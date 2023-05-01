@@ -24,6 +24,7 @@ kotlin {
                 api(compose.materialIconsExtended)
 
                 implementation(libs.kotlinx.serialization.json)
+                implementation(project(":richeditor"))
             }
         }
 

@@ -1,4 +1,4 @@
-package com.mocoding.richeditor.common
+package com.mocoding.richeditor.sample.common
 
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
@@ -14,10 +14,10 @@ import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
-import com.mocoding.richeditor.common.model.RichTextValue
-import com.mocoding.richeditor.common.model.RichTextStyle
-import com.mocoding.richeditor.common.ui.OutlinedRichTextEditor
-import com.mocoding.richeditor.common.ui.RichText
+import com.mocoding.richeditor.model.RichTextValue
+import com.mocoding.richeditor.model.RichTextStyle
+import com.mocoding.richeditor.ui.OutlinedRichTextEditor
+import com.mocoding.richeditor.ui.RichText
 
 @Composable
 fun App() {

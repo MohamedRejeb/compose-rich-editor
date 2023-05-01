@@ -17,7 +17,7 @@ kotlin {
     sourceSets {
         val jvmMain by getting {
             dependencies {
-                implementation(project(":richeditor"))
+                implementation(project(":sample:common"))
                 implementation(compose.desktop.currentOs)
             }
         }

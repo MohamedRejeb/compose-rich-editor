@@ -34,7 +34,7 @@ android {
         jvmTarget = "11"
     }
     dependencies {
-        implementation(project(":richeditor"))
+        implementation(project(":sample:common"))
 
         implementation(libs.activity.compose)
     }

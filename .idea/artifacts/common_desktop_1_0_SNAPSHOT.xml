@@ -1,8 +1,8 @@
 <component name="ArtifactManager">
   <artifact type="jar" name="common-desktop-1.0-SNAPSHOT">
-    <output-path>$PROJECT_DIR$/common/build/libs</output-path>
+    <output-path>$PROJECT_DIR$/sample/common/build/libs</output-path>
     <root id="archive" name="common-desktop-1.0-SNAPSHOT.jar">
-      <element id="module-output" name="compose-richeditor.common.desktopMain" />
+      <element id="module-output" name="compose-richeditor.sample.common.desktopMain" />
     </root>
   </artifact>
 </component>

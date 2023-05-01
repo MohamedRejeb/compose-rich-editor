@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="desktop-jvm-1.0-SNAPSHOT">
+    <output-path>$PROJECT_DIR$/desktop/build/libs</output-path>
+    <root id="archive" name="desktop-jvm-1.0-SNAPSHOT.jar">
+      <element id="module-output" name="compose-richeditor.desktop.jvmMain" />
+    </root>
+  </artifact>
+</component>

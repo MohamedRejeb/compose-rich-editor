@@ -12,6 +12,7 @@ rootProject.name = "compose-richeditor"
 include(
     ":sample:android",
     ":sample:desktop",
+    ":sample:web",
     ":sample:common",
     ":richeditor"
 )

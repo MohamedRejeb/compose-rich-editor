@@ -18,14 +18,3 @@ fun RichText(
         text = value.visualTransformation.filter(value.annotatedString).text,
     )
 }
-
-@Composable
-fun defaultRichTextStyle() = RichTextStyle(
-    textStyle = MaterialTheme.typography.body1,
-    textColor = MaterialTheme.colors.onPrimary,
-)
-
-data class RichTextStyle(
-    val textStyle: TextStyle,
-    val textColor: Color,
-)

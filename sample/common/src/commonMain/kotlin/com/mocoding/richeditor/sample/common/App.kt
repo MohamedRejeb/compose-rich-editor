@@ -1,108 +1,84 @@
 package com.mocoding.richeditor.sample.common
 
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Circle
-import androidx.compose.material.icons.outlined.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.focus.focusProperties
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.unit.dp
 import com.mocoding.richeditor.model.RichTextValue
-import com.mocoding.richeditor.model.RichTextStyle
+import com.mocoding.richeditor.ui.BasicRichTextEditor
 import com.mocoding.richeditor.ui.OutlinedRichTextEditor
 import com.mocoding.richeditor.ui.RichText
+import com.mocoding.richeditor.ui.RichTextEditor
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun App() {
+    var basicRichTextValue by remember { mutableStateOf(RichTextValue()) }
     var richTextValue by remember { mutableStateOf(RichTextValue()) }
+    var outlinedRichTextValue by remember { mutableStateOf(RichTextValue()) }
 
-    Box(
-        contentAlignment = Alignment.TopCenter,
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Compose Rich Editor") },
+            )
+        },
         modifier = Modifier
             .fillMaxSize()
-    ) {
-        val focusManager = LocalFocusManager.current
-        Column {
-            Row {
-                IconToggleButton(
-                    checked = richTextValue.currentStyles.any { it is RichTextStyle.Bold },
-                    onCheckedChange = {
-                        richTextValue = richTextValue.toggleStyle(RichTextStyle.Bold)
-                    },
-                    modifier = Modifier
-                        .onFocusChanged {
-                            println("Focus changed")
-                            println(it.isFocused)
-                            focusManager.moveFocus(FocusDirection.Down)
-                        }
-                        .focusProperties { canFocus = false }
-                ) {
-                    Icon(
-                        Icons.Outlined.FormatBold,
-                        contentDescription = "Bold"
-                    )
-                }
+    ) { paddingValue ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValue)
+                .padding(20.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            // BasicRichTextEditor
+            Text(
+                text = "BasicRichTextEditor:",
+                style = MaterialTheme.typography.titleMedium
+            )
 
-                IconToggleButton(
-                    checked = richTextValue.currentStyles.any { it is RichTextStyle.Italic },
-                    onCheckedChange = {
-                        richTextValue = richTextValue.toggleStyle(RichTextStyle.Italic)
-                    },
-                ) {
-                    Icon(
-                        Icons.Outlined.FormatItalic,
-                        contentDescription = "Italic"
-                    )
-                }
+            Spacer(Modifier.height(8.dp))
 
-                IconToggleButton(
-                    checked = richTextValue.currentStyles.any { it is RichTextStyle.Underline },
-                    onCheckedChange = {
-                        richTextValue = richTextValue.toggleStyle(RichTextStyle.Underline)
-                    },
-                ) {
-                    Icon(
-                        Icons.Outlined.FormatUnderlined,
-                        contentDescription = "Underline"
-                    )
-                }
+            RichTextStyleRow(
+                modifier = Modifier.fillMaxWidth(),
+                value = basicRichTextValue,
+                onValueChanged = {
+                    basicRichTextValue = it
+                },
+            )
 
-                IconToggleButton(
-                    checked = richTextValue.currentStyles.any { it is RichTextStyle.Strikethrough },
-                    onCheckedChange = {
-                        richTextValue = richTextValue.toggleStyle(RichTextStyle.Strikethrough)
-                    },
-                ) {
-                    Icon(
-                        Icons.Outlined.FormatStrikethrough,
-                        contentDescription = "Strikethrough"
-                    )
-                }
+            BasicRichTextEditor(
+                modifier = Modifier.fillMaxWidth(),
+                value = basicRichTextValue,
+                onValueChange = {
+                    basicRichTextValue = it
+                },
+            )
 
-                IconToggleButton(
-                    checked = richTextValue.currentStyles.any { it is RichTextStyle.Red },
-                    onCheckedChange = {
-                        richTextValue = richTextValue.toggleStyle(RichTextStyle.Red)
-                    },
-                ) {
-                    Icon(
-                        Icons.Filled.Circle,
-                        contentDescription = "Red",
-                        tint = Color.Red
-                    )
-                }
-            }
+            Divider(modifier = Modifier.padding(vertical = 20.dp))
 
-            Divider()
+            // RichTextEditor
+            Text(
+                text = "RichTextEditor:",
+                style = MaterialTheme.typography.titleMedium
+            )
 
-            OutlinedRichTextEditor(
+            Spacer(Modifier.height(8.dp))
+
+            RichTextStyleRow(
+                modifier = Modifier.fillMaxWidth(),
+                value = richTextValue,
+                onValueChanged = {
+                    richTextValue = it
+                },
+            )
+
+            RichTextEditor(
                 modifier = Modifier.fillMaxWidth(),
                 value = richTextValue,
                 onValueChange = {
@@ -110,10 +86,45 @@ fun App() {
                 },
             )
 
+            Divider(modifier = Modifier.padding(vertical = 20.dp))
+
+            // OutlinedRichTextEditor
+            Text(
+                text = "OutlinedRichTextEditor:",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            RichTextStyleRow(
+                modifier = Modifier.fillMaxWidth(),
+                value = outlinedRichTextValue,
+                onValueChanged = {
+                    outlinedRichTextValue = it
+                },
+            )
+
+            OutlinedRichTextEditor(
+                modifier = Modifier.fillMaxWidth(),
+                value = outlinedRichTextValue,
+                onValueChange = {
+                    outlinedRichTextValue = it
+                },
+            )
+
+            Divider(modifier = Modifier.padding(vertical = 20.dp))
+
+            // RichText
+            Text(
+                text = "RichText:",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Spacer(Modifier.height(8.dp))
+
             RichText(
+                modifier = Modifier.fillMaxWidth(),
                 value = richTextValue,
-                modifier = Modifier
-                    .fillMaxWidth()
             )
         }
     }

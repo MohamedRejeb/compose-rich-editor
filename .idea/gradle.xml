@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/sample/android" />
             <option value="$PROJECT_DIR$/sample/common" />
             <option value="$PROJECT_DIR$/sample/desktop" />
+            <option value="$PROJECT_DIR$/sample/web" />
           </set>
         </option>
       </GradleProjectSettings>

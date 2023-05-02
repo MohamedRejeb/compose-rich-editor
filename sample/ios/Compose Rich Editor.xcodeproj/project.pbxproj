@@ -166,7 +166,6 @@
 				EA37A5D62A006746008B8114 /* Sources */,
 				EA37A5D72A006746008B8114 /* Frameworks */,
 				EA37A5D82A006746008B8114 /* Resources */,
-				44AE4FD835DE47C8C244DEDB /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -283,23 +282,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		44AE4FD835DE47C8C244DEDB /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Compose Rich Editor/Pods-Compose Rich Editor-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Compose Rich Editor/Pods-Compose Rich Editor-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Compose Rich Editor/Pods-Compose Rich Editor-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		FC1E5BA21DE985C04BD5FB76 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;

@@ -3,13 +3,11 @@ package com.mohamedrejeb.richeditor.sample.common
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Circle
-import androidx.compose.material.icons.outlined.FormatBold
-import androidx.compose.material.icons.outlined.FormatItalic
-import androidx.compose.material.icons.outlined.FormatStrikethrough
-import androidx.compose.material.icons.outlined.FormatUnderlined
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.model.RichTextStyle
 import com.mohamedrejeb.richeditor.model.RichTextValue
 
@@ -51,11 +49,26 @@ fun RichTextStyleRow(
         )
 
         RichTextStyleButton(
-            style = RichTextStyle.Red,
+            style = RichTextStyle.FontSize(28.sp),
+            value = value,
+            onValueChanged = onValueChanged,
+            icon = Icons.Outlined.FormatSize
+        )
+
+        RichTextStyleButton(
+            style = RichTextStyle.TextColor(Color.Red),
             value = value,
             onValueChanged = onValueChanged,
             icon = Icons.Filled.Circle,
             tint = Color.Red
+        )
+
+        RichTextStyleButton(
+            style = CustomStyle(color = Color.White, background = Color.Green),
+            value = value,
+            onValueChanged = onValueChanged,
+            icon = Icons.Outlined.Circle,
+            tint = Color.Green
         )
     }
 }

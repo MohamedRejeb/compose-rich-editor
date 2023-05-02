@@ -12,12 +12,12 @@ import kotlin.math.min
 
 @Immutable
 data class RichTextValue internal constructor(
-    val textFieldValue: TextFieldValue,
+    internal val textFieldValue: TextFieldValue,
     val currentStyles: Set<RichTextStyle> = emptySet(),
-    val parts: List<RichTextPart> = emptyList(),
+    internal val parts: List<RichTextPart> = emptyList(),
 ) {
 
-    val visualTransformation
+    internal val visualTransformation
         get() = VisualTransformation {
             TransformedText(
                 text = annotatedString,
@@ -25,7 +25,7 @@ data class RichTextValue internal constructor(
             )
         }
 
-    val annotatedString
+    internal val annotatedString
         get() = AnnotatedString(
             text = textFieldValue.text,
             spanStyles = parts.map { part ->
@@ -44,11 +44,10 @@ data class RichTextValue internal constructor(
     constructor(
         text: String = "",
         currentStyles: Set<RichTextStyle> = emptySet(),
-        parts: List<RichTextPart> = emptyList(),
     ) : this(
         textFieldValue = TextFieldValue(text = text),
         currentStyles = currentStyles,
-        parts = parts,
+        parts = emptyList(),
     )
 
     fun addStyle(vararg style: RichTextStyle): RichTextValue {
@@ -75,7 +74,7 @@ data class RichTextValue internal constructor(
         return copy(currentStyles = newStyles)
     }
 
-    fun updateTextFieldValue(newTextFieldValue: TextFieldValue): RichTextValue {
+    internal fun updateTextFieldValue(newTextFieldValue: TextFieldValue): RichTextValue {
         val newParts = parts.toMutableList()
 
         if (newTextFieldValue.text.length > textFieldValue.text.length) {

@@ -1,0 +1,5 @@
+target 'Compose Rich Editor' do
+  use_frameworks!
+  platform :ios, '14.1'
+  pod 'common', :path => '../common'
+end

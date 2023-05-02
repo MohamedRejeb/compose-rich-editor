@@ -1,0 +1,6 @@
+framework module Pods_Compose_Rich_Editor {
+  umbrella header "Pods-Compose Rich Editor-umbrella.h"
+
+  export *
+  module * { export * }
+}

@@ -1,0 +1,645 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		668AC078E8D224EC91885CB0 /* Pods_Compose_Rich_Editor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A55337321C3ECF4B51B09A0B /* Pods_Compose_Rich_Editor.framework */; };
+		EA37A5DE2A006746008B8114 /* Compose_Rich_EditorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA37A5DD2A006746008B8114 /* Compose_Rich_EditorApp.swift */; };
+		EA37A5E02A006746008B8114 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA37A5DF2A006746008B8114 /* ContentView.swift */; };
+		EA37A5E22A006747008B8114 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EA37A5E12A006747008B8114 /* Assets.xcassets */; };
+		EA37A5E52A006747008B8114 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EA37A5E42A006747008B8114 /* Preview Assets.xcassets */; };
+		EA37A5EF2A006747008B8114 /* Compose_Rich_EditorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA37A5EE2A006747008B8114 /* Compose_Rich_EditorTests.swift */; };
+		EA37A5F92A006747008B8114 /* Compose_Rich_EditorUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA37A5F82A006747008B8114 /* Compose_Rich_EditorUITests.swift */; };
+		EA37A5FB2A006747008B8114 /* Compose_Rich_EditorUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA37A5FA2A006747008B8114 /* Compose_Rich_EditorUITestsLaunchTests.swift */; };
+		EAC5C8382A0068FF009992F8 /* ComposeViewControllerToSwiftUi.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAC5C8372A0068FF009992F8 /* ComposeViewControllerToSwiftUi.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		EA37A5EB2A006747008B8114 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EA37A5D22A006746008B8114 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EA37A5D92A006746008B8114;
+			remoteInfo = "Compose Rich Editor";
+		};
+		EA37A5F52A006747008B8114 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EA37A5D22A006746008B8114 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EA37A5D92A006746008B8114;
+			remoteInfo = "Compose Rich Editor";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		1705BE2CF82DE7A573D6C062 /* Pods-Compose Rich Editor.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Compose Rich Editor.debug.xcconfig"; path = "Target Support Files/Pods-Compose Rich Editor/Pods-Compose Rich Editor.debug.xcconfig"; sourceTree = "<group>"; };
+		559F6A3065E62ADB4C44E013 /* Pods-Compose Rich Editor.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Compose Rich Editor.release.xcconfig"; path = "Target Support Files/Pods-Compose Rich Editor/Pods-Compose Rich Editor.release.xcconfig"; sourceTree = "<group>"; };
+		A55337321C3ECF4B51B09A0B /* Pods_Compose_Rich_Editor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Compose_Rich_Editor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		EA37A5DA2A006746008B8114 /* Compose Rich Editor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Compose Rich Editor.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		EA37A5DD2A006746008B8114 /* Compose_Rich_EditorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Compose_Rich_EditorApp.swift; sourceTree = "<group>"; };
+		EA37A5DF2A006746008B8114 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		EA37A5E12A006747008B8114 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		EA37A5E42A006747008B8114 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		EA37A5EA2A006747008B8114 /* Compose Rich EditorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Compose Rich EditorTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		EA37A5EE2A006747008B8114 /* Compose_Rich_EditorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Compose_Rich_EditorTests.swift; sourceTree = "<group>"; };
+		EA37A5F42A006747008B8114 /* Compose Rich EditorUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Compose Rich EditorUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		EA37A5F82A006747008B8114 /* Compose_Rich_EditorUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Compose_Rich_EditorUITests.swift; sourceTree = "<group>"; };
+		EA37A5FA2A006747008B8114 /* Compose_Rich_EditorUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Compose_Rich_EditorUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		EAC5C8372A0068FF009992F8 /* ComposeViewControllerToSwiftUi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeViewControllerToSwiftUi.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		EA37A5D72A006746008B8114 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				668AC078E8D224EC91885CB0 /* Pods_Compose_Rich_Editor.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EA37A5E72A006747008B8114 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EA37A5F12A006747008B8114 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0445D6B1E07FAEC189C6342C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A55337321C3ECF4B51B09A0B /* Pods_Compose_Rich_Editor.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		08FDF9C04C8B72F2B782F66B /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				1705BE2CF82DE7A573D6C062 /* Pods-Compose Rich Editor.debug.xcconfig */,
+				559F6A3065E62ADB4C44E013 /* Pods-Compose Rich Editor.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		EA37A5D12A006746008B8114 = {
+			isa = PBXGroup;
+			children = (
+				EA37A5DC2A006746008B8114 /* Compose Rich Editor */,
+				EA37A5ED2A006747008B8114 /* Compose Rich EditorTests */,
+				EA37A5F72A006747008B8114 /* Compose Rich EditorUITests */,
+				EA37A5DB2A006746008B8114 /* Products */,
+				08FDF9C04C8B72F2B782F66B /* Pods */,
+				0445D6B1E07FAEC189C6342C /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		EA37A5DB2A006746008B8114 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				EA37A5DA2A006746008B8114 /* Compose Rich Editor.app */,
+				EA37A5EA2A006747008B8114 /* Compose Rich EditorTests.xctest */,
+				EA37A5F42A006747008B8114 /* Compose Rich EditorUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		EA37A5DC2A006746008B8114 /* Compose Rich Editor */ = {
+			isa = PBXGroup;
+			children = (
+				EA37A5DD2A006746008B8114 /* Compose_Rich_EditorApp.swift */,
+				EA37A5DF2A006746008B8114 /* ContentView.swift */,
+				EA37A5E12A006747008B8114 /* Assets.xcassets */,
+				EA37A5E32A006747008B8114 /* Preview Content */,
+				EAC5C8372A0068FF009992F8 /* ComposeViewControllerToSwiftUi.swift */,
+			);
+			path = "Compose Rich Editor";
+			sourceTree = "<group>";
+		};
+		EA37A5E32A006747008B8114 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				EA37A5E42A006747008B8114 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		EA37A5ED2A006747008B8114 /* Compose Rich EditorTests */ = {
+			isa = PBXGroup;
+			children = (
+				EA37A5EE2A006747008B8114 /* Compose_Rich_EditorTests.swift */,
+			);
+			path = "Compose Rich EditorTests";
+			sourceTree = "<group>";
+		};
+		EA37A5F72A006747008B8114 /* Compose Rich EditorUITests */ = {
+			isa = PBXGroup;
+			children = (
+				EA37A5F82A006747008B8114 /* Compose_Rich_EditorUITests.swift */,
+				EA37A5FA2A006747008B8114 /* Compose_Rich_EditorUITestsLaunchTests.swift */,
+			);
+			path = "Compose Rich EditorUITests";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		EA37A5D92A006746008B8114 /* Compose Rich Editor */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EA37A5FE2A006747008B8114 /* Build configuration list for PBXNativeTarget "Compose Rich Editor" */;
+			buildPhases = (
+				FC1E5BA21DE985C04BD5FB76 /* [CP] Check Pods Manifest.lock */,
+				EA37A5D62A006746008B8114 /* Sources */,
+				EA37A5D72A006746008B8114 /* Frameworks */,
+				EA37A5D82A006746008B8114 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Compose Rich Editor";
+			productName = "Compose Rich Editor";
+			productReference = EA37A5DA2A006746008B8114 /* Compose Rich Editor.app */;
+			productType = "com.apple.product-type.application";
+		};
+		EA37A5E92A006747008B8114 /* Compose Rich EditorTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EA37A6012A006747008B8114 /* Build configuration list for PBXNativeTarget "Compose Rich EditorTests" */;
+			buildPhases = (
+				EA37A5E62A006747008B8114 /* Sources */,
+				EA37A5E72A006747008B8114 /* Frameworks */,
+				EA37A5E82A006747008B8114 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				EA37A5EC2A006747008B8114 /* PBXTargetDependency */,
+			);
+			name = "Compose Rich EditorTests";
+			productName = "Compose Rich EditorTests";
+			productReference = EA37A5EA2A006747008B8114 /* Compose Rich EditorTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		EA37A5F32A006747008B8114 /* Compose Rich EditorUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EA37A6042A006747008B8114 /* Build configuration list for PBXNativeTarget "Compose Rich EditorUITests" */;
+			buildPhases = (
+				EA37A5F02A006747008B8114 /* Sources */,
+				EA37A5F12A006747008B8114 /* Frameworks */,
+				EA37A5F22A006747008B8114 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				EA37A5F62A006747008B8114 /* PBXTargetDependency */,
+			);
+			name = "Compose Rich EditorUITests";
+			productName = "Compose Rich EditorUITests";
+			productReference = EA37A5F42A006747008B8114 /* Compose Rich EditorUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		EA37A5D22A006746008B8114 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1420;
+				LastUpgradeCheck = 1420;
+				TargetAttributes = {
+					EA37A5D92A006746008B8114 = {
+						CreatedOnToolsVersion = 14.2;
+					};
+					EA37A5E92A006747008B8114 = {
+						CreatedOnToolsVersion = 14.2;
+						TestTargetID = EA37A5D92A006746008B8114;
+					};
+					EA37A5F32A006747008B8114 = {
+						CreatedOnToolsVersion = 14.2;
+						TestTargetID = EA37A5D92A006746008B8114;
+					};
+				};
+			};
+			buildConfigurationList = EA37A5D52A006746008B8114 /* Build configuration list for PBXProject "Compose Rich Editor" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = EA37A5D12A006746008B8114;
+			productRefGroup = EA37A5DB2A006746008B8114 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				EA37A5D92A006746008B8114 /* Compose Rich Editor */,
+				EA37A5E92A006747008B8114 /* Compose Rich EditorTests */,
+				EA37A5F32A006747008B8114 /* Compose Rich EditorUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		EA37A5D82A006746008B8114 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EA37A5E52A006747008B8114 /* Preview Assets.xcassets in Resources */,
+				EA37A5E22A006747008B8114 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EA37A5E82A006747008B8114 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EA37A5F22A006747008B8114 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		FC1E5BA21DE985C04BD5FB76 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-Compose Rich Editor-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		EA37A5D62A006746008B8114 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EA37A5E02A006746008B8114 /* ContentView.swift in Sources */,
+				EA37A5DE2A006746008B8114 /* Compose_Rich_EditorApp.swift in Sources */,
+				EAC5C8382A0068FF009992F8 /* ComposeViewControllerToSwiftUi.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EA37A5E62A006747008B8114 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EA37A5EF2A006747008B8114 /* Compose_Rich_EditorTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EA37A5F02A006747008B8114 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EA37A5FB2A006747008B8114 /* Compose_Rich_EditorUITestsLaunchTests.swift in Sources */,
+				EA37A5F92A006747008B8114 /* Compose_Rich_EditorUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		EA37A5EC2A006747008B8114 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EA37A5D92A006746008B8114 /* Compose Rich Editor */;
+			targetProxy = EA37A5EB2A006747008B8114 /* PBXContainerItemProxy */;
+		};
+		EA37A5F62A006747008B8114 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EA37A5D92A006746008B8114 /* Compose Rich Editor */;
+			targetProxy = EA37A5F52A006747008B8114 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		EA37A5FC2A006747008B8114 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		EA37A5FD2A006747008B8114 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		EA37A5FF2A006747008B8114 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1705BE2CF82DE7A573D6C062 /* Pods-Compose Rich Editor.debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Compose Rich Editor/Preview Content\"";
+				DEVELOPMENT_TEAM = V7T9SX3F3Z;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mohamedrejeb.Compose-Rich-Editor";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		EA37A6002A006747008B8114 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 559F6A3065E62ADB4C44E013 /* Pods-Compose Rich Editor.release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Compose Rich Editor/Preview Content\"";
+				DEVELOPMENT_TEAM = V7T9SX3F3Z;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mohamedrejeb.Compose-Rich-Editor";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		EA37A6022A006747008B8114 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = V7T9SX3F3Z;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mohamedrejeb.Compose-Rich-EditorTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Compose Rich Editor.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Compose Rich Editor";
+			};
+			name = Debug;
+		};
+		EA37A6032A006747008B8114 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = V7T9SX3F3Z;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mohamedrejeb.Compose-Rich-EditorTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Compose Rich Editor.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Compose Rich Editor";
+			};
+			name = Release;
+		};
+		EA37A6052A006747008B8114 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = V7T9SX3F3Z;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mohamedrejeb.Compose-Rich-EditorUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "Compose Rich Editor";
+			};
+			name = Debug;
+		};
+		EA37A6062A006747008B8114 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = V7T9SX3F3Z;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mohamedrejeb.Compose-Rich-EditorUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "Compose Rich Editor";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		EA37A5D52A006746008B8114 /* Build configuration list for PBXProject "Compose Rich Editor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EA37A5FC2A006747008B8114 /* Debug */,
+				EA37A5FD2A006747008B8114 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		EA37A5FE2A006747008B8114 /* Build configuration list for PBXNativeTarget "Compose Rich Editor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EA37A5FF2A006747008B8114 /* Debug */,
+				EA37A6002A006747008B8114 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		EA37A6012A006747008B8114 /* Build configuration list for PBXNativeTarget "Compose Rich EditorTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EA37A6022A006747008B8114 /* Debug */,
+				EA37A6032A006747008B8114 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		EA37A6042A006747008B8114 /* Build configuration list for PBXNativeTarget "Compose Rich EditorUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EA37A6052A006747008B8114 /* Debug */,
+				EA37A6062A006747008B8114 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = EA37A5D22A006746008B8114 /* Project object */;
+}

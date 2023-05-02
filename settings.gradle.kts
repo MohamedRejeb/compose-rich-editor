@@ -9,4 +9,10 @@ pluginManagement {
 
 rootProject.name = "compose-richeditor"
 
-include(":android", ":desktop", ":common")
+include(
+    ":sample:android",
+    ":sample:desktop",
+    ":sample:web",
+    ":sample:common",
+    ":richeditor"
+)

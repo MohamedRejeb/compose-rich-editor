@@ -56,7 +56,7 @@ RichTextEditor(
 > - `RichTextEditor` (material3)
 > - `OutlinedRichTextEditor`  (material3)
 
-> All `RichTextEditor` composables are fully customisable with same parameters that are available for a normal `TextField``
+> All `RichTextEditor` composables are fully customisable with same parameters that are available for a normal `TextField`
 > - `TextFieldColors`
 > - `Shape`
 > - `enabled`

@@ -4,9 +4,6 @@ plugins {
     kotlin("android")
 }
 
-group "com.mocoding"
-version "1.0-SNAPSHOT"
-
 android {
     namespace = "com.mocoding.richeditor.android"
     compileSdk = (findProperty("android.compileSdk") as String).toInt()

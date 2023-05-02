@@ -6,9 +6,6 @@ plugins {
     id("com.android.library")
 }
 
-group = "com.mocoding"
-version = "1.0-SNAPSHOT"
-
 kotlin {
     android()
     jvm("desktop") {
@@ -43,7 +40,8 @@ kotlin {
                 api(compose.materialIconsExtended)
 
                 implementation(libs.kotlinx.serialization.json)
-                implementation(project(":richeditor"))
+                implementation("com.mohamedrejeb.richeditor:richeditor-compose:0.1.0")
+//                implementation(project(":richeditor-compose"))
             }
         }
 
@@ -61,7 +59,9 @@ kotlin {
 
         val jsMain by getting {
             dependsOn(commonMain)
-            dependencies {}
+            dependencies {
+
+            }
         }
 
         val iosX64Main by getting
@@ -72,7 +72,9 @@ kotlin {
             iosX64Main.dependsOn(this)
             iosArm64Main.dependsOn(this)
             iosSimulatorArm64Main.dependsOn(this)
-            dependencies {}
+            dependencies {
+
+            }
         }
     }
 }

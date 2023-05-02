@@ -14,8 +14,7 @@
 <img src="https://user-images.githubusercontent.com/41842296/235645097-6ddd1d96-0777-40dc-a18f-730e913b6461.png" />
 <br>
 <br>
-<img src="https://user-images.githubusercontent.com/41842296/235645147-13aa2bd1-a861-4951-a6bc-5f99e3347f3c.png" width="250"/>
-<img src="https://user-images.githubusercontent.com/41842296/235645587-df2f26a7-852f-4b8d-a3a5-850ca57df08f.png" width="250"/>
+<img src="https://user-images.githubusercontent.com/41842296/235653455-2e4998c1-a24f-40c6-9709-77f23e027b8a.png"/>
 </p>
 
 ## Why Compose Rich Editor?
@@ -71,14 +70,14 @@ We have some available methods under `RichTextValue` to update styles. If we use
 var richTextValue by remember { mutableStateOf(RichTextValue()) }
 
 IconButton(
-	onClick = {
-		richTextValue = richTextValue.toggleStyle(RichTextStyle.Bold)
-	}
+    onClick = {
+        richTextValue = richTextValue.toggleStyle(RichTextStyle.Bold)
+    }
 ) {
-	Icon(
-		imageVector = Icons.Outlined.FormatBold,
-		contentDescription = "Bold"
-	)
+    Icon(
+        imageVector = Icons.Outlined.FormatBold,
+        contentDescription = "Bold"
+    )
 }
 ```
 
@@ -88,23 +87,23 @@ The added styles are going to be applied to the written text in the `RichTextEdi
 var richTextValue by remember { mutableStateOf(RichTextValue()) }
 
 IconButton(
-	onClick = {
-		richTextValue = richTextValue.toggleStyle(RichTextStyle.Bold)
-	}
+    onClick = {
+        richTextValue = richTextValue.toggleStyle(RichTextStyle.Bold)
+    }
 ) {
-	Icon(
-		imageVector = Icons.Outlined.FormatBold,
-		contentDescription = "Bold",
-		modifier = Modifier
-			// Mark the icon with a background color is the style is selected
-			.background(
-				color = if (richTextValue.currentStyles.contains(RichTextStyle.Bold)) {
-					Color.Blue
-				} else {
-					Color.Transparent
-				}
-			)
-	)
+    Icon(
+        imageVector = Icons.Outlined.FormatBold,
+        contentDescription = "Bold",
+        modifier = Modifier
+            // Mark the icon with a background color is the style is selected
+            .background(
+                color = if (richTextValue.currentStyles.contains(RichTextStyle.Bold)) {
+                    Color.Blue
+                } else {
+                    Color.Transparent
+                }
+            )
+    )
 }
 ```
 
@@ -193,6 +192,17 @@ object SecondCustomStyle : RichTextStyle {
 }
 
 richTextValue = richTextValue.addStyle(SecondCustomStyle)
+```
+
+### Create Rich Text with Compose UI
+The library provides a `RichText` composable that can be used to display rich text. It's similar to `Text` composable, but it supports rich text styles.
+
+```kotlin
+var richTextValue by remember { mutableStateOf(RichTextValue()) }
+
+RichText(
+    text = richTextValue
+)
 ```
 
 ## Supported Features

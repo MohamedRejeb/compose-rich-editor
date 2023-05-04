@@ -1,9 +1,9 @@
-<h1 align="center">Compose Rich Editor</h1></br>
+<h1 align="center">Compose Rich Editor</h1><br>
 
 <p align="center">
 :richeditor-compose: Rich text editor library for both Jetpack Compose and Compose Multiplatform, fully customizable and supports the common rich text editor features.
 </p>
-</br>
+<br>
 <p align="center">
   <a href="https://opensource.org/licenses/Apache-2.0"><img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"/></a>
   <a href="https://android-arsenal.com/api?level=24"><img alt="API" src="https://img.shields.io/badge/API-24%2B-brightgreen.svg?style=flat"/></a>
@@ -11,10 +11,10 @@
 </p> <br>
 
 <p align="center">
-<img src="https://user-images.githubusercontent.com/41842296/235645097-6ddd1d96-0777-40dc-a18f-730e913b6461.png" />
+<img src="https://user-images.githubusercontent.com/41842296/235645097-6ddd1d96-0777-40dc-a18f-730e913b6461.png" alt="Compose Rich Text Editor"/>
 <br>
 <br>
-<img src="https://user-images.githubusercontent.com/41842296/235653455-2e4998c1-a24f-40c6-9709-77f23e027b8a.png"/>
+<img src="https://user-images.githubusercontent.com/41842296/235653455-2e4998c1-a24f-40c6-9709-77f23e027b8a.png" alt="Compose Rich Text Editor"/>
 </p>
 
 ## Why Compose Rich Editor?
@@ -64,7 +64,7 @@ RichTextEditor(
 > - ...
 
 ### Update Rich Text Styles
-We have some available methods under `RichTextValue` to update styles. If we use `addStyle` method, we add a style. If we use `removeStyle` method, we remove a style. Also, we can toggle a style using `toggleStyle` methond and all of these methods accepts a `RichTextStyle`as a parameter. <br>
+We have some available methods under `RichTextValue` to update styles. If we use `addStyle` method, we add a style. If we use `removeStyle` method, we remove a style. Also, we can toggle a style using `toggleStyle` method and all of these methods accepts a `RichTextStyle` as a parameter. <br>
 
 ```kotlin
 var richTextValue by remember { mutableStateOf(RichTextValue()) }
@@ -81,7 +81,7 @@ IconButton(
 }
 ```
 
-The added styles are going to be applied to the written text in the `RichTextEditor`. Also you can get the current styles using `richTextValue.currentStyles`, you may need it to check if a certain style is added. <br>
+The added styles are going to be applied to the written text in the `RichTextEditor`. Also, you can get the current styles using `richTextValue.currentStyles`, you may need it to check if a certain style is added. <br>
 
 ```kotlin
 var richTextValue by remember { mutableStateOf(RichTextValue()) }
@@ -169,7 +169,8 @@ data class FirstCustomStyle(
     val color: Color, 
     val background: Color
 ) : RichTextStyle {
-    override fun toSpan(): Any {
+
+    override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
         return SpanStyle(
             color = color, 
             background = background
@@ -180,7 +181,7 @@ data class FirstCustomStyle(
 richTextValue = richTextValue.addStyle(FirstCustomStyle(Color.Red, Color.Blue))
 
 object SecondCustomStyle : RichTextStyle {
-    override fun toSpan(): Any {
+    override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
         return SpanStyle(
             color = Color.White,
             background = Color.Blue,
@@ -245,7 +246,7 @@ Support it by joining __[stargazers](https://github.com/MohamedRejeb/Compose-Ric
 Also, __[follow me](https://github.com/MohamedRejeb)__ on GitHub for more libraries! 🤩
 
 # License
-```xml
+```markdown
 Copyright 2023 Mohamed Rejeb
 
 Licensed under the Apache License, Version 2.0 (the "License");

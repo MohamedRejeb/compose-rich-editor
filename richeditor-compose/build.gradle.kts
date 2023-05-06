@@ -5,9 +5,6 @@ plugins {
     id("com.android.library")
 }
 
-group = "com.mohamedrejeb.richeditor"
-version = "0.1.0"
-
 kotlin {
     android()
     jvm("desktop") {

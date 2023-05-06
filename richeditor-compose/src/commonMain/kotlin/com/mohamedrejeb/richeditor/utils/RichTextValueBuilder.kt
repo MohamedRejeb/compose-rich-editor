@@ -7,54 +7,154 @@ import com.mohamedrejeb.richeditor.model.RichTextValue
 import kotlin.math.max
 import kotlin.math.min
 
+/**
+ * A builder for [RichTextValue]
+ * @see RichTextValue
+ */
 internal class RichTextValueBuilder {
 
     private var textFieldValue: TextFieldValue = TextFieldValue()
     private val parts = mutableListOf<RichTextPart>()
     private val currentStyles = mutableSetOf<RichTextStyle>()
 
-    fun textFieldValue(textFieldValue: TextFieldValue) = apply {
+    /**
+     * Set the text field value
+     * @param textFieldValue the text field value to set
+     * @return a new [RichTextValueBuilder] with the new text field value
+     */
+    fun setTextFieldValue(textFieldValue: TextFieldValue): RichTextValueBuilder {
         this.textFieldValue = textFieldValue
+        return this
     }
 
-    fun parts(parts: List<RichTextPart>) = apply {
+    /**
+     * Set the parts of the text
+     * @param parts the parts to set
+     * @return a new [RichTextValueBuilder] with the new parts
+     * @see RichTextPart
+     */
+    fun setParts(parts: List<RichTextPart>): RichTextValueBuilder {
         this.parts.clear()
         this.parts.addAll(parts)
+        return this
     }
 
-    fun currentStyles(currentStyles: Set<RichTextStyle>) = apply {
+    /**
+     * Set the current styles
+     * @param currentStyles the styles to set
+     * @return a new [RichTextValueBuilder] with the new styles
+     * @see RichTextStyle
+     */
+    fun setCurrentStyles(currentStyles: Set<RichTextStyle>): RichTextValueBuilder {
         this.currentStyles.clear()
         this.currentStyles.addAll(currentStyles)
+        return this
     }
 
+    /**
+     * Add a style to the current styles
+     * @param style the style to add
+     * @return a new [RichTextValueBuilder] with the new style
+     * @see RichTextStyle
+     */
+    fun addStyle(vararg style: RichTextStyle): RichTextValueBuilder {
+        currentStyles.addAll(style)
+        applyStylesToSelectedText(*style)
+        return this
+    }
+
+    /**
+     * Remove a style from the current styles
+     * @param style the style to remove
+     * @return a new [RichTextValueBuilder] without the style
+     * @see RichTextStyle
+     */
+    fun removeStyle(vararg style: RichTextStyle): RichTextValueBuilder {
+        currentStyles.removeAll(style.toSet())
+        removeStylesFromSelectedText(*style)
+        return this
+    }
+
+    /**
+     * Update the current styles
+     * @param newStyles the new styles
+     * @return a new [RichTextValueBuilder] with the new styles
+     * @see RichTextStyle
+     */
+    fun updateStyles(newStyles: Set<RichTextStyle>): RichTextValueBuilder {
+        currentStyles.clear()
+        currentStyles.addAll(newStyles)
+        applyStylesToSelectedText(*newStyles.toTypedArray())
+        return this
+    }
+
+    /**
+     * Clear the current styles
+     * @return a new [RichTextValueBuilder] with no styles
+     * @see RichTextStyle
+     */
+    fun clearStyles(): RichTextValueBuilder {
+        currentStyles.clear()
+        removeAllStylesFromSelectedText()
+        return this
+    }
+
+    /**
+     * Add a part to the list of parts
+     * @param part the part to add
+     * @return a new [RichTextValueBuilder] with the new part
+     * @throws IllegalArgumentException if the part is invalid
+     * @see RichTextPart
+     */
+    fun addPart(part: RichTextPart): RichTextValueBuilder {
+        if (part.fromIndex > part.toIndex) {
+            throw IllegalArgumentException("fromIndex must be less than or equal to toIndex")
+        }
+        if (part.fromIndex < 0) {
+            throw IllegalArgumentException("fromIndex must be greater than or equal to 0")
+        }
+        if (part.toIndex > textFieldValue.text.lastIndex) {
+            throw IllegalArgumentException("toIndex must be less than or equal to the last index of the text")
+        }
+
+        parts.add(part)
+        return this
+    }
+
+    /**
+     * Remove a part from the list of parts
+     * @param part the part to remove
+     * @return a new [RichTextValueBuilder] without the part
+     * @see RichTextPart
+     */
+    fun removePart(part: RichTextPart): RichTextValueBuilder {
+        parts.remove(part)
+        return this
+    }
+
+    /**
+     * Update the text field value and update the rich text parts accordingly to the new text field value
+     * @param newTextFieldValue the new text field value
+     * @return a new [RichTextValueBuilder] with the new text field value and parts
+     */
     fun updateTextFieldValue(newTextFieldValue: TextFieldValue): RichTextValueBuilder {
         if (newTextFieldValue.text.length > textFieldValue.text.length) {
             handleAddingCharacters(newTextFieldValue)
         } else if (newTextFieldValue.text.length < textFieldValue.text.length) {
             handleRemovingCharacters(newTextFieldValue)
-        } else {
-            handleReplacingCharacters(newTextFieldValue)
         }
 
-        val newStyle = if (!newTextFieldValue.selection.collapsed || newTextFieldValue.selection.start > 0) {
-            parts
-                .firstOrNull { (newTextFieldValue.selection.start - 1) in (it.fromIndex..it.toIndex) }
-                ?.styles
-                ?: currentStyles
-        } else {
-            currentStyles
-        }
+        updateCurrentStyles(newTextFieldValue = newTextFieldValue)
 
-        collapseParts(
-            textLastIndex = newTextFieldValue.text.lastIndex
-        )
+        collapseParts(textLastIndex = newTextFieldValue.text.lastIndex)
 
-        return RichTextValueBuilder()
-            .textFieldValue(newTextFieldValue)
-            .parts(parts)
-            .currentStyles(newStyle)
+        return this
+            .setTextFieldValue(newTextFieldValue)
     }
 
+    /**
+     * Builds a [RichTextValue] from the current state of the builder.
+     */
     fun build(): RichTextValue {
         return RichTextValue(
             textFieldValue = textFieldValue,
@@ -63,11 +163,17 @@ internal class RichTextValueBuilder {
         )
     }
 
+    /**
+     * Handles adding characters to the text field.
+     * This method will update the [parts] list to reflect the new text field value.
+     *
+     * @param newTextFieldValue the new text field value.
+     */
     private fun handleAddingCharacters(
         newTextFieldValue: TextFieldValue,
     ) {
         val typedChars = newTextFieldValue.text.length - textFieldValue.text.length
-        val startTypeIndex = newTextFieldValue.selection.start - typedChars
+        val startTypeIndex = newTextFieldValue.selection.min - typedChars
 
         val startRichTextPartIndex = parts.indexOfFirst {
             (startTypeIndex - 1) in it.fromIndex..it.toIndex
@@ -86,7 +192,6 @@ internal class RichTextValueBuilder {
 
             if (startRichTextPartIndex < parts.lastIndex) {
                 moveParts(
-                    mParts = parts,
                     fromIndex = startRichTextPartIndex + 1,
                     toIndex = parts.lastIndex,
                     by = typedChars,
@@ -99,7 +204,6 @@ internal class RichTextValueBuilder {
 
             if (endRichTextPartIndex < parts.lastIndex) {
                 moveParts(
-                    mParts = parts,
                     fromIndex = endRichTextPartIndex + 1,
                     toIndex = parts.lastIndex,
                     by = typedChars,
@@ -125,7 +229,6 @@ internal class RichTextValueBuilder {
 
             if ((startRichTextPartIndex + 2) < parts.lastIndex) {
                 moveParts(
-                    mParts = parts,
                     fromIndex = startRichTextPartIndex + 3,
                     toIndex = parts.lastIndex,
                     by = typedChars,
@@ -150,7 +253,6 @@ internal class RichTextValueBuilder {
 
             if ((startRichTextPartIndex + 1) < parts.lastIndex) {
                 moveParts(
-                    mParts = parts,
                     fromIndex = startRichTextPartIndex + 2,
                     toIndex = parts.lastIndex,
                     by = typedChars,
@@ -159,12 +261,18 @@ internal class RichTextValueBuilder {
         }
     }
 
+    /**
+     * Handles removing characters from the text field value.
+     * This method will update the [parts] list to reflect the new text field value.
+     *
+     * @param newTextFieldValue The new text field value.
+     */
     private fun handleRemovingCharacters(
         newTextFieldValue: TextFieldValue
     ) {
         val removedChars = textFieldValue.text.length - newTextFieldValue.text.length
-        val startRemoveIndex = newTextFieldValue.selection.start + removedChars
-        val endRemoveIndex = newTextFieldValue.selection.start
+        val startRemoveIndex = newTextFieldValue.selection.min + removedChars
+        val endRemoveIndex = newTextFieldValue.selection.min
         val removeRange = endRemoveIndex until startRemoveIndex
 
         val removedIndexes = mutableSetOf<Int>()
@@ -205,41 +313,29 @@ internal class RichTextValueBuilder {
         removedIndexes.reversed().forEach { parts.removeAt(it) }
     }
 
-    private fun handleReplacingCharacters(
-        newTextFieldValue: TextFieldValue
-    ) {
-        if (textFieldValue.text == newTextFieldValue.text) {
-            return
-        }
-
-        // Todo: Handle replacing characters.
-    }
-
     /**
-     * Moves parts in [mParts] from [fromIndex] to [toIndex] by [by].
-     * @param mParts The list of parts to move.
+     * Moves [parts] from [fromIndex] to [toIndex] by [by].
      * @param fromIndex The index to start moving from.
      * @param toIndex The index to move to.
      * @param by The amount to move by.
      */
     private fun moveParts(
-        mParts: MutableList<RichTextPart>,
         fromIndex: Int,
         toIndex: Int,
         by: Int
     ) {
         val start = max(fromIndex, 0)
-        val end = min(toIndex, mParts.lastIndex)
+        val end = min(toIndex, parts.lastIndex)
         (start..end).forEach { index ->
-            mParts[index] = mParts[index].copy(
-                fromIndex = mParts[index].fromIndex + by,
-                toIndex = mParts[index].toIndex + by,
+            parts[index] = parts[index].copy(
+                fromIndex = parts[index].fromIndex + by,
+                toIndex = parts[index].toIndex + by,
             )
         }
     }
 
     /**
-     * Collapses parts in [mParts] to avoid overlapping parts.
+     * Collapses parts to avoid overlapping parts.
      * @param textLastIndex The last index of the text, used to determine if a part is out of bounds.
      */
     private fun collapseParts(
@@ -304,22 +400,153 @@ internal class RichTextValueBuilder {
         removedIndexes.reversed().forEach { parts.removeAt(it) }
     }
 
+    /**
+     * Updates the current styles based on the [newTextFieldValue].
+     * @param newTextFieldValue The new [TextFieldValue].
+     */
+    private fun updateCurrentStyles(
+        newTextFieldValue: TextFieldValue
+    ) {
+        val newStyles = if (!newTextFieldValue.selection.collapsed) {
+            parts
+                .firstOrNull {
+                    newTextFieldValue.selection.start in (it.fromIndex..it.toIndex) &&
+                    (newTextFieldValue.selection.end - 1) in (it.fromIndex..it.toIndex)
+                }?.styles
+                ?: parts.firstOrNull {
+                    (newTextFieldValue.selection.min - 1) in (it.fromIndex..it.toIndex)
+                }?.styles
+                ?: currentStyles
+        } else if (newTextFieldValue.selection.start > 0) {
+            parts
+                .firstOrNull { (newTextFieldValue.selection.min - 1) in (it.fromIndex..it.toIndex) }
+                ?.styles
+                ?: currentStyles
+        } else {
+            currentStyles
+        }
+
+        setCurrentStyles(newStyles.toSet())
+    }
+
+    /**
+     * Applies [style] to the selected text.
+     * @param style The [RichTextStyle] to apply.
+     */
+    private fun applyStylesToSelectedText(vararg style: RichTextStyle) {
+        updateSelectedTextParts { part ->
+            val styles = part.styles.toMutableSet()
+            styles.addAll(style.toSet())
+
+            part.copy(
+                styles = styles
+            )
+        }
+    }
+
+    /**
+     * Removes [style] from the selected text.
+     * @param style The [RichTextStyle] to remove.
+     */
+    private fun removeStylesFromSelectedText(vararg style: RichTextStyle) {
+        updateSelectedTextParts { part ->
+            val styles = part.styles.toMutableSet()
+            styles.removeAll(style.toSet())
+
+            part.copy(
+                styles = styles
+            )
+        }
+    }
+
+    /**
+     * Removes all styles from the selected text.
+     */
+    private fun removeAllStylesFromSelectedText() {
+        updateSelectedTextParts { part ->
+            part.copy(
+                styles = emptySet()
+            )
+        }
+    }
+
+    /**
+     * Updates the selected text parts.
+     * @param update The update function.
+     */
+    private fun updateSelectedTextParts(
+        update: (part: RichTextPart) -> RichTextPart
+    ) {
+        if (textFieldValue.selection.collapsed) {
+            return
+        }
+
+        val fromIndex = textFieldValue.selection.min
+        val toIndex = textFieldValue.selection.max
+
+        val selectedParts = parts.filter { part ->
+            part.fromIndex < toIndex && part.toIndex >= fromIndex
+        }
+
+        selectedParts.forEach { part ->
+            val index = parts.indexOf(part)
+            if (index !in parts.indices) return@forEach
+
+            if (part.fromIndex < fromIndex) {
+                parts[index] = part.copy(
+                    toIndex = fromIndex - 1
+                )
+                parts.add(
+                    index + 1,
+                    update(
+                        part.copy(
+                            fromIndex = fromIndex,
+                        )
+                    )
+                )
+            } else if (part.toIndex >= toIndex) {
+                parts[index] = update(
+                    part.copy(
+                        toIndex = toIndex - 1
+                    )
+                )
+                parts.add(
+                    index + 1,
+                    part.copy(
+                        fromIndex = toIndex,
+                    )
+                )
+            } else {
+                parts[index] = update(part)
+            }
+        }
+    }
+
     companion object {
+        /**
+         * Creates a [RichTextValueBuilder] from a [String].
+         */
         fun from(text: String): RichTextValueBuilder {
             return RichTextValueBuilder()
-                .textFieldValue(TextFieldValue(text = text))
+                .setTextFieldValue(TextFieldValue(text = text))
         }
 
+        /**
+         * Creates a [RichTextValueBuilder] from a [TextFieldValue].
+         */
         fun from(textFieldValue: TextFieldValue): RichTextValueBuilder {
             return RichTextValueBuilder()
-                .textFieldValue(textFieldValue)
+                .setTextFieldValue(textFieldValue)
         }
 
+        /**
+         * Creates a [RichTextValueBuilder] from a [RichTextValue].
+         */
         fun from(richTextValue: RichTextValue): RichTextValueBuilder {
             return RichTextValueBuilder()
-                .textFieldValue(richTextValue.textFieldValue)
-                .parts(richTextValue.parts)
-                .currentStyles(richTextValue.currentStyles)
+                .setTextFieldValue(richTextValue.textFieldValue)
+                .setParts(richTextValue.parts)
+                .setCurrentStyles(richTextValue.currentStyles)
         }
     }
 }

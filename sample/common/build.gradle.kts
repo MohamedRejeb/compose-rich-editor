@@ -40,8 +40,8 @@ kotlin {
                 api(compose.materialIconsExtended)
 
                 implementation(libs.kotlinx.serialization.json)
-                implementation("com.mohamedrejeb.richeditor:richeditor-compose:0.1.0")
-//                implementation(project(":richeditor-compose"))
+//                implementation("com.mohamedrejeb.richeditor:richeditor-compose:0.1.0")
+                implementation(project(":richeditor-compose"))
             }
         }
 

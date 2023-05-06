@@ -8,7 +8,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/richeditor" />
+            <option value="$PROJECT_DIR$/richeditor-compose" />
             <option value="$PROJECT_DIR$/sample" />
             <option value="$PROJECT_DIR$/sample/android" />
             <option value="$PROJECT_DIR$/sample/common" />

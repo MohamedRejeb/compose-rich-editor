@@ -10,13 +10,24 @@ import androidx.compose.ui.text.input.VisualTransformation
 import kotlin.math.max
 import kotlin.math.min
 
+/**
+ * A value that represents the text of a RichTextEditor
+ * @param textFieldValue the [TextFieldValue] of the text field
+ * @param currentStyles the current styles applied to the text
+ * @param parts the parts of the text that have different styles
+ * @see RichTextStyle
+ * @see RichTextPart
+ */
 @Immutable
-data class RichTextValue internal constructor(
+public data class RichTextValue internal constructor(
     internal val textFieldValue: TextFieldValue,
     val currentStyles: Set<RichTextStyle> = emptySet(),
     internal val parts: List<RichTextPart> = emptyList(),
 ) {
 
+    /**
+     * The [VisualTransformation] to apply to the text field
+     */
     internal val visualTransformation
         get() = VisualTransformation {
             TransformedText(
@@ -25,6 +36,9 @@ data class RichTextValue internal constructor(
             )
         }
 
+    /**
+     * The [AnnotatedString] representation of the text
+     */
     internal val annotatedString
         get() = AnnotatedString(
             text = textFieldValue.text,
@@ -50,18 +64,36 @@ data class RichTextValue internal constructor(
         parts = emptyList(),
     )
 
+    /**
+     * Add a style to the current styles
+     * @param style the style to add
+     * @return a new [RichTextValue] with the new style added
+     * @see RichTextStyle
+     */
     fun addStyle(vararg style: RichTextStyle): RichTextValue {
        val mStyles = currentStyles.toMutableSet()
         mStyles.addAll(style.toSet())
         return copy(currentStyles = mStyles)
     }
 
+    /**
+     * Remove a style from the current styles
+     * @param style the style to remove
+     * @return a new [RichTextValue] with the style removed
+     * @see RichTextStyle
+     */
     fun removeStyle(vararg style: RichTextStyle): RichTextValue {
         val mStyles = currentStyles.toMutableSet()
         mStyles.removeAll(style.toSet())
         return copy(currentStyles = mStyles)
     }
 
+    /**
+     * Toggle a style
+     * @param style the style to toggle
+     * @return a new [RichTextValue] with the style toggled
+     * @see RichTextStyle
+     */
     fun toggleStyle(style: RichTextStyle): RichTextValue {
         return if (currentStyles.contains(style)) {
             removeStyle(style)
@@ -70,10 +102,21 @@ data class RichTextValue internal constructor(
         }
     }
 
+    /**
+     * Update the current styles
+     * @param newStyles the new styles
+     * @return a new [RichTextValue] with the new styles
+     * @see RichTextStyle
+     */
     fun updateStyles(newStyles: Set<RichTextStyle>): RichTextValue {
         return copy(currentStyles = newStyles)
     }
 
+    /**
+     * Update the text field value and update the rich text parts accordingly to the new text field value
+     * @param newTextFieldValue the new text field value
+     * @return a new [RichTextValue] with the new text field value
+     */
     internal fun updateTextFieldValue(newTextFieldValue: TextFieldValue): RichTextValue {
         val newParts = parts.toMutableList()
 
@@ -222,8 +265,6 @@ data class RichTextValue internal constructor(
             textLength = newTextFieldValue.text.length
         )
 
-        println("newParts: $newParts")
-
         return copy(
             textFieldValue = newTextFieldValue,
             currentStyles = newStyle,
@@ -231,6 +272,13 @@ data class RichTextValue internal constructor(
         )
     }
 
+    /**
+     * Moves parts in [mParts] from [fromIndex] to [toIndex] by [by].
+     * @param mParts The list of parts to move.
+     * @param fromIndex The index to start moving from.
+     * @param toIndex The index to move to.
+     * @param by The amount to move by.
+     */
     private fun moveParts(
         mParts: MutableList<RichTextPart>,
         fromIndex: Int,
@@ -247,6 +295,11 @@ data class RichTextValue internal constructor(
         }
     }
 
+    /**
+     * Collapses parts in [mParts] to avoid overlapping parts.
+     * @param mParts The list of parts to collapse.
+     * @param textLength The length of the text.
+     */
     private fun collapseParts(
         mParts: MutableList<RichTextPart>,
         textLength: Int

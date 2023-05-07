@@ -8,8 +8,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import com.mohamedrejeb.richeditor.utils.RichTextValueBuilder
-import kotlin.math.max
-import kotlin.math.min
 
 /**
  * A value that represents the text of a RichTextEditor

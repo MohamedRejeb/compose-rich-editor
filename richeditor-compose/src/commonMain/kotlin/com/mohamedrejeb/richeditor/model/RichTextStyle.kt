@@ -8,6 +8,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.sp
 
 /**
@@ -73,7 +74,9 @@ interface RichTextStyle {
         override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
             return spanStyle.copy(
                 baselineShift = BaselineShift.Superscript,
-                fontSize = spanStyle.fontSize * 0.8f
+                fontSize =
+                    if (spanStyle.fontSize.isSpecified) spanStyle.fontSize * 0.8f
+                    else TextUnit.Unspecified
             )
         }
     }
@@ -88,7 +91,9 @@ interface RichTextStyle {
         override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
             return spanStyle.copy(
                 baselineShift = BaselineShift.Subscript,
-                fontSize = spanStyle.fontSize * 0.8f
+                fontSize =
+                    if (spanStyle.fontSize.isSpecified) spanStyle.fontSize * 0.8f
+                    else TextUnit.Unspecified
             )
         }
     }
@@ -102,7 +107,9 @@ interface RichTextStyle {
     object Small : RichTextStyle {
         override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
             return spanStyle.copy(
-                fontSize = spanStyle.fontSize * 0.8f
+                fontSize =
+                    if (spanStyle.fontSize.isSpecified) spanStyle.fontSize * 0.8f
+                    else TextUnit.Unspecified
             )
         }
     }

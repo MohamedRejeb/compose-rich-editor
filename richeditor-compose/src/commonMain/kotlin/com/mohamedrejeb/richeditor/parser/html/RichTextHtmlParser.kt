@@ -44,8 +44,8 @@ object RichTextHtmlParser : RichTextParser {
                 if (cssSpanStyle != SpanStyle() || richTextStyle != null) {
                     val tagRichTextStyle = object : RichTextStyle {
                         override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
-                            val tagSpanStyle = richTextStyle?.applyStyle(cssSpanStyle) ?: cssSpanStyle
-                            return spanStyle.merge(tagSpanStyle)
+                            val tagSpanStyle = richTextStyle?.applyStyle(spanStyle) ?: spanStyle
+                            return tagSpanStyle.merge(cssSpanStyle)
                         }
                     }
 
@@ -158,6 +158,21 @@ object RichTextHtmlParser : RichTextParser {
         "h4" to RichTextStyle.H4,
         "h5" to RichTextStyle.H5,
         "h6" to RichTextStyle.H6,
+    )
+
+    /**
+     * HTML elements that should be skipped.
+     */
+    private val skippedHtmlElements = setOf(
+        "head",
+        "meta",
+        "title",
+        "style",
+        "script",
+        "noscript",
+        "link",
+        "base",
+        "template",
     )
 
 }

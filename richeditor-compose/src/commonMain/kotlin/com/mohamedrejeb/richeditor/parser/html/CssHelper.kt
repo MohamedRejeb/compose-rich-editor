@@ -140,8 +140,8 @@ internal object CssHelper {
      */
     internal fun parseCssFontWeight(cssFontWeight: String): FontWeight? {
         return when (cssFontWeight.lowercase()) {
-            "100", "lighter" -> FontWeight.ExtraLight
-            "200" -> FontWeight.Thin
+            "100", "lighter" -> FontWeight.Thin
+            "200" -> FontWeight.ExtraLight
             "300" -> FontWeight.Light
             "400", "normal" -> FontWeight.Normal
             "500", "medium" -> FontWeight.Medium

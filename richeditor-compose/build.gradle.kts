@@ -27,6 +27,8 @@ kotlin {
                 api(compose.materialIconsExtended)
 
                 implementation(libs.kotlinx.serialization.json)
+
+                implementation("com.mohamedrejeb.ksoup:ksoup-html:0.1.2")
             }
         }
 

@@ -5,8 +5,10 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.sp
 
 /**
  * A style that can be applied to a [RichTextPart].
@@ -58,6 +60,154 @@ interface RichTextStyle {
     object Strikethrough : RichTextStyle {
         override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
             return spanStyle.copy(textDecoration = TextDecoration.LineThrough)
+        }
+    }
+
+    /**
+     * [Superscript] implementation of [RichTextStyle] that applies a superscript to the text.
+     *
+     * @see RichTextStyle
+     * @see <a href="https://www.w3schools.com/tags/tag_sup.asp">Superscript</a>
+     */
+    object Superscript : RichTextStyle {
+        override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
+            return spanStyle.copy(
+                baselineShift = BaselineShift.Superscript,
+                fontSize = spanStyle.fontSize * 0.8f
+            )
+        }
+    }
+
+    /**
+     * [Subscript] implementation of [RichTextStyle] that applies a subscript to the text.
+     *
+     * @see RichTextStyle
+     * @see <a href="https://www.w3schools.com/tags/tag_sub.asp">Subscript</a>
+     */
+    object Subscript : RichTextStyle {
+        override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
+            return spanStyle.copy(
+                baselineShift = BaselineShift.Subscript,
+                fontSize = spanStyle.fontSize * 0.8f
+            )
+        }
+    }
+
+    /**
+     * [Small] implementation of [RichTextStyle] that applies a small style to the text.
+     *
+     * @see RichTextStyle
+     * @see <a href="https://www.w3schools.com/tags/tag_small.asp">Small</a>
+     */
+    object Small : RichTextStyle {
+        override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
+            return spanStyle.copy(
+                fontSize = spanStyle.fontSize * 0.8f
+            )
+        }
+    }
+
+    /**
+     * [Mark] implementation of [RichTextStyle] that applies a mark style to the text.
+     *
+     * @see RichTextStyle
+     * @see <a href="https://www.w3schools.com/tags/tag_mark.asp">Mark</a>
+     */
+    object Mark : RichTextStyle {
+        override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
+            return spanStyle.copy(
+                background = Color.Yellow
+            )
+        }
+    }
+
+    /**
+     * [H1] implementation of [RichTextStyle] that applies a H1 style to the text.
+     *
+     * @see RichTextStyle
+     * @see <a href="https://www.w3schools.com/tags/tag_hn.asp">H1</a>
+     */
+    object H1 : RichTextStyle {
+        override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
+            return spanStyle.copy(
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+
+    /**
+     * [H2] implementation of [RichTextStyle] that applies a H2 style to the text.
+     *
+     * @see RichTextStyle
+     * @see <a href="https://www.w3schools.com/tags/tag_hn.asp">H2</a>
+     */
+    object H2 : RichTextStyle {
+        override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
+            return spanStyle.copy(
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+
+    /**
+     * [H3] implementation of [RichTextStyle] that applies a H3 style to the text.
+     *
+     * @see RichTextStyle
+     * @see <a href="https://www.w3schools.com/tags/tag_hn.asp">H3</a>
+     */
+    object H3 : RichTextStyle {
+        override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
+            return spanStyle.copy(
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+
+    /**
+     * [H4] implementation of [RichTextStyle] that applies a H4 style to the text.
+     *
+     * @see RichTextStyle
+     * @see <a href="https://www.w3schools.com/tags/tag_hn.asp">H4</a>
+     */
+    object H4 : RichTextStyle {
+        override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
+            return spanStyle.copy(
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+
+    /**
+     * [H5] implementation of [RichTextStyle] that applies a H5 style to the text.
+     *
+     * @see RichTextStyle
+     * @see <a href="https://www.w3schools.com/tags/tag_hn.asp">H5</a>
+     */
+    object H5 : RichTextStyle {
+        override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
+            return spanStyle.copy(
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+
+    /**
+     * [H6] implementation of [RichTextStyle] that applies a H6 style to the text.
+     *
+     * @see RichTextStyle
+     * @see <a href="https://www.w3schools.com/tags/tag_hn.asp">H6</a>
+     */
+    object H6 : RichTextStyle {
+        override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
+            return spanStyle.copy(
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 

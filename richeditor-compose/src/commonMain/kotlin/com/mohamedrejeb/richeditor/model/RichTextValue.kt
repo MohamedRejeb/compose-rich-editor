@@ -7,6 +7,7 @@ import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.parser.annotatedstring.RichTextAnnotatedStringParser
 import com.mohamedrejeb.richeditor.parser.html.RichTextHtmlParser
 import com.mohamedrejeb.richeditor.utils.RichTextValueBuilder
@@ -165,6 +166,7 @@ data class RichTextValue internal constructor(
          * @param annotatedString the [AnnotatedString]
          * @return a [RichTextValue] from the [AnnotatedString]
          */
+        @ExperimentalRichTextApi
         fun from(annotatedString: AnnotatedString): RichTextValue {
             return RichTextAnnotatedStringParser.encode(annotatedString)
         }

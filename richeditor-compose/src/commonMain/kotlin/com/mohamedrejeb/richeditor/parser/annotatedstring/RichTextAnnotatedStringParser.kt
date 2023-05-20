@@ -1,5 +1,6 @@
-package com.mohamedrejeb.richeditor.parser.html
+package com.mohamedrejeb.richeditor.parser.annotatedstring
 
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import com.mohamedrejeb.ksoup.html.parser.KsoupHtmlHandler
@@ -9,128 +10,56 @@ import com.mohamedrejeb.richeditor.model.RichTextStyle
 import com.mohamedrejeb.richeditor.model.RichTextValue
 import com.mohamedrejeb.richeditor.parser.RichTextParser
 
-internal object RichTextHtmlParser : RichTextParser<String> {
+internal object RichTextAnnotatedStringParser : RichTextParser<AnnotatedString> {
 
-    override fun encode(input: String): RichTextValue {
-        val openedTags = mutableListOf<Pair<String, Map<String, String>>>()
-        var text = ""
-        val currentStyles: MutableList<RichTextStyle> = mutableListOf()
-        val parts: MutableList<RichTextPart> = mutableListOf()
+    override fun encode(input: AnnotatedString): RichTextValue {
+        val text = input.text
+        val spanStyles = input.spanStyles
+        val currentStyles = mutableSetOf<RichTextStyle>()
 
-        val handler = KsoupHtmlHandler
-            .Builder()
-            .onText {
-                val lastOpenedTag = openedTags.lastOrNull()?.first
-                if (lastOpenedTag in skippedHtmlElements) return@onText
-
-                val addedText = removeHtmlTextExtraSpaces(
-                    input = it,
-                    trimStart = text.lastOrNull() == ' ' || text.lastOrNull() == '\n',
-                )
-                text += addedText
-
-                parts.add(
-                    RichTextPart(
-                        fromIndex = text.length - addedText.length,
-                        toIndex = text.lastIndex,
-                        styles = currentStyles.toSet()
-                    )
-                )
-            }
-            .onOpenTag { name, attributes, _ ->
-                openedTags.add(name to attributes)
-
-                val cssStyleMap = attributes["style"]?.let { CssEncoder.parseCssStyle(it) } ?: emptyMap()
-                val cssSpanStyle = CssEncoder.parseCssStyleMapToSpanStyle(cssStyleMap)
-                val richTextStyle = htmlElementsStyleEncodeMap[name]
-
-                if (cssSpanStyle != SpanStyle() || richTextStyle != null) {
-                    val tagRichTextStyle = object : RichTextStyle {
+        val parts = spanStyles.map { style ->
+            val part = RichTextPart(
+                fromIndex = style.start,
+                toIndex = style.end - 1,
+                styles = setOf(
+                    object : RichTextStyle {
                         override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
-                            val tagSpanStyle = richTextStyle?.applyStyle(spanStyle) ?: spanStyle
-                            return tagSpanStyle.merge(cssSpanStyle)
+                            return spanStyle.merge(style.item)
                         }
                     }
+                )
+            )
 
-                    currentStyles.add(tagRichTextStyle)
-                }
+            if (part.toIndex == text.lastIndex) currentStyles.addAll(part.styles)
 
-                if (
-                    text.lastOrNull() != null &&
-                    text.lastOrNull()?.toString() != "\n" &&
-                    name in htmlBlockElements
-                ) {
-                    text += "\n"
-                }
-
-                when (name) {
-                    "br" -> {
-                        text += "\n"
-                    }
-                }
-            }
-            .onCloseTag { name, _ ->
-                openedTags.removeLastOrNull()
-                currentStyles.removeLastOrNull()
-
-                if (name in htmlBlockElements) {
-                    text += "\n"
-                }
-
-                when (name) {
-                    "br" -> {
-                        text += "\n"
-                    }
-                }
-            }
-            .build()
-
-        val parser = KsoupHtmlParser(
-            handler = handler
-        )
-
-        parser.write(input)
-        parser.end()
+            part
+        }
 
         return RichTextValue(
             textFieldValue = TextFieldValue(text),
-            currentStyles = currentStyles.toSet(),
+            currentStyles = currentStyles,
             parts = parts
         )
     }
 
-    override fun decode(richTextValue: RichTextValue): String {
+    override fun decode(richTextValue: RichTextValue): AnnotatedString {
         val text = richTextValue.textFieldValue.text
-        val parts = richTextValue.parts.sortedBy { it.fromIndex }
+        val parts = richTextValue.parts
 
-        val builder = StringBuilder()
-
-        for (part in parts) {
-            val partText = text.substring(part.fromIndex, part.toIndex + 1).replace("\n", "<br>")
-            val partStyles = part.styles.toMutableSet()
-
-            val tagName = partStyles
-                .firstOrNull { htmlElementsStyleDecodeMap.containsKey(it) }
-                ?.let {
-                    partStyles.remove(it)
-                    htmlElementsStyleDecodeMap[it]
+        val spanStyles = parts.map { part ->
+            AnnotatedString.Range(
+                start = part.fromIndex,
+                end = part.toIndex + 1,
+                item = part.styles.fold(SpanStyle()) { acc, style ->
+                    style.applyStyle(acc)
                 }
-                ?: if (part.fromIndex > 0 && text[part.fromIndex - 1] != '\n') "span" else "p"
-
-            val tagStyle =
-                if (partStyles.isEmpty()) ""
-                else {
-                    val stylesToApply = partStyles
-                        .fold(SpanStyle()) { acc, richTextStyle -> richTextStyle.applyStyle(acc) }
-
-                    val cssStyleMap = CssDecoder.decodeSpanStyleToCssStyleMap(stylesToApply)
-                    " style=\"${CssDecoder.decodeCssStyleMap(cssStyleMap)}\""
-                }
-
-            builder.append("<$tagName$tagStyle>$partText</$tagName>")
+            )
         }
 
-        return builder.toString()
+        return AnnotatedString(
+            text = text,
+            spanStyles = spanStyles
+        )
     }
 
     /**

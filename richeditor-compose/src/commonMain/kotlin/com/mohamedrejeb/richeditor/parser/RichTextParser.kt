@@ -2,10 +2,10 @@ package com.mohamedrejeb.richeditor.parser
 
 import com.mohamedrejeb.richeditor.model.RichTextValue
 
-interface RichTextParser {
+internal interface RichTextParser<T> {
 
-    fun encode(input: String): RichTextValue
+    fun encode(input: T): RichTextValue
 
-    fun decode(richTextValue: RichTextValue): String
+    fun decode(richTextValue: RichTextValue): T
 
 }

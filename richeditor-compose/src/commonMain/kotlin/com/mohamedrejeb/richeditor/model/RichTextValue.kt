@@ -7,6 +7,9 @@ import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.parser.annotatedstring.RichTextAnnotatedStringParser
+import com.mohamedrejeb.richeditor.parser.html.RichTextHtmlParser
 import com.mohamedrejeb.richeditor.utils.RichTextValueBuilder
 
 /**
@@ -18,7 +21,7 @@ import com.mohamedrejeb.richeditor.utils.RichTextValueBuilder
  * @see RichTextPart
  */
 @Immutable
-public data class RichTextValue internal constructor(
+data class RichTextValue internal constructor(
     internal val textFieldValue: TextFieldValue,
     val currentStyles: Set<RichTextStyle> = emptySet(),
     internal val parts: List<RichTextPart> = emptyList(),
@@ -128,23 +131,60 @@ public data class RichTextValue internal constructor(
             .build()
     }
 
+    /**
+     * Create an HTML string from the [RichTextValue]
+     *
+     * @return an HTML string from the [RichTextValue]
+     */
+    fun toHtml(): String {
+        return RichTextHtmlParser.decode(this)
+    }
+
+    /**
+     * Create an [AnnotatedString] from the [RichTextValue]
+     *
+     * @return an [AnnotatedString] from the [RichTextValue]
+     */
+    fun toAnnotatedString(): AnnotatedString {
+        return RichTextAnnotatedStringParser.decode(this)
+    }
+
     companion object {
+        /**
+         * Create a [RichTextValue] from an HTML string
+         *
+         * @param html the HTML string
+         * @return a [RichTextValue] from the HTML string
+         */
+        fun from(html: String): RichTextValue {
+            return RichTextHtmlParser.encode(html)
+        }
+
+        /**
+         * Create a [RichTextValue] from an [AnnotatedString]
+         *
+         * @param annotatedString the [AnnotatedString]
+         * @return a [RichTextValue] from the [AnnotatedString]
+         */
+        @ExperimentalRichTextApi
+        fun from(annotatedString: AnnotatedString): RichTextValue {
+            return RichTextAnnotatedStringParser.encode(annotatedString)
+        }
+
         /**
          * The default [Saver] implementation for [RichTextValue].
          */
         val Saver = Saver<RichTextValue, Any>(
             save = {
                 arrayListOf(
-                    with(TextFieldValue.Saver) { this@Saver.save(it.textFieldValue) },
-
-                    )
+                    RichTextHtmlParser.decode(it),
+                )
             },
             restore = {
-                @Suppress("UNCHECKED_CAST")
-                val list = it as List<Any>
-                RichTextValue(
-                    textFieldValue = with(TextFieldValue.Saver) { restore(list[0]) }!!,
-                )
+                val list = it as? List<*> ?: return@Saver null
+                val htmlString = list[0] as? String ?: return@Saver null
+
+                RichTextHtmlParser.encode(htmlString)
             }
         )
     }

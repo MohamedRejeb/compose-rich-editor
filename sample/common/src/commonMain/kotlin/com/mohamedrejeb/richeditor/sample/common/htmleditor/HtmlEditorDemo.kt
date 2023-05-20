@@ -1,4 +1,4 @@
-package com.mohamedrejeb.richeditor.sample.common
+package com.mohamedrejeb.richeditor.sample.common.htmleditor
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -6,12 +6,11 @@ import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HtmlEditor() {
+fun HtmlEditorDemo() {
     var isHtmlToRichText by remember { mutableStateOf(false) }
 
     ComposeRichEditorTheme(false) {

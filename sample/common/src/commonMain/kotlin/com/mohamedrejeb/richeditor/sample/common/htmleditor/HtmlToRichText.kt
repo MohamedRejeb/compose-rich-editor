@@ -1,13 +1,16 @@
-package com.mohamedrejeb.richeditor.sample.common
+package com.mohamedrejeb.richeditor.sample.common.htmleditor
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.UrlAnnotation
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.mohamedrejeb.richeditor.parser.html.RichTextHtmlParser
+import com.mohamedrejeb.richeditor.model.RichTextValue
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -16,7 +19,7 @@ fun HtmlToRichText(
     modifier: Modifier = Modifier,
 ) {
     var html by remember { mutableStateOf(TextFieldValue()) }
-    val richTextValue = RichTextHtmlParser.encode(html.text)
+    val richTextValue = RichTextValue.from(html.text)
 
     Row(
         modifier = modifier

@@ -5,10 +5,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mohamedrejeb.richeditor.model.RichTextValue
-import com.mohamedrejeb.richeditor.parser.html.RichTextHtmlParser
+import com.mohamedrejeb.richeditor.sample.common.components.RichTextStyleRow
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
@@ -18,16 +19,6 @@ import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun App() {
-    var basicRichTextValue by remember { mutableStateOf(RichTextValue()) }
-    var richTextValue by remember { mutableStateOf(
-        RichTextHtmlParser.encode(
-            """
-            <p><b>RichTextEditor</b> is a <i>composable</i> that allows you to edit <u>rich text</u> content.</p>
-            """.trimIndent()
-        )
-    ) }
-    var outlinedRichTextValue by remember { mutableStateOf(RichTextValue()) }
-
     ComposeRichEditorTheme {
         Scaffold(
             topBar = {
@@ -39,102 +30,30 @@ fun App() {
                 .fillMaxSize()
         ) { paddingValue ->
             Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValue)
                     .padding(20.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                // BasicRichTextEditor
-                Text(
-                    text = "BasicRichTextEditor:",
-                    style = MaterialTheme.typography.titleMedium
-                )
 
-                Spacer(Modifier.height(8.dp))
+                OutlinedButton(
+                    onClick = {
 
-                RichTextStyleRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = basicRichTextValue,
-                    onValueChanged = {
-                        basicRichTextValue = it
+                    }
+                ) {
+                    Text("Rich Text Editor Demo")
+                }
+
+                OutlinedButton(
+                    onClick = {
+
                     },
-                )
+                ) {
+                    Text("HTML Editor Demo")
+                }
 
-                BasicRichTextEditor(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = basicRichTextValue,
-                    onValueChange = {
-                        basicRichTextValue = it
-                    },
-                )
-
-                Divider(modifier = Modifier.padding(vertical = 20.dp))
-
-                // RichTextEditor
-                Text(
-                    text = "RichTextEditor:",
-                    style = MaterialTheme.typography.titleMedium
-                )
-
-                Spacer(Modifier.height(8.dp))
-
-                RichTextStyleRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = richTextValue,
-                    onValueChanged = {
-                        richTextValue = it
-                    },
-                )
-
-                RichTextEditor(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = richTextValue,
-                    onValueChange = {
-                        richTextValue = it
-                    },
-                )
-
-                Divider(modifier = Modifier.padding(vertical = 20.dp))
-
-                // OutlinedRichTextEditor
-                Text(
-                    text = "OutlinedRichTextEditor:",
-                    style = MaterialTheme.typography.titleMedium
-                )
-
-                Spacer(Modifier.height(8.dp))
-
-                RichTextStyleRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = outlinedRichTextValue,
-                    onValueChanged = {
-                        outlinedRichTextValue = it
-                    },
-                )
-
-                OutlinedRichTextEditor(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = outlinedRichTextValue,
-                    onValueChange = {
-                        outlinedRichTextValue = it
-                    },
-                )
-
-                Divider(modifier = Modifier.padding(vertical = 20.dp))
-
-                // RichText
-                Text(
-                    text = "RichText:",
-                    style = MaterialTheme.typography.titleMedium
-                )
-
-                Spacer(Modifier.height(8.dp))
-
-                RichText(
-                    modifier = Modifier.fillMaxWidth(),
-                    richText = richTextValue,
-                )
             }
         }
     }

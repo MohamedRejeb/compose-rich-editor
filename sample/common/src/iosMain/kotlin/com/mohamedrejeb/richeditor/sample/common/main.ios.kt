@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.ComposeUIViewController
+import com.mohamedrejeb.richeditor.sample.common.htmleditor.HtmlEditorDemo
 import platform.UIKit.*
 
 @Suppress("unused", "FunctionName")
@@ -27,7 +28,7 @@ fun MainViewController(
                 .fillMaxSize()
                 .padding(safeArea)
         ) {
-            HtmlEditor()
+            HtmlEditorDemo()
         }
     }
 }

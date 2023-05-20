@@ -1,4 +1,4 @@
-package com.mohamedrejeb.richeditor.sample.common
+package com.mohamedrejeb.richeditor.sample.common.components
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.model.RichTextStyle
 import com.mohamedrejeb.richeditor.model.RichTextValue
+import com.mohamedrejeb.richeditor.sample.common.model.CustomStyle
 
 @Composable
 fun RichTextStyleRow(

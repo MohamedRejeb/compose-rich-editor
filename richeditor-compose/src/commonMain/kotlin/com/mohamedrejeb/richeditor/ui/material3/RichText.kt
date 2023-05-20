@@ -25,7 +25,7 @@ import com.mohamedrejeb.richeditor.model.RichTextValue
  * High level element that displays rich text and provides semantics / accessibility information.
  * [RichText] is a convenience wrapper around [Text] and [RichTextValue] to allow for rich text.
  *
- * @param value The rich text to be displayed.
+ * @param richText The rich text to be displayed.
  * @param modifier the [Modifier] to be applied to this layout node
  * @param color [Color] to apply to the text. If [Color.Unspecified], and [style] has no color set,
  * this will be [LocalContentColor].
@@ -59,7 +59,7 @@ import com.mohamedrejeb.richeditor.model.RichTextValue
  */
 @Composable
 fun RichText(
-    value: RichTextValue,
+    richText: RichTextValue,
     modifier: Modifier = Modifier,
     color: Color = Color.Unspecified,
     fontSize: TextUnit = TextUnit.Unspecified,
@@ -79,7 +79,7 @@ fun RichText(
 ) {
     Text(
         modifier = modifier,
-        text = value.visualTransformation.filter(value.annotatedString).text,
+        text = richText.visualTransformation.filter(richText.annotatedString).text,
         color = color,
         fontSize = fontSize,
         fontStyle = fontStyle,

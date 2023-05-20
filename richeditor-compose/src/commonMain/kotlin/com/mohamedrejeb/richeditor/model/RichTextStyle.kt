@@ -50,7 +50,20 @@ interface RichTextStyle {
      */
     object Underline : RichTextStyle {
         override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
-            return spanStyle.copy(textDecoration = TextDecoration.Underline)
+            return spanStyle.copy(
+                textDecoration = if (
+                    spanStyle.textDecoration == TextDecoration.LineThrough ||
+                    spanStyle.textDecoration == TextDecoration.combine(
+                        listOf(TextDecoration.Underline, TextDecoration.LineThrough)
+                    )
+                ) {
+                    TextDecoration.combine(
+                        listOf(TextDecoration.Underline, TextDecoration.LineThrough)
+                    )
+                } else {
+                    TextDecoration.Underline
+                }
+            )
         }
     }
 
@@ -60,7 +73,20 @@ interface RichTextStyle {
      */
     object Strikethrough : RichTextStyle {
         override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
-            return spanStyle.copy(textDecoration = TextDecoration.LineThrough)
+            return spanStyle.copy(
+                textDecoration = if (
+                    spanStyle.textDecoration == TextDecoration.Underline ||
+                    spanStyle.textDecoration == TextDecoration.combine(
+                        listOf(TextDecoration.Underline, TextDecoration.LineThrough)
+                    )
+                ) {
+                    TextDecoration.combine(
+                        listOf(TextDecoration.Underline, TextDecoration.LineThrough)
+                    )
+                } else {
+                    TextDecoration.LineThrough
+                }
+            )
         }
     }
 

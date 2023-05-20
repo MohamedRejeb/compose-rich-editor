@@ -133,7 +133,7 @@ fun App() {
 
                 RichText(
                     modifier = Modifier.fillMaxWidth(),
-                    value = richTextValue,
+                    richText = richTextValue,
                 )
             }
         }

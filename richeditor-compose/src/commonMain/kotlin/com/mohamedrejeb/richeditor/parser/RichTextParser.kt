@@ -6,6 +6,6 @@ interface RichTextParser {
 
     fun encode(input: String): RichTextValue
 
-    fun decode(input: RichTextValue): String
+    fun decode(richTextValue: RichTextValue): String
 
 }

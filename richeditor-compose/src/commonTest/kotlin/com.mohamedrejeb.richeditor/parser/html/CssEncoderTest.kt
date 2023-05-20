@@ -11,7 +11,7 @@ import kotlin.math.roundToInt
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class CssHelperTest {
+internal class CssEncoderTest {
     @Test
     fun testParseCssStyle() {
         val style = "font-weight: bold; color: #ff0000; font-size: 12px;"
@@ -23,7 +23,7 @@ internal class CssHelperTest {
                 "color" to "#ff0000",
                 "font-size" to "12px"
             ),
-            CssHelper.parseCssStyle(style)
+            CssEncoder.parseCssStyle(style)
         )
         assertEquals(
             mapOf(
@@ -31,7 +31,7 @@ internal class CssHelperTest {
                 "color" to "#f00",
                 "font-size" to "-12.5px"
             ),
-            CssHelper.parseCssStyle(style2)
+            CssEncoder.parseCssStyle(style2)
         )
     }
 
@@ -44,23 +44,23 @@ internal class CssHelperTest {
         val color5 = "blue"
 
         assertEquals(
-            CssHelper.parseCssColor(color),
+            CssEncoder.parseCssColor(color),
             Color(255, 0, 0)
         )
         assertEquals(
-            CssHelper.parseCssColor(color2),
+            CssEncoder.parseCssColor(color2),
             Color(255, 0, 0)
         )
         assertEquals(
-            CssHelper.parseCssColor(color3),
+            CssEncoder.parseCssColor(color3),
             Color(255, 0, 0)
         )
         assertEquals(
-            CssHelper.parseCssColor(color4),
+            CssEncoder.parseCssColor(color4),
             Color(255, 0, 0, 127)
         )
         assertEquals(
-            CssHelper.parseCssColor(color5),
+            CssEncoder.parseCssColor(color5),
             Color(0, 0, 255)
         )
     }
@@ -78,35 +78,35 @@ internal class CssHelperTest {
 
         assertEquals(
             12f,
-            CssHelper.parseCssSize(size)
+            CssEncoder.parseCssSize(size)
         )
         assertEquals(
             16f,
-            CssHelper.parseCssSize(size2)?.roundToInt()?.toFloat()
+            CssEncoder.parseCssSize(size2)?.roundToInt()?.toFloat()
         )
         assertEquals(
             192f,
-            CssHelper.parseCssSize(size3)
+            CssEncoder.parseCssSize(size3)
         )
         assertEquals(
             192f,
-            CssHelper.parseCssSize(size4)
+            CssEncoder.parseCssSize(size4)
         )
         assertEquals(
             1.92f,
-            CssHelper.parseCssSize(size5)
+            CssEncoder.parseCssSize(size5)
         )
         assertEquals(
             null,
-            CssHelper.parseCssSize(size6)
+            CssEncoder.parseCssSize(size6)
         )
         assertEquals(
             12.5f,
-            CssHelper.parseCssSize(size7)
+            CssEncoder.parseCssSize(size7)
         )
         assertEquals(
             -16f,
-            CssHelper.parseCssSize(size8)?.roundToInt()?.toFloat()
+            CssEncoder.parseCssSize(size8)?.roundToInt()?.toFloat()
         )
     }
 
@@ -121,27 +121,27 @@ internal class CssHelperTest {
 
         assertEquals(
             FontWeight.Bold,
-            CssHelper.parseCssFontWeight(fontWeight),
+            CssEncoder.parseCssFontWeight(fontWeight),
         )
         assertEquals(
             FontWeight.Black,
-            CssHelper.parseCssFontWeight(fontWeight2),
+            CssEncoder.parseCssFontWeight(fontWeight2),
         )
         assertEquals(
             FontWeight.Thin,
-            CssHelper.parseCssFontWeight(fontWeight3),
+            CssEncoder.parseCssFontWeight(fontWeight3),
         )
         assertEquals(
             FontWeight.Thin,
-            CssHelper.parseCssFontWeight(fontWeight4),
+            CssEncoder.parseCssFontWeight(fontWeight4),
         )
         assertEquals(
             FontWeight.Black,
-            CssHelper.parseCssFontWeight(fontWeight5),
+            CssEncoder.parseCssFontWeight(fontWeight5),
         )
         assertEquals(
             FontWeight.Normal,
-            CssHelper.parseCssFontWeight(fontWeight6),
+            CssEncoder.parseCssFontWeight(fontWeight6),
         )
     }
 
@@ -154,19 +154,19 @@ internal class CssHelperTest {
 
         assertEquals(
             FontStyle.Italic,
-            CssHelper.parseCssFontStyle(fontStyle),
+            CssEncoder.parseCssFontStyle(fontStyle),
         )
         assertEquals(
             FontStyle.Italic,
-            CssHelper.parseCssFontStyle(fontStyle2),
+            CssEncoder.parseCssFontStyle(fontStyle2),
         )
         assertEquals(
             FontStyle.Normal,
-            CssHelper.parseCssFontStyle(fontStyle3),
+            CssEncoder.parseCssFontStyle(fontStyle3),
         )
         assertEquals(
             null,
-            CssHelper.parseCssFontStyle(fontStyle4),
+            CssEncoder.parseCssFontStyle(fontStyle4),
         )
     }
 
@@ -180,23 +180,23 @@ internal class CssHelperTest {
 
         assertEquals(
             TextDecoration.Underline,
-            CssHelper.parseCssTextDecoration(textDecoration),
+            CssEncoder.parseCssTextDecoration(textDecoration),
         )
         assertEquals(
             TextDecoration.LineThrough,
-            CssHelper.parseCssTextDecoration(textDecoration2),
+            CssEncoder.parseCssTextDecoration(textDecoration2),
         )
         assertEquals(
             null,
-            CssHelper.parseCssTextDecoration(textDecoration3),
+            CssEncoder.parseCssTextDecoration(textDecoration3),
         )
         assertEquals(
             null,
-            CssHelper.parseCssTextDecoration(textDecoration4),
+            CssEncoder.parseCssTextDecoration(textDecoration4),
         )
         assertEquals(
             null,
-            CssHelper.parseCssTextDecoration(textDecoration5),
+            CssEncoder.parseCssTextDecoration(textDecoration5),
         )
     }
 
@@ -210,23 +210,23 @@ internal class CssHelperTest {
 
         assertEquals(
             BaselineShift.Subscript,
-            CssHelper.parseCssBaselineShift(baselineShift),
+            CssEncoder.parseCssBaselineShift(baselineShift),
         )
         assertEquals(
             BaselineShift.Superscript,
-            CssHelper.parseCssBaselineShift(baselineShift2),
+            CssEncoder.parseCssBaselineShift(baselineShift2),
         )
         assertEquals(
             BaselineShift.None,
-            CssHelper.parseCssBaselineShift(baselineShift3),
+            CssEncoder.parseCssBaselineShift(baselineShift3),
         )
         assertEquals(
             null,
-            CssHelper.parseCssBaselineShift(baselineShift4),
+            CssEncoder.parseCssBaselineShift(baselineShift4),
         )
         assertEquals(
             BaselineShift(.5f),
-            CssHelper.parseCssBaselineShift(baselineShift5),
+            CssEncoder.parseCssBaselineShift(baselineShift5),
         )
     }
 
@@ -245,7 +245,7 @@ internal class CssHelperTest {
                 blurRadius = 1f,
                 color = Color(0, 0, 0)
             ),
-            CssHelper.parseCssTextShadow(textShadow)
+            CssEncoder.parseCssTextShadow(textShadow)
         )
         assertEquals(
             Shadow(
@@ -253,7 +253,7 @@ internal class CssHelperTest {
                 blurRadius = 2f,
                 color = Color(0, 0, 0)
             ),
-            CssHelper.parseCssTextShadow(textShadow2)
+            CssEncoder.parseCssTextShadow(textShadow2)
         )
         assertEquals(
             Shadow(
@@ -261,7 +261,7 @@ internal class CssHelperTest {
                 blurRadius = 10f,
                 color = Color(255, 204, 0)
             ),
-            CssHelper.parseCssTextShadow(textShadow3)
+            CssEncoder.parseCssTextShadow(textShadow3)
         )
         assertEquals(
             Shadow(
@@ -269,7 +269,7 @@ internal class CssHelperTest {
                 blurRadius = 0f,
                 color = Color(255, 0, 0)
             ),
-            CssHelper.parseCssTextShadow(textShadow4)
+            CssEncoder.parseCssTextShadow(textShadow4)
         )
     }
 }

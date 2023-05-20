@@ -20,6 +20,9 @@ object RichTextHtmlParser : RichTextParser {
         val handler = KsoupHtmlHandler
             .Builder()
             .onText {
+                val lastOpenedTag = openedTags.lastOrNull()?.first
+                if (lastOpenedTag in skippedHtmlElements) return@onText
+
                 val addedText = removeHtmlTextExtraSpaces(
                     input = it,
                     trimStart = text.lastOrNull() == ' ' || text.lastOrNull() == '\n',
@@ -34,12 +37,12 @@ object RichTextHtmlParser : RichTextParser {
                     )
                 )
             }
-            .onOpenTag { name, attributes, isImplied ->
+            .onOpenTag { name, attributes, _ ->
                 openedTags.add(name to attributes)
 
-                val cssStyleMap = attributes["style"]?.let { CssHelper.parseCssStyle(it) } ?: emptyMap()
-                val cssSpanStyle = CssHelper.parseCssStyleMapToSpanStyle(cssStyleMap)
-                val richTextStyle = htmlElementsStyleMap[name]
+                val cssStyleMap = attributes["style"]?.let { CssEncoder.parseCssStyle(it) } ?: emptyMap()
+                val cssSpanStyle = CssEncoder.parseCssStyleMapToSpanStyle(cssStyleMap)
+                val richTextStyle = htmlElementsStyleEncodeMap[name]
 
                 if (cssSpanStyle != SpanStyle() || richTextStyle != null) {
                     val tagRichTextStyle = object : RichTextStyle {
@@ -52,7 +55,11 @@ object RichTextHtmlParser : RichTextParser {
                     currentStyles.add(tagRichTextStyle)
                 }
 
-                if (text.lastOrNull()?.toString() != "\n" && name in htmlBlockElements) {
+                if (
+                    text.lastOrNull() != null &&
+                    text.lastOrNull()?.toString() != "\n" &&
+                    name in htmlBlockElements
+                ) {
                     text += "\n"
                 }
 
@@ -62,7 +69,7 @@ object RichTextHtmlParser : RichTextParser {
                     }
                 }
             }
-            .onCloseTag { name, isImplied ->
+            .onCloseTag { name, _ ->
                 openedTags.removeLastOrNull()
                 currentStyles.removeLastOrNull()
 
@@ -92,8 +99,38 @@ object RichTextHtmlParser : RichTextParser {
         )
     }
 
-    override fun decode(input: RichTextValue): String {
-        TODO("Not yet implemented")
+    override fun decode(richTextValue: RichTextValue): String {
+        val text = richTextValue.textFieldValue.text
+        val parts = richTextValue.parts.sortedBy { it.fromIndex }
+
+        val builder = StringBuilder()
+
+        for (part in parts) {
+            val partText = text.substring(part.fromIndex, part.toIndex + 1).replace("\n", "<br>")
+            val partStyles = part.styles.toMutableSet()
+
+            val tagName = partStyles
+                .firstOrNull { htmlElementsStyleDecodeMap.containsKey(it) }
+                ?.let {
+                    partStyles.remove(it)
+                    htmlElementsStyleDecodeMap[it]
+                }
+                ?: if (part.fromIndex > 0 && text[part.fromIndex - 1] != '\n') "span" else "p"
+
+            val tagStyle =
+                if (partStyles.isEmpty()) ""
+                else {
+                    val stylesToApply = partStyles
+                        .fold(SpanStyle()) { acc, richTextStyle -> richTextStyle.applyStyle(acc) }
+
+                    val cssStyleMap = CssDecoder.decodeSpanStyleToCssStyleMap(stylesToApply)
+                    " style=\"${CssDecoder.decodeCssStyleMap(cssStyleMap)}\""
+                }
+
+            builder.append("<$tagName$tagStyle>$partText</$tagName>")
+        }
+
+        return builder.toString()
     }
 
     /**
@@ -135,11 +172,11 @@ object RichTextHtmlParser : RichTextParser {
     )
 
     /**
-     * HTML elements that have a style.
+     * Encodes HTML elements to [RichTextStyle].
      *
      * @see <a href="https://www.w3schools.com/html/html_formatting.asp">HTML formatting</a>
      */
-    private val htmlElementsStyleMap = mapOf(
+    private val htmlElementsStyleEncodeMap = mapOf(
         "b" to RichTextStyle.Bold,
         "strong" to RichTextStyle.Bold,
         "i" to RichTextStyle.Italic,
@@ -158,6 +195,28 @@ object RichTextHtmlParser : RichTextParser {
         "h4" to RichTextStyle.H4,
         "h5" to RichTextStyle.H5,
         "h6" to RichTextStyle.H6,
+    )
+
+    /**
+     * Encodes HTML elements to [RichTextStyle].
+     *
+     * @see <a href="https://www.w3schools.com/html/html_formatting.asp">HTML formatting</a>
+     */
+    private val htmlElementsStyleDecodeMap = mapOf(
+        RichTextStyle.Bold to "b",
+        RichTextStyle.Italic to "i",
+        RichTextStyle.Underline to "u",
+        RichTextStyle.Strikethrough to "strike",
+        RichTextStyle.Subscript to "sub",
+        RichTextStyle.Superscript to "sup",
+        RichTextStyle.Mark to "mark",
+        RichTextStyle.Small to "small",
+        RichTextStyle.H1 to "h1",
+        RichTextStyle.H2 to "h2",
+        RichTextStyle.H3 to "h3",
+        RichTextStyle.H4 to "h4",
+        RichTextStyle.H5 to "h5",
+        RichTextStyle.H6 to "h6",
     )
 
     /**

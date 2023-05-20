@@ -202,7 +202,7 @@ The library provides a `RichText` composable that can be used to display rich te
 var richTextValue by remember { mutableStateOf(RichTextValue()) }
 
 RichText(
-    text = richTextValue
+    richText = richTextValue
 )
 ```
 

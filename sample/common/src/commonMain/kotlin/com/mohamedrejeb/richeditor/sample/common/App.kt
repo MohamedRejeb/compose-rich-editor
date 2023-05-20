@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mohamedrejeb.richeditor.model.RichTextValue
+import com.mohamedrejeb.richeditor.parser.html.RichTextHtmlParser
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
@@ -18,7 +19,13 @@ import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 @Composable
 fun App() {
     var basicRichTextValue by remember { mutableStateOf(RichTextValue()) }
-    var richTextValue by remember { mutableStateOf(RichTextValue()) }
+    var richTextValue by remember { mutableStateOf(
+        RichTextHtmlParser.encode(
+            """
+            <p><b>RichTextEditor</b> is a <i>composable</i> that allows you to edit <u>rich text</u> content.</p>
+            """.trimIndent()
+        )
+    ) }
     var outlinedRichTextValue by remember { mutableStateOf(RichTextValue()) }
 
     ComposeRichEditorTheme {
@@ -126,7 +133,7 @@ fun App() {
 
                 RichText(
                     modifier = Modifier.fillMaxWidth(),
-                    value = richTextValue,
+                    richText = richTextValue,
                 )
             }
         }

@@ -407,24 +407,15 @@ internal class RichTextValueBuilder {
     private fun updateCurrentStyles(
         newTextFieldValue: TextFieldValue
     ) {
-        val newStyles = if (!newTextFieldValue.selection.collapsed) {
-            parts
-                .firstOrNull {
-                    newTextFieldValue.selection.start in (it.fromIndex..it.toIndex) &&
-                    (newTextFieldValue.selection.end - 1) in (it.fromIndex..it.toIndex)
-                }?.styles
-                ?: parts.firstOrNull {
-                    (newTextFieldValue.selection.min - 1) in (it.fromIndex..it.toIndex)
-                }?.styles
-                ?: currentStyles
-        } else if (newTextFieldValue.selection.start > 0) {
-            parts
-                .firstOrNull { (newTextFieldValue.selection.min - 1) in (it.fromIndex..it.toIndex) }
-                ?.styles
-                ?: currentStyles
-        } else {
-            currentStyles
-        }
+        val newStyles = parts
+            .firstOrNull {
+                if (newTextFieldValue.selection.min == 0 && it.fromIndex == 0) {
+                    return@firstOrNull true
+                }
+                (newTextFieldValue.selection.min - 1) in (it.fromIndex..it.toIndex)
+            }
+            ?.styles
+            ?: currentStyles
 
         setCurrentStyles(newStyles.toSet())
     }

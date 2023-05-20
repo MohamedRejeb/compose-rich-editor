@@ -7,7 +7,7 @@ internal class FloatUtilsTest {
 
     @Test
     fun testMaxDecimals() {
-        val float = 12.123456789f
+        val float = 12.123457f
         val float2 = 0.49999f
         val float3 = 0.5f
         val float4 = 0.50001f

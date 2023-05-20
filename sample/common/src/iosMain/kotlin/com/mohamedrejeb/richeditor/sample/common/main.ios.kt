@@ -27,7 +27,7 @@ fun MainViewController(
                 .fillMaxSize()
                 .padding(safeArea)
         ) {
-            App()
+            HtmlEditor()
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.mohamedrejeb.richeditor.sample.common
+package com.mohamedrejeb.richeditor.sample.common.model
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle

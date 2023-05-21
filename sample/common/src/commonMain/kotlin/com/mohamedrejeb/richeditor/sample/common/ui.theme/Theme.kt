@@ -31,7 +31,9 @@ internal fun ComposeRichEditorTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) {
-        DarkColorScheme
+        // TODO: Uncomment this line when dark theme is ready
+        // DarkColorScheme
+        LightColorScheme
     } else {
         LightColorScheme
     }

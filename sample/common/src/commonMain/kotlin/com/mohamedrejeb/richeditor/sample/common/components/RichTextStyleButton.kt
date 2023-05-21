@@ -1,4 +1,4 @@
-package com.mohamedrejeb.richeditor.sample.common
+package com.mohamedrejeb.richeditor.sample.common.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape

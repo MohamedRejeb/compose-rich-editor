@@ -42,6 +42,11 @@ kotlin {
                 implementation(libs.kotlinx.serialization.json)
 //                implementation("com.mohamedrejeb.richeditor:richeditor-compose:0.1.0")
                 implementation(project(":richeditor-compose"))
+
+                val voyagerVersion = "1.0.0-rc05"
+
+                // Navigator
+                implementation("cafe.adriel.voyager:voyager-navigator:$voyagerVersion")
             }
         }
 

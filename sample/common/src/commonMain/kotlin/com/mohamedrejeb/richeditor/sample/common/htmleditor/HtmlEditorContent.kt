@@ -1,17 +1,21 @@
-package com.mohamedrejeb.richeditor.sample.common
+package com.mohamedrejeb.richeditor.sample.common.htmleditor
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HtmlEditor() {
+fun HtmlEditorContent() {
+    val navigator = LocalNavigator.currentOrThrow
+
     var isHtmlToRichText by remember { mutableStateOf(false) }
 
     ComposeRichEditorTheme(false) {
@@ -19,6 +23,13 @@ fun HtmlEditor() {
             topBar = {
                 TopAppBar(
                     title = { Text("Html Editor") },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = { navigator.pop() }
+                        ) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        }
+                    },
                     actions = {
                         IconButton(
                             onClick = {

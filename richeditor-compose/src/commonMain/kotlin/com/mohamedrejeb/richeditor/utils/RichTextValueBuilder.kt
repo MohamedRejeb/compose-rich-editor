@@ -479,8 +479,6 @@ internal class RichTextValueBuilder {
             part.fromIndex < toIndex && part.toIndex >= fromIndex
         }
 
-        println("Selected parts $selectedParts")
-
         selectedParts.forEach { part ->
             val index = parts.indexOf(part)
             if (index !in parts.indices) return@forEach

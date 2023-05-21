@@ -11,13 +11,20 @@ import com.mohamedrejeb.richeditor.model.RichTextValue
 import com.mohamedrejeb.richeditor.sample.common.components.RichTextStyleRow
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RichTextToHtml(
+    richTextValue: RichTextValue,
+    onHtmlChanged: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var richTextValue by remember { mutableStateOf(RichTextValue()) }
+    var richTextValue by remember(richTextValue) {
+        mutableStateOf(richTextValue    )
+    }
     val html = richTextValue.toHtml()
+
+    LaunchedEffect(html) {
+        onHtmlChanged(html)
+    }
 
     Row(
         modifier = modifier

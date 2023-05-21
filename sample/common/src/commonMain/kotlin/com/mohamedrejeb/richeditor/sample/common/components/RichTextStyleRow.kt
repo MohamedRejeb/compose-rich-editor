@@ -1,6 +1,7 @@
 package com.mohamedrejeb.richeditor.sample.common.components
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.outlined.*
@@ -18,58 +19,72 @@ fun RichTextStyleRow(
     value: RichTextValue,
     onValueChanged: (RichTextValue) -> Unit,
 ) {
-    Row(
+    LazyRow(
         modifier = modifier
     ) {
-        RichTextStyleButton(
-            style = RichTextStyle.Bold,
-            value = value,
-            onValueChanged = onValueChanged,
-            icon = Icons.Outlined.FormatBold
-        )
+        item {
+            RichTextStyleButton(
+                style = RichTextStyle.Bold,
+                value = value,
+                onValueChanged = onValueChanged,
+                icon = Icons.Outlined.FormatBold
+            )
+        }
 
-        RichTextStyleButton(
-            style = RichTextStyle.Italic,
-            value = value,
-            onValueChanged = onValueChanged,
-            icon = Icons.Outlined.FormatItalic
-        )
+        item {
+            RichTextStyleButton(
+                style = RichTextStyle.Italic,
+                value = value,
+                onValueChanged = onValueChanged,
+                icon = Icons.Outlined.FormatItalic
+            )
+        }
 
-        RichTextStyleButton(
-            style = RichTextStyle.Underline,
-            value = value,
-            onValueChanged = onValueChanged,
-            icon = Icons.Outlined.FormatUnderlined
-        )
+        item {
+            RichTextStyleButton(
+                style = RichTextStyle.Underline,
+                value = value,
+                onValueChanged = onValueChanged,
+                icon = Icons.Outlined.FormatUnderlined
+            )
+        }
 
-        RichTextStyleButton(
-            style = RichTextStyle.Strikethrough,
-            value = value,
-            onValueChanged = onValueChanged,
-            icon = Icons.Outlined.FormatStrikethrough
-        )
+        item {
+            RichTextStyleButton(
+                style = RichTextStyle.Strikethrough,
+                value = value,
+                onValueChanged = onValueChanged,
+                icon = Icons.Outlined.FormatStrikethrough
+            )
+        }
 
-        RichTextStyleButton(
-            style = RichTextStyle.FontSize(28.sp),
-            value = value,
-            onValueChanged = onValueChanged,
-            icon = Icons.Outlined.FormatSize
-        )
+        item {
+            RichTextStyleButton(
+                style = RichTextStyle.FontSize(28.sp),
+                value = value,
+                onValueChanged = onValueChanged,
+                icon = Icons.Outlined.FormatSize
+            )
+        }
 
-        RichTextStyleButton(
-            style = RichTextStyle.TextColor(Color.Red),
-            value = value,
-            onValueChanged = onValueChanged,
-            icon = Icons.Filled.Circle,
-            tint = Color.Red
-        )
+        item {
+            RichTextStyleButton(
+                style = RichTextStyle.TextColor(Color.Red),
+                value = value,
+                onValueChanged = onValueChanged,
+                icon = Icons.Filled.Circle,
+                tint = Color.Red
+            )
+        }
 
-        RichTextStyleButton(
-            style = CustomStyle(color = Color.Blue, background = Color.Green),
-            value = value,
-            onValueChanged = onValueChanged,
-            icon = Icons.Outlined.Circle,
-            tint = Color.Green
-        )
+        item {
+            RichTextStyleButton(
+                style = CustomStyle(color = Color.Blue, background = Color.Green),
+                value = value,
+                onValueChanged = onValueChanged,
+                icon = Icons.Outlined.Circle,
+                tint = Color.Green
+            )
+        }
     }
 }

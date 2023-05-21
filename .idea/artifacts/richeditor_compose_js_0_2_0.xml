@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="richeditor-compose-js-0.2.0">
+    <output-path>$PROJECT_DIR$/richeditor-compose/build/libs</output-path>
+    <root id="archive" name="richeditor-compose-js-0.2.0.jar">
+      <element id="module-output" name="compose-richeditor.richeditor-compose.jsMain" />
+    </root>
+  </artifact>
+</component>

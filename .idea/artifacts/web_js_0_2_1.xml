@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="web-js-0.2.1">
+    <output-path>$PROJECT_DIR$/sample/web/build/libs</output-path>
+    <root id="archive" name="web-js-0.2.1.jar">
+      <element id="module-output" name="compose-richeditor.sample.web.jsMain" />
+    </root>
+  </artifact>
+</component>

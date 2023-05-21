@@ -50,6 +50,89 @@ internal object CssEncoder {
     }
 
     /**
+     * Converts the given CSS style map into a [SpanStyle].
+     *
+     * @param cssStyleMap the CSS style map to convert.
+     * @return the converted [SpanStyle].
+     */
+    internal fun parseCssStyleMapToSpanStyleSet(cssStyleMap: Map<String, String>): Set<SpanStyle> {
+        val spanStyleSet = mutableSetOf<SpanStyle>()
+
+        cssStyleMap["color"]?.let{ string ->
+            parseCssColor(string)?.let {
+                spanStyleSet.add(
+                    SpanStyle(color = it)
+                )
+            }
+        }
+        cssStyleMap["font-size"]?.let{ string ->
+            parseCssSize(string)?.sp?.let {
+                spanStyleSet.add(
+                    SpanStyle(fontSize = it)
+                )
+            }
+        }
+        cssStyleMap["font-weight"]?.let{ string ->
+            parseCssFontWeight(string)?.let {
+                spanStyleSet.add(
+                    SpanStyle(fontWeight = it)
+                )
+            }
+        }
+        cssStyleMap["font-style"]?.let{ string ->
+            parseCssFontStyle(string)?.let {
+                spanStyleSet.add(
+                    SpanStyle(fontStyle = it)
+                )
+            }
+        }
+        cssStyleMap["letter-spacing"]?.let{ string ->
+            parseCssSize(string)?.sp?.let {
+                spanStyleSet.add(
+                    SpanStyle(letterSpacing = it)
+                )
+            }
+        }
+        cssStyleMap["baseline-shift"]?.let{ string ->
+            parseCssBaselineShift(string)?.let {
+                spanStyleSet.add(
+                    SpanStyle(baselineShift = it)
+                )
+            }
+        }
+        cssStyleMap["background"]?.let{ string ->
+            parseCssColor(string)?.let {
+                spanStyleSet.add(
+                    SpanStyle(background = it)
+                )
+            }
+        }
+            ?: cssStyleMap["background-color"]?.let{ string ->
+                parseCssColor(string)?.let {
+                    spanStyleSet.add(
+                        SpanStyle(background = it)
+                    )
+                }
+            }
+        cssStyleMap["text-decoration"]?.let{ string ->
+            parseCssTextDecoration(string)?.let {
+                spanStyleSet.add(
+                    SpanStyle(textDecoration = it)
+                )
+            }
+        }
+        cssStyleMap["text-shadow"]?.let{ string ->
+            parseCssTextShadow(string)?.let {
+                spanStyleSet.add(
+                    SpanStyle(shadow = it)
+                )
+            }
+        }
+
+        return spanStyleSet
+    }
+
+    /**
      * Parses a CSS color string and returns a [Color] or `null` if the color string could not be parsed.
      *
      * @param cssColor the CSS color string to parse.

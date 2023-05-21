@@ -13,18 +13,12 @@ import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
 
 @Composable
 fun RichTextToHtml(
-    richTextValue: RichTextValue,
-    onHtmlChanged: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var richTextValue by remember(richTextValue) {
-        mutableStateOf(richTextValue    )
+    var richTextValue by remember {
+        mutableStateOf(RichTextValue())
     }
     val html = richTextValue.toHtml()
-
-    LaunchedEffect(html) {
-        onHtmlChanged(html)
-    }
 
     Row(
         modifier = modifier

@@ -1,5 +1,6 @@
 package com.mohamedrejeb.richeditor.utils
 
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.mohamedrejeb.richeditor.model.RichTextPart
 import com.mohamedrejeb.richeditor.model.RichTextStyle
@@ -138,8 +139,11 @@ internal class RichTextValueBuilder {
      * @return a new [RichTextValueBuilder] with the new text field value and parts
      */
     fun updateTextFieldValue(newTextFieldValue: TextFieldValue): RichTextValueBuilder {
+        // Workaround to add unordered list support, it's going to be improved,
+        // But for now if it works, it works :D
+        var newTextFieldValue = newTextFieldValue
         if (newTextFieldValue.text.length > textFieldValue.text.length) {
-            handleAddingCharacters(newTextFieldValue)
+            newTextFieldValue = handleAddingCharacters(newTextFieldValue)
         } else if (newTextFieldValue.text.length < textFieldValue.text.length) {
             handleRemovingCharacters(newTextFieldValue)
         }
@@ -171,9 +175,30 @@ internal class RichTextValueBuilder {
      */
     private fun handleAddingCharacters(
         newTextFieldValue: TextFieldValue,
-    ) {
-        val typedChars = newTextFieldValue.text.length - textFieldValue.text.length
+    ): TextFieldValue {
+        var newTextFieldValue = newTextFieldValue
+        var typedChars = newTextFieldValue.text.length - textFieldValue.text.length
         val startTypeIndex = newTextFieldValue.selection.min - typedChars
+
+        // Workaround to add unordered list support, it's going to be changed in the future
+        // when I'm going to add ordered list support but for now if it works, it works :D
+        if (
+            newTextFieldValue.text.getOrNull(startTypeIndex - 2) == '\n' &&
+            newTextFieldValue.text.getOrNull(startTypeIndex - 1) == '-' &&
+            newTextFieldValue.text.getOrNull(startTypeIndex) == ' '
+        ) {
+            var newText = newTextFieldValue.text
+            newText = newText.removeRange(startTypeIndex - 1..startTypeIndex)
+            val firstHalf = newText.substring(0..startTypeIndex-2)
+            val secondHalf = newText.substring(startTypeIndex-1..newText.lastIndex)
+            val unorderedListPrefix = "  •  "
+            newText = firstHalf + unorderedListPrefix + secondHalf
+            typedChars+=3
+            newTextFieldValue = newTextFieldValue.copy(
+                text = newText,
+                selection = TextRange(startTypeIndex + typedChars)
+            )
+        }
 
         val startRichTextPartIndex = parts.indexOfFirst {
             (startTypeIndex - 1) in it.fromIndex..it.toIndex
@@ -259,6 +284,7 @@ internal class RichTextValueBuilder {
                 )
             }
         }
+        return newTextFieldValue
     }
 
     /**

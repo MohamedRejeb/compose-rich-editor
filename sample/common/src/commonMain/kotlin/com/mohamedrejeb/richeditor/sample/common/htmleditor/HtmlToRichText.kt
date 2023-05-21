@@ -16,18 +16,12 @@ import com.mohamedrejeb.richeditor.ui.material3.RichText
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HtmlToRichText(
-    html: String,
-    onRichTextValueChanged: (RichTextValue) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var html by remember(html) {
-        mutableStateOf(TextFieldValue(html))
+    var html by remember {
+        mutableStateOf(TextFieldValue())
     }
     val richTextValue = RichTextValue.from(html.text)
-
-    LaunchedEffect(richTextValue) {
-        onRichTextValueChanged(richTextValue)
-    }
 
     Row(
         modifier = modifier

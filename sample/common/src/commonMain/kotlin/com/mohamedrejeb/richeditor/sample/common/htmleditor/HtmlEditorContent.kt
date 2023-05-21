@@ -20,9 +20,6 @@ fun HtmlEditorContent() {
 
     var isHtmlToRichText by remember { mutableStateOf(false) }
 
-    var html by remember { mutableStateOf(TextFieldValue()) }
-    var richTextValue by remember { mutableStateOf(RichTextValue()) }
-
     ComposeRichEditorTheme(false) {
         Scaffold(
             topBar = {
@@ -54,10 +51,6 @@ fun HtmlEditorContent() {
         ) { paddingValue ->
             if (isHtmlToRichText) {
                 HtmlToRichText(
-                    html = html.text,
-                    onRichTextValueChanged = {
-                        richTextValue = it
-                    },
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValue)

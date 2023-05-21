@@ -8,6 +8,7 @@
   <a href="https://opensource.org/licenses/Apache-2.0"><img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"/></a>
   <a href="https://android-arsenal.com/api?level=21"><img alt="API" src="https://img.shields.io/badge/API-21%2B-brightgreen.svg?style=flat"/></a>
   <a href="https://github.com/MohamedRejeb"><img alt="Profile" src="https://raw.githubusercontent.com/MohamedRejeb/MohamedRejeb/main/badges/mohamedrejeb.svg"/></a>
+  <a href="https://search.maven.org/search?q=g:%22com.mohamedrejeb.richeditor%22%20AND%20a:%22richeditor-compose%22"><img alt="Maven Central" src="https://img.shields.io/maven-central/v/com.mohamedrejeb.richeditor/richeditor-compose"/></a>
 </p> <br>
 
 <p align="center">

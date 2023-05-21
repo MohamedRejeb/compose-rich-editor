@@ -82,19 +82,14 @@ fun RichTextToHtml(
 
             Spacer(Modifier.height(8.dp))
 
-            SelectionContainer(
+            Text(
+                text = html,
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
                     .border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.extraSmall)
                     .padding(vertical = 12.dp, horizontal = 12.dp)
-            ) {
-                Text(
-                    text = html,
-                    modifier = Modifier
-                        .fillMaxSize()
-                )
-            }
+            )
         }
     }
 }

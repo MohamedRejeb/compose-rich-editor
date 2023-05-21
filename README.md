@@ -195,6 +195,22 @@ object SecondCustomStyle : RichTextStyle {
 richTextValue = richTextValue.addStyle(SecondCustomStyle)
 ```
 
+### Create `RichTextValue` from HTML String
+We can create a `RichTextValue` from HTML string using `RichTextValue.fromHtml` factory method.
+
+```kotlin
+val html = "<b>Hello</b> <i>World</i>"
+val richTextValue = RichTextValue.from(html)
+```
+
+### Export `RichTextValue` to HTML String
+We can export a `RichTextValue` to HTML string using `RichTextValue.toHtml` method.
+
+```kotlin
+val richTextValue = RichTextValue()
+val html = richTextValue.toHtml()
+```
+
 ### Create Rich Text with Compose UI
 The library provides a `RichText` composable that can be used to display rich text. It's similar to `Text` composable, but it supports rich text styles.
 
@@ -216,13 +232,15 @@ There are some supported features that you can use with `RichTextEditor`:
 - [x] Background color
 - [x] Font size
 - [x] Create a custom style
+- [X] Add unordered lists
+- [X] Support importing and exporting HTML
 
 ## Coming Features
 The library still in its early stages, so there are some features that are coming soon:
 
 - [ ] Add link
 - [ ] Add paragraph alignment (left, center, right)
-- [ ] Add ordered and unordered lists
+- [ ] Add ordered lists
 - [ ] Add Blockquote
 - [ ] Add code block style
 - [ ] Add undo and redo
@@ -230,7 +248,6 @@ The library still in its early stages, so there are some features that are comin
 - [ ] Add image support
 - [ ] Add video support
 - [ ] Add audio support
-- [ ] Support importing and exporting HTML
 - [ ] Support importing and exporting Markdown
 - [ ] Add add prebuilt styles panel
 

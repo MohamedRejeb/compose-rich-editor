@@ -7,11 +7,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.mohamedrejeb.richeditor.model.RichTextValue
 import com.mohamedrejeb.richeditor.sample.common.htmleditor.HtmlEditorScreen
 import com.mohamedrejeb.richeditor.sample.common.richeditor.RichEditorScreen
+import com.mohamedrejeb.richeditor.ui.material3.RichText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,6 +39,18 @@ fun HomeContent() {
                 .verticalScroll(rememberScrollState())
         ) {
 
+            Spacer(modifier = Modifier.height(20.dp))
+
+            RichText(
+                richText = RichTextValue.from("<u>Welcome</u> to <b>Compose Rich Editor Demo</b>"),
+                style = MaterialTheme.typography.displaySmall,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(20.dp)
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -58,7 +73,6 @@ fun HomeContent() {
                     Text("HTML Editor Demo")
                 }
             }
-
 
         }
     }

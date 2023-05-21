@@ -65,7 +65,7 @@ fun RichTextStyleRow(
         )
 
         RichTextStyleButton(
-            style = CustomStyle(color = Color.White, background = Color.Green),
+            style = CustomStyle(color = Color.Blue, background = Color.Green),
             value = value,
             onValueChanged = onValueChanged,
             icon = Icons.Outlined.Circle,

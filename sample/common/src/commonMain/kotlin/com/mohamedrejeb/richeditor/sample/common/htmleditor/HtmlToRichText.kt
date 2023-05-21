@@ -18,7 +18,9 @@ import com.mohamedrejeb.richeditor.ui.material3.RichText
 fun HtmlToRichText(
     modifier: Modifier = Modifier,
 ) {
-    var html by remember { mutableStateOf(TextFieldValue()) }
+    var html by remember {
+        mutableStateOf(TextFieldValue())
+    }
     val richTextValue = RichTextValue.from(html.text)
 
     Row(

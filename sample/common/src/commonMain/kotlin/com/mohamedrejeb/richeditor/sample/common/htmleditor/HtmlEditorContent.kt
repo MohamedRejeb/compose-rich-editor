@@ -7,8 +7,10 @@ import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.TextFieldValue
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.mohamedrejeb.richeditor.model.RichTextValue
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -13,8 +13,12 @@ import com.mohamedrejeb.richeditor.parser.RichTextParser
 internal object RichTextAnnotatedStringParser : RichTextParser<AnnotatedString> {
 
     override fun encode(input: AnnotatedString): RichTextValue {
-        val parts = input.spanStyles.map { (style, start, end) ->
-            RichTextPart(
+        val text = input.text
+        val spanStyles = input.spanStyles
+        val currentStyles = mutableSetOf<RichTextStyle>()
+
+        val parts = spanStyles.map { (style, start, end) ->
+            val part = RichTextPart(
                 fromIndex = start,
                 toIndex = end - 1,
                 styles = setOf(
@@ -23,11 +27,11 @@ internal object RichTextAnnotatedStringParser : RichTextParser<AnnotatedString> 
                     }
                 )
             )
-        }
 
-        val currentStyles = parts
-            .filter { it.toIndex == input.text.lastIndex }
-            .mapTo(mutableSetOf()) { it.styles.first() }
+            if (part.toIndex == text.lastIndex) currentStyles.addAll(part.styles)
+
+            part
+        }
 
         return RichTextValue(
             textFieldValue = TextFieldValue(text),

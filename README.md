@@ -265,6 +265,8 @@ Feel free to help out by sending a pull request :heart:.
 Support it by joining __[stargazers](https://github.com/MohamedRejeb/Compose-Rich-Editor/stargazers)__ for this repository. :star: <br>
 Also, __[follow me](https://github.com/MohamedRejeb)__ on GitHub for more libraries! 🤩
 
+You can always <a href="https://www.buymeacoffee.com/MohamedRejeb"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=MohamedRejeb&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff"></a>
+
 # License
 ```markdown
 Copyright 2023 Mohamed Rejeb

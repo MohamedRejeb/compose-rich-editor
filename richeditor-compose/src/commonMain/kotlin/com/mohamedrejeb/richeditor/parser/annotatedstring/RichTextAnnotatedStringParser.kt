@@ -17,15 +17,13 @@ internal object RichTextAnnotatedStringParser : RichTextParser<AnnotatedString> 
         val spanStyles = input.spanStyles
         val currentStyles = mutableSetOf<RichTextStyle>()
 
-        val parts = spanStyles.map { style ->
+        val parts = spanStyles.map { (style, start, end) ->
             val part = RichTextPart(
-                fromIndex = style.start,
-                toIndex = style.end - 1,
+                fromIndex = start,
+                toIndex = end - 1,
                 styles = setOf(
                     object : RichTextStyle {
-                        override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
-                            return spanStyle.merge(style.item)
-                        }
+                        override fun applyStyle(spanStyle: SpanStyle) = spanStyle.merge(style)
                     }
                 )
             )
@@ -46,11 +44,11 @@ internal object RichTextAnnotatedStringParser : RichTextParser<AnnotatedString> 
         val text = richTextValue.textFieldValue.text
         val parts = richTextValue.parts
 
-        val spanStyles = parts.map { part ->
+        val spanStyles = parts.map { (fromIndex, toIndex, styles) ->
             AnnotatedString.Range(
-                start = part.fromIndex,
-                end = part.toIndex + 1,
-                item = part.styles.fold(SpanStyle()) { acc, style ->
+                start = fromIndex,
+                end = toIndex + 1,
+                item = styles.fold(SpanStyle()) { acc, style ->
                     style.applyStyle(acc)
                 }
             )

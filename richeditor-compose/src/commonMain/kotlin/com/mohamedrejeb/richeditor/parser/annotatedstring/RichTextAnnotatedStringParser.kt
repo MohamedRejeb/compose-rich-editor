@@ -13,27 +13,21 @@ import com.mohamedrejeb.richeditor.parser.RichTextParser
 internal object RichTextAnnotatedStringParser : RichTextParser<AnnotatedString> {
 
     override fun encode(input: AnnotatedString): RichTextValue {
-        val text = input.text
-        val spanStyles = input.spanStyles
-        val currentStyles = mutableSetOf<RichTextStyle>()
-
-        val parts = spanStyles.map { style ->
-            val part = RichTextPart(
-                fromIndex = style.start,
-                toIndex = style.end - 1,
+        val parts = input.spanStyles.map { (style, start, end) ->
+            RichTextPart(
+                fromIndex = start,
+                toIndex = end - 1,
                 styles = setOf(
                     object : RichTextStyle {
-                        override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
-                            return spanStyle.merge(style.item)
-                        }
+                        override fun applyStyle(spanStyle: SpanStyle) = spanStyle.merge(style)
                     }
                 )
             )
-
-            if (part.toIndex == text.lastIndex) currentStyles.addAll(part.styles)
-
-            part
         }
+
+        val currentStyles = parts
+            .filter { it.toIndex == input.text.lastIndex }
+            .mapTo(mutableSetOf()) { it.styles.first() }
 
         return RichTextValue(
             textFieldValue = TextFieldValue(text),
@@ -46,11 +40,11 @@ internal object RichTextAnnotatedStringParser : RichTextParser<AnnotatedString> 
         val text = richTextValue.textFieldValue.text
         val parts = richTextValue.parts
 
-        val spanStyles = parts.map { part ->
+        val spanStyles = parts.map { (fromIndex, toIndex, styles) ->
             AnnotatedString.Range(
-                start = part.fromIndex,
-                end = part.toIndex + 1,
-                item = part.styles.fold(SpanStyle()) { acc, style ->
+                start = fromIndex,
+                end = toIndex + 1,
+                item = styles.fold(SpanStyle()) { acc, style ->
                     style.applyStyle(acc)
                 }
             )

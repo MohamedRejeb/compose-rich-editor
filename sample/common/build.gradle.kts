@@ -40,8 +40,8 @@ kotlin {
                 api(compose.materialIconsExtended)
 
                 implementation(libs.kotlinx.serialization.json)
-                implementation("com.mohamedrejeb.richeditor:richeditor-compose:0.2.0")
-//                implementation(project(":richeditor-compose"))
+//                implementation("com.mohamedrejeb.richeditor:richeditor-compose:0.2.0")
+                implementation(project(":richeditor-compose"))
 
                 val voyagerVersion = "1.0.0-rc05"
 

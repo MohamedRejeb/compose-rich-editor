@@ -1,7 +1,9 @@
 package com.mohamedrejeb.richeditor.parser.html
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextDecoration
 import com.mohamedrejeb.ksoup.html.parser.KsoupHtmlHandler
 import com.mohamedrejeb.ksoup.html.parser.KsoupHtmlParser
 import com.mohamedrejeb.richeditor.model.RichTextPart
@@ -63,6 +65,12 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                     text += "\n"
                 }
 
+                if (name == "a" && name in htmlInlineElements) {
+                    val href = attributes["href"] ?: ""
+                    println("LINK $href")
+                    currentStyles.add(RichTextStyle.Hyperlink(href))
+                }
+
                 when (name) {
                     "br" -> {
                         text += "\n"
@@ -75,6 +83,9 @@ internal object RichTextHtmlParser : RichTextParser<String> {
 
                 if (name in htmlBlockElements) {
                     text += "\n"
+                }
+                if (name == "a" && name in htmlInlineElements) {
+                    currentStyles.removeLastOrNull()
                 }
 
                 when (name) {

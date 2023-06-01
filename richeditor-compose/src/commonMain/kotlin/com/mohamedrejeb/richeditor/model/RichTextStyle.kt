@@ -245,6 +245,21 @@ interface RichTextStyle {
     }
 
     /**
+     * [Normal] implementation of [RichTextStyle] that applies a H6 style to the text.
+     *
+     * @see RichTextStyle
+     * @see <a href="https://www.w3schools.com/tags/tag_hn.asp">H6</a>
+     */
+    object Normal : RichTextStyle {
+        override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
+            return spanStyle.copy(
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Normal
+            )
+        }
+    }
+
+    /**
      * [TextColor] implementation of [RichTextStyle] that applies a color to the text.
      * @param color the color to apply.
      * @see RichTextStyle
@@ -282,4 +297,15 @@ interface RichTextStyle {
             )
         }
     }
+
+    data class Hyperlink(val url: String) : RichTextStyle {
+        override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
+            return spanStyle.copy(
+                color = Color(0xFF0000FF),  // Blue color
+                textDecoration = TextDecoration.Underline
+            )
+        }
+    }
+
+
 }

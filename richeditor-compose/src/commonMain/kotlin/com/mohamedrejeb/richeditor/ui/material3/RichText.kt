@@ -1,5 +1,7 @@
 package com.mohamedrejeb.richeditor.ui.material3
 
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.material.LocalContentColor
 import androidx.compose.material.Text
@@ -7,8 +9,12 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.Paragraph
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
@@ -77,9 +83,11 @@ fun RichText(
     onTextLayout: (TextLayoutResult) -> Unit = {},
     style: TextStyle = LocalTextStyle.current
 ) {
-    Text(
+
+    val uriHandler = LocalUriHandler.current
+    RichTextClickable(
         modifier = modifier,
-        text = richText.visualTransformation.filter(richText.annotatedString).text,
+        richText = richText,
         color = color,
         fontSize = fontSize,
         fontStyle = fontStyle,
@@ -94,6 +102,71 @@ fun RichText(
         maxLines = maxLines,
         inlineContent = inlineContent,
         onTextLayout = onTextLayout,
-        style = style
+        style = style,
+        onClick = {
+            richText.visualTransformation.filter(richText.annotatedString).text.getStringAnnotations(
+                "URL",
+                it,
+                it
+            )
+                .firstOrNull()?.let { stringAnnotation ->
+                    uriHandler.openUri(stringAnnotation.item)
+                }
+        }
+    )
+}
+
+@Composable
+fun RichTextClickable(
+    richText: RichTextValue,
+    modifier: Modifier = Modifier,
+    color: Color = Color.Unspecified,
+    fontSize: TextUnit = TextUnit.Unspecified,
+    fontStyle: FontStyle? = null,
+    fontWeight: FontWeight? = null,
+    fontFamily: FontFamily? = null,
+    letterSpacing: TextUnit = TextUnit.Unspecified,
+    textDecoration: TextDecoration? = null,
+    textAlign: TextAlign? = null,
+    lineHeight: TextUnit = TextUnit.Unspecified,
+    overflow: TextOverflow = TextOverflow.Clip,
+    softWrap: Boolean = true,
+    maxLines: Int = Int.MAX_VALUE,
+    inlineContent: Map<String, InlineTextContent> = mapOf(),
+    onTextLayout: (TextLayoutResult) -> Unit = {},
+    style: TextStyle = LocalTextStyle.current,
+    onClick: (Int) -> Unit
+) {
+    val layoutResult = remember { mutableStateOf<TextLayoutResult?>(null) }
+    val pressIndicator = Modifier.pointerInput(onClick) {
+        detectTapGestures { pos ->
+            layoutResult.value?.let { layoutResult ->
+                onClick(layoutResult.getOffsetForPosition(pos))
+            }
+        }
+    }
+
+    Text(
+        text = richText.visualTransformation.filter(richText.annotatedString).text,
+        modifier = modifier.then(pressIndicator),
+        style = style.copy(
+            color = color,
+            fontSize = fontSize,
+            fontStyle = fontStyle,
+            fontWeight = fontWeight,
+            fontFamily = fontFamily,
+            letterSpacing = letterSpacing,
+            textDecoration = textDecoration,
+            textAlign = textAlign,
+            lineHeight = lineHeight,
+        ),
+        softWrap = softWrap,
+        overflow = overflow,
+        maxLines = maxLines,
+        inlineContent = inlineContent,
+        onTextLayout = {
+            layoutResult.value = it
+            onTextLayout(it)
+        }
     )
 }

@@ -42,20 +42,20 @@ data class RichTextValue internal constructor(
      * The [AnnotatedString] representation of the text
      */
     internal val annotatedString
-        get() = AnnotatedString(
-            text = textFieldValue.text,
-            spanStyles = parts.map { part ->
+        get() = buildAnnotatedString {
+            parts.forEach { part ->
                 val spanStyle = part.styles.fold(SpanStyle()) { acc, style ->
                     style.applyStyle(acc)
                 }
-
-                AnnotatedString.Range(
-                    item = spanStyle,
-                    start = part.fromIndex,
-                    end = part.toIndex + 1,
-                )
+                withStyle(spanStyle) {
+                    append(textFieldValue.text.substring(part.fromIndex, part.toIndex + 1))
+                }
+                part.styles.filterIsInstance<RichTextStyle.Hyperlink>().forEach { hyperlink ->
+                    addStringAnnotation("URL", hyperlink.url, part.fromIndex, part.toIndex + 1)
+                    append("\n")
+                }
             }
-        )
+        }
 
     constructor(
         text: String = "",

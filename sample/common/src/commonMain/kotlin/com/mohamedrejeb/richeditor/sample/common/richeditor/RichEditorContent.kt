@@ -25,13 +25,17 @@ fun RichEditorContent() {
     val navigator = LocalNavigator.currentOrThrow
 
     var basicRichTextValue by remember { mutableStateOf(RichTextValue()) }
-    var richTextValue by remember { mutableStateOf(
-        RichTextValue.from(
-            """
+    var richTextValue by remember {
+        mutableStateOf(
+            RichTextValue.from(
+                """
+               <a href="https://www.w3schools.com">Visit W3Schools</a><br>
             <p><b>RichTextEditor</b> is a <i>composable</i> that allows you to edit <u>rich text</u> content.</p>
+            <a href="https://github.com/DAKSHSEMWAL/Compose-Rich-Editor">MDParserKit Core</a><br>
             """.trimIndent()
+            )
         )
-    ) }
+    }
     var outlinedRichTextValue by remember { mutableStateOf(RichTextValue()) }
 
     ComposeRichEditorTheme {

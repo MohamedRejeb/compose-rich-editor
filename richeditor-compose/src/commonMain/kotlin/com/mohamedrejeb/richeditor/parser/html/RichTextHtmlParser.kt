@@ -40,21 +40,37 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                 )
             }
             .onOpenTag { name, attributes, _ ->
+                if (name == "br") {
+                    text += "\n"
+                    return@onOpenTag
+                }
                 openedTags.add(name to attributes)
 
-                val cssStyleMap = attributes["style"]?.let { CssEncoder.parseCssStyle(it) } ?: emptyMap()
+                val cssStyleMap =
+                    attributes["style"]?.let { CssEncoder.parseCssStyle(it) } ?: emptyMap()
                 val cssSpanStyle = CssEncoder.parseCssStyleMapToSpanStyle(cssStyleMap)
                 val richTextStyle = htmlElementsStyleEncodeMap[name]
 
                 if (cssSpanStyle != SpanStyle() || richTextStyle != null) {
-                    val tagRichTextStyle = object : RichTextStyle {
-                        override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
-                            val tagSpanStyle = richTextStyle?.applyStyle(spanStyle) ?: spanStyle
-                            return tagSpanStyle.merge(cssSpanStyle)
+                    when (name) {
+                        "h1" -> currentStyles.add(RichTextStyle.H1)
+                        "h2" -> currentStyles.add(RichTextStyle.H2)
+                        "h3" -> currentStyles.add(RichTextStyle.H3)
+                        "h4" -> currentStyles.add(RichTextStyle.H4)
+                        "h5" -> currentStyles.add(RichTextStyle.H5)
+                        "h6" -> currentStyles.add(RichTextStyle.H6)
+                        else -> {
+                            val tagRichTextStyle = object : RichTextStyle {
+                                override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
+                                    val tagSpanStyle =
+                                        richTextStyle?.applyStyle(spanStyle) ?: spanStyle
+                                    return tagSpanStyle.merge(cssSpanStyle)
+                                }
+                            }
+
+                            currentStyles.add(tagRichTextStyle)
                         }
                     }
-
-                    currentStyles.add(tagRichTextStyle)
                 }
 
                 if (
@@ -71,11 +87,6 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                     currentStyles.add(RichTextStyle.Hyperlink(href))
                 }
 
-                when (name) {
-                    "br" -> {
-                        text += "\n"
-                    }
-                }
             }
             .onCloseTag { name, _ ->
                 openedTags.removeLastOrNull()
@@ -84,14 +95,14 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                 if (name in htmlBlockElements) {
                     text += "\n"
                 }
+
                 if (name == "a" && name in htmlInlineElements) {
                     currentStyles.removeLastOrNull()
                 }
 
-                when (name) {
-                    "br" -> {
-                        text += "\n"
-                    }
+                // If it's a heading, add a new line after the closing tag
+                if (name in setOf("h1", "h2", "h3", "h4", "h5", "h6")) {
+                    text += "\n"
                 }
             }
             .build()
@@ -102,7 +113,6 @@ internal object RichTextHtmlParser : RichTextParser<String> {
 
         parser.write(input)
         parser.end()
-
         return RichTextValue(
             textFieldValue = TextFieldValue(text),
             currentStyles = currentStyles.toSet(),
@@ -120,25 +130,41 @@ internal object RichTextHtmlParser : RichTextParser<String> {
             val partText = text.substring(part.fromIndex, part.toIndex + 1).replace("\n", "<br>")
             val partStyles = part.styles.toMutableSet()
 
-            val tagName = partStyles
-                .firstOrNull { htmlElementsStyleDecodeMap.containsKey(it) }
-                ?.let {
-                    partStyles.remove(it)
-                    htmlElementsStyleDecodeMap[it]
-                }
-                ?: if (part.fromIndex > 0 && text[part.fromIndex - 1] != '\n') "span" else "p"
+            var tagName: String
+            var tagStyle = ""
 
-            val tagStyle =
-                if (partStyles.isEmpty()) ""
-                else {
+            // Handle hyperlink separately, extract href attribute and tag name
+            if (partStyles.any { it is RichTextStyle.Hyperlink }) {
+                val hyperlinkStyle =
+                    partStyles.first { it is RichTextStyle.Hyperlink } as RichTextStyle.Hyperlink
+                tagName = "a"
+                tagStyle = " href=\"${hyperlinkStyle.url}\""
+                partStyles.remove(hyperlinkStyle)
+            } else {
+                tagName =
+                    partStyles
+                        .firstOrNull { htmlElementsStyleDecodeMap.containsKey(it) }
+                        ?.let {
+                            partStyles.remove(it)
+                            htmlElementsStyleDecodeMap[it]
+                        }
+                        ?: if (part.fromIndex > 0 && text[part.fromIndex - 1] != '\n') "span" else "p"
+
+                tagStyle = if (partStyles.isEmpty()) "" else {
                     val stylesToApply = partStyles
                         .fold(SpanStyle()) { acc, richTextStyle -> richTextStyle.applyStyle(acc) }
 
                     val cssStyleMap = CssDecoder.decodeSpanStyleToCssStyleMap(stylesToApply)
                     " style=\"${CssDecoder.decodeCssStyleMap(cssStyleMap)}\""
                 }
+            }
 
             builder.append("<$tagName$tagStyle>$partText</$tagName>")
+
+            // If it's a heading, add a new line after the closing tag
+            if (tagName in setOf("h1", "h2", "h3", "h4", "h5", "h6")) {
+                builder.append("\n")
+            }
         }
 
         return builder.toString()
@@ -166,9 +192,38 @@ internal object RichTextHtmlParser : RichTextParser<String> {
      * @see <a href="https://www.w3schools.com/html/html_blocks.asp">HTML blocks</a>
      */
     private val htmlInlineElements = setOf(
-        "a", "abbr", "acronym", "b", "bdo", "big", "br", "button", "cite", "code", "dfn", "em", "i", "img", "input",
-        "kbd", "label", "map", "object", "q", "samp", "script", "select", "small", "span", "strong", "sub", "sup",
-        "textarea", "time", "tt", "var"
+        "a",
+        "abbr",
+        "acronym",
+        "b",
+        "bdo",
+        "big",
+        "br",
+        "button",
+        "cite",
+        "code",
+        "dfn",
+        "em",
+        "i",
+        "img",
+        "input",
+        "kbd",
+        "label",
+        "map",
+        "object",
+        "q",
+        "samp",
+        "script",
+        "select",
+        "small",
+        "span",
+        "strong",
+        "sub",
+        "sup",
+        "textarea",
+        "time",
+        "tt",
+        "var"
     )
 
     /**
@@ -177,9 +232,40 @@ internal object RichTextHtmlParser : RichTextParser<String> {
      * @see <a href="https://www.w3schools.com/html/html_blocks.asp">HTML blocks</a>
      */
     private val htmlBlockElements = setOf(
-        "address", "article", "aside", "blockquote", "canvas", "dd", "div", "dl", "fieldset", "figcaption",
-        "figure", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6", "header", "hgroup", "hr", "li", "main", "nav",
-        "noscript", "ol", "p", "pre", "section", "table", "tfoot", "ul", "video"
+        "address",
+        "article",
+        "aside",
+        "blockquote",
+        "canvas",
+        "dd",
+        "div",
+        "dl",
+        "fieldset",
+        "figcaption",
+        "figure",
+        "footer",
+        "form",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "header",
+        "hgroup",
+        "hr",
+        "li",
+        "main",
+        "nav",
+        "noscript",
+        "ol",
+        "p",
+        "pre",
+        "section",
+        "table",
+        "tfoot",
+        "ul",
+        "video"
     )
 
     /**
@@ -188,6 +274,12 @@ internal object RichTextHtmlParser : RichTextParser<String> {
      * @see <a href="https://www.w3schools.com/html/html_formatting.asp">HTML formatting</a>
      */
     private val htmlElementsStyleEncodeMap = mapOf(
+        "h1" to RichTextStyle.H1,
+        "h2" to RichTextStyle.H2,
+        "h3" to RichTextStyle.H3,
+        "h4" to RichTextStyle.H4,
+        "h5" to RichTextStyle.H5,
+        "h6" to RichTextStyle.H6,
         "b" to RichTextStyle.Bold,
         "strong" to RichTextStyle.Bold,
         "i" to RichTextStyle.Italic,
@@ -200,12 +292,6 @@ internal object RichTextHtmlParser : RichTextParser<String> {
         "sup" to RichTextStyle.Superscript,
         "mark" to RichTextStyle.Mark,
         "small" to RichTextStyle.Small,
-        "h1" to RichTextStyle.H1,
-        "h2" to RichTextStyle.H2,
-        "h3" to RichTextStyle.H3,
-        "h4" to RichTextStyle.H4,
-        "h5" to RichTextStyle.H5,
-        "h6" to RichTextStyle.H6,
     )
 
     /**
@@ -214,6 +300,12 @@ internal object RichTextHtmlParser : RichTextParser<String> {
      * @see <a href="https://www.w3schools.com/html/html_formatting.asp">HTML formatting</a>
      */
     private val htmlElementsStyleDecodeMap = mapOf(
+        RichTextStyle.H1 to "h1",
+        RichTextStyle.H2 to "h2",
+        RichTextStyle.H3 to "h3",
+        RichTextStyle.H4 to "h4",
+        RichTextStyle.H5 to "h5",
+        RichTextStyle.H6 to "h6",
         RichTextStyle.Bold to "b",
         RichTextStyle.Italic to "i",
         RichTextStyle.Underline to "u",
@@ -222,12 +314,6 @@ internal object RichTextHtmlParser : RichTextParser<String> {
         RichTextStyle.Superscript to "sup",
         RichTextStyle.Mark to "mark",
         RichTextStyle.Small to "small",
-        RichTextStyle.H1 to "h1",
-        RichTextStyle.H2 to "h2",
-        RichTextStyle.H3 to "h3",
-        RichTextStyle.H4 to "h4",
-        RichTextStyle.H5 to "h5",
-        RichTextStyle.H6 to "h6",
     )
 
     /**

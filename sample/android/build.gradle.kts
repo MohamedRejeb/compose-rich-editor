@@ -34,5 +34,6 @@ android {
         implementation(project(":sample:common"))
 
         implementation(libs.activity.compose)
+        implementation(libs.accompanist.systemuicontroller)
     }
 }

@@ -43,6 +43,7 @@ kotlin {
 //                implementation("com.mohamedrejeb.richeditor:richeditor-compose:0.2.0")
                 implementation(project(":richeditor-compose"))
 
+
                 val voyagerVersion = "1.0.0-rc05"
 
                 // Navigator

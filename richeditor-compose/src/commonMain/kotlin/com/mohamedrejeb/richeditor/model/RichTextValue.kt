@@ -2,11 +2,13 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.saveable.Saver
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextDecoration
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.parser.annotatedstring.RichTextAnnotatedStringParser
 import com.mohamedrejeb.richeditor.parser.html.RichTextHtmlParser
@@ -41,9 +43,15 @@ data class RichTextValue internal constructor(
     /**
      * The [AnnotatedString] representation of the text
      */
-    internal val annotatedString
+    internal val annotatedString: AnnotatedString
         get() = buildAnnotatedString {
+            var lastToIndex = 0
             parts.forEach { part ->
+                if (part.fromIndex > lastToIndex) {
+                    // Append the text between the last part's end and the current part's start
+                    append(textFieldValue.text.substring(lastToIndex, part.fromIndex))
+                }
+
                 val spanStyle = part.styles.fold(SpanStyle()) { acc, style ->
                     style.applyStyle(acc)
                 }
@@ -51,11 +59,23 @@ data class RichTextValue internal constructor(
                     append(textFieldValue.text.substring(part.fromIndex, part.toIndex + 1))
                 }
                 part.styles.filterIsInstance<RichTextStyle.Hyperlink>().forEach { hyperlink ->
-                    addStringAnnotation("URL", hyperlink.url, part.fromIndex, part.toIndex + 1)
-                    append("\n")
+                    addStringAnnotation(
+                        tag = "URL",
+                        annotation = hyperlink.url,
+                        start = part.fromIndex,
+                        end = part.toIndex + 1
+                    )
                 }
+
+                lastToIndex = part.toIndex + 1
+            }
+
+            if (lastToIndex < textFieldValue.text.length) {
+                // Append the remaining text after the last part
+                append(textFieldValue.text.substring(lastToIndex))
             }
         }
+
 
     constructor(
         text: String = "",

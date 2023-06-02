@@ -7,7 +7,7 @@ package com.mohamedrejeb.richeditor.model
  * @param styles the styles to apply to the part.
  * @see RichTextStyle
  */
-internal data class RichTextPart(
+data class RichTextPart(
     val fromIndex: Int,
     val toIndex: Int,
     val styles: Set<RichTextStyle>,

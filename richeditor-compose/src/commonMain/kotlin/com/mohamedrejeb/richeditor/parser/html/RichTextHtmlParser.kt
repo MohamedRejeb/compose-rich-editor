@@ -83,7 +83,6 @@ internal object RichTextHtmlParser : RichTextParser<String> {
 
                 if (name == "a" && name in htmlInlineElements) {
                     val href = attributes["href"] ?: ""
-                    println("LINK $href")
                     currentStyles.add(RichTextStyle.Hyperlink(href))
                 }
 
@@ -97,6 +96,7 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                 }
 
                 if (name == "a" && name in htmlInlineElements) {
+                    text += " "
                     currentStyles.removeLastOrNull()
                 }
 

@@ -74,7 +74,6 @@ fun RichEditorContent() {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValue)
-                    .padding(20.dp)
                     .verticalScroll(rememberScrollState()).clickable(
                         interactionSource = MutableInteractionSource(),
                         indication = null,
@@ -83,6 +82,7 @@ fun RichEditorContent() {
             ) {
                 // BasicRichTextEditor
                 Text(
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
                     text = "BasicRichTextEditor:",
                     style = MaterialTheme.typography.titleMedium
                 )
@@ -90,7 +90,7 @@ fun RichEditorContent() {
                 Spacer(Modifier.height(8.dp))
 
                 RichTextStyleRow(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
                     value = basicRichTextValue,
                     onValueChanged = {
                         basicRichTextValue = it
@@ -98,7 +98,7 @@ fun RichEditorContent() {
                 )
 
                 BasicRichTextEditor(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
                     value = basicRichTextValue,
                     onValueChange = {
                         basicRichTextValue = it
@@ -109,6 +109,7 @@ fun RichEditorContent() {
 
                 // RichTextEditor
                 Text(
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
                     text = "RichTextEditor:",
                     style = MaterialTheme.typography.titleMedium
                 )
@@ -116,7 +117,7 @@ fun RichEditorContent() {
                 Spacer(Modifier.height(8.dp))
 
                 RichTextStyleRow(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
                     value = richTextValue,
                     onValueChanged = {
                         richTextValue = it
@@ -124,7 +125,7 @@ fun RichEditorContent() {
                 )
 
                 RichTextEditor(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
                     value = richTextValue,
                     onValueChange = {
                         richTextValue = it
@@ -135,6 +136,7 @@ fun RichEditorContent() {
 
                 // OutlinedRichTextEditor
                 Text(
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
                     text = "OutlinedRichTextEditor:",
                     style = MaterialTheme.typography.titleMedium
                 )
@@ -142,7 +144,7 @@ fun RichEditorContent() {
                 Spacer(Modifier.height(8.dp))
 
                 RichTextStyleRow(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
                     value = outlinedRichTextValue,
                     onValueChanged = {
                         outlinedRichTextValue = it
@@ -150,7 +152,7 @@ fun RichEditorContent() {
                 )
 
                 OutlinedRichTextEditor(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
                     value = outlinedRichTextValue,
                     onValueChange = {
                         outlinedRichTextValue = it
@@ -161,6 +163,7 @@ fun RichEditorContent() {
 
                 // RichText
                 Text(
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
                     text = "RichText:",
                     style = MaterialTheme.typography.titleMedium
                 )
@@ -168,7 +171,7 @@ fun RichEditorContent() {
                 Spacer(Modifier.height(8.dp))
 
                 RichText(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
                     richText = richTextValue,
                 )
             }

@@ -307,5 +307,13 @@ interface RichTextStyle {
         }
     }
 
+    object NormalText : RichTextStyle {
+        override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
+            return SpanStyle(
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Normal
+            )
+        }
+    }
 
 }

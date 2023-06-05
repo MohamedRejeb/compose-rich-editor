@@ -301,7 +301,7 @@ interface RichTextStyle {
     data class Hyperlink(val url: String) : RichTextStyle {
         override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
             return spanStyle.copy(
-                color = Color(0xFF0000FF),  // Blue color
+                color = Color(0xFF5C8AFF),  // Blue color
                 textDecoration = TextDecoration.Underline
             )
         }

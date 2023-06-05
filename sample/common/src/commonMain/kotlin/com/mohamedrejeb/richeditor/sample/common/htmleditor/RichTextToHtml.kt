@@ -6,6 +6,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.mohamedrejeb.richeditor.model.RichTextValue
 import com.mohamedrejeb.richeditor.sample.common.components.RichTextStyleRow
@@ -13,16 +14,14 @@ import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
 
 @Composable
 fun RichTextToHtml(
+    richTextValue: RichTextValue,
+    onRichTextValueChange: (RichTextValue) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var richTextValue by remember {
-        mutableStateOf(RichTextValue())
-    }
     val html = richTextValue.toHtml()
 
     Row(
         modifier = modifier
-            .fillMaxSize()
             .padding(20.dp)
     ) {
         Column(
@@ -40,7 +39,7 @@ fun RichTextToHtml(
             RichTextStyleRow(
                 value = richTextValue,
                 onValueChanged = {
-                    richTextValue = it
+                    onRichTextValueChange(it)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -54,7 +53,7 @@ fun RichTextToHtml(
                     .weight(1f),
                 value = richTextValue,
                 onValueChange = {
-                    richTextValue = it
+                    onRichTextValueChange(it)
                 },
             )
         }

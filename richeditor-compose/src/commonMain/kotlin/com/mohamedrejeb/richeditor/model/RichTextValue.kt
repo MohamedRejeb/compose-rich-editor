@@ -27,6 +27,15 @@ data class RichTextValue internal constructor(
     internal val parts: List<RichTextPart> = emptyList(),
 ) {
 
+    // Todo just a test
+    fun getPartsText(): String {
+        return parts.joinToString("") { part ->
+            (textFieldValue.text
+                .substring(part.fromIndex, part.toIndex + 1) + ": Style -> " + part.styles.joinToString(", ") { it::class.simpleName.orEmpty() })
+                .replace("\n", "\n\\n")
+        }
+    }
+
     /**
      * The [VisualTransformation] to apply to the text field
      */
@@ -135,6 +144,7 @@ data class RichTextValue internal constructor(
      * Create an HTML string from the [RichTextValue]
      *
      * @return an HTML string from the [RichTextValue]
+     * @since 0.2.0
      */
     fun toHtml(): String {
         return RichTextHtmlParser.decode(this)
@@ -144,6 +154,7 @@ data class RichTextValue internal constructor(
      * Create an [AnnotatedString] from the [RichTextValue]
      *
      * @return an [AnnotatedString] from the [RichTextValue]
+     * @since 0.2.0
      */
     fun toAnnotatedString(): AnnotatedString {
         return RichTextAnnotatedStringParser.decode(this)
@@ -155,6 +166,7 @@ data class RichTextValue internal constructor(
          *
          * @param html the HTML string
          * @return a [RichTextValue] from the HTML string
+         * @since 0.2.0
          */
         fun from(html: String): RichTextValue {
             return RichTextHtmlParser.encode(html)
@@ -165,6 +177,7 @@ data class RichTextValue internal constructor(
          *
          * @param annotatedString the [AnnotatedString]
          * @return a [RichTextValue] from the [AnnotatedString]
+         * @since 0.2.0
          */
         @ExperimentalRichTextApi
         fun from(annotatedString: AnnotatedString): RichTextValue {

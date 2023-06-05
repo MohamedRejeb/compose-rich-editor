@@ -16,16 +16,14 @@ import com.mohamedrejeb.richeditor.ui.material3.RichText
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HtmlToRichText(
+    html: TextFieldValue,
+    onHtmlChange: (TextFieldValue) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var html by remember {
-        mutableStateOf(TextFieldValue())
-    }
     val richTextValue = RichTextValue.from(html.text)
 
     Row(
         modifier = modifier
-            .fillMaxSize()
             .padding(20.dp)
     ) {
         Column(
@@ -46,7 +44,7 @@ fun HtmlToRichText(
                     .weight(1f),
                 value = html,
                 onValueChange = {
-                    html = it
+                    onHtmlChange(it)
                 },
             )
         }

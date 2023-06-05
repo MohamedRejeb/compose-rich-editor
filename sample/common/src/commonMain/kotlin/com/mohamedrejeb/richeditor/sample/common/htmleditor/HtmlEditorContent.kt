@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mohamedrejeb.richeditor.model.RichTextValue
@@ -19,6 +20,13 @@ fun HtmlEditorContent() {
     val navigator = LocalNavigator.currentOrThrow
 
     var isHtmlToRichText by remember { mutableStateOf(false) }
+
+    var html by remember {
+        mutableStateOf(TextFieldValue(""))
+    }
+    var richTextValue by remember {
+        mutableStateOf(RichTextValue())
+    }
 
     ComposeRichEditorTheme(false) {
         Scaffold(
@@ -49,17 +57,40 @@ fun HtmlEditorContent() {
             modifier = Modifier
                 .fillMaxSize()
         ) { paddingValue ->
-            if (isHtmlToRichText) {
-                HtmlToRichText(
+            Column(
+                modifier = Modifier
+                    .padding(paddingValue)
+                    .fillMaxSize()
+            ) {
+                if (isHtmlToRichText) {
+                    HtmlToRichText(
+                        html = html,
+                        onHtmlChange = {
+                            html = it
+                            richTextValue = RichTextValue.from(it.text)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    )
+                } else {
+                    RichTextToHtml(
+                        richTextValue = richTextValue,
+                        onRichTextValueChange = {
+                            richTextValue = it
+                            html = TextFieldValue(it.toHtml())
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    text = richTextValue.getPartsText(),
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValue)
-                )
-            } else {
-                RichTextToHtml(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValue)
+                        .fillMaxWidth()
+                        .padding(20.dp)
                 )
             }
         }

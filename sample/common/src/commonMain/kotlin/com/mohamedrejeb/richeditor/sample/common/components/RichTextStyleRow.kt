@@ -1,6 +1,5 @@
 package com.mohamedrejeb.richeditor.sample.common.components
 
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Circle

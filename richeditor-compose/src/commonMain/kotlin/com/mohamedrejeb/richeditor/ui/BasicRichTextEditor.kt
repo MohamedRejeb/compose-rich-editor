@@ -1,7 +1,9 @@
 package com.mohamedrejeb.richeditor.ui
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -72,6 +74,7 @@ import com.mohamedrejeb.richeditor.model.RichTextValue
  * innerTextField exactly once.
  *
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BasicRichTextEditor(
     value: RichTextValue,
@@ -91,6 +94,8 @@ fun BasicRichTextEditor(
     decorationBox: @Composable (innerTextField: @Composable () -> Unit) -> Unit =
         @Composable { innerTextField -> innerTextField() }
 ) {
+    val test = rememberPagerState(initialPage = 0, )
+    test.currentPage
     BasicTextField(
         value = value.textFieldValue,
         onValueChange = {

@@ -141,19 +141,19 @@ internal class RichTextValueBuilder {
     fun updateTextFieldValue(newTextFieldValue: TextFieldValue): RichTextValueBuilder {
         // Workaround to add unordered list support, it's going to be improved,
         // But for now if it works, it works :D
-        var newTextFieldValue = newTextFieldValue
-        if (newTextFieldValue.text.length > textFieldValue.text.length) {
-            newTextFieldValue = handleAddingCharacters(newTextFieldValue)
-        } else if (newTextFieldValue.text.length < textFieldValue.text.length) {
-            handleRemovingCharacters(newTextFieldValue)
+        var mNewTextFieldValue = newTextFieldValue
+        if (mNewTextFieldValue.text.length > textFieldValue.text.length) {
+            mNewTextFieldValue = handleAddingCharacters(mNewTextFieldValue)
+        } else if (mNewTextFieldValue.text.length < textFieldValue.text.length) {
+            handleRemovingCharacters(mNewTextFieldValue)
         }
 
-        updateCurrentStyles(newTextFieldValue = newTextFieldValue)
+        updateCurrentStyles(newTextFieldValue = mNewTextFieldValue)
 
-        collapseParts(textLastIndex = newTextFieldValue.text.lastIndex)
+        collapseParts(textLastIndex = mNewTextFieldValue.text.lastIndex)
 
         return this
-            .setTextFieldValue(newTextFieldValue)
+            .setTextFieldValue(mNewTextFieldValue)
     }
 
     /**
@@ -176,25 +176,25 @@ internal class RichTextValueBuilder {
     private fun handleAddingCharacters(
         newTextFieldValue: TextFieldValue,
     ): TextFieldValue {
-        var newTextFieldValue = newTextFieldValue
-        var typedChars = newTextFieldValue.text.length - textFieldValue.text.length
-        val startTypeIndex = newTextFieldValue.selection.min - typedChars
+        var mNewTextFieldValue = newTextFieldValue
+        var typedChars = mNewTextFieldValue.text.length - textFieldValue.text.length
+        val startTypeIndex = mNewTextFieldValue.selection.min - typedChars
 
         // Workaround to add unordered list support, it's going to be changed in the future
         // when I'm going to add ordered list support but for now if it works, it works :D
         if (
-            newTextFieldValue.text.getOrNull(startTypeIndex - 2) == '\n' &&
-            newTextFieldValue.text.getOrNull(startTypeIndex - 1) == '-' &&
-            newTextFieldValue.text.getOrNull(startTypeIndex) == ' '
+            mNewTextFieldValue.text.getOrNull(startTypeIndex - 2) == '\n' &&
+            mNewTextFieldValue.text.getOrNull(startTypeIndex - 1) == '-' &&
+            mNewTextFieldValue.text.getOrNull(startTypeIndex) == ' '
         ) {
-            var newText = newTextFieldValue.text
+            var newText = mNewTextFieldValue.text
             newText = newText.removeRange(startTypeIndex - 1..startTypeIndex)
             val firstHalf = newText.substring(0..startTypeIndex-2)
             val secondHalf = newText.substring(startTypeIndex-1..newText.lastIndex)
             val unorderedListPrefix = "  •  "
             newText = firstHalf + unorderedListPrefix + secondHalf
             typedChars+=3
-            newTextFieldValue = newTextFieldValue.copy(
+            mNewTextFieldValue = mNewTextFieldValue.copy(
                 text = newText,
                 selection = TextRange(startTypeIndex + typedChars)
             )
@@ -284,7 +284,7 @@ internal class RichTextValueBuilder {
                 )
             }
         }
-        return newTextFieldValue
+        return mNewTextFieldValue
     }
 
     /**

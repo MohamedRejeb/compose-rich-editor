@@ -2,13 +2,11 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.saveable.Saver
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextDecoration
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.parser.annotatedstring.RichTextAnnotatedStringParser
 import com.mohamedrejeb.richeditor.parser.html.RichTextHtmlParser
@@ -55,18 +53,7 @@ data class RichTextValue internal constructor(
                 val spanStyle = part.styles.fold(SpanStyle()) { acc, style ->
                     style.applyStyle(acc)
                 }
-                // Check if this part has a ListItem or OrderedListItem style
-                val listItem =
-                    part.styles.firstOrNull { it is RichTextStyle.UnorderedListItem || it is RichTextStyle.OrderedListItem }
-
                 withStyle(spanStyle) {
-                    // If this part is a list item, append a bullet point at the start
-                    // If it's an ordered list item, append the position instead
-
-                    when (listItem) {
-                        is RichTextStyle.UnorderedListItem -> append("• ")
-                        is RichTextStyle.OrderedListItem -> append("${listItem.position}. ")
-                    }
                     append(textFieldValue.text.substring(part.fromIndex, part.toIndex + 1))
                 }
                 part.styles.filterIsInstance<RichTextStyle.Hyperlink>().forEach { hyperlink ->
@@ -86,7 +73,6 @@ data class RichTextValue internal constructor(
                 append(textFieldValue.text.substring(lastToIndex))
             }
         }
-
 
     constructor(
         text: String = "",

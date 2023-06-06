@@ -24,10 +24,21 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                 val lastOpenedTag = openedTags.lastOrNull()?.first
                 if (lastOpenedTag in skippedHtmlElements) return@onText
 
-                val addedText = removeHtmlTextExtraSpaces(
+                var addedText = removeHtmlTextExtraSpaces(
                     input = it,
                     trimStart = text.lastOrNull() == ' ' || text.lastOrNull() == '\n',
                 )
+
+                // Check the last style in the currentStyles list
+                val lastStyle = currentStyles.lastOrNull()
+                if (lastStyle is RichTextStyle.UnorderedListItem) {
+                    // Add bullet point at start if last style is UnorderedListItem
+                    addedText = "\u2022 $addedText"
+                } else if (lastStyle is RichTextStyle.OrderedListItem) {
+                    // Add index at start if last style is OrderedListItem
+                    addedText = "${lastStyle.position}. $addedText"
+                }
+
                 text += addedText
 
                 parts.add(
@@ -58,9 +69,6 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                         "h4" -> currentStyles.add(RichTextStyle.H4)
                         "h5" -> currentStyles.add(RichTextStyle.H5)
                         "h6" -> currentStyles.add(RichTextStyle.H6)
-                        "ul" -> currentStyles.add(RichTextStyle.UnorderedList)
-                        "ol" -> currentStyles.add(RichTextStyle.OrderedList)
-                        "li" -> currentStyles.add(RichTextStyle.UnorderedListItem)
                         else -> {
                             val tagRichTextStyle = object : RichTextStyle {
                                 override fun applyStyle(spanStyle: SpanStyle): SpanStyle {

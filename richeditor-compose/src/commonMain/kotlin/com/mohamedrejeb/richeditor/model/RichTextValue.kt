@@ -62,6 +62,7 @@ data class RichTextValue internal constructor(
                 withStyle(spanStyle) {
                     // If this part is a list item, append a bullet point at the start
                     // If it's an ordered list item, append the position instead
+
                     when (listItem) {
                         is RichTextStyle.UnorderedListItem -> append("• ")
                         is RichTextStyle.OrderedListItem -> append("${listItem.position}. ")

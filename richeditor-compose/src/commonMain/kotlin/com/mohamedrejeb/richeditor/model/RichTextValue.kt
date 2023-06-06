@@ -55,7 +55,17 @@ data class RichTextValue internal constructor(
                 val spanStyle = part.styles.fold(SpanStyle()) { acc, style ->
                     style.applyStyle(acc)
                 }
+                // Check if this part has a ListItem or OrderedListItem style
+                val listItem =
+                    part.styles.firstOrNull { it is RichTextStyle.UnorderedListItem || it is RichTextStyle.OrderedListItem }
+
                 withStyle(spanStyle) {
+                    // If this part is a list item, append a bullet point at the start
+                    // If it's an ordered list item, append the position instead
+                    when (listItem) {
+                        is RichTextStyle.UnorderedListItem -> append("• ")
+                        is RichTextStyle.OrderedListItem -> append("${listItem.position}. ")
+                    }
                     append(textFieldValue.text.substring(part.fromIndex, part.toIndex + 1))
                 }
                 part.styles.filterIsInstance<RichTextStyle.Hyperlink>().forEach { hyperlink ->

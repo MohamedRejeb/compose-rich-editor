@@ -1,9 +1,7 @@
 package com.mohamedrejeb.richeditor.parser.html
 
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextDecoration
 import com.mohamedrejeb.ksoup.html.parser.KsoupHtmlHandler
 import com.mohamedrejeb.ksoup.html.parser.KsoupHtmlParser
 import com.mohamedrejeb.richeditor.model.RichTextPart
@@ -18,7 +16,8 @@ internal object RichTextHtmlParser : RichTextParser<String> {
         var text = ""
         val currentStyles: MutableList<RichTextStyle> = mutableListOf()
         val parts: MutableList<RichTextPart> = mutableListOf()
-
+        var listCounter = 1
+        val listStyleStack: MutableList<RichTextStyle> = mutableListOf()
         val handler = KsoupHtmlHandler
             .Builder()
             .onText {
@@ -59,6 +58,9 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                         "h4" -> currentStyles.add(RichTextStyle.H4)
                         "h5" -> currentStyles.add(RichTextStyle.H5)
                         "h6" -> currentStyles.add(RichTextStyle.H6)
+                        "ul" -> currentStyles.add(RichTextStyle.UnorderedList)
+                        "ol" -> currentStyles.add(RichTextStyle.OrderedList)
+                        "li" -> currentStyles.add(RichTextStyle.UnorderedListItem)
                         else -> {
                             val tagRichTextStyle = object : RichTextStyle {
                                 override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
@@ -86,6 +88,27 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                     currentStyles.add(RichTextStyle.Hyperlink(href))
                 }
 
+                if (name == "ol") {
+                    listStyleStack.add(RichTextStyle.OrderedList)
+                }
+
+                if (name == "ul") {
+                    listStyleStack.add(RichTextStyle.UnorderedList)
+                }
+
+                if (name == "li") {
+                    val listStyle = listStyleStack.lastOrNull()
+                    if (listStyle != null) {
+                        val listItemStyle = when (listStyle) {
+                            RichTextStyle.OrderedList -> RichTextStyle.OrderedListItem(listCounter++)
+                            RichTextStyle.UnorderedList -> RichTextStyle.UnorderedListItem
+                            else -> null
+                        }
+                        if (listItemStyle != null) {
+                            currentStyles.add(listItemStyle)
+                        }
+                    }
+                }
             }
             .onCloseTag { name, _ ->
                 openedTags.removeLastOrNull()
@@ -99,6 +122,36 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                     text += " "
                     currentStyles.removeLastOrNull()
                 }
+
+                if (name == "li") {
+                    text += "\n"
+                    currentStyles.removeLastOrNull()
+                }
+                if (name == "ul") {
+                    currentStyles.removeLastOrNull()
+                }
+                if (name == "ol") {
+                    currentStyles.removeLastOrNull()
+                }
+
+                if (name == "ol") {
+                    listStyleStack.removeLastOrNull()
+                    if (listStyleStack.none { it is RichTextStyle.OrderedList }) {
+                        listCounter = 1
+                    }
+                }
+
+                if (name == "ul") {
+                    listStyleStack.removeLastOrNull()
+                }
+
+                if (name == "li") {
+                    val listStyle = listStyleStack.lastOrNull()
+                    if (listStyle is RichTextStyle.OrderedList || listStyle is RichTextStyle.UnorderedList) {
+                        currentStyles.removeLastOrNull()
+                    }
+                }
+
 
                 // If it's a heading, add a new line after the closing tag
                 if (name in setOf("h1", "h2", "h3", "h4", "h5", "h6")) {
@@ -314,6 +367,8 @@ internal object RichTextHtmlParser : RichTextParser<String> {
         RichTextStyle.Superscript to "sup",
         RichTextStyle.Mark to "mark",
         RichTextStyle.Small to "small",
+        RichTextStyle.UnorderedList to "ul",
+        RichTextStyle.UnorderedListItem to "li"
     )
 
     /**

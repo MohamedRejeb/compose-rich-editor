@@ -36,6 +36,22 @@ fun RichEditorContent() {
             <a href="https://www.w3schools.com">Visit W3Schools</a><br>
             <p><b>RichTextEditor</b> is a <i>composable</i> that allows you to edit <u>rich text</u> content.</p>
             <a href="https://github.com/DAKSHSEMWAL/Compose-Rich-Editor">MDParserKit Core</a><br>
+            
+            <h2>An Unordered HTML List</h2>
+
+            <ul>
+              <li>Coffee</li>
+              <li>Tea</li>
+              <li>Milk</li>
+            </ul>  
+
+            <h2>An Ordered HTML List</h2>
+
+            <ol>
+              <li>Coffee</li>
+              <li>Tea</li>
+              <li>Milk</li>
+            </ol> 
             """.trimIndent()
             )
         )
@@ -47,6 +63,21 @@ fun RichEditorContent() {
             <a href="https://www.w3schools.com">Visit W3Schools</a><br>
             <p><b>RichTextEditor</b> is a <i>composable</i> that allows you to edit <u>rich text</u> content.</p>
             <a href="https://github.com/DAKSHSEMWAL/Compose-Rich-Editor">MDParserKit Core</a><br>
+             <h2>An Unordered HTML List</h2>
+
+            <ul>
+              <li>Coffee</li>
+              <li>Tea</li>
+              <li>Milk</li>
+            </ul>  
+
+            <h2>An Ordered HTML List</h2>
+
+            <ol>
+              <li>Coffee</li>
+              <li>Tea</li>
+              <li>Milk</li>
+            </ol
             """.trimIndent()
             )
         )

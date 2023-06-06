@@ -186,22 +186,64 @@ internal object RichTextHtmlParser : RichTextParser<String> {
         val parts = richTextValue.parts.sortedBy { it.fromIndex }
 
         val builder = StringBuilder()
-
+        var openedListTag: String? = null
         for (part in parts) {
-            val partText = text.substring(part.fromIndex, part.toIndex + 1).replace("\n", "<br>")
+            val partText: String
             val partStyles = part.styles.toMutableSet()
 
             var tagName: String
             var tagStyle = ""
 
-            // Handle hyperlink separately, extract href attribute and tag name
-            if (partStyles.any { it is RichTextStyle.Hyperlink }) {
+            if (partStyles.any { it is RichTextStyle.UnorderedListItem || it is RichTextStyle.OrderedListItem }) {
+                val listItemStyle =
+                    partStyles.first { it is RichTextStyle.UnorderedListItem || it is RichTextStyle.OrderedListItem }
+
+                if (listItemStyle is RichTextStyle.UnorderedListItem) {
+                    tagName = "li"
+                    partText =
+                        text.substring(part.fromIndex + 2, part.toIndex + 1).replace("\n", "<br>")
+                    if (openedListTag != "ul") {
+                        if (openedListTag != null) {
+                            builder.append("</$openedListTag>")
+                        }
+                        openedListTag = "ul"
+                        builder.append("<$openedListTag>")
+                    }
+                } else if (listItemStyle is RichTextStyle.OrderedListItem) {
+                    tagName = "li"
+                    partText = text.substring(
+                        part.fromIndex + "${listItemStyle.position}.".length,
+                        part.toIndex + 1
+                    ).replace("\n", "<br>")
+                    if (openedListTag != "ol") {
+                        if (openedListTag != null) {
+                            builder.append("</$openedListTag>")
+                        }
+                        openedListTag = "ol"
+                        builder.append("<$openedListTag>")
+                    }
+                } else {
+                    continue
+                }
+
+                partStyles.remove(listItemStyle)
+            } else if (partStyles.any { it is RichTextStyle.Hyperlink }) {
+                if (openedListTag != null) {
+                    builder.append("</$openedListTag>")
+                    openedListTag = null
+                }
                 val hyperlinkStyle =
                     partStyles.first { it is RichTextStyle.Hyperlink } as RichTextStyle.Hyperlink
                 tagName = "a"
                 tagStyle = " href=\"${hyperlinkStyle.url}\""
+                partText = text.substring(part.fromIndex, part.toIndex + 1).replace("\n", "<br>")
                 partStyles.remove(hyperlinkStyle)
             } else {
+                if (openedListTag != null) {
+                    builder.append("</$openedListTag>")
+                    openedListTag = null
+                }
+
                 tagName =
                     partStyles
                         .firstOrNull { htmlElementsStyleDecodeMap.containsKey(it) }
@@ -210,6 +252,7 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                             htmlElementsStyleDecodeMap[it]
                         }
                         ?: if (part.fromIndex > 0 && text[part.fromIndex - 1] != '\n') "span" else "p"
+                partText = text.substring(part.fromIndex, part.toIndex + 1).replace("\n", "<br>")
 
                 tagStyle = if (partStyles.isEmpty()) "" else {
                     val stylesToApply = partStyles
@@ -230,6 +273,7 @@ internal object RichTextHtmlParser : RichTextParser<String> {
 
         return builder.toString()
     }
+
 
     /**
      * Removes extra spaces from the given input. Because in HTML, extra spaces are ignored as well as new lines.

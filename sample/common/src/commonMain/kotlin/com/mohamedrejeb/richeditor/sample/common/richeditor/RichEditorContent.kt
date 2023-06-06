@@ -132,6 +132,7 @@ fun RichEditorContent() {
                     modifier = Modifier.fillMaxWidth().padding(20.dp),
                     value = basicRichTextValue,
                     onValueChange = {
+                        println("REMARKS,\n${it.toHtml()}")
                         basicRichTextValue = it
                     },
                 )

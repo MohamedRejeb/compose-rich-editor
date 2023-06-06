@@ -65,13 +65,17 @@ class RichTextState(
     }
 
     fun addSpanStyle(spanStyle: SpanStyle) {
-        toAddSpanStyle = toAddSpanStyle.merge(spanStyle)
-//        currentSpanStyle = currentSpanStyle.merge(unAppliedSpanStyle)
+        if (!currentSpanStyle.isSpecifiedFieldsEquals(spanStyle)) {
+            toAddSpanStyle = toAddSpanStyle.merge(spanStyle)
+            toRemoveSpanStyle = toRemoveSpanStyle.unmerge(spanStyle)
+        }
     }
 
     fun removeSpanStyle(spanStyle: SpanStyle) {
-        toRemoveSpanStyle = toRemoveSpanStyle.merge(spanStyle)
-//        currentSpanStyle = currentSpanStyle.merge(unAppliedSpanStyle)
+        if (currentSpanStyle.isSpecifiedFieldsEquals(spanStyle)) {
+            toRemoveSpanStyle = toRemoveSpanStyle.merge(spanStyle)
+            toAddSpanStyle = toAddSpanStyle.unmerge(spanStyle)
+        }
     }
 
     fun addParagraphStyle(paragraphStyle: ParagraphStyle) {
@@ -133,7 +137,7 @@ class RichTextState(
 
     /**
      * Handles adding characters to the text field.
-     * This method will update the [parts] list to reflect the new text field value.
+     * This method will update the [richParagraphStyleList] to reflect the new changes.
      *
      * @param newTextFieldValue the new text field value.
      */
@@ -155,16 +159,20 @@ class RichTextState(
             val beforeText = activeRichSpanStyle.text.substring(0, startIndex)
             val afterText = activeRichSpanStyle.text.substring(startIndex)
 
-            val newSpanStyle = activeRichSpanStyle.spanStyle.merge(toAddSpanStyle).unmerge(toRemoveSpanStyle)
+            val activeRichSpanStyleFullSpanStyle = activeRichSpanStyle.fullSpanStyle
+            val newSpanStyle = activeRichSpanStyleFullSpanStyle.merge(toAddSpanStyle).unmerge(toRemoveSpanStyle)
 
-            println("$toRemoveSpanStyle")
-            println("${toRemoveSpanStyle == SpanStyle()}")
+            println("newSpanStyle: $newSpanStyle")
 
-            if (toAddSpanStyle == SpanStyle() && toRemoveSpanStyle == SpanStyle()) {
+            if (
+                (toAddSpanStyle == SpanStyle() && toRemoveSpanStyle == SpanStyle()) ||
+                newSpanStyle == activeRichSpanStyleFullSpanStyle
+            ) {
                 activeRichSpanStyle.text = beforeText + typedText + afterText
             } else if (toRemoveSpanStyle == SpanStyle()) {
                 activeRichSpanStyle.text = beforeText
                 activeRichSpanStyle.children.add(
+                    0,
                     RichSpanStyle(
                         paragraph = activeRichSpanStyle.paragraph,
                         parent = activeRichSpanStyle,
@@ -175,6 +183,7 @@ class RichTextState(
                 )
                 if (afterText.isNotEmpty()) {
                     activeRichSpanStyle.children.add(
+                        1,
                         RichSpanStyle(
                             paragraph = activeRichSpanStyle.paragraph,
                             parent = activeRichSpanStyle,
@@ -185,7 +194,7 @@ class RichTextState(
                 }
             } else {
                 activeRichSpanStyle.text = beforeText
-                val parentRichSpanStyle = activeRichSpanStyle.getClosestSpanStyle(newSpanStyle)
+                val parentRichSpanStyle = activeRichSpanStyle.getClosestRichSpanStyle(newSpanStyle)
                 println("parentRichSpanStyle: $parentRichSpanStyle")
                 val newRichSpanStyle = RichSpanStyle(
                     paragraph = activeRichSpanStyle.paragraph,
@@ -199,16 +208,57 @@ class RichTextState(
                     parent = parentRichSpanStyle,
                     text = afterText,
                     textRange = TextRange(startIndex, startIndex + afterText.length),
-                    spanStyle = activeRichSpanStyle.spanStyle.unmerge(parentRichSpanStyle?.spanStyle),
+                    spanStyle = activeRichSpanStyleFullSpanStyle,
                 )
+
+                val toShiftRichSpanStyleList: MutableList<RichSpanStyle> = mutableListOf()
+                var previousRichSpanStyle: RichSpanStyle?
+                var currentRichSpanStyle: RichSpanStyle? = activeRichSpanStyle
+
+                toShiftRichSpanStyleList.add(newRichSpanStyle)
+                if (afterSpanStyle.text.isNotEmpty() || afterSpanStyle.children.isNotEmpty())
+                    toShiftRichSpanStyleList.add(afterSpanStyle)
+
+                while(true) {
+                    previousRichSpanStyle = currentRichSpanStyle
+                    currentRichSpanStyle = currentRichSpanStyle?.parent
+
+                    println("enter currentRichSpanStyle: $currentRichSpanStyle")
+
+                    if (currentRichSpanStyle == null || currentRichSpanStyle == parentRichSpanStyle) {
+                        break
+                    } else {
+                        val index = currentRichSpanStyle.children.indexOf(previousRichSpanStyle)
+                        if (index in 0 until currentRichSpanStyle.children.lastIndex) {
+                            ((index + 1)..currentRichSpanStyle.children.lastIndex).forEach {
+                                val richSpanStyle = currentRichSpanStyle.children[it]
+                                richSpanStyle.spanStyle = richSpanStyle.fullSpanStyle
+                                richSpanStyle.parent = parentRichSpanStyle
+                                toShiftRichSpanStyleList.add(richSpanStyle)
+                            }
+                            currentRichSpanStyle.children.removeRange(index + 1, currentRichSpanStyle.children.size)
+                        }
+                    }
+                }
+
+                println("to shift ${toShiftRichSpanStyleList.size}: $toShiftRichSpanStyleList")
+
                 if (parentRichSpanStyle == null) {
-                    activeRichSpanStyle.paragraph.children.add(newRichSpanStyle)
-                    if (afterSpanStyle.text.isNotEmpty())
-                        activeRichSpanStyle.paragraph.children.add(afterSpanStyle)
+                    val index = activeRichSpanStyle.paragraph.children.indexOf(previousRichSpanStyle)
+                    if (index in 0 .. activeRichSpanStyle.paragraph.children.lastIndex) {
+                        activeRichSpanStyle.paragraph.children.addAll(
+                            index + 1,
+                            toShiftRichSpanStyleList
+                        )
+                    }
                 } else {
-                    parentRichSpanStyle.children.add(newRichSpanStyle)
-                    if (afterSpanStyle.text.isNotEmpty())
-                        parentRichSpanStyle.children.add(afterSpanStyle)
+                    val index = parentRichSpanStyle.children.indexOf(previousRichSpanStyle)
+                    if (index in 0 .. parentRichSpanStyle.children.lastIndex) {
+                        parentRichSpanStyle.children.addAll(
+                            index + 1,
+                            toShiftRichSpanStyleList
+                        )
+                    }
                 }
             }
         } else {
@@ -224,7 +274,7 @@ class RichTextState(
 
     /**
      * Handles removing characters from the text field value.
-     * This method will update the [parts] list to reflect the new text field value.
+     * This method will update the [richParagraphStyleList] to reflect the new changes.
      *
      * @param newTextFieldValue The new text field value.
      */
@@ -235,8 +285,6 @@ class RichTextState(
         val startRemoveIndex = newTextFieldValue.selection.min + removedChars
         val endRemoveIndex = newTextFieldValue.selection.min
         val removeRange = TextRange(endRemoveIndex, startRemoveIndex)
-
-        val removedIndexes = mutableSetOf<Int>()
 
         val startRichSpanStyle = getSpanStyleByTextIndex(textIndex = startRemoveIndex - 1) ?: return
         val endRichSpanStyle = getSpanStyleByTextIndex(textIndex = endRemoveIndex) ?: return

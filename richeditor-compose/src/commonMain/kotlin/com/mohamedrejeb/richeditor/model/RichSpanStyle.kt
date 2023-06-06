@@ -9,13 +9,27 @@ import com.mohamedrejeb.richeditor.utils.isSpecifiedFieldsEquals
 public class RichSpanStyle(
     val key: Int = 0,
     val children: SnapshotStateList<RichSpanStyle> = mutableStateListOf(),
-    val paragraph: RichParagraphStyle,
-    val parent: RichSpanStyle? = null,
+    var paragraph: RichParagraphStyle,
+    var parent: RichSpanStyle? = null,
     var text: String = "",
     var textRange: TextRange = TextRange(start = 0, end = 0),
-    var fullTextRange: TextRange = TextRange(start = 0, end = 0),
+//    var fullTextRange: TextRange = TextRange(start = 0, end = 0),
     var spanStyle: SpanStyle = SpanStyle(),
 ) {
+    val fullTextRange: TextRange get() {
+        var textRange = this.textRange
+        var lastChild: RichSpanStyle? = this
+        while (true) {
+            lastChild = lastChild?.children?.lastOrNull()
+            if (lastChild == null) break
+            textRange = TextRange(
+                start = textRange.min,
+                end = lastChild.textRange.max
+            )
+        }
+        return textRange
+    }
+
     val fullSpanStyle: SpanStyle
         get() {
         var spanStyle = this.spanStyle
@@ -55,7 +69,7 @@ public class RichSpanStyle(
                 index = result.first
         }
 
-        fullTextRange = TextRange(start = textRange.min, end = index)
+//        fullTextRange = TextRange(start = textRange.min, end = index)
         return index to null
     }
 
@@ -92,15 +106,13 @@ public class RichSpanStyle(
         return this
     }
 
-    fun getClosestSpanStyle(spanStyle: SpanStyle): RichSpanStyle? {
-        println(spanStyle)
-        println(this.spanStyle)
+    fun getClosestRichSpanStyle(spanStyle: SpanStyle): RichSpanStyle? {
         if (spanStyle.isSpecifiedFieldsEquals(this.fullSpanStyle)) return this
 
-        return parent?.getClosestSpanStyle(spanStyle)
+        return parent?.getClosestRichSpanStyle(spanStyle)
     }
 
     override fun toString(): String {
-        return "RichSpanStyle(text='$text')"
+        return "RichSpanStyle(text='$text', textRange=$textRange, fullTextRange=$fullTextRange)"
     }
 }

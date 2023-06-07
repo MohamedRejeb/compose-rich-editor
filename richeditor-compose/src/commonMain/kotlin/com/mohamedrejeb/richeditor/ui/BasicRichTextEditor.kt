@@ -7,11 +7,16 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.key.Key.Companion.Enter
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -72,6 +77,7 @@ import com.mohamedrejeb.richeditor.model.RichTextValue
  * innerTextField exactly once.
  *
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun BasicRichTextEditor(
     value: RichTextValue,
@@ -98,7 +104,19 @@ fun BasicRichTextEditor(
                 value.updateTextFieldValue(it)
             )
         },
-        modifier = modifier,
+        modifier = modifier.onKeyEvent {
+            if (it.key.keyCode == Enter.keyCode) {
+                onValueChange(
+                    value.updateTextFieldValue(
+                        TextFieldValue(
+                            text = value.textFieldValue.text + "\n",
+                            selection = TextRange(value.textFieldValue.text.length + 1)
+                        )
+                    )
+                )
+            }
+            false
+        },
         enabled = enabled,
         readOnly = readOnly,
         textStyle = textStyle,

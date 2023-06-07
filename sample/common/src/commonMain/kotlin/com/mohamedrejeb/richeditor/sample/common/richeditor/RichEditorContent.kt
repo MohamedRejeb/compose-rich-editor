@@ -51,7 +51,7 @@ fun RichEditorContent() {
               <li><a href="https://github.com/DAKSHSEMWAL/Compose-Rich-Editor">MDParserKit Core</a></li>
               <li>Tea</li>
               <li>Milk</li>
-            </ol
+            </ol>
             """.trimIndent()
             )
         )

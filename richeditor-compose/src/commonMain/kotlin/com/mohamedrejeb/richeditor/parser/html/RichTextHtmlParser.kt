@@ -37,6 +37,7 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                             // Add bullet point at start if style is UnorderedListItem
                             addedText = "\u2022 $addedText"
                         }
+
                         is RichTextStyle.OrderedListItem -> {
                             // Add index at start if style is OrderedListItem
                             addedText = "${style.position}. $addedText"
@@ -144,7 +145,7 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                 when (name) {
                     // If it's a heading, add a new line after the closing tag
 
-                    in setOf("h1", "h2", "h3", "h4", "h5", "h6")->{
+                    in setOf("h1", "h2", "h3", "h4", "h5", "h6") -> {
                         text += "\n"
                     }
 
@@ -208,6 +209,10 @@ internal object RichTextHtmlParser : RichTextParser<String> {
             var tagName: String
             var tagStyle = ""
 
+            val hyperlinkStyle: RichTextStyle.Hyperlink? =
+                partStyles.filterIsInstance<RichTextStyle.Hyperlink>().firstOrNull()
+            partStyles.removeAll { it is RichTextStyle.Hyperlink }
+
             if (partStyles.any { it is RichTextStyle.UnorderedListItem || it is RichTextStyle.OrderedListItem }) {
                 val listItemStyle =
                     partStyles.first { it is RichTextStyle.UnorderedListItem || it is RichTextStyle.OrderedListItem }
@@ -230,7 +235,7 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                     }
                     if (openedListTag != "ul") {
                         if (openedListTag != null) {
-                            builder.append("</$openedListTag>")
+                            builder.append("</$openedListTag><br>")
                         }
                         openedListTag = "ul"
                         builder.append("<$openedListTag>")
@@ -253,7 +258,7 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                     }
                     if (openedListTag != "ol") {
                         if (openedListTag != null) {
-                            builder.append("</$openedListTag>")
+                            builder.append("</$openedListTag><br>")
                         }
                         openedListTag = "ol"
                         builder.append("<$openedListTag>")
@@ -263,17 +268,20 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                 }
 
                 partStyles.remove(listItemStyle)
-            } else if (partStyles.any { it is RichTextStyle.Hyperlink }) {
-                if (openedListTag != null) {
-                    builder.append("</$openedListTag>")
-                    openedListTag = null
+
+                builder.append("<$tagName$tagStyle>")
+
+                if (hyperlinkStyle != null) {
+                    builder.append("<a href=\"${hyperlinkStyle.url}\">")
                 }
-                val hyperlinkStyle =
-                    partStyles.first { it is RichTextStyle.Hyperlink } as RichTextStyle.Hyperlink
-                tagName = "a"
-                tagStyle = " href=\"${hyperlinkStyle.url}\""
-                partText = text.substring(part.fromIndex, part.toIndex + 1).replace("\n", "<br>")
-                partStyles.remove(hyperlinkStyle)
+
+                builder.append(partText.replace("\n", "<br>"))
+
+                if (hyperlinkStyle != null) {
+                    builder.append("</a>")
+                }
+                builder.append("</$tagName>")  // closing the <li> tag
+
             } else {
                 if (openedListTag != null) {
                     builder.append("</$openedListTag>")
@@ -297,17 +305,11 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                     val cssStyleMap = CssDecoder.decodeSpanStyleToCssStyleMap(stylesToApply)
                     " style=\"${CssDecoder.decodeCssStyleMap(cssStyleMap)}\""
                 }
+                builder.append("<$tagName$tagStyle>${partText}</$tagName>")
             }
-
-            builder.append("<$tagName$tagStyle>$partText")
-
-            if (tagName != "li") {
-                builder.append("</$tagName>")
-            }
-
             // If it's a heading, add a new line after the closing tag
             if (tagName in setOf("h1", "h2", "h3", "h4", "h5", "h6")) {
-                builder.append("\n")
+                builder.append("<br>")
             }
         }
 

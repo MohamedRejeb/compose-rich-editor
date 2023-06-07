@@ -30,13 +30,18 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                 )
 
                 // Check the last style in the currentStyles list
-                val lastStyle = currentStyles.lastOrNull()
-                if (lastStyle is RichTextStyle.UnorderedListItem) {
-                    // Add bullet point at start if last style is UnorderedListItem
-                    addedText = "\u2022 $addedText"
-                } else if (lastStyle is RichTextStyle.OrderedListItem) {
-                    // Add index at start if last style is OrderedListItem
-                    addedText = "${lastStyle.position}. $addedText"
+                // Go through all currentStyles and apply them
+                for (style in currentStyles) {
+                    when (style) {
+                        is RichTextStyle.UnorderedListItem -> {
+                            // Add bullet point at start if style is UnorderedListItem
+                            addedText = "\u2022 $addedText"
+                        }
+                        is RichTextStyle.OrderedListItem -> {
+                            // Add index at start if style is OrderedListItem
+                            addedText = "${style.position}. $addedText"
+                        }
+                    }
                 }
 
                 text += addedText
@@ -133,47 +138,54 @@ internal object RichTextHtmlParser : RichTextParser<String> {
             }
             .onCloseTag { name, _ ->
                 openedTags.removeLastOrNull()
+
                 currentStyles.removeLastOrNull()
 
-                if (name in htmlBlockElements) {
-                    text += "\n"
-                }
+                when (name) {
+                    // If it's a heading, add a new line after the closing tag
 
-                if (name == "a" && name in htmlInlineElements) {
-                    text += " "
-                    currentStyles.removeLastOrNull()
-                }
-
-                if (name == "ol") {
-                    listStyleStack.removeLastOrNull()
-                    if (listStyleStack.none { it is RichTextStyle.OrderedList }) {
-                        listCounter = 1
+                    in setOf("h1", "h2", "h3", "h4", "h5", "h6")->{
+                        text += "\n"
                     }
-                }
 
-                if (name == "ul") {
-                    listStyleStack.removeLastOrNull()
-                }
+                    in htmlBlockElements -> {
+                        when (name) {
+                            "li" -> {
+                                val listStyle = listStyleStack.lastOrNull()
+                                if (listStyle is RichTextStyle.OrderedList || listStyle is RichTextStyle.UnorderedList) {
+                                    currentStyles.removeLastOrNull()
+                                }
+                            }
 
-                if (name == "li") {
-                    val listStyle = listStyleStack.lastOrNull()
-                    if (listStyle is RichTextStyle.OrderedList || listStyle is RichTextStyle.UnorderedList) {
+                            "ol" -> {
+                                listStyleStack.removeLastOrNull()
+                                if (listStyleStack.none { it is RichTextStyle.OrderedList }) {
+                                    listCounter = 1
+                                }
+                            }
+
+                            "ul" -> {
+                                listStyleStack.removeLastOrNull()
+                            }
+                        }
+                        text += "\n"
+                    }
+
+                    in htmlInlineElements -> {
+                        if (name == "a") {
+                            text += " "
+                        }
                         currentStyles.removeLastOrNull()
                     }
-                }
 
-
-                // If it's a heading, add a new line after the closing tag
-                if (name in setOf("h1", "h2", "h3", "h4", "h5", "h6")) {
-                    text += "\n"
                 }
             }
+
             .build()
 
         val parser = KsoupHtmlParser(
             handler = handler
         )
-
         parser.write(input)
         parser.end()
         return RichTextValue(
@@ -305,7 +317,6 @@ internal object RichTextHtmlParser : RichTextParser<String> {
 
         return builder.toString()
     }
-
 
 
     /**

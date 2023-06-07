@@ -320,7 +320,7 @@ internal object RichTextHtmlParser : RichTextParser<String> {
         }
 
         if (openedListTag != null) {
-            builder.append("</$openedListTag>")
+            builder.append("</$openedListTag><br>")
         }
 
         return builder.toString()

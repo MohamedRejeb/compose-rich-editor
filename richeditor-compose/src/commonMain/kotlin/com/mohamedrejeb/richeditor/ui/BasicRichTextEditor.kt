@@ -17,9 +17,11 @@ import androidx.compose.ui.input.key.Key.Companion.Enter
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import com.mohamedrejeb.richeditor.model.RichTextStyle
 import com.mohamedrejeb.richeditor.model.RichTextValue
 import com.mohamedrejeb.richeditor.utils.appendListItem
@@ -116,12 +118,23 @@ fun BasicRichTextEditor(
                     it is RichTextStyle.UnorderedListItem || it is RichTextStyle.OrderedListItem
                 }
 
-                // Append a new list item based on the last list style
-                val updatedValue = lastListStyle?.let { value.appendListItem(it) } ?: value
+                if (lastListStyle == null) {
+                    // If it doesn't, just add a new line
+                    onValueChange(
+                        value.updateTextFieldValue(
+                            TextFieldValue(
+                                text = value.textFieldValue.text + "\n",
+                                selection = TextRange(value.textFieldValue.text.length + 1)
+                            )
+                        )
+                    )
+                } else {// Append a new list item based on the last list style
+                    val updatedValue = lastListStyle.let { value.appendListItem(it) }
 
-                // Call the onValueChange callback with the updated value
-                onValueChange(updatedValue)
-                return@onKeyEvent true
+                    // Call the onValueChange callback with the updated value
+                    onValueChange(updatedValue)
+                    return@onKeyEvent true
+                }
             }
             if (event.key.keyCode == Backspace.keyCode) {
                 // Check if there is any text selected in the editor

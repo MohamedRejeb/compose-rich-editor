@@ -12,8 +12,12 @@ fun RichTextValue.appendListItem(lastListStyle: RichTextStyle): RichTextValue {
 
     // The list item marker (bullet or number)
     val listItemMarker = when (lastListStyle) {
-        is RichTextStyle.UnorderedListItem -> "• "
+        is RichTextStyle.UnorderedListItem -> {
+            print("UnorderedListItem")
+            "• "
+        }
         is RichTextStyle.OrderedListItem -> {
+            print("OrderedListItem")
             // Find the last ordered list item and increment its number
             val lastOrderedListItemNumber = this.parts
                 .filter { it.styles.contains(lastListStyle) }
@@ -47,3 +51,4 @@ fun RichTextValue.appendListItem(lastListStyle: RichTextStyle): RichTextValue {
         textFieldValue = updatedTextFieldValue, parts = updatedParts
     )
 }
+

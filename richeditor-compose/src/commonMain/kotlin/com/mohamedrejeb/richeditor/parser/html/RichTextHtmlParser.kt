@@ -282,6 +282,12 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                 }
                 builder.append("</$tagName>")  // closing the <li> tag
 
+            } else if (hyperlinkStyle != null) {
+                tagName = "a"
+                tagStyle = " href=\"${hyperlinkStyle.url}\""
+                partStyles.remove(hyperlinkStyle)
+                partText = text.substring(part.fromIndex, part.toIndex + 1).replace("\n", "<br>")
+                builder.append("<$tagName$tagStyle>$partText</$tagName>")
             } else {
                 if (openedListTag != null) {
                     builder.append("</$openedListTag>")

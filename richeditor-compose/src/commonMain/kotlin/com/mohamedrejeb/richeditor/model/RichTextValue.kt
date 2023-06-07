@@ -2,11 +2,14 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.saveable.Saver
-import androidx.compose.ui.text.*
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.withStyle
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.parser.annotatedstring.RichTextAnnotatedStringParser
 import com.mohamedrejeb.richeditor.parser.html.RichTextHtmlParser
@@ -22,9 +25,9 @@ import com.mohamedrejeb.richeditor.utils.RichTextValueBuilder
  */
 @Immutable
 data class RichTextValue internal constructor(
-    internal val textFieldValue: TextFieldValue,
+    val textFieldValue: TextFieldValue,
     val currentStyles: Set<RichTextStyle> = emptySet(),
-    internal val parts: List<RichTextPart> = emptyList(),
+    val parts: List<RichTextPart> = emptyList(),
 ) {
 
     /**

@@ -91,32 +91,45 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                     text += "\n"
                 }
 
-                if (name == "a" && name in htmlInlineElements) {
-                    val href = attributes["href"] ?: ""
-                    currentStyles.add(RichTextStyle.Hyperlink(href))
-                }
+                when (name) {
+                    in htmlBlockElements -> {
+                        when (name) {
+                            "li" -> {
+                                val listStyle = listStyleStack.lastOrNull()
+                                if (listStyle != null) {
+                                    val listItemStyle = when (listStyle) {
+                                        RichTextStyle.OrderedList -> RichTextStyle.OrderedListItem(
+                                            listCounter++
+                                        )
 
-                if (name == "ol") {
-                    listStyleStack.add(RichTextStyle.OrderedList)
-                }
+                                        RichTextStyle.UnorderedList -> RichTextStyle.UnorderedListItem
+                                        else -> null
+                                    }
+                                    if (listItemStyle != null) {
+                                        currentStyles.add(listItemStyle)
+                                    }
+                                }
+                            }
 
-                if (name == "ul") {
-                    listStyleStack.add(RichTextStyle.UnorderedList)
-                }
+                            "ol" -> {
+                                listStyleStack.add(RichTextStyle.OrderedList)
+                            }
 
-                if (name == "li") {
-                    val listStyle = listStyleStack.lastOrNull()
-                    if (listStyle != null) {
-                        val listItemStyle = when (listStyle) {
-                            RichTextStyle.OrderedList -> RichTextStyle.OrderedListItem(listCounter++)
-                            RichTextStyle.UnorderedList -> RichTextStyle.UnorderedListItem
-                            else -> null
+                            "ul" -> {
+                                listStyleStack.add(RichTextStyle.UnorderedList)
+                            }
                         }
-                        if (listItemStyle != null) {
-                            currentStyles.add(listItemStyle)
+                    }
+
+                    in htmlInlineElements -> {
+                        if (name == "a") {
+                            val href = attributes["href"] ?: ""
+                            currentStyles.add(RichTextStyle.Hyperlink(href))
                         }
                     }
                 }
+
+
             }
             .onCloseTag { name, _ ->
                 openedTags.removeLastOrNull()
@@ -128,17 +141,6 @@ internal object RichTextHtmlParser : RichTextParser<String> {
 
                 if (name == "a" && name in htmlInlineElements) {
                     text += " "
-                    currentStyles.removeLastOrNull()
-                }
-
-                if (name == "li") {
-                    text += "\n"
-                    currentStyles.removeLastOrNull()
-                }
-                if (name == "ul") {
-                    currentStyles.removeLastOrNull()
-                }
-                if (name == "ol") {
                     currentStyles.removeLastOrNull()
                 }
 
@@ -200,8 +202,20 @@ internal object RichTextHtmlParser : RichTextParser<String> {
 
                 if (listItemStyle is RichTextStyle.UnorderedListItem) {
                     tagName = "li"
-                    partText =
-                        text.substring(part.fromIndex + 2, part.toIndex + 1).replace("\n", "<br>")
+                    partText = if (text.substring(
+                            part.fromIndex, part.toIndex + 1,
+                        ).startsWith("• ")
+                    ) {
+                        text.substring(
+                            part.fromIndex + "• ".length,
+                            part.toIndex + 1
+                        ).replace("\n", "<br>")
+                    } else {
+                        text.substring(
+                            part.fromIndex,
+                            part.toIndex + 1
+                        ).replace("\n", "<br>")
+                    }
                     if (openedListTag != "ul") {
                         if (openedListTag != null) {
                             builder.append("</$openedListTag>")
@@ -211,10 +225,20 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                     }
                 } else if (listItemStyle is RichTextStyle.OrderedListItem) {
                     tagName = "li"
-                    partText = text.substring(
-                        part.fromIndex + "${listItemStyle.position}.".length,
-                        part.toIndex + 1
-                    ).replace("\n", "<br>")
+                    partText = if (text.substring(
+                            part.fromIndex, part.toIndex + 1,
+                        ).startsWith("${listItemStyle.position}")
+                    ) {
+                        text.substring(
+                            part.fromIndex + "${listItemStyle.position}.".length,
+                            part.toIndex + 1
+                        ).replace("\n", "<br>")
+                    } else {
+                        text.substring(
+                            part.fromIndex,
+                            part.toIndex + 1
+                        ).replace("\n", "<br>")
+                    }
                     if (openedListTag != "ol") {
                         if (openedListTag != null) {
                             builder.append("</$openedListTag>")
@@ -263,7 +287,11 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                 }
             }
 
-            builder.append("<$tagName$tagStyle>$partText</$tagName>")
+            builder.append("<$tagName$tagStyle>$partText")
+
+            if (tagName != "li") {
+                builder.append("</$tagName>")
+            }
 
             // If it's a heading, add a new line after the closing tag
             if (tagName in setOf("h1", "h2", "h3", "h4", "h5", "h6")) {
@@ -271,8 +299,13 @@ internal object RichTextHtmlParser : RichTextParser<String> {
             }
         }
 
+        if (openedListTag != null) {
+            builder.append("</$openedListTag>")
+        }
+
         return builder.toString()
     }
+
 
 
     /**

@@ -40,7 +40,7 @@ fun RichEditorContent() {
             <h2>An Unordered HTML List</h2>
 
             <ul>
-              <li>Coffee</li>
+              <li><a href="https://github.com/DAKSHSEMWAL/Compose-Rich-Editor">MDParserKit Core</a></li>
               <li>Tea</li>
               <li>Milk</li>
             </ul>  
@@ -48,10 +48,10 @@ fun RichEditorContent() {
             <h2>An Ordered HTML List</h2>
 
             <ol>
-              <li>Coffee</li>
+              <li><a href="https://github.com/DAKSHSEMWAL/Compose-Rich-Editor">MDParserKit Core</a></li>
               <li>Tea</li>
               <li>Milk</li>
-            </ol> 
+            </ol
             """.trimIndent()
             )
         )
@@ -66,7 +66,7 @@ fun RichEditorContent() {
              <h2>An Unordered HTML List</h2>
 
             <ul>
-              <li>Coffee</li>
+              <li><a href="https://github.com/DAKSHSEMWAL/Compose-Rich-Editor">MDParserKit Core</a></li>
               <li>Tea</li>
               <li>Milk</li>
             </ul>  
@@ -74,10 +74,10 @@ fun RichEditorContent() {
             <h2>An Ordered HTML List</h2>
 
             <ol>
-              <li>Coffee</li>
+              <li><a href="https://github.com/DAKSHSEMWAL/Compose-Rich-Editor">MDParserKit Core</a></li>
               <li>Tea</li>
               <li>Milk</li>
-            </ol
+            </ol>
             """.trimIndent()
             )
         )

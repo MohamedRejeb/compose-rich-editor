@@ -91,10 +91,8 @@ fun BasicRichTextEditor(
     textStyle: TextStyle = TextStyle.Default,
     keyboardOptions: KeyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
     keyboardActions: KeyboardActions = KeyboardActions(onDone = {
-        val text = value.textFieldValue.text + "\n"
-        val textFieldValue = TextFieldValue(text, TextRange(text.length))
         handleEnterKeyPress(
-            value.updateTextFieldValue(textFieldValue),
+            value,
             onValueChange
         )
     }),

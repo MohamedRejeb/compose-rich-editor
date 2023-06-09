@@ -40,9 +40,7 @@ internal object RichTextHtmlParser : RichTextParser<String> {
 
                         is RichTextStyle.OrderedListItem -> {
                             // Add index at start if style is OrderedListItem
-                            println("Current Post ${style.position}")
                             addedText = "${style.position}. $addedText"
-                            println("Current Post ${style.position}")
                         }
                     }
                 }

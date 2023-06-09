@@ -31,7 +31,7 @@ object RichEditorScreen: Screen {
             <ol>
               <li><a href="https://github.com/DAKSHSEMWAL/Compose-Rich-Editor">MDParserKit Core</a></li>
               <li>Tea</li>
-              <li>Milk</li>
+              <li><a href="https://github.com/DAKSHSEMWAL/Compose-Rich-Editor">MDParserKit Core</a></li>
             </ol>
             """.trimIndent())
         }

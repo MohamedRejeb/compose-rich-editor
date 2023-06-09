@@ -40,7 +40,9 @@ internal object RichTextHtmlParser : RichTextParser<String> {
 
                         is RichTextStyle.OrderedListItem -> {
                             // Add index at start if style is OrderedListItem
+                            println("Current Post ${style.position}")
                             addedText = "${style.position}. $addedText"
+                            println("Current Post ${style.position}")
                         }
                     }
                 }
@@ -203,6 +205,10 @@ internal object RichTextHtmlParser : RichTextParser<String> {
         val builder = StringBuilder()
         var openedListTag: String? = null
         for (part in parts) {
+            // ensure indices are valid before calling substring
+            if (part.fromIndex < 0 || part.toIndex >= text.length) {
+                continue
+            }
             val partText: String
             val partStyles = part.styles.toMutableSet()
 
@@ -235,7 +241,7 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                     }
                     if (openedListTag != "ul") {
                         if (openedListTag != null) {
-                            builder.append("</$openedListTag><br>")
+                            builder.append("</$openedListTag>")
                         }
                         openedListTag = "ul"
                         builder.append("<$openedListTag>")
@@ -258,7 +264,7 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                     }
                     if (openedListTag != "ol") {
                         if (openedListTag != null) {
-                            builder.append("</$openedListTag><br>")
+                            builder.append("</$openedListTag>")
                         }
                         openedListTag = "ol"
                         builder.append("<$openedListTag>")
@@ -320,7 +326,7 @@ internal object RichTextHtmlParser : RichTextParser<String> {
         }
 
         if (openedListTag != null) {
-            builder.append("</$openedListTag><br>")
+            builder.append("</$openedListTag>")
         }
 
         return builder.toString()

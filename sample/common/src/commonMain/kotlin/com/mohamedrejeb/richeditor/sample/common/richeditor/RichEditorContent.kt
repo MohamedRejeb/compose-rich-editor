@@ -41,60 +41,20 @@ import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun RichEditorContent() {
+fun RichEditorContent(content: String,onValueChange: (String) -> Unit) {
     val navigator = LocalNavigator.currentOrThrow
     val keyboardController = LocalSoftwareKeyboardController.current
     var basicRichTextValue by remember {
         mutableStateOf(
             RichTextValue.from(
-                """<h1>Text</h1>
-            <a href="https://www.w3schools.com">Visit W3Schools</a><br>
-            <p><b>RichTextEditor</b> is a <i>composable</i> that allows you to edit <u>rich text</u> content.</p>
-            <a href="https://github.com/DAKSHSEMWAL/Compose-Rich-Editor">MDParserKit Core</a><br>
-            <a href="https://music.youtube.com/search?q=summer+high">https://music.youtube.com/search?q=summer+high</a><br>
-            
-            <h2>An Unordered HTML List</h2>
-
-            <ul>
-              <li><a href="https://github.com/DAKSHSEMWAL/Compose-Rich-Editor">MDParserKit Core</a></li>
-              <li>Tea</li>
-              <li>Milk</li>
-            </ul>  
-
-            <h2>An Ordered HTML List</h2>
-
-            <ol>
-              <li><a href="https://github.com/DAKSHSEMWAL/Compose-Rich-Editor">MDParserKit Core</a></li>
-              <li>Tea</li>
-              <li>Milk</li>
-            </ol>
-            """.trimIndent()
+                content
             )
         )
     }
     var richTextValue by remember {
         mutableStateOf(
             RichTextValue.from(
-                """<h1>Text</h1>
-            <a href="https://www.w3schools.com">Visit W3Schools</a><br>
-            <p><b>RichTextEditor</b> is a <i>composable</i> that allows you to edit <u>rich text</u> content.</p>
-            <a href="https://github.com/DAKSHSEMWAL/Compose-Rich-Editor">MDParserKit Core</a><br>
-             <h2>An Unordered HTML List</h2>
-
-            <ul>
-              <li><a href="https://github.com/DAKSHSEMWAL/Compose-Rich-Editor">MDParserKit Core</a></li>
-              <li>Tea</li>
-              <li>Milk</li>
-            </ul>  
-
-            <h2>An Ordered HTML List</h2>
-
-            <ol>
-              <li><a href="https://github.com/DAKSHSEMWAL/Compose-Rich-Editor">MDParserKit Core</a></li>
-              <li>Tea</li>
-              <li>Milk</li>
-            </ol>
-            """.trimIndent()
+                content
             )
         )
     }
@@ -141,6 +101,7 @@ fun RichEditorContent() {
                     value = basicRichTextValue,
                     onValueChanged = {
                         basicRichTextValue = it
+                        onValueChange(it.toHtml())
                     },
                 )
 
@@ -148,7 +109,6 @@ fun RichEditorContent() {
                     modifier = Modifier.fillMaxWidth().padding(20.dp),
                     value = basicRichTextValue,
                     onValueChange = {
-                        println("REMARKS,\n${it.toHtml()}")
                         basicRichTextValue = it
                     },
                 )

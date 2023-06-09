@@ -2,7 +2,6 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.BaselineShift
@@ -308,15 +307,6 @@ interface RichTextStyle {
             return spanStyle.copy(
                 color = Color(0xFF5C8AFF),  // Blue color
                 textDecoration = TextDecoration.Underline
-            )
-        }
-    }
-
-    object NormalText : RichTextStyle {
-        override fun applyStyle(spanStyle: SpanStyle): SpanStyle {
-            return SpanStyle(
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Normal
             )
         }
     }

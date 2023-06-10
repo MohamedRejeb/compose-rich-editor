@@ -3,10 +3,48 @@ package com.mohamedrejeb.richeditor.utils
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.isUnspecified
 
-internal fun SpanStyle.unmerge(other: SpanStyle? = null): SpanStyle {
+/**
+ * Merge two [SpanStyle]s together.
+ * It behaves like [SpanStyle.merge] but it also merges [TextDecoration]s.
+ * Which is not the case in [SpanStyle.merge].
+ * So if the two [SpanStyle]s have different [TextDecoration]s, they will be combined.
+ */
+internal fun SpanStyle.customMerge(
+    other: SpanStyle?,
+    textDecoration: TextDecoration? = null
+): SpanStyle {
+    if (other == null) return this
+
+    val firstTextDecoration = textDecoration ?: this.textDecoration
+    val secondTextDecoration = other.textDecoration
+
+    return if (
+        firstTextDecoration != null &&
+        secondTextDecoration != null &&
+        firstTextDecoration != secondTextDecoration
+    ) {
+        this.merge(
+            other.copy(
+                textDecoration = TextDecoration.combine(
+                    listOf(
+                        firstTextDecoration,
+                        secondTextDecoration
+                    )
+                )
+            )
+        )
+    } else {
+        this.merge(other)
+    }
+}
+
+internal fun SpanStyle.unmerge(
+    other: SpanStyle?,
+): SpanStyle {
     if (other == null) return this
 
     return SpanStyle(
@@ -25,13 +63,21 @@ internal fun SpanStyle.unmerge(other: SpanStyle? = null): SpanStyle {
         baselineShift = if (other.baselineShift != null) null else this.baselineShift,
         textGeometricTransform = if (other.textGeometricTransform != null) null else this.textGeometricTransform,
         localeList = if (other.localeList != null) null else this.localeList,
-        background = if (other.background.isSpecified) Color.Unspecified else this.background ,
-        textDecoration = if (other.textDecoration != null) null else this.textDecoration,
+        background = if (other.background.isSpecified) Color.Unspecified else this.background,
+        textDecoration = if (other.textDecoration != null && other.textDecoration == this.textDecoration) {
+            null
+        } else if (
+            other.textDecoration != null &&
+            this.textDecoration != null &&
+            other.textDecoration!! in this.textDecoration!!
+        ) {
+            this.textDecoration!! - other.textDecoration!!
+        } else this.textDecoration,
         shadow = if (other.shadow != null) null else this.shadow,
     )
 }
 
-internal fun SpanStyle.isSpecifiedFieldsEquals(other: SpanStyle? = null): Boolean {
+internal fun SpanStyle.isSpecifiedFieldsEquals(other: SpanStyle? = null, strict: Boolean = false): Boolean {
     if (other == null) return false
 
     if (other.color.isSpecified && this.color != other.color) return false
@@ -46,7 +92,18 @@ internal fun SpanStyle.isSpecifiedFieldsEquals(other: SpanStyle? = null): Boolea
     if (other.textGeometricTransform != null && this.textGeometricTransform != other.textGeometricTransform) return false
     if (other.localeList != null && this.localeList != other.localeList) return false
     if (other.background.isSpecified && this.background != other.background) return false
-    if (other.textDecoration != null && this.textDecoration != other.textDecoration) return false
+    if (strict) {
+        if (other.textDecoration != null && this.textDecoration != other.textDecoration) return false
+    } else {
+        if (
+            (other.textDecoration != null &&
+                    this.textDecoration == null) ||
+            (other.textDecoration != null &&
+                    this.textDecoration != null &&
+                    other.textDecoration!! !in this.textDecoration!! &&
+                    this.textDecoration!! !in other.textDecoration!!)
+        ) return false
+    }
     if (other.shadow != null && this.shadow != other.shadow) return false
 
     return true

@@ -6,27 +6,24 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 internal class RichSpanStyleTest {
-    val paragraph = RichParagraphStyle(key = 0)
-    val richSpanStyle = RichSpanStyle(
+    private val paragraph = RichParagraphStyle(key = 0)
+    private val richSpanStyle = RichSpanStyle(
         key = 0,
         paragraph = paragraph,
         text = "012",
         textRange = TextRange(0, 3),
-        fullTextRange = TextRange(0, 8),
         children = mutableStateListOf(
             RichSpanStyle(
                 key = 10,
                 paragraph = paragraph,
                 text = "34",
                 textRange = TextRange(3, 5),
-                fullTextRange = TextRange(3, 5),
             ),
             RichSpanStyle(
                 key = 11,
                 paragraph = paragraph,
                 text = "567",
                 textRange = TextRange(5, 8),
-                fullTextRange = TextRange(5, 8),
             ),
         )
     )

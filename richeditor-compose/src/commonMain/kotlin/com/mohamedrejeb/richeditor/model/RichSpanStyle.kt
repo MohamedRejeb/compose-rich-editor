@@ -107,7 +107,7 @@ public class RichSpanStyle(
     }
 
     fun getClosestRichSpanStyle(spanStyle: SpanStyle): RichSpanStyle? {
-        if (spanStyle.isSpecifiedFieldsEquals(this.fullSpanStyle)) return this
+        if (spanStyle.isSpecifiedFieldsEquals(this.fullSpanStyle, strict = true)) return this
 
         return parent?.getClosestRichSpanStyle(spanStyle)
     }

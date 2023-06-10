@@ -10,6 +10,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import com.mohamedrejeb.richeditor.utils.append
+import com.mohamedrejeb.richeditor.utils.customMerge
 import com.mohamedrejeb.richeditor.utils.isSpecifiedFieldsEquals
 import com.mohamedrejeb.richeditor.utils.unmerge
 import kotlin.math.max
@@ -46,7 +47,7 @@ class RichTextState(
 
     private var unAppliedParagraphStyle: ParagraphStyle by mutableStateOf(ParagraphStyle())
 
-    val currentSpanStyle: SpanStyle get() = currentAppliedSpanStyle.merge(toAddSpanStyle).unmerge(toRemoveSpanStyle)
+    val currentSpanStyle: SpanStyle get() = currentAppliedSpanStyle.customMerge(toAddSpanStyle).unmerge(toRemoveSpanStyle)
 
     var currentParagraphStyle: ParagraphStyle by mutableStateOf(
         getParagraphStyleByTextIndex(textIndex = textFieldValue.selection.min)?.paragraphStyle ?: ParagraphStyle()
@@ -66,14 +67,14 @@ class RichTextState(
 
     fun addSpanStyle(spanStyle: SpanStyle) {
         if (!currentSpanStyle.isSpecifiedFieldsEquals(spanStyle)) {
-            toAddSpanStyle = toAddSpanStyle.merge(spanStyle)
+            toAddSpanStyle = toAddSpanStyle.customMerge(spanStyle)
             toRemoveSpanStyle = toRemoveSpanStyle.unmerge(spanStyle)
         }
     }
 
     fun removeSpanStyle(spanStyle: SpanStyle) {
         if (currentSpanStyle.isSpecifiedFieldsEquals(spanStyle)) {
-            toRemoveSpanStyle = toRemoveSpanStyle.merge(spanStyle)
+            toRemoveSpanStyle = toRemoveSpanStyle.customMerge(spanStyle)
             toAddSpanStyle = toAddSpanStyle.unmerge(spanStyle)
         }
     }
@@ -160,9 +161,7 @@ class RichTextState(
             val afterText = activeRichSpanStyle.text.substring(startIndex)
 
             val activeRichSpanStyleFullSpanStyle = activeRichSpanStyle.fullSpanStyle
-            val newSpanStyle = activeRichSpanStyleFullSpanStyle.merge(toAddSpanStyle).unmerge(toRemoveSpanStyle)
-
-            println("newSpanStyle: $newSpanStyle")
+            val newSpanStyle = activeRichSpanStyleFullSpanStyle.customMerge(toAddSpanStyle).unmerge(toRemoveSpanStyle)
 
             if (
                 (toAddSpanStyle == SpanStyle() && toRemoveSpanStyle == SpanStyle()) ||
@@ -178,7 +177,9 @@ class RichTextState(
                         parent = activeRichSpanStyle,
                         text = typedText,
                         textRange = TextRange(startTypeIndex, startTypeIndex + typedText.length),
-                        spanStyle = toAddSpanStyle,
+                        spanStyle = SpanStyle(textDecoration = currentSpanStyle.textDecoration).customMerge(
+                            toAddSpanStyle
+                        ),
                     )
                 )
                 if (afterText.isNotEmpty()) {
@@ -195,7 +196,6 @@ class RichTextState(
             } else {
                 activeRichSpanStyle.text = beforeText
                 val parentRichSpanStyle = activeRichSpanStyle.getClosestRichSpanStyle(newSpanStyle)
-                println("parentRichSpanStyle: $parentRichSpanStyle")
                 val newRichSpanStyle = RichSpanStyle(
                     paragraph = activeRichSpanStyle.paragraph,
                     parent = parentRichSpanStyle,
@@ -223,8 +223,6 @@ class RichTextState(
                     previousRichSpanStyle = currentRichSpanStyle
                     currentRichSpanStyle = currentRichSpanStyle?.parent
 
-                    println("enter currentRichSpanStyle: $currentRichSpanStyle")
-
                     if (currentRichSpanStyle == null || currentRichSpanStyle == parentRichSpanStyle) {
                         break
                     } else {
@@ -240,8 +238,6 @@ class RichTextState(
                         }
                     }
                 }
-
-                println("to shift ${toShiftRichSpanStyleList.size}: $toShiftRichSpanStyleList")
 
                 if (parentRichSpanStyle == null) {
                     val index = activeRichSpanStyle.paragraph.children.indexOf(previousRichSpanStyle)

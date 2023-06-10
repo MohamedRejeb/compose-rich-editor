@@ -6,28 +6,25 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 internal class RichParagraphStyleTest {
-    val paragraph = RichParagraphStyle(key = 0)
-    val richSpanStyleList = listOf(
+    private val paragraph = RichParagraphStyle(key = 0)
+    private val richSpanStyleList = listOf(
         RichSpanStyle(
             key = 0,
             paragraph = paragraph,
             text = "012",
             textRange = TextRange(0, 3),
-            fullTextRange = TextRange(0, 7),
             children = mutableStateListOf(
                 RichSpanStyle(
                     key = 10,
                     paragraph = paragraph,
                     text = "345",
                     textRange = TextRange(3, 6),
-                    fullTextRange = TextRange(3, 6),
                 ),
                 RichSpanStyle(
                     key = 11,
                     paragraph = paragraph,
                     text = "6",
                     textRange = TextRange(6, 7),
-                    fullTextRange = TextRange(6, 7),
                 ),
             )
         ),
@@ -36,10 +33,9 @@ internal class RichParagraphStyleTest {
             paragraph = paragraph,
             text = "8",
             textRange = TextRange(8, 9),
-            fullTextRange = TextRange(8, 9),
         )
     )
-    val richParagraphStyle = RichParagraphStyle(key = 0,)
+    private val richParagraphStyle = RichParagraphStyle(key = 0,)
 
     @Test
     fun testRemoveTextRange() {

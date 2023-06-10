@@ -32,6 +32,23 @@ public class RichParagraphStyle(
         return index to null
     }
 
+    fun getSpanStyleListByTextRange(
+        searchTextRange: TextRange,
+        offset: Int = 0,
+    ): Pair<Int, List<RichSpanStyle>> {
+        var index = offset
+        val richSpanStyleList = mutableListOf<RichSpanStyle>()
+        children.forEach { richSpanStyle ->
+            val result = richSpanStyle.getSpanStyleListByTextRange(
+                searchTextRange = searchTextRange,
+                offset = index,
+            )
+            richSpanStyleList.addAll(result.second)
+            index = result.first
+        }
+        return index to richSpanStyleList
+    }
+
     fun removeTextRange(textRange: TextRange): RichParagraphStyle? {
         println("removeTextRange: $textRange")
         for (i in children.lastIndex downTo 0) {

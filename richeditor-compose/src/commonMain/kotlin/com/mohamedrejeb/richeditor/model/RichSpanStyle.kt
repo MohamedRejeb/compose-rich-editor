@@ -73,11 +73,43 @@ public class RichSpanStyle(
         return index to null
     }
 
+    fun getSpanStyleListByTextRange(
+        searchTextRange: TextRange,
+        offset: Int = 0,
+    ): Pair<Int, List<RichSpanStyle>> {
+        var index = offset
+        val richSpanStyleList = mutableListOf<RichSpanStyle>()
+
+        // Set start text range
+        textRange = TextRange(start = index, end = index + text.length)
+        index += this.text.length
+
+        // Check if the text index is in the start text range
+        if (searchTextRange.min < textRange.max && searchTextRange.max > textRange.min)
+            richSpanStyleList.add(this)
+
+        // Check if the text index is in the children
+        children.forEach { richSpanStyle ->
+            val result = richSpanStyle.getSpanStyleListByTextRange(
+                searchTextRange = searchTextRange,
+                offset = index,
+            )
+            richSpanStyleList.addAll(result.second)
+            index = result.first
+        }
+
+        return index to richSpanStyleList
+    }
+
     fun removeTextRange(textRange: TextRange): RichSpanStyle? {
         if (textRange.min <= this.textRange.min && textRange.max >= fullTextRange.max) return null
 
         // Remove text from start
-        if (textRange.min in this.textRange || textRange.max in this.textRange) {
+        if (textRange.min in this.textRange || (textRange.max - 1) in this.textRange) {
+            println("Remove text from start")
+            println("textRange: $textRange")
+            println("this.textRange: ${this.textRange}")
+            println("text: ${this.text}")
             val startFirstHalf = 0 until (textRange.min - this.textRange.min)
             val startSecondHalf = (textRange.max - this.textRange.min) until (this.textRange.max - this.textRange.min)
             val newStartText =

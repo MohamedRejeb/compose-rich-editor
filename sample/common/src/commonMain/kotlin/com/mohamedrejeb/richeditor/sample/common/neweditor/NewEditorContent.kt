@@ -98,7 +98,7 @@ fun NewEditorContent() {
                     richTextState.richParagraphStyleList.forEachIndexed { index, richParagraphStyle ->
                         Text("Paragraph $index: ${richParagraphStyle.children.size} children")
                         richParagraphStyle.children.forEachIndexed { index, richTextStyle ->
-                            RichTextStyleTreeRepresentation(index, richTextStyle, "  ")
+                            RichTextStyleTreeRepresentation(index, richTextStyle, " -")
                         }
 
                         Divider(modifier = Modifier.padding(vertical = 20.dp))
@@ -113,6 +113,6 @@ fun NewEditorContent() {
 fun RichTextStyleTreeRepresentation(index: Int, richSpanStyle: RichSpanStyle, startText: String) {
     Text("${startText}Text $index `$richSpanStyle`: ${richSpanStyle.children.size} children")
     richSpanStyle.children.forEachIndexed { index, richSpanStyle ->
-        RichTextStyleTreeRepresentation(index, richSpanStyle, "$startText  ")
+        RichTextStyleTreeRepresentation(index, richSpanStyle, "$startText-")
     }
 }

@@ -145,6 +145,6 @@ public class RichSpanStyle(
     }
 
     override fun toString(): String {
-        return "RichSpanStyle(text='$text', textRange=$textRange, fullTextRange=$fullTextRange)"
+        return "RichSpanStyle(text='$text', textRange=$textRange, fullTextRange=$fullTextRange, fullSpanStyle=$fullSpanStyle)"
     }
 }

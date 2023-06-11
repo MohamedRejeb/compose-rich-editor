@@ -1,5 +1,5 @@
 group = "com.mohamedrejeb.richeditor"
-version = "0.2.0"
+version = "1.0.0-alpha01"
 
 buildscript {
     repositories {
@@ -24,7 +24,7 @@ allprojects {
     }
 
     group = "com.mohamedrejeb.richeditor"
-    version = "0.2.0"
+    version = "1.0.0-alpha01"
 
 //    apply(plugin = "org.jetbrains.dokka")
     apply(plugin = "maven-publish")

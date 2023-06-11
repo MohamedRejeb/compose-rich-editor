@@ -20,6 +20,14 @@ import com.mohamedrejeb.richeditor.utils.RichTextValueBuilder
  * @see RichTextStyle
  * @see RichTextPart
  */
+@Deprecated(
+    message = "Use rememberRichTextState instead",
+    replaceWith = ReplaceWith(
+        expression = "rememberRichTextState()",
+        imports = ["com.mohamedrejeb.richeditor.model.rememberRichTextState"]
+    ),
+    level = DeprecationLevel.WARNING,
+)
 @Immutable
 data class RichTextValue internal constructor(
     internal val textFieldValue: TextFieldValue,

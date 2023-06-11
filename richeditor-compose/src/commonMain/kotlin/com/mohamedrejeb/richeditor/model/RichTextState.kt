@@ -178,7 +178,7 @@ class RichTextState(
             ) {
                 activeRichSpanStyle.text = beforeText + typedText + afterText
             } else {
-                applyStyleToRichSpanStyle(
+                handleUpdatingRichSpanStyle(
                     richSpanStyle = activeRichSpanStyle,
                     beforeText = beforeText,
                     middleText = typedText,
@@ -262,7 +262,7 @@ class RichTextState(
 
             val startApplyStyleIndex = maxOf(startSelectionIndex, richSpanStyle.textRange.start)
 
-            applyStyleToRichSpanStyle(
+            handleUpdatingRichSpanStyle(
                 richSpanStyle = richSpanStyle,
                 newSpanStyle = newSpanStyle,
                 startIndex = startApplyStyleIndex,
@@ -281,6 +281,7 @@ class RichTextState(
         val startSelectionIndex = selection.min
         val endSelectionIndex = selection.max
 
+//        for (i in richSpanStyleList.lastIndex downTo richSpanStyleList.lastIndex) {
         for (i in richSpanStyleList.lastIndex downTo 0) {
             val richSpanStyle = richSpanStyleList[i]
 
@@ -300,7 +301,7 @@ class RichTextState(
 
             val startApplyStyleIndex = maxOf(startSelectionIndex, richSpanStyle.textRange.start)
 
-            applyStyleToRichSpanStyle(
+            handleUpdatingRichSpanStyle(
                 richSpanStyle = richSpanStyle,
                 newSpanStyle = newSpanStyle,
                 startIndex = startApplyStyleIndex,
@@ -324,7 +325,7 @@ class RichTextState(
      * @param richSpanStyleFullSpanStyle The [SpanStyle] of the [RichSpanStyle].
      * @param newSpanStyle The new [SpanStyle] to apply to the [RichSpanStyle].
      */
-    private fun applyStyleToRichSpanStyle(
+    private fun handleUpdatingRichSpanStyle(
         richSpanStyle: RichSpanStyle,
         beforeText: String,
         middleText: String,
@@ -334,108 +335,181 @@ class RichTextState(
         newSpanStyle: SpanStyle = richSpanStyleFullSpanStyle.customMerge(toAddSpanStyle).unmerge(toRemoveSpanStyle),
     ) {
         if (toRemoveSpanStyle == SpanStyle()) {
-            richSpanStyle.text = beforeText
-            richSpanStyle.children.add(
-                0,
-                RichSpanStyle(
-                    paragraph = richSpanStyle.paragraph,
-                    parent = richSpanStyle,
-                    text = middleText,
-                    textRange = TextRange(
-                        startIndex,
-                        startIndex + middleText.length
-                    ),
-                    spanStyle = SpanStyle(textDecoration = currentSpanStyle.textDecoration).customMerge(
-                        toAddSpanStyle
-                    ),
-                )
+            handleApplyingStyleToRichSpanStyle(
+                richSpanStyle = richSpanStyle,
+                beforeText = beforeText,
+                middleText = middleText,
+                afterText = afterText,
+                startIndex = startIndex,
             )
-            if (afterText.isNotEmpty()) {
-                richSpanStyle.children.add(
-                    1,
-                    RichSpanStyle(
-                        paragraph = richSpanStyle.paragraph,
-                        parent = richSpanStyle,
-                        text = afterText,
-                        textRange = TextRange(
-                            startIndex + middleText.length,
-                            startIndex + middleText.length + afterText.length
-                        ),
-                    )
-                )
-            }
         } else {
-            println("beforeText: $beforeText")
-            println("middleText: $middleText")
-            println("afterText: $afterText")
+            handleRemovingStyleFromRichSpanStyle(
+                richSpanStyle = richSpanStyle,
+                beforeText = beforeText,
+                middleText = middleText,
+                afterText = afterText,
+                startIndex = startIndex,
+                richSpanStyleFullSpanStyle = richSpanStyleFullSpanStyle,
+                newSpanStyle = newSpanStyle,
+            )
+        }
+    }
 
-            richSpanStyle.text = beforeText
-            val parentRichSpanStyle = richSpanStyle.getClosestRichSpanStyle(newSpanStyle)
-            val newRichSpanStyle = RichSpanStyle(
+    /**
+     * Handles applying a new [SpanStyle] to a [RichSpanStyle].
+     *
+     * @param richSpanStyle The [RichSpanStyle] to apply the new [SpanStyle] to.
+     * @param beforeText The text before applying the styles.
+     * @param middleText The text to apply the styles to.
+     * @param afterText The text after applying the styles.
+     * @param startIndex The start index of the text to apply the styles to.
+     */
+    private fun handleApplyingStyleToRichSpanStyle(
+        richSpanStyle: RichSpanStyle,
+        beforeText: String,
+        middleText: String,
+        afterText: String,
+        startIndex: Int,
+    ) {
+        richSpanStyle.text = beforeText
+        richSpanStyle.children.add(
+            0,
+            RichSpanStyle(
                 paragraph = richSpanStyle.paragraph,
-                parent = parentRichSpanStyle,
+                parent = richSpanStyle,
                 text = middleText,
                 textRange = TextRange(
                     startIndex,
                     startIndex + middleText.length
                 ),
-                spanStyle = newSpanStyle.unmerge(parentRichSpanStyle?.spanStyle),
-            )
-            val afterSpanStyle = RichSpanStyle(
-                paragraph = richSpanStyle.paragraph,
-                parent = parentRichSpanStyle,
-                text = afterText,
-                textRange = TextRange(
-                    startIndex + middleText.length,
-                    startIndex + middleText.length + afterText.length
+                spanStyle = SpanStyle(textDecoration = currentSpanStyle.textDecoration).customMerge(
+                    toAddSpanStyle
                 ),
-                spanStyle = richSpanStyleFullSpanStyle,
             )
+        )
+        if (afterText.isNotEmpty()) {
+            richSpanStyle.children.add(
+                1,
+                RichSpanStyle(
+                    paragraph = richSpanStyle.paragraph,
+                    parent = richSpanStyle,
+                    text = afterText,
+                    textRange = TextRange(
+                        startIndex + middleText.length,
+                        startIndex + middleText.length + afterText.length
+                    ),
+                )
+            )
+        }
+    }
 
-            val toShiftRichSpanStyleList: MutableList<RichSpanStyle> = mutableListOf()
-            var previousRichSpanStyle: RichSpanStyle?
-            var currentRichSpanStyle: RichSpanStyle? = richSpanStyle
+    /**
+     * Handles removing a [SpanStyle] from a [RichSpanStyle].
+     *
+     * @param richSpanStyle The [RichSpanStyle] to remove the [SpanStyle] from.
+     * @param beforeText The text before removing the styles.
+     * @param middleText The text to remove the styles from.
+     * @param afterText The text after removing the styles.
+     * @param startIndex The start index of the text to remove the styles from.
+     * @param richSpanStyleFullSpanStyle The [SpanStyle] of the [RichSpanStyle].
+     * @param newSpanStyle The new [SpanStyle] to apply to the [RichSpanStyle].
+     */
+    private fun handleRemovingStyleFromRichSpanStyle(
+        richSpanStyle: RichSpanStyle,
+        beforeText: String,
+        middleText: String,
+        afterText: String,
+        startIndex: Int,
+        richSpanStyleFullSpanStyle: SpanStyle,
+        newSpanStyle: SpanStyle,
+    ) {
+        println("beforeText: $beforeText")
+        println("middleText: $middleText")
+        println("afterText: $afterText")
+        println("startIndex: $startIndex")
 
-            toShiftRichSpanStyleList.add(newRichSpanStyle)
-            if (afterSpanStyle.text.isNotEmpty() || afterSpanStyle.children.isNotEmpty())
-                toShiftRichSpanStyleList.add(afterSpanStyle)
+        if (richSpanStyleFullSpanStyle == newSpanStyle) {
+            println("richSpanStyleFullSpanStyle == newSpanStyle")
+            return
+        }
 
-            while(true) {
-                previousRichSpanStyle = currentRichSpanStyle
-                currentRichSpanStyle = currentRichSpanStyle?.parent
+        richSpanStyle.text = beforeText
+        val parentRichSpanStyle = richSpanStyle.getClosestRichSpanStyle(newSpanStyle)
+        println("parentRichSpanStyle: $parentRichSpanStyle")
+        val newRichSpanStyle = RichSpanStyle(
+            paragraph = richSpanStyle.paragraph,
+            parent = parentRichSpanStyle,
+            text = middleText,
+            textRange = TextRange(
+                startIndex,
+                startIndex + middleText.length
+            ),
+            spanStyle = newSpanStyle.unmerge(parentRichSpanStyle?.spanStyle),
+        )
+        val afterSpanStyle = RichSpanStyle(
+            paragraph = richSpanStyle.paragraph,
+            parent = parentRichSpanStyle,
+            text = afterText,
+            textRange = TextRange(
+                startIndex + middleText.length,
+                startIndex + middleText.length + afterText.length
+            ),
+            spanStyle = richSpanStyleFullSpanStyle,
+        )
 
-                if (currentRichSpanStyle == null || currentRichSpanStyle == parentRichSpanStyle) {
-                    break
-                } else {
-                    val index = currentRichSpanStyle.children.indexOf(previousRichSpanStyle)
-                    if (index in 0 until currentRichSpanStyle.children.lastIndex) {
-                        ((index + 1)..currentRichSpanStyle.children.lastIndex).forEach {
-                            val richSpanStyle = currentRichSpanStyle.children[it]
-                            richSpanStyle.spanStyle = richSpanStyle.fullSpanStyle
-                            richSpanStyle.parent = parentRichSpanStyle
-                            toShiftRichSpanStyleList.add(richSpanStyle)
-                        }
-                        currentRichSpanStyle.children.removeRange(index + 1, currentRichSpanStyle.children.size)
+        val toShiftRichSpanStyleList: MutableList<RichSpanStyle> = mutableListOf()
+        var previousRichSpanStyle: RichSpanStyle?
+        var currentRichSpanStyle: RichSpanStyle? = richSpanStyle
+
+        toShiftRichSpanStyleList.add(newRichSpanStyle)
+        if (afterSpanStyle.text.isNotEmpty() || afterSpanStyle.children.isNotEmpty())
+            toShiftRichSpanStyleList.add(afterSpanStyle)
+
+        println("toShiftRichSpanStyleList: $toShiftRichSpanStyleList")
+
+        while(true) {
+            previousRichSpanStyle = currentRichSpanStyle
+            currentRichSpanStyle = currentRichSpanStyle?.parent
+            println("previousRichSpanStyle: $previousRichSpanStyle")
+            println("currentRichSpanStyle: $currentRichSpanStyle")
+
+            if (currentRichSpanStyle == null || currentRichSpanStyle == parentRichSpanStyle) {
+                break
+            } else {
+                val index = currentRichSpanStyle.children.indexOf(previousRichSpanStyle)
+                if (index in 0 until currentRichSpanStyle.children.lastIndex) {
+                    ((index + 1)..currentRichSpanStyle.children.lastIndex).forEach {
+                        val richSpanStyle = currentRichSpanStyle.children[it]
+                        richSpanStyle.spanStyle = richSpanStyle.fullSpanStyle
+                        richSpanStyle.parent = parentRichSpanStyle
+                        toShiftRichSpanStyleList.add(richSpanStyle)
                     }
+                    currentRichSpanStyle.children.removeRange(index + 1, currentRichSpanStyle.children.size)
                 }
             }
+        }
 
-            if (parentRichSpanStyle == null) {
-                val index = richSpanStyle.paragraph.children.indexOf(previousRichSpanStyle)
-                if (index in 0 .. richSpanStyle.paragraph.children.lastIndex) {
-                    richSpanStyle.paragraph.children.addAll(
-                        index + 1,
-                        toShiftRichSpanStyleList
-                    )
-                }
-            } else {
-                val index = parentRichSpanStyle.children.indexOf(previousRichSpanStyle)
-                if (index in 0 .. parentRichSpanStyle.children.lastIndex) {
-                    parentRichSpanStyle.children.addAll(
-                        index + 1,
-                        toShiftRichSpanStyleList
-                    )
-                }
+        println("toShiftRichSpanStyleList2: $toShiftRichSpanStyleList")
+        println("currentRichSpanStyle: $currentRichSpanStyle")
+        println("previousRichSpanStyle: $previousRichSpanStyle")
+
+        if (parentRichSpanStyle == null || currentRichSpanStyle == null) {
+            val index = richSpanStyle.paragraph.children.indexOf(previousRichSpanStyle)
+            println("paragraph index: $index")
+            if (index in 0 .. richSpanStyle.paragraph.children.lastIndex) {
+                richSpanStyle.paragraph.children.addAll(
+                    index + 1,
+                    toShiftRichSpanStyleList
+                )
+            }
+        } else {
+            val index = parentRichSpanStyle.children.indexOf(previousRichSpanStyle)
+            println("index: $index")
+            if (index in 0 .. parentRichSpanStyle.children.lastIndex) {
+                parentRichSpanStyle.children.addAll(
+                    index + 1,
+                    toShiftRichSpanStyleList
+                )
             }
         }
     }

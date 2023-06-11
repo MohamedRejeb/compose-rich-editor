@@ -234,7 +234,7 @@ class RichTextState(
     private fun handleReplacingCharacters(
         newTextFieldValue: TextFieldValue
     ) {
-
+        newTextFieldValue.text
     }
 
     private fun handleAddingStyleToSelectedText() {

@@ -114,10 +114,16 @@ class RichTextState(
      * @param newTextFieldValue the new text field value.
      */
     private fun updateTextFieldValue(newTextFieldValue: TextFieldValue) {
+        println("updateTextFieldValue: ${newTextFieldValue.text}")
         annotatedString = buildAnnotatedString {
+            var index = 0
             richParagraphStyleList.forEach { richParagraphStyle ->
                 withStyle(richParagraphStyle.paragraphStyle) {
-                    append(richParagraphStyle.children)
+                    index = append(
+                        richSpanStyleList = richParagraphStyle.children,
+                        startIndex = index,
+                        text = newTextFieldValue.text,
+                    )
                 }
             }
         }
@@ -334,6 +340,8 @@ class RichTextState(
         richSpanStyleFullSpanStyle: SpanStyle = richSpanStyle.fullSpanStyle,
         newSpanStyle: SpanStyle = richSpanStyleFullSpanStyle.customMerge(toAddSpanStyle).unmerge(toRemoveSpanStyle),
     ) {
+        if (richSpanStyleFullSpanStyle == newSpanStyle) return
+
         if (toRemoveSpanStyle == SpanStyle()) {
             handleApplyingStyleToRichSpanStyle(
                 richSpanStyle = richSpanStyle,
@@ -427,11 +435,6 @@ class RichTextState(
         println("middleText: $middleText")
         println("afterText: $afterText")
         println("startIndex: $startIndex")
-
-        if (richSpanStyleFullSpanStyle == newSpanStyle) {
-            println("richSpanStyleFullSpanStyle == newSpanStyle")
-            return
-        }
 
         richSpanStyle.text = beforeText
         val parentRichSpanStyle = richSpanStyle.getClosestRichSpanStyle(newSpanStyle)

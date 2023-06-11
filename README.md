@@ -1,5 +1,4 @@
 <h1 align="center">Compose Rich Editor</h1><br>
-<img src="./richeditor-compose/src/androidMain/ic_launcher-playstore.png" width="200" height="200"/>
 <p align="center">
 :richeditor-compose: Rich text editor library for both Jetpack Compose and Compose Multiplatform, fully customizable and supports the common rich text editor features.
 </p>

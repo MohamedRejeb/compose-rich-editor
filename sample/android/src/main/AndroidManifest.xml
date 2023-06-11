@@ -6,7 +6,6 @@
             android:allowBackup="false"
             android:supportsRtl="true"
             android:label="Compose RichText"
-            android:icon="@mipmap/ic_launcher_round"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar">
         <activity
                 android:name="com.mohamedrejeb.richeditor.sample.MainActivity"

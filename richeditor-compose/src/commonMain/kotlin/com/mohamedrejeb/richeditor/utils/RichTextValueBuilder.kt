@@ -174,7 +174,7 @@ internal class RichTextValueBuilder {
      * @param newTextFieldValue the new text field value.
      */
     private fun handleAddingCharacters(
-        newTextFieldValue: TextFieldValue,
+        newTextFieldValue: TextFieldValue
     ): TextFieldValue {
         var newTextFieldValue = newTextFieldValue
         var typedChars = newTextFieldValue.text.length - textFieldValue.text.length
@@ -182,21 +182,20 @@ internal class RichTextValueBuilder {
 
         // Workaround to add unordered list support, it's going to be changed in the future
         // when I'm going to add ordered list support but for now if it works, it works :D
-        if (
-            newTextFieldValue.text.getOrNull(startTypeIndex - 2) == '\n' &&
-            newTextFieldValue.text.getOrNull(startTypeIndex - 1) == '-' &&
-            newTextFieldValue.text.getOrNull(startTypeIndex) == ' '
+        if (newTextFieldValue.text.getOrNull(startTypeIndex - 2) == '\n' && newTextFieldValue.text.getOrNull(
+                startTypeIndex - 1
+            ) == '-' && newTextFieldValue.text.getOrNull(startTypeIndex) == ' '
         ) {
             var newText = newTextFieldValue.text
             newText = newText.removeRange(startTypeIndex - 1..startTypeIndex)
-            val firstHalf = newText.substring(0..startTypeIndex-2)
-            val secondHalf = newText.substring(startTypeIndex-1..newText.lastIndex)
-            val unorderedListPrefix = "  •  "
+            val firstHalf = newText.substring(0..startTypeIndex - 2)
+            val secondHalf = newText.substring(startTypeIndex - 1..newText.lastIndex)
+            val unorderedListPrefix = "• "
             newText = firstHalf + unorderedListPrefix + secondHalf
-            typedChars+=3
+            typedChars += 2
+            currentStyles += RichTextStyle.UnorderedListItem
             newTextFieldValue = newTextFieldValue.copy(
-                text = newText,
-                selection = TextRange(startTypeIndex + typedChars)
+                text = newText, selection = TextRange(startTypeIndex + typedChars)
             )
         }
 
@@ -219,7 +218,7 @@ internal class RichTextValueBuilder {
                 moveParts(
                     fromIndex = startRichTextPartIndex + 1,
                     toIndex = parts.lastIndex,
-                    by = typedChars,
+                    by = typedChars
                 )
             }
         } else if (currentStyles == endRichTextPart?.styles) {
@@ -229,9 +228,7 @@ internal class RichTextValueBuilder {
 
             if (endRichTextPartIndex < parts.lastIndex) {
                 moveParts(
-                    fromIndex = endRichTextPartIndex + 1,
-                    toIndex = parts.lastIndex,
-                    by = typedChars,
+                    fromIndex = endRichTextPartIndex + 1, toIndex = parts.lastIndex, by = typedChars
                 )
             }
         } else if (startRichTextPart == endRichTextPart && startRichTextPart != null) {
@@ -256,7 +253,7 @@ internal class RichTextValueBuilder {
                 moveParts(
                     fromIndex = startRichTextPartIndex + 3,
                     toIndex = parts.lastIndex,
-                    by = typedChars,
+                    by = typedChars
                 )
             }
         } else if (endRichTextPart == null) {
@@ -280,7 +277,7 @@ internal class RichTextValueBuilder {
                 moveParts(
                     fromIndex = startRichTextPartIndex + 2,
                     toIndex = parts.lastIndex,
-                    by = typedChars,
+                    by = typedChars
                 )
             }
         }
@@ -307,14 +304,12 @@ internal class RichTextValueBuilder {
             if (removeRange.last < part.fromIndex) {
                 // Example: L|orem| ipsum *dolor* sit amet.
                 parts[index] = part.copy(
-                    fromIndex = part.fromIndex - removedChars,
-                    toIndex = part.toIndex - removedChars
+                    fromIndex = part.fromIndex - removedChars, toIndex = part.toIndex - removedChars
                 )
             } else if (removeRange.first <= part.fromIndex && removeRange.last >= part.toIndex) {
                 // Example: Lorem| ipsum *dolor* si|t amet.
                 parts[index] = part.copy(
-                    fromIndex = 0,
-                    toIndex = 0
+                    fromIndex = 0, toIndex = 0
                 )
                 removedIndexes.add(index)
             } else if (removeRange.first <= part.fromIndex && removeRange.last < part.toIndex) {
@@ -346,16 +341,13 @@ internal class RichTextValueBuilder {
      * @param by The amount to move by.
      */
     private fun moveParts(
-        fromIndex: Int,
-        toIndex: Int,
-        by: Int
+        fromIndex: Int, toIndex: Int, by: Int
     ) {
         val start = max(fromIndex, 0)
         val end = min(toIndex, parts.lastIndex)
         (start..end).forEach { index ->
             parts[index] = parts[index].copy(
-                fromIndex = parts[index].fromIndex + by,
-                toIndex = parts[index].toIndex + by,
+                fromIndex = parts[index].fromIndex + by, toIndex = parts[index].toIndex + by
             )
         }
     }

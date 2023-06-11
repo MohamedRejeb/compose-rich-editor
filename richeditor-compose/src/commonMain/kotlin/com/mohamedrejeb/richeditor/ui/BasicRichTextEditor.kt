@@ -7,24 +7,15 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.input.key.Key.Companion.Backspace
-import androidx.compose.ui.input.key.Key.Companion.Enter
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.text.TextLayoutResult
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
-import com.mohamedrejeb.richeditor.model.RichTextStyle
 import com.mohamedrejeb.richeditor.model.RichTextValue
-import com.mohamedrejeb.richeditor.utils.addListItem
 
 /**
  * Basic composable that enables users to edit rich text via hardware or software keyboard, but provides no decorations like hint or placeholder.
@@ -80,7 +71,6 @@ import com.mohamedrejeb.richeditor.utils.addListItem
  * innerTextField exactly once.
  *
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun BasicRichTextEditor(
     value: RichTextValue,
@@ -89,13 +79,8 @@ fun BasicRichTextEditor(
     enabled: Boolean = true,
     readOnly: Boolean = false,
     textStyle: TextStyle = TextStyle.Default,
-    keyboardOptions: KeyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-    keyboardActions: KeyboardActions = KeyboardActions(onDone = {
-        handleEnterKeyPress(
-            value,
-            onValueChange
-        )
-    }),
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
     singleLine: Boolean = false,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
@@ -108,25 +93,11 @@ fun BasicRichTextEditor(
     BasicTextField(
         value = value.textFieldValue,
         onValueChange = {
-            if(it.text.length<value.textFieldValue.text.length){
-                handleDelete(value, onValueChange)
-            }
-            else {
-                onValueChange(
-                    value.updateTextFieldValue(it)
-                )
-            }
+            onValueChange(
+                value.updateTextFieldValue(it)
+            )
         },
-        modifier = modifier.onKeyEvent { event ->
-            if (event.key.keyCode == Enter.keyCode) {
-                handleEnterKeyPress(value, onValueChange)
-            }
-            if (event.key.keyCode == Backspace.keyCode) {
-                // Check if there is any text selected in the editor
-                return@onKeyEvent handleDelete(value, onValueChange)
-            }
-            return@onKeyEvent false
-        },
+        modifier = modifier,
         enabled = enabled,
         readOnly = readOnly,
         textStyle = textStyle,
@@ -142,89 +113,3 @@ fun BasicRichTextEditor(
         decorationBox = decorationBox,
     )
 }
-
-private fun handleDelete(
-    value: RichTextValue,
-    onValueChange: (RichTextValue) -> Unit
-): Boolean {
-    if (value.textFieldValue.selection.start != value.textFieldValue.selection.end) {
-        // If there is a selection, delete the selected text and update the value accordingly
-        val updatedValue = value.updateTextFieldValue(
-            value.textFieldValue.copy(
-                text = value.textFieldValue.text.removeRange(
-                    value.textFieldValue.selection.start,
-                    value.textFieldValue.selection.end
-                )
-            )
-        )
-        onValueChange(updatedValue)
-        return true
-    } else {
-        // If there is no selection, delete the character before the cursor and update the value accordingly
-        val cursorPosition = value.textFieldValue.selection.start
-        if (cursorPosition > 0 && cursorPosition <= value.textFieldValue.text.length) {
-            val updatedValue = value.updateTextFieldValue(
-                value.textFieldValue.copy(
-                    text = value.textFieldValue.text.removeRange(
-                        cursorPosition - 1,
-                        cursorPosition
-                    )
-                )
-            )
-
-            // Decrease the toIndex of the last part if the character before the cursor was removed
-            val updatedParts = updatedValue.parts.toMutableList()
-            val lastPart = updatedParts.lastOrNull()
-            if (lastPart != null && cursorPosition - 1 == lastPart.toIndex) {
-                // If the last part's fromIndex equals toIndex, remove the style
-                if (lastPart.fromIndex == lastPart.toIndex - 1) {
-                    updatedParts[updatedParts.lastIndex] =
-                        lastPart.copy(styles = emptySet())
-                } else {
-                    updatedParts[updatedParts.lastIndex] =
-                        lastPart.copy(toIndex = lastPart.toIndex - 1)
-                }
-                onValueChange(updatedValue.copy(parts = updatedParts))
-            } else {
-                onValueChange(updatedValue)
-            }
-            return true
-        }
-    }
-    return false
-}
-
-
-
-private fun handleEnterKeyPress(
-    value: RichTextValue,
-    onValueChange: (RichTextValue) -> Unit
-) {
-    // Check if the last style is a list style
-    val lastListStyle = value.parts.asReversed().find {
-        it.styles.any { style ->
-            style is RichTextStyle.UnorderedListItem || style is RichTextStyle.OrderedListItem
-        }
-    }?.styles?.lastOrNull {
-        it is RichTextStyle.UnorderedListItem || it is RichTextStyle.OrderedListItem
-    }
-
-    if (lastListStyle == null) {
-        // If it doesn't, just add a new line
-        onValueChange(
-            value.updateTextFieldValue(
-                TextFieldValue(
-                    text = value.textFieldValue.text + "\n",
-                    selection = TextRange(value.textFieldValue.text.length + 1)
-                )
-            )
-        )
-    } else {
-        // Append a new list item based on the last list style
-        val updatedValue = value.addListItem()
-
-        // Call the onValueChange callback with the updated value
-        onValueChange(updatedValue.updateTextFieldValue(updatedValue.textFieldValue))
-    }
-}
-

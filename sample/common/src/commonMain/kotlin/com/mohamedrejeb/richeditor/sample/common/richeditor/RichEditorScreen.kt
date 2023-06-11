@@ -15,13 +15,13 @@ object RichEditorScreen: Screen {
                     mutableStateOf("""<h1>Text</h1>
             <a href="https://www.w3schools.com">Visit W3Schools</a><br>
             <p><b>RichTextEditor</b> is a <i>composable</i> that allows you to edit <u>rich text</u> content.</p>
-            <a href="https://github.com/DAKSHSEMWAL/Compose-Rich-Editor">MDParserKit Core</a><br>
+            <a href="https://github.com/MohamedRejeb/Compose-Rich-Editor">MDParserKit Core</a><br>
             <a href="https://music.youtube.com/search?q=summer+high">https://music.youtube.com/search?q=summer+high</a><br>
             
             <h2>An Unordered HTML List</h2>
 
             <ul>
-              <li><a href="https://github.com/DAKSHSEMWAL/Compose-Rich-Editor">MDParserKit Core</a></li>
+              <li><a href="https://github.com/MohamedRejeb/Compose-Rich-Editor">MDParserKit Core</a></li>
               <li>Tea</li>
               <li>Milk</li>
             </ul>  
@@ -29,9 +29,9 @@ object RichEditorScreen: Screen {
             <h2>An Ordered HTML List</h2>
 
             <ol>
-              <li><a href="https://github.com/DAKSHSEMWAL/Compose-Rich-Editor">MDParserKit Core</a></li>
+              <li><a href="https://github.com/MohamedRejeb/Compose-Rich-Editor">MDParserKit Core</a></li>
               <li>Tea</li>
-              <li><a href="https://github.com/DAKSHSEMWAL/Compose-Rich-Editor">MDParserKit Core</a></li>
+              <li><a href="https://github.com/MohamedRejeb/Compose-Rich-Editor">MDParserKit Core</a></li>
             </ol>
             """.trimIndent())
         }

@@ -286,35 +286,6 @@ internal class RichTextValueBuilder {
             }
         }
 
-        // Workaround to prevent multiline headinng style
-        for (i in parts.indices) {
-            val part = parts[i]
-
-            // Check if part has a heading style and contains a newline character.
-            if (part.styles.any { it is RichTextStyle.H1 || it is RichTextStyle.H2 || it is RichTextStyle.H3 || it is RichTextStyle.H4 || it is RichTextStyle.H5 || it is RichTextStyle.H6 } &&
-                newTextFieldValue.text.substring(part.fromIndex..part.toIndex).contains('\n')
-            ) {
-                // Find the position of the newline character.
-                val newlinePosition =
-                    newTextFieldValue.text.substring(part.fromIndex..part.toIndex).indexOf('\n')
-
-                // Split the part at the newline character.
-                val firstPart =
-                    RichTextPart(part.fromIndex, part.fromIndex + newlinePosition, part.styles)
-                val secondPart = RichTextPart(
-                    part.fromIndex + newlinePosition + 1,
-                    part.toIndex,
-                    setOf(RichTextStyle.Normal)
-                )
-
-                // Replace the original part with the two new parts.
-                parts.removeAt(i)
-                parts.addAll(i, listOf(firstPart, secondPart))
-
-                // Break the loop since we modified the list we are iterating over.
-                break
-            }
-        }
         return newTextFieldValue
     }
 

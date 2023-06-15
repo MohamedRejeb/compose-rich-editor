@@ -9,6 +9,7 @@ import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
+import com.mohamedrejeb.richeditor.utils.*
 import com.mohamedrejeb.richeditor.utils.append
 import com.mohamedrejeb.richeditor.utils.customMerge
 import com.mohamedrejeb.richeditor.utils.isSpecifiedFieldsEquals
@@ -47,13 +48,27 @@ class RichTextState(
 
     private var unAppliedParagraphStyle: ParagraphStyle by mutableStateOf(ParagraphStyle())
 
-    val currentSpanStyle: SpanStyle get() = currentAppliedSpanStyle.customMerge(toAddSpanStyle).unmerge(toRemoveSpanStyle)
+    /**
+     * The current span style.
+     * If the selection is collapsed, the span style is the style of the character preceding the selection.
+     * If the selection is not collapsed, the span style is the style of the selection.
+     */
+    val currentSpanStyle: SpanStyle
+        get() = currentAppliedSpanStyle.customMerge(toAddSpanStyle).unmerge(toRemoveSpanStyle)
 
+    /**
+     * The current paragraph style.
+     * If the selection is collapsed, the paragraph style is the style of the paragraph containing the selection.
+     * If the selection is not collapsed, the paragraph style is the style of the selection.
+     */
     var currentParagraphStyle: ParagraphStyle by mutableStateOf(
         getParagraphStyleByTextIndex(textIndex = textFieldValue.selection.min)?.paragraphStyle ?: ParagraphStyle()
     )
         private set
 
+    /**
+     * The annotated string representing the rich text.
+     */
     var annotatedString by mutableStateOf(AnnotatedString(text = ""))
         private set
 
@@ -139,9 +154,7 @@ class RichTextState(
         toRemoveSpanStyle = SpanStyle()
         unAppliedParagraphStyle = ParagraphStyle()
         // Update current span style
-        currentAppliedSpanStyle = getSpanStyleByTextIndex(textIndex = max(0, textFieldValue.selection.min - 1))
-            ?.fullSpanStyle
-            ?: SpanStyle()
+        updateCurrentSpanStyle()
 
         // Update current paragraph style
         currentParagraphStyle = getParagraphStyleByTextIndex(textIndex = max(0, textFieldValue.selection.min - 1))
@@ -461,7 +474,7 @@ class RichTextState(
         if (afterSpanStyle.text.isNotEmpty() || afterSpanStyle.children.isNotEmpty())
             toShiftRichSpanStyleList.add(afterSpanStyle)
 
-        while(true) {
+        while (true) {
             previousRichSpanStyle = currentRichSpanStyle
             currentRichSpanStyle = currentRichSpanStyle?.parent
 
@@ -483,7 +496,7 @@ class RichTextState(
 
         if (parentRichSpanStyle == null || currentRichSpanStyle == null) {
             val index = richSpanStyle.paragraph.children.indexOf(previousRichSpanStyle)
-            if (index in 0 .. richSpanStyle.paragraph.children.lastIndex) {
+            if (index in 0..richSpanStyle.paragraph.children.lastIndex) {
                 richSpanStyle.paragraph.children.addAll(
                     index + 1,
                     toShiftRichSpanStyleList
@@ -491,7 +504,7 @@ class RichTextState(
             }
         } else {
             val index = parentRichSpanStyle.children.indexOf(previousRichSpanStyle)
-            if (index in 0 .. parentRichSpanStyle.children.lastIndex) {
+            if (index in 0..parentRichSpanStyle.children.lastIndex) {
                 parentRichSpanStyle.children.addAll(
                     index + 1,
                     toShiftRichSpanStyleList
@@ -508,7 +521,7 @@ class RichTextState(
         var previousRichSpanStyle: RichSpanStyle?
         var currentRichSpanStyle: RichSpanStyle? = startRichSpanStyle
 
-        while(true) {
+        while (true) {
             previousRichSpanStyle = currentRichSpanStyle
             currentRichSpanStyle = currentRichSpanStyle?.parent
 
@@ -529,6 +542,21 @@ class RichTextState(
         }
 
         return toShiftRichSpanStyleList
+    }
+
+    /**
+     * Updates the [currentAppliedSpanStyle] to the [SpanStyle] that should be applied to the current selection.
+     */
+    private fun updateCurrentSpanStyle() {
+        currentAppliedSpanStyle =
+            if (selection.collapsed)
+                getSpanStyleByTextIndex(textIndex = max(0, textFieldValue.selection.min - 1))
+                    ?.fullSpanStyle
+                    ?: SpanStyle()
+            else
+                getSpanStyleListByTextRange(selection)
+                    .getCommonStyle()
+                    ?: SpanStyle()
     }
 
     /**

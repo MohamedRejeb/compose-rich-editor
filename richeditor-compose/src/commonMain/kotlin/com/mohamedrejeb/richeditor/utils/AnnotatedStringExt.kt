@@ -30,11 +30,7 @@ internal fun AnnotatedString.Builder.append(
         val newText = text.substring(index, index + richSpanStyle.text.length)
         richSpanStyle.text = newText
         append(newText)
-        println("text: $newText")
-        println("start: $index")
-        println("end: ${index + richSpanStyle.text.length}")
         index += richSpanStyle.text.length
-
         richSpanStyle.children.forEach { richSpanStyle ->
             index = append(
                 richSpanStyle = richSpanStyle,

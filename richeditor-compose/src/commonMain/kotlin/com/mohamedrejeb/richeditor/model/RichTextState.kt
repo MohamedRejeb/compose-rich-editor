@@ -114,7 +114,6 @@ class RichTextState(
      * @param newTextFieldValue the new text field value.
      */
     private fun updateTextFieldValue(newTextFieldValue: TextFieldValue) {
-        println("updateTextFieldValue: ${newTextFieldValue.text}")
         annotatedString = buildAnnotatedString {
             var index = 0
             richParagraphStyleList.forEach { richParagraphStyle ->
@@ -431,14 +430,8 @@ class RichTextState(
         richSpanStyleFullSpanStyle: SpanStyle,
         newSpanStyle: SpanStyle,
     ) {
-        println("beforeText: $beforeText")
-        println("middleText: $middleText")
-        println("afterText: $afterText")
-        println("startIndex: $startIndex")
-
         richSpanStyle.text = beforeText
         val parentRichSpanStyle = richSpanStyle.getClosestRichSpanStyle(newSpanStyle)
-        println("parentRichSpanStyle: $parentRichSpanStyle")
         val newRichSpanStyle = RichSpanStyle(
             paragraph = richSpanStyle.paragraph,
             parent = parentRichSpanStyle,
@@ -468,13 +461,9 @@ class RichTextState(
         if (afterSpanStyle.text.isNotEmpty() || afterSpanStyle.children.isNotEmpty())
             toShiftRichSpanStyleList.add(afterSpanStyle)
 
-        println("toShiftRichSpanStyleList: $toShiftRichSpanStyleList")
-
         while(true) {
             previousRichSpanStyle = currentRichSpanStyle
             currentRichSpanStyle = currentRichSpanStyle?.parent
-            println("previousRichSpanStyle: $previousRichSpanStyle")
-            println("currentRichSpanStyle: $currentRichSpanStyle")
 
             if (currentRichSpanStyle == null || currentRichSpanStyle == parentRichSpanStyle) {
                 break
@@ -492,13 +481,8 @@ class RichTextState(
             }
         }
 
-        println("toShiftRichSpanStyleList2: $toShiftRichSpanStyleList")
-        println("currentRichSpanStyle: $currentRichSpanStyle")
-        println("previousRichSpanStyle: $previousRichSpanStyle")
-
         if (parentRichSpanStyle == null || currentRichSpanStyle == null) {
             val index = richSpanStyle.paragraph.children.indexOf(previousRichSpanStyle)
-            println("paragraph index: $index")
             if (index in 0 .. richSpanStyle.paragraph.children.lastIndex) {
                 richSpanStyle.paragraph.children.addAll(
                     index + 1,
@@ -507,7 +491,6 @@ class RichTextState(
             }
         } else {
             val index = parentRichSpanStyle.children.indexOf(previousRichSpanStyle)
-            println("index: $index")
             if (index in 0 .. parentRichSpanStyle.children.lastIndex) {
                 parentRichSpanStyle.children.addAll(
                     index + 1,
@@ -515,6 +498,37 @@ class RichTextState(
                 )
             }
         }
+    }
+
+    private fun getToShiftRichSpanStyleList(
+        startRichSpanStyle: RichSpanStyle,
+        endRichSpanStyle: RichSpanStyle?,
+    ): List<RichSpanStyle> {
+        val toShiftRichSpanStyleList: MutableList<RichSpanStyle> = mutableListOf()
+        var previousRichSpanStyle: RichSpanStyle?
+        var currentRichSpanStyle: RichSpanStyle? = startRichSpanStyle
+
+        while(true) {
+            previousRichSpanStyle = currentRichSpanStyle
+            currentRichSpanStyle = currentRichSpanStyle?.parent
+
+            if (currentRichSpanStyle == null || currentRichSpanStyle == endRichSpanStyle) {
+                break
+            } else {
+                val index = currentRichSpanStyle.children.indexOf(previousRichSpanStyle)
+                if (index in 0 until currentRichSpanStyle.children.lastIndex) {
+                    ((index + 1)..currentRichSpanStyle.children.lastIndex).forEach {
+                        val richSpanStyle = currentRichSpanStyle.children[it]
+                        richSpanStyle.spanStyle = richSpanStyle.fullSpanStyle
+                        richSpanStyle.parent = endRichSpanStyle
+                        toShiftRichSpanStyleList.add(richSpanStyle)
+                    }
+                    currentRichSpanStyle.children.removeRange(index + 1, currentRichSpanStyle.children.size)
+                }
+            }
+        }
+
+        return toShiftRichSpanStyleList
     }
 
     /**

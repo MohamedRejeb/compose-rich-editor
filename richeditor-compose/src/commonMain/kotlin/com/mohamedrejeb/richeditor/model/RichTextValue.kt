@@ -35,15 +35,6 @@ data class RichTextValue internal constructor(
     internal val parts: List<RichTextPart> = emptyList(),
 ) {
 
-    // Todo just a test
-    fun getPartsText(): String {
-        return parts.joinToString("") { part ->
-            (textFieldValue.text
-                .substring(part.fromIndex, part.toIndex + 1) + ": Style -> " + part.styles.joinToString(", ") { it::class.simpleName.orEmpty() })
-                .replace("\n", "\n\\n")
-        }
-    }
-
     /**
      * The [VisualTransformation] to apply to the text field
      */

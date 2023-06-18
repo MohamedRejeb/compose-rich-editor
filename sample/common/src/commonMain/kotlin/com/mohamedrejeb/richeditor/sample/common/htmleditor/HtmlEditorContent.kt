@@ -85,13 +85,6 @@ fun HtmlEditorContent() {
                             .weight(1f)
                     )
                 }
-                Spacer(Modifier.height(12.dp))
-                Text(
-                    text = richTextValue.getPartsText(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp)
-                )
             }
         }
     }

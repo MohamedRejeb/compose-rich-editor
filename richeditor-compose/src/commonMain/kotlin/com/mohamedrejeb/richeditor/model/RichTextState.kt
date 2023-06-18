@@ -28,6 +28,7 @@ fun rememberRichTextState(
 class RichTextState(
 
 ) {
+
     public val richParagraphStyleList = mutableStateListOf(
         RichParagraphStyle(
             key = 0,
@@ -72,6 +73,22 @@ class RichTextState(
     var annotatedString by mutableStateOf(AnnotatedString(text = ""))
         private set
 
+    /**
+     * Toggle the [SpanStyle]
+     * If the passed span style doesn't exist in the [currentSpanStyle] it's going to be added.
+     * If the passed span style already exists in the [currentSpanStyle] it's going to be removed.
+     *
+     * Example: You can toggle Bold FontWeight by passing:
+     *
+     * ```
+     * SpanStyle(fontWeight = FontWeight.Bold)
+     * ```
+     *
+     * @param spanStyle the span style that is going to be toggled.
+     * Only the specified params are going to be toggled, and the non specified ones are going to be ignored.
+     * @see [addSpanStyle]
+     * @see [removeSpanStyle]
+     */
     fun toggleSpanStyle(spanStyle: SpanStyle) {
         println("is Equals: ${currentSpanStyle.isSpecifiedFieldsEquals(spanStyle)}")
         if (currentSpanStyle.isSpecifiedFieldsEquals(spanStyle))
@@ -80,6 +97,20 @@ class RichTextState(
             addSpanStyle(spanStyle)
     }
 
+    /**
+     * Add new [SpanStyle] to the [currentSpanStyle]
+     *
+     * Example: You can add Bold FontWeight by passing:
+     *
+     * ```
+     * SpanStyle(fontWeight = FontWeight.Bold)
+     * ```
+     *
+     * @param spanStyle the span style that is going to be added to the [currentSpanStyle].
+     * Only the specified params are going to be applied, and the non specified ones are going to be ignored.
+     * @see [removeSpanStyle]
+     * @see [toggleSpanStyle]
+     */
     fun addSpanStyle(spanStyle: SpanStyle) {
         if (!currentSpanStyle.isSpecifiedFieldsEquals(spanStyle)) {
             toAddSpanStyle = toAddSpanStyle.customMerge(spanStyle)
@@ -90,6 +121,20 @@ class RichTextState(
             handleAddingStyleToSelectedText()
     }
 
+    /**
+     * Remove an existing [SpanStyle] from the [currentSpanStyle]
+     *
+     * Example: You can remove Bold FontWeight by passing:
+     *
+     * ```
+     * SpanStyle(fontWeight = FontWeight.Bold)
+     * ```
+     *
+     * @param spanStyle the span style that is going to be removed from the [currentSpanStyle].
+     * Only the specified params are going to be removed, and the non specified ones are going to be ignored.
+     * @see [addSpanStyle]
+     * @see [toggleSpanStyle]
+     */
     fun removeSpanStyle(spanStyle: SpanStyle) {
         if (currentSpanStyle.isSpecifiedFieldsEquals(spanStyle)) {
             toRemoveSpanStyle = toRemoveSpanStyle.customMerge(spanStyle)

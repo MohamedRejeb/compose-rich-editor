@@ -6,7 +6,7 @@ import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.TextRange
 
 public class RichParagraphStyle(
-    val key: Int,
+    val key: Int = 0,
     val children: SnapshotStateList<RichSpanStyle> = mutableStateListOf(),
     var paragraphStyle: ParagraphStyle = ParagraphStyle(),
 ) {

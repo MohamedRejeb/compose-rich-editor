@@ -174,6 +174,10 @@ class RichTextState(
      * @param newTextFieldValue the new text field value.
      */
     private fun updateTextFieldValue(newTextFieldValue: TextFieldValue) {
+        // Check for paragraphs
+
+
+        // Update the annotatedString and the textFieldValue with the new values
         annotatedString = buildAnnotatedString {
             var index = 0
             richParagraphStyleList.forEach { richParagraphStyle ->
@@ -300,6 +304,9 @@ class RichTextState(
         newTextFieldValue.text
     }
 
+    /**
+     * Handles adding the style in [toAddSpanStyle] to the selected text.
+     */
     private fun handleAddingStyleToSelectedText() {
         val richSpanStyleList = getSpanStyleListByTextRange(selection)
 
@@ -338,6 +345,9 @@ class RichTextState(
         updateTextFieldValue(textFieldValue)
     }
 
+    /**
+     * Handles removing the style in [toRemoveSpanStyle] from the selected text.
+     */
     private fun handleRemovingStyleFromSelectedText() {
         val richSpanStyleList = getSpanStyleListByTextRange(selection)
 
@@ -645,6 +655,13 @@ class RichTextState(
         return null
     }
 
+    /**
+     * Returns a list of [RichSpanStyle]s that contains at least a part of the given [searchTextRange].
+     * If no [RichSpanStyle] contains at least a part of the given [searchTextRange], an empty list is returned.
+     *
+     * @param searchTextRange The [TextRange] to search for.
+     * @return A list of [RichSpanStyle]s that contains a part of the given [searchTextRange], or an empty list if no such [RichSpanStyle] exists.
+     */
     private fun getSpanStyleListByTextRange(searchTextRange: TextRange): List<RichSpanStyle> {
         var index = 0
         val richSpanStyleList = mutableListOf<RichSpanStyle>()

@@ -7,69 +7,110 @@ import com.mohamedrejeb.richeditor.model.RichTextStyle
 import com.mohamedrejeb.richeditor.model.RichTextValue
 
 /**
- * Extension Function to add the link to RichTextValue
- * The function checks if the any text is selected and applies the hyperlink to it
- * other wise append the link and then add the style
- *  @see <a href="https://gist.github.com/DAKSHSEMWAL/6a7f0453a6650c9b88a4f54a98ead4d7">Get Link Usage</a>
+ * Adds a hyperlink to the text within the selection of the current rich text value. If the selection is collapsed,
+ * the hyperlink will be inserted at the caret's position. Otherwise, the hyperlink will replace the selected text.
+ *
+ * @param link The URL for the hyperlink.
+ * @return A new rich text value with the hyperlink added.
  */
 fun RichTextValue.getLink(link: String): RichTextValue {
-    // The current text of the rich text value
+    // Ensure the link starts with http:// or https://
+    val url =
+        if (link.startsWith("https://") || link.startsWith("http://")) link else "https://$link"
+
     val currentText = this.textFieldValue.text
-    // The current selection of the rich text value
     val currentSelection = this.textFieldValue.selection
-    // The text that is currently selected
-    val selectedText = currentText.substring(currentSelection.start, currentSelection.end)
+    val newRichTextPart = ArrayList<RichTextPart>()
 
-    return if (selectedText.isNotEmpty()) {
-        // If there is a selection and it matches the text, we will apply the hyperlink to the selection.
+    // Insert the URL at the caret's position if the selection is collapsed
+    val newText = if (currentSelection.collapsed) {
+        StringBuilder(currentText).apply {
+            insert(currentSelection.start, "$url ")
+        }.toString()
+    } else {
+        currentText
+    }
+    // If there are parts in the text (i.e., it's not empty)
+    if (this.parts.isNotEmpty()) {
+        this.parts.forEach { part ->
+            // If the current selection is within this part
+            if (currentSelection.isWithin(TextRange(part.fromIndex, part.toIndex))) {
+                // Create a new part up to the start of the selection
+                val partFirst =
+                    RichTextPart(part.fromIndex, currentSelection.start - 1, part.styles)
+                newRichTextPart.add(partFirst)
 
-        // Create a new RichTextPart that includes the hyperlink style.
-        val hyperlinkPart = RichTextPart(
-            fromIndex = currentSelection.start,
-            toIndex = currentSelection.end - 1,
-            styles = setOf(RichTextStyle.Hyperlink(url = link))
-        )
+                // Create a hyperlink part
+                val hyperlinkStyle = part.styles + RichTextStyle.Hyperlink(url)
+                val hyperlinkPart: RichTextPart
+                val lastPart: RichTextPart
 
-        // Prepare the updated parts of the rich text value
-        val updatedParts = this.parts.toMutableList().apply {
-            // Remove any parts that overlap with the current selection.
-            removeAll { part -> part.fromIndex >= currentSelection.start && part.toIndex <= currentSelection.end }
-            // Add the new hyperlink part.
-            add(hyperlinkPart)
+                if (currentSelection.collapsed) {
+                    hyperlinkPart = RichTextPart(
+                        fromIndex = currentSelection.start,
+                        toIndex = currentSelection.start + url.length - 1,
+                        styles = hyperlinkStyle
+                    )
+
+                    // Create a new part after the hyperlink
+                    lastPart = RichTextPart(
+                        currentSelection.start + url.length,
+                        part.toIndex + url.length,
+                        part.styles
+                    )
+                } else {
+                    hyperlinkPart = RichTextPart(
+                        fromIndex = currentSelection.start,
+                        toIndex = currentSelection.end - 1,
+                        styles = hyperlinkStyle
+                    )
+
+                    // Create a new part after the hyperlink
+                    lastPart = RichTextPart(currentSelection.end, part.toIndex, part.styles)
+                }
+
+                newRichTextPart.add(hyperlinkPart)
+                newRichTextPart.add(lastPart)
+            } else {
+                newRichTextPart.add(part)
+            }
+        }
+    } else {
+        // If there are no parts in the text (i.e., it's empty)
+        val hyperlinkStyle = setOf<RichTextStyle>() + RichTextStyle.Hyperlink(url)
+        val hyperlinkPart: RichTextPart
+
+        if (currentSelection.collapsed) {
+            hyperlinkPart = RichTextPart(
+                fromIndex = currentSelection.start,
+                toIndex = currentSelection.start + url.length - 1,
+                styles = hyperlinkStyle
+            )
+        } else {
+            hyperlinkPart = RichTextPart(
+                fromIndex = 0,
+                toIndex = currentText.lastIndex - 1,
+                styles = hyperlinkStyle
+            )
         }
 
-        // Create a new RichTextValue with the updated parts.
-        val updatedTextFieldValue = TextFieldValue(
-            text = currentText, selection = TextRange(currentText.length + 1)
-        )
-
-        // Create a new RichTextValue with the updated TextFieldValue and parts.
-        this.copy(
-            textFieldValue = updatedTextFieldValue, parts = updatedParts
-        )
-    } else {
-        // If there's no selection or it doesn't match the text, we will append the hyperlink to the end of the text.
-
-        // Prepare the updated text
-        val updatedText = "$currentText $link"
-
-        // Create a new RichTextPart that includes the hyperlink style.
-        val hyperlinkPart = RichTextPart(
-            fromIndex = currentText.length + 1, // add 1 for the space
-            toIndex = updatedText.length - 1, styles = setOf(RichTextStyle.Hyperlink(url = link))
-        )
-
-        // Prepare the updated parts of the rich text value
-        val updatedParts = this.parts + hyperlinkPart
-
-        // Create a new TextFieldValue that includes the updated text and selection.
-        val updatedTextFieldValue = TextFieldValue(
-            text = updatedText, selection = TextRange(updatedText.length)
-        )
-
-        // Create a new RichTextValue with the updated TextFieldValue and parts.
-        this.copy(
-            textFieldValue = updatedTextFieldValue, parts = updatedParts
-        )
+        newRichTextPart.add(hyperlinkPart)
     }
+
+    val newTextFieldValue = TextFieldValue(newText, TextRange(currentSelection.min, newText.length))
+    val newStyle = RichTextValueBuilder().apply {
+        setTextFieldValue(newTextFieldValue)
+        setParts(newRichTextPart)
+        setCurrentStyles(this@getLink.currentStyles)
+    }.build()
+    return newStyle
 }
+
+/**
+ * Checks if the current TextRange is within the given range.
+ *
+ * @param range The TextRange to compare against.
+ * @return True if the current TextRange is within the given range, false otherwise.
+ */
+fun TextRange.isWithin(range: TextRange): Boolean =
+    this.start >= range.start && this.end <= range.end

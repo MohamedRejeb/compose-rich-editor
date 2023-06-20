@@ -7,9 +7,11 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.model.RichTextState
@@ -22,6 +24,48 @@ fun NewRichTextStyleRow(
     LazyRow(
         modifier = modifier
     ) {
+        item {
+            NewRichTextStyleButton(
+                onClick = {
+                    richTextState.toggleParagraphStyle(
+                        ParagraphStyle(
+                            textAlign = TextAlign.Left
+                        )
+                    )
+                },
+                isSelected = richTextState.currentParagraphStyle.textAlign == TextAlign.Left,
+                icon = Icons.Outlined.FormatAlignLeft
+            )
+        }
+
+        item {
+            NewRichTextStyleButton(
+                onClick = {
+                    richTextState.toggleParagraphStyle(
+                        ParagraphStyle(
+                            textAlign = TextAlign.Center
+                        )
+                    )
+                },
+                isSelected = richTextState.currentParagraphStyle.textAlign == TextAlign.Center,
+                icon = Icons.Outlined.FormatAlignCenter
+            )
+        }
+
+        item {
+            NewRichTextStyleButton(
+                onClick = {
+                    richTextState.toggleParagraphStyle(
+                        ParagraphStyle(
+                            textAlign = TextAlign.Right
+                        )
+                    )
+                },
+                isSelected = richTextState.currentParagraphStyle.textAlign == TextAlign.Right,
+                icon = Icons.Outlined.FormatAlignRight
+            )
+        }
+
         item {
             NewRichTextStyleButton(
                 onClick = {

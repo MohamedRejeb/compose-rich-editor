@@ -6,19 +6,18 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import com.mohamedrejeb.richeditor.utils.isSpecifiedFieldsEquals
 
-public class RichSpanStyle(
+public class RichSpan(
     val key: Int = 0,
-    val children: SnapshotStateList<RichSpanStyle> = mutableStateListOf(),
-    var paragraph: RichParagraphStyle,
-    var parent: RichSpanStyle? = null,
+    val children: SnapshotStateList<RichSpan> = mutableStateListOf(),
+    var paragraph: RichParagraph,
+    var parent: RichSpan? = null,
     var text: String = "",
     var textRange: TextRange = TextRange(start = 0, end = 0),
-//    var fullTextRange: TextRange = TextRange(start = 0, end = 0),
     var spanStyle: SpanStyle = SpanStyle(),
 ) {
     val fullTextRange: TextRange get() {
         var textRange = this.textRange
-        var lastChild: RichSpanStyle? = this
+        var lastChild: RichSpan? = this
         while (true) {
             lastChild = lastChild?.children?.lastOrNull()
             if (lastChild == null) break
@@ -43,10 +42,38 @@ public class RichSpanStyle(
         return spanStyle
     }
 
-    fun getSpanStyleByTextIndex(
+    val isFirstInParagraph: Boolean get() {
+        var current: RichSpan
+        var parent: RichSpan = this
+
+        while (true) {
+            current = parent
+            parent = current.parent ?: break
+
+            if (parent.children.first() != current || parent.text.isNotEmpty()) return false
+        }
+
+        return paragraph.children.first() == current
+    }
+
+    val isLastInParagraph: Boolean get() {
+        var current: RichSpan
+        var parent: RichSpan = this
+
+        while (true) {
+            current = parent
+            parent = current.parent ?: break
+
+            if (parent.children.last() != current) return false
+        }
+
+        return paragraph.children.last() == current
+    }
+
+    fun getRichSpanByTextIndex(
         textIndex: Int,
         offset: Int = 0,
-    ): Pair<Int, RichSpanStyle?> {
+    ): Pair<Int, RichSpan?> {
         var index = offset
 
         // Set start text range
@@ -54,12 +81,12 @@ public class RichSpanStyle(
         index += this.text.length
 
         // Check if the text index is in the start text range
-        if (textIndex in textRange)
+        if (textIndex in textRange || (isFirstInParagraph && textIndex + 1 == textRange.min))
             return index to this
 
         // Check if the text index is in the children
-        children.forEach { richSpanStyle ->
-            val result = richSpanStyle.getSpanStyleByTextIndex(
+        children.forEach { richSpan ->
+            val result = richSpan.getRichSpanByTextIndex(
                 textIndex = textIndex,
                 offset = index,
             )
@@ -69,16 +96,15 @@ public class RichSpanStyle(
                 index = result.first
         }
 
-//        fullTextRange = TextRange(start = textRange.min, end = index)
         return index to null
     }
 
-    fun getSpanStyleListByTextRange(
+    fun getRichSpanListByTextRange(
         searchTextRange: TextRange,
         offset: Int = 0,
-    ): Pair<Int, List<RichSpanStyle>> {
+    ): Pair<Int, List<RichSpan>> {
         var index = offset
-        val richSpanStyleList = mutableListOf<RichSpanStyle>()
+        val richSpanList = mutableListOf<RichSpan>()
 
         // Set start text range
         textRange = TextRange(start = index, end = index + text.length)
@@ -86,30 +112,26 @@ public class RichSpanStyle(
 
         // Check if the text index is in the start text range
         if (searchTextRange.min < textRange.max && searchTextRange.max > textRange.min)
-            richSpanStyleList.add(this)
+            richSpanList.add(this)
 
         // Check if the text index is in the children
-        children.forEach { richSpanStyle ->
-            val result = richSpanStyle.getSpanStyleListByTextRange(
+        children.forEach { richSpan ->
+            val result = richSpan.getRichSpanListByTextRange(
                 searchTextRange = searchTextRange,
                 offset = index,
             )
-            richSpanStyleList.addAll(result.second)
+            richSpanList.addAll(result.second)
             index = result.first
         }
 
-        return index to richSpanStyleList
+        return index to richSpanList
     }
 
-    fun removeTextRange(textRange: TextRange): RichSpanStyle? {
+    fun removeTextRange(textRange: TextRange): RichSpan? {
         if (textRange.min <= this.textRange.min && textRange.max >= fullTextRange.max) return null
 
         // Remove text from start
         if (textRange.min in this.textRange || (textRange.max - 1) in this.textRange) {
-            println("Remove text from start")
-            println("textRange: $textRange")
-            println("this.textRange: ${this.textRange}")
-            println("text: ${this.text}")
             val startFirstHalf = 0 until (textRange.min - this.textRange.min)
             val startSecondHalf = (textRange.max - this.textRange.min) until (this.textRange.max - this.textRange.min)
             val newStartText =
@@ -121,8 +143,8 @@ public class RichSpanStyle(
 
         // Remove text from children
         for (i in children.lastIndex downTo 0) {
-            val richSpanStyle = children[i]
-            val result = richSpanStyle.removeTextRange(textRange)
+            val richSpan = children[i]
+            val result = richSpan.removeTextRange(textRange)
             if (result == null) {
                 children.removeAt(i)
             } else {
@@ -138,13 +160,13 @@ public class RichSpanStyle(
         return this
     }
 
-    fun getClosestRichSpanStyle(spanStyle: SpanStyle): RichSpanStyle? {
+    fun getClosestRichSpan(spanStyle: SpanStyle): RichSpan? {
         if (spanStyle.isSpecifiedFieldsEquals(this.fullSpanStyle, strict = true)) return this
 
-        return parent?.getClosestRichSpanStyle(spanStyle)
+        return parent?.getClosestRichSpan(spanStyle)
     }
 
     override fun toString(): String {
-        return "RichSpanStyle(text='$text', textRange=$textRange, fullTextRange=$fullTextRange, fullSpanStyle=$fullSpanStyle)"
+        return "richSpan(text='$text', textRange=$textRange, fullTextRange=$fullTextRange)"
     }
 }

@@ -2,17 +2,17 @@ package com.mohamedrejeb.richeditor.utils
 
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.withStyle
-import com.mohamedrejeb.richeditor.model.RichSpanStyle
+import com.mohamedrejeb.richeditor.model.RichSpan
 
 internal fun AnnotatedString.Builder.append(
-    richSpanStyleList: List<RichSpanStyle>,
+    richSpanList: List<RichSpan>,
     startIndex: Int,
     text: String,
 ): Int {
     var index = startIndex
-    richSpanStyleList.forEach { richSpanStyle ->
+    richSpanList.forEach { richSpan ->
         index = append(
-            richSpanStyle = richSpanStyle,
+            richSpan = richSpan,
             startIndex = index,
             text = text
         )
@@ -21,19 +21,19 @@ internal fun AnnotatedString.Builder.append(
 }
 
 internal fun AnnotatedString.Builder.append(
-    richSpanStyle: RichSpanStyle,
+    richSpan: RichSpan,
     startIndex: Int,
     text: String,
 ): Int {
     var index = startIndex
-    withStyle(richSpanStyle.spanStyle) {
-        val newText = text.substring(index, index + richSpanStyle.text.length)
-        richSpanStyle.text = newText
+    withStyle(richSpan.spanStyle) {
+        val newText = text.substring(index, index + richSpan.text.length)
+        richSpan.text = newText
         append(newText)
-        index += richSpanStyle.text.length
-        richSpanStyle.children.forEach { richSpanStyle ->
+        index += richSpan.text.length
+        richSpan.children.forEach { richSpan ->
             index = append(
-                richSpanStyle = richSpanStyle,
+                richSpan = richSpan,
                 startIndex = index,
                 text = text
             )

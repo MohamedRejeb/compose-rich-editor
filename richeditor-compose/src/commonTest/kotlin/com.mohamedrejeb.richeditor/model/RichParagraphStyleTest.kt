@@ -6,21 +6,21 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 internal class RichParagraphStyleTest {
-    private val paragraph = RichParagraphStyle(key = 0)
-    private val richSpanStyleList = listOf(
-        RichSpanStyle(
+    private val paragraph = RichParagraph(key = 0)
+    private val richSpanLists = listOf(
+        RichSpan(
             key = 0,
             paragraph = paragraph,
             text = "012",
             textRange = TextRange(0, 3),
             children = mutableStateListOf(
-                RichSpanStyle(
+                RichSpan(
                     key = 10,
                     paragraph = paragraph,
                     text = "345",
                     textRange = TextRange(3, 6),
                 ),
-                RichSpanStyle(
+                RichSpan(
                     key = 11,
                     paragraph = paragraph,
                     text = "6",
@@ -28,29 +28,29 @@ internal class RichParagraphStyleTest {
                 ),
             )
         ),
-        RichSpanStyle(
+        RichSpan(
             key = 1,
             paragraph = paragraph,
             text = "8",
             textRange = TextRange(8, 9),
         )
     )
-    private val richParagraphStyle = RichParagraphStyle(key = 0,)
+    private val richParagraph = RichParagraph(key = 0,)
 
     @Test
     fun testRemoveTextRange() {
-        richParagraphStyle.children.clear()
-        richParagraphStyle.children.addAll(richSpanStyleList)
+        richParagraph.children.clear()
+        richParagraph.children.addAll(richSpanLists)
         assertEquals(
             null,
-            richParagraphStyle.removeTextRange(TextRange(0, 20))
+            richParagraph.removeTextRange(TextRange(0, 20))
         )
 
-        richParagraphStyle.children.clear()
-        richParagraphStyle.children.addAll(richSpanStyleList)
+        richParagraph.children.clear()
+        richParagraph.children.addAll(richSpanLists)
         assertEquals(
             1,
-            richParagraphStyle.removeTextRange(TextRange(0, 8))?.children?.size
+            richParagraph.removeTextRange(TextRange(0, 8))?.children?.size
         )
     }
 

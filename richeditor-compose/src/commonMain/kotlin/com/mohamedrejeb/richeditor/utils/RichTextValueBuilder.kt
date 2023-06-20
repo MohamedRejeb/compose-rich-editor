@@ -12,6 +12,7 @@ import kotlin.math.min
  * A builder for [RichTextValue]
  * @see RichTextValue
  */
+@Deprecated("Use rememberRichTextState instead")
 internal class RichTextValueBuilder {
 
     private var textFieldValue: TextFieldValue = TextFieldValue()

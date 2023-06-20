@@ -7,22 +7,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.mohamedrejeb.richeditor.model.RichSpanStyle
+import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichTextValue
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.sample.common.components.NewRichTextStyleRow
-import com.mohamedrejeb.richeditor.sample.common.components.RichTextStyleRow
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
-import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.NewRichTextEditor
-import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
-import com.mohamedrejeb.richeditor.ui.material3.RichText
-import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,13 +83,17 @@ fun NewEditorContent() {
                 Divider(modifier = Modifier.padding(vertical = 20.dp))
 
                 Text(
+                    text = "Selection: ${richTextState.selection}",
+                )
+
+                Text(
                     text = "tree representation:",
                 )
 
                 key(
                    richTextState.annotatedString
                 ) {
-                    richTextState.richParagraphStyleList.forEachIndexed { index, richParagraphStyle ->
+                    richTextState.richParagraphList.forEachIndexed { index, richParagraphStyle ->
                         Text("Paragraph $index: ${richParagraphStyle.children.size} children")
                         richParagraphStyle.children.forEachIndexed { index, richTextStyle ->
                             RichTextStyleTreeRepresentation(index, richTextStyle, " -")
@@ -110,9 +108,9 @@ fun NewEditorContent() {
 }
 
 @Composable
-fun RichTextStyleTreeRepresentation(index: Int, richSpanStyle: RichSpanStyle, startText: String) {
-    Text("${startText}Text $index `$richSpanStyle`: ${richSpanStyle.children.size} children")
-    richSpanStyle.children.forEachIndexed { index, richSpanStyle ->
-        RichTextStyleTreeRepresentation(index, richSpanStyle, "$startText-")
+fun RichTextStyleTreeRepresentation(index: Int, richSpan: RichSpan, startText: String) {
+    Text("${startText}Text $index `$richSpan`: ${richSpan.children.size} children")
+    richSpan.children.forEachIndexed { index, richSpan ->
+        RichTextStyleTreeRepresentation(index, richSpan, "$startText-")
     }
 }

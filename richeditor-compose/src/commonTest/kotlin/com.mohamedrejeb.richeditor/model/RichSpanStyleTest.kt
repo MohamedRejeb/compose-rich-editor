@@ -5,21 +5,21 @@ import androidx.compose.ui.text.TextRange
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class RichSpanStyleTest {
-    private val paragraph = RichParagraphStyle(key = 0)
-    private val richSpanStyle = RichSpanStyle(
+internal class RichSpanTest {
+    private val paragraph = RichParagraph(key = 0)
+    private val richSpan = RichSpan(
         key = 0,
         paragraph = paragraph,
         text = "012",
         textRange = TextRange(0, 3),
         children = mutableStateListOf(
-            RichSpanStyle(
+            RichSpan(
                 key = 10,
                 paragraph = paragraph,
                 text = "34",
                 textRange = TextRange(3, 5),
             ),
-            RichSpanStyle(
+            RichSpan(
                 key = 11,
                 paragraph = paragraph,
                 text = "567",
@@ -32,40 +32,40 @@ internal class RichSpanStyleTest {
     fun testGetSpanStyleByTextIndex() {
         assertEquals(
             0,
-            richSpanStyle.getSpanStyleByTextIndex(textIndex = 0).second?.key,
+            richSpan.getRichSpanByTextIndex(textIndex = 0).second?.key,
         )
         assertEquals(
             0,
-            richSpanStyle.getSpanStyleByTextIndex(textIndex = 2).second?.key,
+            richSpan.getRichSpanByTextIndex(textIndex = 2).second?.key,
         )
         assertEquals(
             null,
-            richSpanStyle.getSpanStyleByTextIndex(textIndex = 8).second?.key,
+            richSpan.getRichSpanByTextIndex(textIndex = 8).second?.key,
         )
         assertEquals(
             null,
-            richSpanStyle.getSpanStyleByTextIndex(textIndex = 9).second?.key,
+            richSpan.getRichSpanByTextIndex(textIndex = 9).second?.key,
         )
 
         assertEquals(
             10,
-            richSpanStyle.getSpanStyleByTextIndex(textIndex = 3).second?.key,
+            richSpan.getRichSpanByTextIndex(textIndex = 3).second?.key,
         )
         assertEquals(
             11,
-            richSpanStyle.getSpanStyleByTextIndex(textIndex = 6).second?.key,
+            richSpan.getRichSpanByTextIndex(textIndex = 6).second?.key,
         )
 
         assertEquals(
             11,
-            richSpanStyle.getSpanStyleByTextIndex(textIndex = 7).second?.key,
+            richSpan.getRichSpanByTextIndex(textIndex = 7).second?.key,
         )
     }
 
     @Test
     fun testRemoveTextRangeStart() {
         // Remove all start text
-        val removeAllStartText = richSpanStyle.removeTextRange(TextRange(0, 3))
+        val removeAllStartText = richSpan.removeTextRange(TextRange(0, 3))
         assertEquals(
             "",
             removeAllStartText?.text
@@ -83,7 +83,7 @@ internal class RichSpanStyleTest {
     @Test
     fun testRemoveTextRangeStartPart() {
         // Remove part of start text
-        val removePartOfStartText = richSpanStyle.removeTextRange(TextRange(1, 3))
+        val removePartOfStartText = richSpan.removeTextRange(TextRange(1, 3))
         assertEquals(
             "0",
             removePartOfStartText?.text
@@ -101,7 +101,7 @@ internal class RichSpanStyleTest {
     @Test
     fun testRemoveTextRangeFirstChild() {
         // Remove first child
-        val removeFirstChild = richSpanStyle.removeTextRange(TextRange(3, 7))
+        val removeFirstChild = richSpan.removeTextRange(TextRange(3, 7))
         assertEquals(
             "012",
             removeFirstChild?.text
@@ -119,7 +119,7 @@ internal class RichSpanStyleTest {
     @Test
     fun testRemoveTextRangeLastChild() {
         // Remove last child
-        val removeLastChild = richSpanStyle.removeTextRange(TextRange(5, 8))
+        val removeLastChild = richSpan.removeTextRange(TextRange(5, 8))
         assertEquals(
             "012",
             removeLastChild?.text
@@ -137,7 +137,7 @@ internal class RichSpanStyleTest {
     @Test
     fun testRemoveTextRangeTwoChildren() {
         // Remove the two children
-        val removeTwoChildren = richSpanStyle.removeTextRange(TextRange(3, 8))
+        val removeTwoChildren = richSpan.removeTextRange(TextRange(3, 8))
         assertEquals(
             "012",
             removeTwoChildren?.text
@@ -151,7 +151,7 @@ internal class RichSpanStyleTest {
     @Test
     fun testRemoveTextRangeAlLText() {
         // Remove all the text
-        val removeAllText = richSpanStyle.removeTextRange(TextRange(0, 20))
+        val removeAllText = richSpan.removeTextRange(TextRange(0, 20))
         assertEquals(
             null,
             removeAllText

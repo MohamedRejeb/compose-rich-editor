@@ -5,14 +5,14 @@ plugins {
 }
 
 android {
-    namespace = "com.mocoding.richeditor.android"
+    namespace = "com.mohamedrejeb.richeditor.android"
     compileSdk = (findProperty("android.compileSdk") as String).toInt()
 
     defaultConfig {
         minSdk = (findProperty("android.minSdk") as String).toInt()
         targetSdk = (findProperty("android.targetSdk") as String).toInt()
 
-        applicationId = "com.mocoding.richeditor.android"
+        applicationId = "com.mohamedrejeb.richeditor.android"
         versionCode = 1
         versionName = "1.0"
     }

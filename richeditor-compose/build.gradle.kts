@@ -69,7 +69,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.mocoding.richeditor"
+    namespace = "com.mohamedrejeb.richeditor"
     compileSdk = (findProperty("android.compileSdk") as String).toInt()
 
     defaultConfig {

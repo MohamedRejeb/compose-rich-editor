@@ -39,7 +39,7 @@ class RichTextState(
     val composition get() = textFieldValue.composition
 
     private var currentAppliedSpanStyle: SpanStyle by mutableStateOf(
-        getRichSpanByTextIndex(textIndex = max(0, textFieldValue.selection.min - 1))?.fullSpanStyle ?: SpanStyle()
+        getRichSpanByTextIndex(textIndex = textFieldValue.selection.min - 1)?.fullSpanStyle ?: SpanStyle()
     )
 
     private var toAddSpanStyle: SpanStyle by mutableStateOf(SpanStyle())
@@ -250,8 +250,6 @@ class RichTextState(
             handleAddingCharacters(newTextFieldValue)
         } else if (newTextFieldValue.text.length < textFieldValue.text.length) {
             handleRemovingCharacters(newTextFieldValue)
-        } else if (newTextFieldValue.text != textFieldValue.text) {
-            handleReplacingCharacters(newTextFieldValue)
         }
 
         // Update text field value
@@ -321,14 +319,21 @@ class RichTextState(
             endIndex = newTextFieldValue.selection.min
         )
         val startTypeIndex = newTextFieldValue.selection.min - typedCharsCount
-        val previousIndex = max(0, startTypeIndex - 1)
+        val previousIndex = startTypeIndex - 1
 
         val activeRichSpan = getRichSpanByTextIndex(previousIndex)
 
+        println("previousIndex: $previousIndex")
+        println("activeRichSpan: $activeRichSpan")
+
         if (activeRichSpan != null) {
-            val startIndex = startTypeIndex - activeRichSpan.textRange.min
+            val startIndex = max(0, startTypeIndex - activeRichSpan.textRange.min)
             val beforeText = activeRichSpan.text.substring(0, startIndex)
             val afterText = activeRichSpan.text.substring(startIndex)
+
+            println("startIndex: $startIndex")
+            println("beforeText: $beforeText")
+            println("afterText: $afterText")
 
             val activeRichSpanFullSpanStyle = activeRichSpan.fullSpanStyle
             val newSpanStyle = activeRichSpanFullSpanStyle.customMerge(toAddSpanStyle).unmerge(toRemoveSpanStyle)
@@ -390,12 +395,6 @@ class RichTextState(
         if (startParagraphIndex != endParagraphIndex) {
             endRichSpan.paragraph.removeTextRange(removeRange)
         }
-    }
-
-    private fun handleReplacingCharacters(
-        newTextFieldValue: TextFieldValue
-    ) {
-        newTextFieldValue.text
     }
 
     private fun checkForParagraphs(
@@ -794,7 +793,7 @@ class RichTextState(
     private fun updateCurrentSpanStyle() {
         currentAppliedSpanStyle =
             if (selection.collapsed)
-                getRichSpanByTextIndex(textIndex = max(0, textFieldValue.selection.min - 1))
+                getRichSpanByTextIndex(textIndex = textFieldValue.selection.min - 1)
                     ?.fullSpanStyle
                     ?: SpanStyle()
             else
@@ -869,6 +868,11 @@ class RichTextState(
      * @return The [RichSpan] that contains the given [textIndex], or null if no such [RichSpan] exists.
      */
     private fun getRichSpanByTextIndex(textIndex: Int): RichSpan? {
+        println("getRichSpanByTextIndex($textIndex)")
+
+        if (textIndex < 0)
+            return richParagraphList.firstOrNull()?.children?.firstOrNull { it.isFirstInParagraph }
+
         var index = 0
         richParagraphList.forEach { richParagraphStyle ->
             val result = richParagraphStyle.getRichSpanByTextIndex(

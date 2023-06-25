@@ -60,6 +60,8 @@ public class RichSpan(
         var current: RichSpan
         var parent: RichSpan = this
 
+        if (!isChildrenEmpty()) return false
+
         while (true) {
             current = parent
             parent = current.parent ?: break
@@ -69,6 +71,11 @@ public class RichSpan(
 
         return paragraph.children.last() == current
     }
+
+    private fun isChildrenEmpty(): Boolean =
+        children.all { richSpan ->
+            richSpan.text.isEmpty() && richSpan.isChildrenEmpty()
+        }
 
     fun getRichSpanByTextIndex(
         textIndex: Int,

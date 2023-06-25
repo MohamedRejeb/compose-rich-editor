@@ -52,35 +52,28 @@ fun HomeContent() {
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier
-                    .padding(40.dp)
+            Button(
+                onClick = {
+                    navigator.push(RichEditorScreen)
+                }
             ) {
-                Button(
-                    onClick = {
-                        navigator.push(RichEditorScreen)
-                    }
-                ) {
-                    Text("Rich Text Editor Demo")
-                }
+                Text("Rich Text Editor Demo")
+            }
 
-                Button(
-                    onClick = {
-                        navigator.push(HtmlEditorScreen)
-                    },
-                ) {
-                    Text("HTML Editor Demo")
-                }
+            Button(
+                onClick = {
+                    navigator.push(HtmlEditorScreen)
+                },
+            ) {
+                Text("HTML Editor Demo")
+            }
 
-                Button(
-                    onClick = {
-                        navigator.push(NewEditorScreen)
-                    },
-                ) {
-                    Text("HTML Editor Demo")
-                }
+            Button(
+                onClick = {
+                    navigator.push(NewEditorScreen)
+                },
+            ) {
+                Text("HTML Editor Demo")
             }
 
         }

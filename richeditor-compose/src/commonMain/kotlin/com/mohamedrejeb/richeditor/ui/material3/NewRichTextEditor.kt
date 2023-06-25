@@ -7,9 +7,13 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.LocalTextStyle
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.ClipboardManager
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -88,28 +92,41 @@ fun NewRichTextEditor(
     shape: Shape = TextFieldDefaults.filledShape,
     colors: TextFieldColors = TextFieldDefaults.textFieldColors()
 ) {
-    TextField(
-        value = richTextState.textFieldValue,
-        onValueChange = {
-            richTextState.onTextFieldValueChange(it)
-        },
-        modifier = modifier,
-        enabled = enabled,
-        readOnly = readOnly,
-        textStyle = textStyle,
-        label = label,
-        placeholder = placeholder,
-        leadingIcon = leadingIcon,
-        trailingIcon = trailingIcon,
-        supportingText = supportingText,
-        isError = isError,
-//        visualTransformation = richTextState.visualTransformation,
-        keyboardOptions = keyboardOptions,
-        keyboardActions = keyboardActions,
-        singleLine = singleLine,
-        maxLines = maxLines,
-        interactionSource = interactionSource,
-        shape = shape,
-        colors = colors,
-    )
+    val clipboardManager = remember {
+        object : ClipboardManager {
+            override fun setText(annotatedString: AnnotatedString) {
+                println("setText: $annotatedString")
+            }
+
+            override fun getText(): AnnotatedString {
+                return AnnotatedString("Hi hhh")
+            }
+        }
+    }
+    CompositionLocalProvider(LocalClipboardManager provides clipboardManager) {
+        TextField(
+            value = richTextState.textFieldValue,
+            onValueChange = {
+                richTextState.onTextFieldValueChange(it)
+            },
+            modifier = modifier,
+            enabled = enabled,
+            readOnly = readOnly,
+            textStyle = textStyle,
+            label = label,
+            placeholder = placeholder,
+            leadingIcon = leadingIcon,
+            trailingIcon = trailingIcon,
+            supportingText = supportingText,
+            isError = isError,
+            visualTransformation = richTextState.visualTransformation,
+            keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
+            singleLine = singleLine,
+            maxLines = maxLines,
+            interactionSource = interactionSource,
+            shape = shape,
+            colors = colors,
+        )
+    }
 }

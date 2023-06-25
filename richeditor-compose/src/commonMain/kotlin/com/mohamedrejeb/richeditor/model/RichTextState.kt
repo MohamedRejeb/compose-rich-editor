@@ -601,6 +601,17 @@ class RichTextState(
         afterText: String,
         startIndex: Int,
     ) {
+        // Simplify the richSpan tree if possible, by avoiding creating a new RichSpan.
+        if (
+            beforeText.isEmpty() &&
+            afterText.isEmpty() &&
+            richSpan.children.isEmpty()
+        ) {
+            richSpan.text = middleText
+            richSpan.spanStyle = richSpan.spanStyle.customMerge(toAddSpanStyle)
+            return
+        }
+
         richSpan.text = beforeText
         richSpan.children.add(
             0,

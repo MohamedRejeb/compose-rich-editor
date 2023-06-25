@@ -92,18 +92,21 @@ fun NewRichTextEditor(
     shape: Shape = TextFieldDefaults.filledShape,
     colors: TextFieldColors = TextFieldDefaults.textFieldColors()
 ) {
-    val clipboardManager = remember {
+    val clipboardManager = LocalClipboardManager.current
+    val richClipboardManager = remember {
         object : ClipboardManager {
             override fun setText(annotatedString: AnnotatedString) {
                 println("setText: $annotatedString")
+                clipboardManager.setText(AnnotatedString("Copy hhh"))
             }
 
-            override fun getText(): AnnotatedString {
+            override fun getText(): AnnotatedString? {
                 return AnnotatedString("Hi hhh")
             }
         }
     }
-    CompositionLocalProvider(LocalClipboardManager provides clipboardManager) {
+
+    CompositionLocalProvider(LocalClipboardManager provides richClipboardManager) {
         TextField(
             value = richTextState.textFieldValue,
             onValueChange = {

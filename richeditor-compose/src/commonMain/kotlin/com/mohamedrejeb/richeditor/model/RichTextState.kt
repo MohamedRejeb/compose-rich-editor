@@ -509,7 +509,6 @@ class RichTextState(
         val startSelectionIndex = selection.min
         val endSelectionIndex = selection.max
 
-//        for (i in richSpanList.lastIndex downTo richSpanList.lastIndex) {
         for (i in richSpanList.lastIndex downTo 0) {
             val richSpan = richSpanList[i]
 
@@ -601,6 +600,12 @@ class RichTextState(
         afterText: String,
         startIndex: Int,
     ) {
+        println("handleApplyingStyleToRichSpan")
+        println("beforeText: $beforeText")
+        println("middleText: $middleText")
+        println("afterText: $afterText")
+        val fullSpanStyle = richSpan.fullSpanStyle
+
         // Simplify the richSpan tree if possible, by avoiding creating a new RichSpan.
         if (
             beforeText.isEmpty() &&
@@ -608,26 +613,31 @@ class RichTextState(
             richSpan.children.isEmpty()
         ) {
             richSpan.text = middleText
-            richSpan.spanStyle = richSpan.spanStyle.customMerge(toAddSpanStyle)
+            richSpan.spanStyle = richSpan.spanStyle.copy(
+                textDecoration = fullSpanStyle.textDecoration
+            ).customMerge(toAddSpanStyle)
             return
         }
 
         richSpan.text = beforeText
-        richSpan.children.add(
-            0,
-            RichSpan(
-                paragraph = richSpan.paragraph,
-                parent = richSpan,
-                text = middleText,
-                textRange = TextRange(
-                    startIndex,
-                    startIndex + middleText.length
-                ),
-                spanStyle = SpanStyle(textDecoration = currentSpanStyle.textDecoration).customMerge(
-                    toAddSpanStyle
-                ),
-            )
+        val newRichSpan = RichSpan(
+            paragraph = richSpan.paragraph,
+            parent = richSpan,
+            text = middleText,
+            textRange = TextRange(
+                startIndex,
+                startIndex + middleText.length
+            ),
+            spanStyle = SpanStyle(
+                textDecoration = fullSpanStyle.textDecoration
+            ).customMerge(toAddSpanStyle),
         )
+        if (middleText.isNotEmpty()) {
+            richSpan.children.add(
+                0,
+                newRichSpan
+            )
+        }
         if (afterText.isNotEmpty()) {
             richSpan.children.add(
                 1,
@@ -641,6 +651,19 @@ class RichTextState(
                     ),
                 )
             )
+        } else {
+            val afterRichSpan = richSpan.children.getOrNull(1)
+            if (afterRichSpan != null &&
+                afterRichSpan.spanStyle == newRichSpan.spanStyle) {
+                if (richSpan.children.size == 2 && richSpan.text.isEmpty()) {
+                    richSpan.text = newRichSpan.text + afterRichSpan.text
+                    richSpan.spanStyle = richSpan.spanStyle.customMerge(newRichSpan.spanStyle)
+                    richSpan.children.clear()
+                } else {
+                    newRichSpan.text += afterRichSpan.text
+                    richSpan.children.remove(afterRichSpan)
+                }
+            }
         }
     }
 
@@ -691,6 +714,10 @@ class RichTextState(
         var previousRichSpan: RichSpan?
         var currentRichSpan: RichSpan? = richSpan
 
+        println("beforeText: $beforeText")
+        println("middleText: $middleText")
+        println("afterText: $afterText")
+
         toShiftRichSpanList.add(newRichSpan)
         if (afterSpanStyle.text.isNotEmpty() || afterSpanStyle.children.isNotEmpty())
             toShiftRichSpanList.add(afterSpanStyle)
@@ -707,13 +734,34 @@ class RichTextState(
                     ((index + 1)..currentRichSpan.children.lastIndex).forEach {
                         val richSpan = currentRichSpan.children[it]
                         richSpan.spanStyle = richSpan.fullSpanStyle
-                        richSpan.parent = parentRichSpan
-                        toShiftRichSpanList.add(richSpan)
+                        val lastChild = toShiftRichSpanList.lastOrNull()
+                        if (lastChild != null && lastChild.spanStyle == richSpan.spanStyle) {
+                            if (lastChild.children.isEmpty()) {
+                                lastChild.text += richSpan.text
+                                lastChild.children.addAll(richSpan.children)
+                            }
+                            else {
+                                lastChild.children.add(richSpan)
+                                richSpan.parent = lastChild
+                                richSpan.spanStyle = SpanStyle()
+                                for (i in richSpan.children.lastIndex downTo 0) {
+                                    val child = richSpan.children[i]
+                                    child.parent = lastChild
+                                    richSpan.children.removeAt(i)
+                                    lastChild.children.add(child)
+                                }
+                            }
+                        } else {
+                            richSpan.parent = parentRichSpan
+                            toShiftRichSpanList.add(richSpan)
+                        }
                     }
                     currentRichSpan.children.removeRange(index + 1, currentRichSpan.children.size)
                 }
             }
         }
+
+        println("toShiftRichSpanList: $toShiftRichSpanList")
 
         if (parentRichSpan == null || currentRichSpan == null) {
             val index = richSpan.paragraph.children.indexOf(previousRichSpan)
@@ -730,6 +778,15 @@ class RichTextState(
                     index + 1,
                     toShiftRichSpanList
                 )
+            }
+        }
+
+        if (richSpan.text.isEmpty() && richSpan.children.isEmpty()) {
+            val parent = richSpan.parent
+            if (parent != null) {
+                parent.children.remove(richSpan)
+            } else {
+                richSpan.paragraph.children.remove(richSpan)
             }
         }
     }

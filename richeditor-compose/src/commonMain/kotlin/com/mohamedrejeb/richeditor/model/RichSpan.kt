@@ -50,10 +50,10 @@ public class RichSpan(
             current = parent
             parent = current.parent ?: break
 
-            if (parent.children.first() != current || parent.text.isNotEmpty()) return false
+            if (parent.children.firstOrNull() != current || parent.text.isNotEmpty()) return false
         }
 
-        return paragraph.children.first() == current
+        return paragraph.children.firstOrNull() == current
     }
 
     val isLastInParagraph: Boolean get() {
@@ -66,10 +66,10 @@ public class RichSpan(
             current = parent
             parent = current.parent ?: break
 
-            if (parent.children.last() != current) return false
+            if (parent.children.lastOrNull() != current) return false
         }
 
-        return paragraph.children.last() == current
+        return paragraph.children.lastOrNull() == current
     }
 
     private fun isChildrenEmpty(): Boolean =

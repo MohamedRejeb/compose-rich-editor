@@ -5,6 +5,14 @@ plugins {
     id("com.android.library")
 }
 
+/**
+ * Determines if this Gradle build is running on a Mac OSX Operating System.
+ */
+fun isBuildingOnOSX(): Boolean {
+    val osName = System.getProperty("os.name").toLowerCase()
+    return osName.contains("mac os x") || osName.contains("darwin") || osName.contains("osx")
+}
+
 kotlin {
     android()
     jvm("desktop") {
@@ -13,9 +21,13 @@ kotlin {
     js(IR) {
         browser()
     }
-    iosX64()
-    iosArm64()
-    iosSimulatorArm64()
+
+    // don't build on windows , useless libraries get downloaded
+    if(isBuildingOnOSX()) {
+        iosX64()
+        iosArm64()
+        iosSimulatorArm64()
+    }
 
     sourceSets {
         val commonMain by getting {
@@ -55,15 +67,17 @@ kotlin {
             dependencies {}
         }
 
-        val iosX64Main by getting
-        val iosArm64Main by getting
-        val iosSimulatorArm64Main by getting
-        val iosMain by creating {
-            dependsOn(commonMain)
-            iosX64Main.dependsOn(this)
-            iosArm64Main.dependsOn(this)
-            iosSimulatorArm64Main.dependsOn(this)
-            dependencies {}
+        if(isBuildingOnOSX()) {
+            val iosX64Main by getting
+            val iosArm64Main by getting
+            val iosSimulatorArm64Main by getting
+            val iosMain by creating {
+                dependsOn(commonMain)
+                iosX64Main.dependsOn(this)
+                iosArm64Main.dependsOn(this)
+                iosSimulatorArm64Main.dependsOn(this)
+                dependencies {}
+            }
         }
     }
 }

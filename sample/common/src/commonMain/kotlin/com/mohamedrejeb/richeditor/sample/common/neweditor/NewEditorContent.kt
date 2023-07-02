@@ -83,6 +83,14 @@ fun NewEditorContent() {
                 Divider(modifier = Modifier.padding(vertical = 20.dp))
 
                 Text(
+                    text = "Annoation Length: ${richTextState.annotatedString.text.length}",
+                )
+
+                Text(
+                    text = "Text Length: ${richTextState.textFieldValue.text.length}",
+                )
+
+                Text(
                     text = "Selection: ${richTextState.selection}",
                 )
 

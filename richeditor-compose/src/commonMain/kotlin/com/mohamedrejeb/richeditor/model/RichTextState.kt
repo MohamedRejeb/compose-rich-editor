@@ -36,7 +36,7 @@ class RichTextState(
         )
     )
     internal var visualTransformation: VisualTransformation by mutableStateOf(VisualTransformation.None)
-    internal var textFieldValue by mutableStateOf(TextFieldValue())
+    public var textFieldValue by mutableStateOf(TextFieldValue())
     val selection get() = textFieldValue.selection
     val composition get() = textFieldValue.composition
 
@@ -244,11 +244,10 @@ class RichTextState(
      * @param newTextFieldValue the new text field value.
      */
     internal fun onTextFieldValueChange(newTextFieldValue: TextFieldValue) {
-        if (newTextFieldValue.text.length > textFieldValue.text.length) {
+        if (newTextFieldValue.text.length > textFieldValue.text.length)
             handleAddingCharacters(newTextFieldValue)
-        } else if (newTextFieldValue.text.length < textFieldValue.text.length) {
+        else if (newTextFieldValue.text.length < textFieldValue.text.length)
             handleRemovingCharacters(newTextFieldValue)
-        }
 
         // Update text field value
         updateTextFieldValue(newTextFieldValue)
@@ -301,7 +300,8 @@ class RichTextState(
             }
         }
         textFieldValue = newTextFieldValue.copy(text = newText)
-        visualTransformation = VisualTransformation { text ->
+        visualTransformation = VisualTransformation { _ ->
+            println("visualTransformation: ${annotatedString.length}")
             TransformedText(
                 annotatedString,
                 OffsetMapping.Identity
@@ -652,17 +652,27 @@ class RichTextState(
                 )
             )
         } else {
-            val afterRichSpan = richSpan.children.getOrNull(1)
-            if (afterRichSpan != null &&
-                afterRichSpan.spanStyle == newRichSpan.spanStyle) {
-                if (richSpan.children.size == 2 && richSpan.text.isEmpty()) {
-                    richSpan.text = newRichSpan.text + afterRichSpan.text
-                    richSpan.spanStyle = richSpan.spanStyle.customMerge(newRichSpan.spanStyle)
-                    richSpan.children.clear()
-                } else {
-                    newRichSpan.text += afterRichSpan.text
-                    richSpan.children.remove(afterRichSpan)
-                }
+            val firstRichSpan = richSpan.children.firstOrNull()
+            val secondRichSpan = richSpan.children.getOrNull(1)
+            if (
+                firstRichSpan != null &&
+                secondRichSpan != null &&
+                firstRichSpan.spanStyle == secondRichSpan.spanStyle
+            ) {
+                firstRichSpan.text += secondRichSpan.text
+                firstRichSpan.children.addAll(secondRichSpan.children)
+                richSpan.children.removeAt(1)
+            }
+
+            if (
+                firstRichSpan != null &&
+                richSpan.text.isEmpty() &&
+                richSpan.children.size == 1
+            ) {
+                richSpan.text = firstRichSpan.text
+                richSpan.spanStyle = richSpan.spanStyle.customMerge(firstRichSpan.spanStyle)
+                richSpan.children.clear()
+                richSpan.children.addAll(firstRichSpan.children)
             }
         }
     }

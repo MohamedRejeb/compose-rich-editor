@@ -16,7 +16,7 @@ import com.mohamedrejeb.richeditor.model.RichTextValue
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.sample.common.components.NewRichTextStyleRow
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
-import com.mohamedrejeb.richeditor.ui.material3.NewRichTextEditor
+import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,8 +72,8 @@ fun NewEditorContent() {
                     richTextState = richTextState,
                 )
 
-                NewRichTextEditor(
-                    richTextState = richTextState,
+                RichTextEditor(
+                    state = richTextState,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(300.dp)

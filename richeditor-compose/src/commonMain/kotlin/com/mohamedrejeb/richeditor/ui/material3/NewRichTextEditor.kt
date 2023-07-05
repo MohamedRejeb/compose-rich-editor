@@ -2,12 +2,15 @@ package com.mohamedrejeb.richeditor.ui.material3
 
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.LocalTextStyle
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
@@ -19,6 +22,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.RichTextValue
+import kotlinx.coroutines.flow.collect
 
 /**
  * Material 3 Design filled rich text field.
@@ -93,6 +97,7 @@ fun NewRichTextEditor(
     colors: TextFieldColors = TextFieldDefaults.textFieldColors()
 ) {
     val clipboardManager = LocalClipboardManager.current
+    // TODO: Use RichClipboardManager
     val richClipboardManager = remember {
         object : ClipboardManager {
             override fun setText(annotatedString: AnnotatedString) {
@@ -104,6 +109,22 @@ fun NewRichTextEditor(
                 return AnnotatedString("Hi hhh")
             }
         }
+    }
+
+    val hover = interactionSource.collectIsHoveredAsState()
+    val press = interactionSource.collectIsPressedAsState()
+    LaunchedEffect(interactionSource) {
+        interactionSource.interactions.collect { i ->
+            println("Interaction: $i")
+        }
+    }
+
+    LaunchedEffect(hover) {
+        println("Hover: $hover")
+    }
+
+    LaunchedEffect(press) {
+        println("Press: $press")
     }
 
     CompositionLocalProvider(LocalClipboardManager provides richClipboardManager) {

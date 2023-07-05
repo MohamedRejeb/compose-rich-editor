@@ -28,7 +28,6 @@ fun rememberRichTextState(
 class RichTextState(
 
 ) {
-
     public val richParagraphList = mutableStateListOf(
         RichParagraph(
             key = 0,
@@ -328,17 +327,10 @@ class RichTextState(
 
         val activeRichSpan = getRichSpanByTextIndex(previousIndex)
 
-        println("previousIndex: $previousIndex")
-        println("activeRichSpan: $activeRichSpan")
-
         if (activeRichSpan != null) {
             val startIndex = max(0, startTypeIndex - activeRichSpan.textRange.min)
             val beforeText = activeRichSpan.text.substring(0, startIndex)
             val afterText = activeRichSpan.text.substring(startIndex)
-
-            println("startIndex: $startIndex")
-            println("beforeText: $beforeText")
-            println("afterText: $afterText")
 
             val activeRichSpanFullSpanStyle = activeRichSpan.fullSpanStyle
             val newSpanStyle = activeRichSpanFullSpanStyle.customMerge(toAddSpanStyle).unmerge(toRemoveSpanStyle)
@@ -422,9 +414,6 @@ class RichTextState(
                 continue
             }
 
-            println("index: $index")
-            println("richSpan: $richSpan")
-
             // Get the paragraph style index of the rich span style
             val paragraphIndex = richParagraphList.indexOf(richSpan.paragraph)
             // If the paragraph index is -1, continue (this should not happen)
@@ -433,18 +422,11 @@ class RichTextState(
                 continue
             }
 
-            println("paragraphIndex: $paragraphIndex")
-
             // Create a new paragraph style
             val newParagraph = richSpan.paragraph.slice(
                 startIndex = index,
                 richSpan = richSpan,
             )
-
-            println("newParagraph: $newParagraph")
-            newParagraph.children.forEach {
-                println("    child: $it")
-            }
 
             // Add the new paragraph to the map
             toAddParagraphMap[paragraphIndex + 1] = newParagraph
@@ -504,14 +486,17 @@ class RichTextState(
      * Handles removing the style in [toRemoveSpanStyle] from the selected text.
      */
     private fun handleRemovingStyleFromSelectedText() {
-        val richSpanList = getRichSpanListByTextRange(selection)
+        // Get the rich span list of the selected text
+        val selectedRichSpanList = getRichSpanListByTextRange(selection)
 
         val startSelectionIndex = selection.min
         val endSelectionIndex = selection.max
 
-        for (i in richSpanList.lastIndex downTo 0) {
-            val richSpan = richSpanList[i]
+        // Loop through the rich span list
+        for (i in selectedRichSpanList.lastIndex downTo 0) {
+            val richSpan = selectedRichSpanList[i]
 
+            // Get the text before, during, and after the selected text
             val beforeText = if (startSelectionIndex in richSpan.textRange)
                 richSpan.text.substring(0, startSelectionIndex - richSpan.textRange.start)
             else ""
@@ -600,10 +585,6 @@ class RichTextState(
         afterText: String,
         startIndex: Int,
     ) {
-        println("handleApplyingStyleToRichSpan")
-        println("beforeText: $beforeText")
-        println("middleText: $middleText")
-        println("afterText: $afterText")
         val fullSpanStyle = richSpan.fullSpanStyle
 
         // Simplify the richSpan tree if possible, by avoiding creating a new RichSpan.
@@ -724,12 +705,8 @@ class RichTextState(
         var previousRichSpan: RichSpan?
         var currentRichSpan: RichSpan? = richSpan
 
-        println("beforeText: $beforeText")
-        println("middleText: $middleText")
-        println("afterText: $afterText")
-
         toShiftRichSpanList.add(newRichSpan)
-        if (afterSpanStyle.text.isNotEmpty() || afterSpanStyle.children.isNotEmpty())
+        if (afterSpanStyle.text.isNotEmpty())
             toShiftRichSpanList.add(afterSpanStyle)
 
         while (true) {
@@ -741,37 +718,53 @@ class RichTextState(
             } else {
                 val index = currentRichSpan.children.indexOf(previousRichSpan)
                 if (index in 0 until currentRichSpan.children.lastIndex) {
+                    val currentRichSpanFullSpanStyle = currentRichSpan.fullSpanStyle
                     ((index + 1)..currentRichSpan.children.lastIndex).forEach {
-                        val richSpan = currentRichSpan.children[it]
-                        richSpan.spanStyle = richSpan.fullSpanStyle
+                        val childRichSpan = currentRichSpan.children[it]
+
+                        // Remove empty RichSpan.
+                        if (childRichSpan.text.isEmpty() && childRichSpan.children.isEmpty()) {
+                            currentRichSpan.children.removeAt(it)
+                            return@forEach
+                        }
+
+                        // Merge RichSpan span style with parent RichSpan span style.
+                        childRichSpan.spanStyle = currentRichSpanFullSpanStyle.merge(childRichSpan.spanStyle)
+
+                        // Lookup for RichSpan with the same span style and merge them to optimize the RichSpan tree.
                         val lastChild = toShiftRichSpanList.lastOrNull()
-                        if (lastChild != null && lastChild.spanStyle == richSpan.spanStyle) {
+                        if (lastChild != null && lastChild.spanStyle == childRichSpan.spanStyle) {
                             if (lastChild.children.isEmpty()) {
-                                lastChild.text += richSpan.text
-                                lastChild.children.addAll(richSpan.children)
+                                lastChild.text += childRichSpan.text
+                                lastChild.children.addAll(childRichSpan.children)
                             }
                             else {
-                                lastChild.children.add(richSpan)
-                                richSpan.parent = lastChild
-                                richSpan.spanStyle = SpanStyle()
-                                for (i in richSpan.children.lastIndex downTo 0) {
-                                    val child = richSpan.children[i]
+                                lastChild.children.add(childRichSpan)
+                                childRichSpan.parent = lastChild
+                                childRichSpan.spanStyle = SpanStyle()
+                                for (i in childRichSpan.children.lastIndex downTo 0) {
+                                    val child = childRichSpan.children[i]
                                     child.parent = lastChild
-                                    richSpan.children.removeAt(i)
+                                    childRichSpan.children.removeAt(i)
                                     lastChild.children.add(child)
                                 }
                             }
                         } else {
-                            richSpan.parent = parentRichSpan
-                            toShiftRichSpanList.add(richSpan)
+                            childRichSpan.parent = parentRichSpan
+                            toShiftRichSpanList.add(childRichSpan)
                         }
                     }
+
+                    // Remove shifted RichSpan from parent RichSpan.
                     currentRichSpan.children.removeRange(index + 1, currentRichSpan.children.size)
+
+                    // Remove empty RichSpan.
+                    if (previousRichSpan?.isEmpty() == true) {
+                        currentRichSpan.children.removeAt(index)
+                    }
                 }
             }
         }
-
-        println("toShiftRichSpanList: $toShiftRichSpanList")
 
         if (parentRichSpan == null || currentRichSpan == null) {
             val index = richSpan.paragraph.children.indexOf(previousRichSpan)
@@ -781,6 +774,11 @@ class RichTextState(
                     toShiftRichSpanList
                 )
             }
+
+            // Remove empty RichSpan.
+            if (previousRichSpan?.isEmpty() == true) {
+                richSpan.paragraph.children.removeAt(index)
+            }
         } else {
             val index = parentRichSpan.children.indexOf(previousRichSpan)
             if (index in 0..parentRichSpan.children.lastIndex) {
@@ -788,6 +786,11 @@ class RichTextState(
                     index + 1,
                     toShiftRichSpanList
                 )
+            }
+
+            // Remove empty RichSpan.
+            if (previousRichSpan?.isEmpty() == true) {
+                parentRichSpan.children.removeAt(index)
             }
         }
 

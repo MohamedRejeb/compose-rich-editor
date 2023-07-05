@@ -10,7 +10,7 @@ public class RichParagraph(
     val key: Int = 0,
     val children: SnapshotStateList<RichSpan> = mutableStateListOf(),
     var paragraphStyle: ParagraphStyle = ParagraphStyle(
-        lineBreak = LineBreak.Heading
+        lineBreak = LineBreak.Heading,
     ),
 ) {
     fun getRichSpanByTextIndex(

@@ -72,6 +72,8 @@ public class RichSpan(
         return paragraph.children.lastOrNull() == current
     }
 
+    fun isEmpty(): Boolean = text.isEmpty() && isChildrenEmpty()
+
     private fun isChildrenEmpty(): Boolean =
         children.all { richSpan ->
             richSpan.text.isEmpty() && richSpan.isChildrenEmpty()

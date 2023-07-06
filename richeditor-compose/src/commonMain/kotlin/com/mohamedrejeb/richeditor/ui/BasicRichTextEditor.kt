@@ -3,8 +3,8 @@ package com.mohamedrejeb.richeditor.ui
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -12,14 +12,14 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalDensity
@@ -30,6 +30,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.isSpecified
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.RichTextValue
@@ -309,17 +310,34 @@ internal fun BasicRichTextEditor(
             override fun setText(annotatedString: AnnotatedString) {
 //                println("setText: $annotatedString")
 //                clipboardManager.setText(AnnotatedString("Copy hhh"))
-                println("setText: ${state.annotatedString.spanStyles}")
+//                val stringBuilder = StringBuilder()
+//                stringBuilder.append(state.annotatedString.text)
+//                stringBuilder[0] = 'a'
+
                 clipboardManager.setText(state.annotatedString)
             }
 
             override fun getText(): AnnotatedString? {
                 val annotatedString = clipboardManager.getText()
-                println("getText: ${annotatedString}")
-                println("getText: ${annotatedString?.text}")
-                println("getText: ${annotatedString?.spanStyles}")
                 return annotatedString
-//                return AnnotatedString("Hi hhh")
+            }
+        }
+    }
+
+    // Workaround for Android to fix a bug in BasicTextField where it doesn't select the correct text
+    // when the text contains multiple paragraphs.
+    LaunchedEffect(interactionSource) {
+        interactionSource.interactions.collect { interaction ->
+            if (interaction is PressInteraction.Release) {
+                val pressPosition = interaction.press.pressPosition
+
+                adjustTextIndicatorOffset(
+                    pressPosition = pressPosition,
+                    state = state,
+                    contentPadding = contentPadding,
+                    textStyle = textStyle,
+                    density = density
+                )
             }
         }
     }
@@ -331,53 +349,14 @@ internal fun BasicRichTextEditor(
                 state.onTextFieldValueChange(it)
             },
             modifier = modifier
-                // Workaround to fix a bug in BasicTextField where it doesn't select the correct text
+                // Workaround for Desktop to fix a bug in BasicTextField where it doesn't select the correct text
                 // when the text contains multiple paragraphs.
-                .onPointerEvent(PointerEventType.Press) {
-                    val pressPosition = it.changes.firstOrNull()?.position ?: return@onPointerEvent
-                    val topPadding = with(density) { contentPadding.calculateTopPadding().toPx() }
-                    val startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() }
-
-                    var textHeight = 0f
-                    var index = -1
-                    val selectedParagraph = state.richParagraphList.firstOrNull { paragraph ->
-                        index++
-                        val lineHeight =
-                            if (
-                                paragraph.paragraphStyle.lineHeight.isSpecified &&
-                                paragraph.paragraphStyle.lineHeight.isSp &&
-                                paragraph.paragraphStyle.lineHeight.value > 0f
-                            ) paragraph.paragraphStyle.lineHeight.toPx()
-                            else 0f
-
-                        val paragraphHeightSp = paragraph.getMaxFontSize()
-                        val paragraphHeight =
-                            if (
-                                paragraphHeightSp.isSpecified &&
-                                paragraphHeightSp.isSp &&
-                                paragraphHeightSp.toPx() > 0f
-                            ) paragraphHeightSp.toPx()
-                            else localTextStyle.fontSize.toPx()
-
-                        textHeight += paragraphHeight
-                        textHeight += lineHeight
-
-                        topPadding + textHeight > pressPosition.y
-                    } ?: return@onPointerEvent
-
-                    val nextParagraph = state.richParagraphList.getOrNull(index + 1)
-                    val nextParagraphStart = nextParagraph?.children?.firstOrNull()?.textRange?.min
-                    if (
-                        state.selection.collapsed &&
-                        state.selection.min == nextParagraphStart
-                    ) {
-                        state.updateTextFieldValue(
-                            state.textFieldValue.copy(
-                                selection = TextRange(state.selection.min - 1, state.selection.min - 1)
-                            )
-                        )
-                    }
-                },
+                .adjustTextIndicatorOffset(
+                    state = state,
+                    contentPadding = contentPadding,
+                    textStyle = localTextStyle,
+                    density = density,
+                ),
             enabled = enabled,
             readOnly = readOnly,
             textStyle = textStyle,
@@ -391,6 +370,63 @@ internal fun BasicRichTextEditor(
             interactionSource = interactionSource,
             cursorBrush = cursorBrush,
             decorationBox = decorationBox,
+        )
+    }
+}
+
+internal expect fun Modifier.adjustTextIndicatorOffset(
+    state: RichTextState,
+    contentPadding: PaddingValues,
+    textStyle: TextStyle,
+    density: Density,
+): Modifier
+
+internal fun adjustTextIndicatorOffset(
+    pressPosition: Offset,
+    state: RichTextState,
+    contentPadding: PaddingValues,
+    textStyle: TextStyle,
+    density: Density,
+) {
+    val topPadding = with(density) { contentPadding.calculateTopPadding().toPx() }
+
+    var textHeight = 0f
+    var index = -1
+    state.richParagraphList.firstOrNull { paragraph ->
+        index++
+        val lineHeight =
+            if (
+                paragraph.paragraphStyle.lineHeight.isSpecified &&
+                paragraph.paragraphStyle.lineHeight.isSp &&
+                paragraph.paragraphStyle.lineHeight.value > 0f
+            ) with(density) { paragraph.paragraphStyle.lineHeight.toPx() }
+            else 0f
+
+        val paragraphHeightSp = paragraph.getMaxFontSize()
+        val paragraphHeight =
+            if (
+                paragraphHeightSp.isSpecified &&
+                paragraphHeightSp.isSp &&
+                with(density) { paragraphHeightSp.toPx() } > 0f
+            ) with(density) { paragraphHeightSp.toPx() }
+            else with(density) { textStyle.fontSize.toPx() }
+
+        textHeight += paragraphHeight
+        textHeight += lineHeight
+
+        topPadding + textHeight > pressPosition.y
+    } ?: return
+
+    val nextParagraph = state.richParagraphList.getOrNull(index + 1)
+    val nextParagraphStart = nextParagraph?.children?.firstOrNull()?.textRange?.min
+    if (
+        state.selection.collapsed &&
+        state.selection.min == nextParagraphStart
+    ) {
+        state.updateTextFieldValue(
+            state.textFieldValue.copy(
+                selection = TextRange(state.selection.min - 1, state.selection.min - 1)
+            )
         )
     }
 }

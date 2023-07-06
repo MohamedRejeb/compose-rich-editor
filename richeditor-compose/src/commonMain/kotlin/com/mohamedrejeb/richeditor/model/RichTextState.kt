@@ -36,6 +36,8 @@ class RichTextState(
     )
     internal var visualTransformation: VisualTransformation by mutableStateOf(VisualTransformation.None)
     public var textFieldValue by mutableStateOf(TextFieldValue())
+
+    // TODO: Force selection to be on top when background is applied to rich span
     val selection get() = textFieldValue.selection
     val composition get() = textFieldValue.composition
 
@@ -300,7 +302,6 @@ class RichTextState(
         }
         textFieldValue = newTextFieldValue.copy(text = newText)
         visualTransformation = VisualTransformation { _ ->
-            println("visualTransformation: ${annotatedString.length}")
             TransformedText(
                 annotatedString,
                 OffsetMapping.Identity
@@ -398,16 +399,17 @@ class RichTextState(
         newTextFieldValue: TextFieldValue
     ) {
         var index = newTextFieldValue.text.lastIndex
-        val toAddParagraphMap = mutableMapOf<Int, RichParagraph>()
 
         while (true) {
             // Search for the next paragraph
             index = newTextFieldValue.text.lastIndexOf('\n', index)
+
             // If there are no more paragraphs, break
             if (index == -1) break
 
             // Get the rich span style at the index to split it between two paragraphs
             val richSpan = getRichSpanByTextIndex(index)
+
             // If there is no rich span style at the index, continue (this should not happen)
             if (richSpan == null) {
                 index--
@@ -428,16 +430,12 @@ class RichTextState(
                 richSpan = richSpan,
             )
 
-            // Add the new paragraph to the map
-            toAddParagraphMap[paragraphIndex + 1] = newParagraph
+            // Add the new paragraph
+            richParagraphList.add(paragraphIndex + 1, newParagraph)
+
 
             // Remove one from the index to continue searching for paragraphs
             index--
-        }
-
-        // Add the new paragraphs
-        toAddParagraphMap.forEach { (index, paragraph) ->
-            richParagraphList.add(index, paragraph)
         }
     }
 

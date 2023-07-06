@@ -261,7 +261,8 @@ fun RichTextEditor(
                     colors = colors,
                     contentPadding = contentPadding
                 )
-            }
+            },
+            contentPadding = contentPadding,
         )
     }
 }

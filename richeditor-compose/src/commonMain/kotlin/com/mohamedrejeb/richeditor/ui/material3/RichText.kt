@@ -110,7 +110,7 @@ fun RichText(
  * High-level element that displays rich text and provides semantics / accessibility information.
  * [RichText] is a convenience wrapper around [Text] and [RichTextValue] to allow for rich text.
  *
- * @param richText The rich text to be displayed.
+ * @param state [RichTextState] The rich text to be displayed.
  * @param modifier the [Modifier] to be applied to this layout node
  * @param color [Color] to apply to the text. If [Color.Unspecified], and [style] has no color set,
  * this will be [LocalContentColor].

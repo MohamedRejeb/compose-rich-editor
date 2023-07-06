@@ -29,7 +29,8 @@ fun NewRichTextStyleRow(
                 onClick = {
                     richTextState.toggleParagraphStyle(
                         ParagraphStyle(
-                            textAlign = TextAlign.Left
+                            textAlign = TextAlign.Left,
+                            lineHeight = 20.sp
                         )
                     )
                 },

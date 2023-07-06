@@ -71,6 +71,13 @@ import com.mohamedrejeb.richeditor.model.RichTextValue
  * different states. See [TextFieldDefaults.outlinedTextFieldColors]
  */
 @Composable
+@Deprecated(
+    message = "Use state instead of value",
+    replaceWith = ReplaceWith(
+        expression = "OutlinedRichTextEditor(state =, )",
+    ),
+    level = DeprecationLevel.WARNING
+)
 fun OutlinedRichTextEditor(
     value: RichTextValue,
     onValueChange: (RichTextValue) -> Unit,

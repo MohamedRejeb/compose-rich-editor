@@ -5,12 +5,16 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.LineBreak
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.isSpecified
+import androidx.compose.ui.unit.sp
 
 public class RichParagraph(
     val key: Int = 0,
     val children: SnapshotStateList<RichSpan> = mutableStateListOf(),
     var paragraphStyle: ParagraphStyle = ParagraphStyle(
         lineBreak = LineBreak.Heading,
+        lineHeight = 0.sp,
     ),
 ) {
     fun getRichSpanByTextIndex(
@@ -71,5 +75,16 @@ public class RichParagraph(
 
         if (children.isEmpty()) return null
         return this
+    }
+
+    fun getMaxFontSize(): TextUnit {
+        var height = 0.sp
+        children.forEach { richSpan ->
+            val childHeight = richSpan.getMaxFontSize()
+            if (childHeight.isSpecified && childHeight > height) {
+                height = childHeight
+            }
+        }
+        return height
     }
 }

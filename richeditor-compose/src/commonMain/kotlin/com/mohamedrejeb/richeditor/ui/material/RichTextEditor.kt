@@ -74,6 +74,13 @@ import com.mohamedrejeb.richeditor.model.RichTextValue
  * this text field in different states. See [TextFieldDefaults.textFieldColors]
  */
 @Composable
+@Deprecated(
+    message = "Use state instead of value",
+    replaceWith = ReplaceWith(
+        expression = "RichTextEditor(state =, )",
+    ),
+    level = DeprecationLevel.WARNING
+)
 fun RichTextEditor(
     value: RichTextValue,
     onValueChange: (RichTextValue) -> Unit,

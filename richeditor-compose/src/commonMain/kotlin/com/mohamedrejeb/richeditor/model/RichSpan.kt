@@ -4,6 +4,9 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.isSpecified
+import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.utils.isSpecifiedFieldsEquals
 
 public class RichSpan(
@@ -13,7 +16,9 @@ public class RichSpan(
     var parent: RichSpan? = null,
     var text: String = "",
     var textRange: TextRange = TextRange(start = 0, end = 0),
-    var spanStyle: SpanStyle = SpanStyle(),
+    var spanStyle: SpanStyle = SpanStyle(
+        fontSize = 16.sp,
+    ),
 ) {
     val fullTextRange: TextRange get() {
         var textRange = this.textRange
@@ -173,6 +178,17 @@ public class RichSpan(
         if (spanStyle.isSpecifiedFieldsEquals(this.fullSpanStyle, strict = true)) return this
 
         return parent?.getClosestRichSpan(spanStyle)
+    }
+
+    fun getMaxFontSize(): TextUnit {
+        var height = if (spanStyle.fontSize.isSpecified) spanStyle.fontSize else 0.sp
+        children.forEach { richSpan ->
+            val childHeight = richSpan.getMaxFontSize()
+            if (childHeight.isSpecified && childHeight > height) {
+                height = childHeight
+            }
+        }
+        return height
     }
 
     override fun toString(): String {

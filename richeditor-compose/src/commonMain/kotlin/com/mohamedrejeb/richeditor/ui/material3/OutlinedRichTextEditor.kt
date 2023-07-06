@@ -276,7 +276,8 @@ fun OutlinedRichTextEditor(
                         )
                     }
                 )
-            }
+            },
+            contentPadding = contentPadding,
         )
     }
 }

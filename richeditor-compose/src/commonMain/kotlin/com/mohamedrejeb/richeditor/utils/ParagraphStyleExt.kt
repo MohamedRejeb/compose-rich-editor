@@ -4,6 +4,7 @@ import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.isUnspecified
+import com.mohamedrejeb.richeditor.model.RichParagraph
 
 internal fun ParagraphStyle.unmerge(
     other: ParagraphStyle?,
@@ -11,14 +12,14 @@ internal fun ParagraphStyle.unmerge(
     if (other == null) return this
 
     return ParagraphStyle(
-        textAlign = if (other.textAlign != null) null else this.textAlign,
-        textDirection = if (other.textDirection != null) null else this.textDirection,
-        lineHeight = if (other.lineHeight.isSpecified) TextUnit.Unspecified else this.lineHeight,
-        textIndent = if (other.textIndent != null) null else this.textIndent,
-        platformStyle = if (other.platformStyle != null) null else this.platformStyle,
-        lineHeightStyle = if (other.lineHeightStyle != null) null else this.lineHeightStyle,
-        lineBreak = if (other.lineBreak != null) null else this.lineBreak,
-        hyphens = if (other.hyphens != null) null else this.hyphens,
+        textAlign = if (other.textAlign != null) RichParagraph.DefaultParagraphStyle.textAlign else this.textAlign,
+        textDirection = if (other.textDirection != null) RichParagraph.DefaultParagraphStyle.textDirection else this.textDirection,
+        lineHeight = if (other.lineHeight.isSpecified) RichParagraph.DefaultParagraphStyle.lineHeight else this.lineHeight,
+        textIndent = if (other.textIndent != null) RichParagraph.DefaultParagraphStyle.textIndent else this.textIndent,
+        platformStyle = if (other.platformStyle != null) RichParagraph.DefaultParagraphStyle.platformStyle else this.platformStyle,
+        lineHeightStyle = if (other.lineHeightStyle != null) RichParagraph.DefaultParagraphStyle.lineHeightStyle else this.lineHeightStyle,
+        lineBreak = if (other.lineBreak != null) RichParagraph.DefaultParagraphStyle.lineBreak else this.lineBreak,
+        hyphens = if (other.hyphens != null) RichParagraph.DefaultParagraphStyle.hyphens else this.hyphens,
     )
 }
 

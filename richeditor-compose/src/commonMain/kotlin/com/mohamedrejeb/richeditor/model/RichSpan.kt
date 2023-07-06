@@ -16,9 +16,7 @@ public class RichSpan(
     var parent: RichSpan? = null,
     var text: String = "",
     var textRange: TextRange = TextRange(start = 0, end = 0),
-    var spanStyle: SpanStyle = SpanStyle(
-        fontSize = 16.sp,
-    ),
+    var spanStyle: SpanStyle = DefaultSpanStyle,
 ) {
     val fullTextRange: TextRange get() {
         var textRange = this.textRange
@@ -84,6 +82,17 @@ public class RichSpan(
             richSpan.text.isEmpty() && richSpan.isChildrenEmpty()
         }
 
+    internal fun getFirstNonEmptyChild(): RichSpan? {
+        children.forEach { richSpan ->
+            if (richSpan.text.isNotEmpty()) return richSpan
+            else {
+                val result = richSpan.getFirstNonEmptyChild()
+                if (result != null) return result
+            }
+        }
+        return null
+    }
+
     fun getRichSpanByTextIndex(
         textIndex: Int,
         offset: Int = 0,
@@ -95,8 +104,15 @@ public class RichSpan(
         index += this.text.length
 
         // Check if the text index is in the start text range
-        if (textIndex in textRange || (isFirstInParagraph && textIndex + 1 == textRange.min))
-            return index to this
+        if (
+            (textIndex in textRange || (isFirstInParagraph && textIndex + 1 == textRange.min))
+        ) {
+            return if (text.isEmpty()) {
+                index to paragraph.getFirstNonEmptyChild()
+            } else {
+                index to this
+            }
+        }
 
         // Check if the text index is in the children
         children.forEach { richSpan ->
@@ -193,5 +209,11 @@ public class RichSpan(
 
     override fun toString(): String {
         return "richSpan(text='$text', textRange=$textRange, fullTextRange=$fullTextRange)"
+    }
+
+    companion object {
+        val DefaultSpanStyle = SpanStyle(
+            fontSize = 16.sp,
+        )
     }
 }

@@ -27,10 +27,9 @@ fun NewRichTextStyleRow(
         item {
             NewRichTextStyleButton(
                 onClick = {
-                    richTextState.toggleParagraphStyle(
+                    richTextState.addParagraphStyle(
                         ParagraphStyle(
                             textAlign = TextAlign.Left,
-                            lineHeight = 20.sp
                         )
                     )
                 },
@@ -42,7 +41,7 @@ fun NewRichTextStyleRow(
         item {
             NewRichTextStyleButton(
                 onClick = {
-                    richTextState.toggleParagraphStyle(
+                    richTextState.addParagraphStyle(
                         ParagraphStyle(
                             textAlign = TextAlign.Center
                         )
@@ -56,7 +55,7 @@ fun NewRichTextStyleRow(
         item {
             NewRichTextStyleButton(
                 onClick = {
-                    richTextState.toggleParagraphStyle(
+                    richTextState.addParagraphStyle(
                         ParagraphStyle(
                             textAlign = TextAlign.Right
                         )

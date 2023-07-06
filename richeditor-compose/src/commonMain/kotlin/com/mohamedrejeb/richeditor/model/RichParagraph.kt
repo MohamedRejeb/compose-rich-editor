@@ -5,6 +5,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.LineBreak
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.sp
@@ -12,32 +13,25 @@ import androidx.compose.ui.unit.sp
 public class RichParagraph(
     val key: Int = 0,
     val children: SnapshotStateList<RichSpan> = mutableStateListOf(),
-    var paragraphStyle: ParagraphStyle = ParagraphStyle(
-        lineBreak = LineBreak.Heading,
-        lineHeight = 0.sp,
-    ),
+    var paragraphStyle: ParagraphStyle = DefaultParagraphStyle,
 ) {
     fun getRichSpanByTextIndex(
+        paragraphIndex: Int,
         textIndex: Int,
         offset: Int = 0,
-        hasNextParagraph: Boolean = false,
     ): Pair<Int, RichSpan?> {
         var index = offset
+
+        // If the paragraph is not the first one, we add 1 to the index which stands for the line break
+        if (paragraphIndex > 0) index++
+
         children.forEach { richSpan ->
             val result = richSpan.getRichSpanByTextIndex(
                 textIndex = textIndex,
                 offset = index,
             )
-            if (result.second != null) {
-                return if (
-                    result.second?.isLastInParagraph == true &&
-                    result.second?.textRange?.max == textIndex + 1 &&
-                    hasNextParagraph
-                )
-                    result.first to null
-                else
-                    result
-            }
+            if (result.second != null)
+                return result
             else
                 index = result.first
         }
@@ -45,10 +39,15 @@ public class RichParagraph(
     }
 
     fun getRichSpanListByTextRange(
+        paragraphIndex: Int,
         searchTextRange: TextRange,
         offset: Int = 0,
     ): Pair<Int, List<RichSpan>> {
         var index = offset
+
+        // If the paragraph is not the first one, we add 1 to the index which stands for the line break
+        if (paragraphIndex > 0) index++
+
         val richSpanList = mutableListOf<RichSpan>()
         children.forEach { richSpan ->
             val result = richSpan.getRichSpanListByTextRange(
@@ -86,5 +85,29 @@ public class RichParagraph(
             }
         }
         return height
+    }
+
+    fun getFirstNonEmptyChild(): RichSpan? {
+        children.forEach { richSpan ->
+            if (richSpan.text.isNotEmpty()) return richSpan
+            else {
+                val result = richSpan.getFirstNonEmptyChild()
+                if (result != null) return result
+            }
+        }
+        val firstChild = children.firstOrNull()
+        children.clear()
+        if (firstChild != null) {
+            firstChild.children.clear()
+            children.add(firstChild)
+        }
+        return firstChild
+    }
+
+    companion object {
+        val DefaultParagraphStyle = ParagraphStyle(
+            textAlign = TextAlign.Left,
+            lineBreak = LineBreak.Heading,
+        )
     }
 }

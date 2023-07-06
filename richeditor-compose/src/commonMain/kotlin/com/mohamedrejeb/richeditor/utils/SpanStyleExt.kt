@@ -13,7 +13,9 @@ import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextGeometricTransform
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.isUnspecified
+import com.mohamedrejeb.richeditor.model.RichSpan
 
 /**
  * Merge two [SpanStyle]s together.
@@ -58,16 +60,12 @@ internal fun SpanStyle.unmerge(
     return SpanStyle(
         color = if (other.color.isSpecified) Color.Unspecified else this.color,
         fontFamily = if (other.fontFamily != null) null else this.fontFamily,
-        fontSize = if (!other.fontSize.isUnspecified) TextUnit.Unspecified else this.fontSize,
+        fontSize = if (other.fontSize.isSpecified) TextUnit.Unspecified else this.fontSize,
         fontWeight = if (other.fontWeight != null) null else this.fontWeight,
         fontStyle = if (other.fontStyle != null) null else this.fontStyle,
         fontSynthesis = if (other.fontSynthesis != null) null else this.fontSynthesis,
         fontFeatureSettings = if (other.fontFeatureSettings != null) null else this.fontFeatureSettings,
-        letterSpacing = if (!other.letterSpacing.isUnspecified) {
-            TextUnit.Unspecified
-        } else {
-            this.letterSpacing
-        },
+        letterSpacing = if (other.letterSpacing.isSpecified) TextUnit.Unspecified else this.letterSpacing,
         baselineShift = if (other.baselineShift != null) null else this.baselineShift,
         textGeometricTransform = if (other.textGeometricTransform != null) null else this.textGeometricTransform,
         localeList = if (other.localeList != null) null else this.localeList,

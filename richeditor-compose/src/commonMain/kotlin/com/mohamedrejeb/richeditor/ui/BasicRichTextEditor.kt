@@ -367,19 +367,14 @@ internal fun BasicRichTextEditor(
 
                     val nextParagraph = state.richParagraphList.getOrNull(index + 1)
                     val nextParagraphStart = nextParagraph?.children?.firstOrNull()?.textRange?.min
-                    val selectedParagraphStart = selectedParagraph.children.firstOrNull()?.textRange?.min
                     if (
                         state.selection.collapsed &&
-                        (
-                            state.selection.min == nextParagraphStart ||
-                            (
-                                state.selection.min == selectedParagraphStart &&
-                                pressPosition.x > (startPadding + 100f)
-                            )
-                        )
+                        state.selection.min == nextParagraphStart
                     ) {
-                        state.textFieldValue = state.textFieldValue.copy(
-                            selection = TextRange(state.selection.min - 1, state.selection.min - 1)
+                        state.updateTextFieldValue(
+                            state.textFieldValue.copy(
+                                selection = TextRange(state.selection.min - 1, state.selection.min - 1)
+                            )
                         )
                     }
                 },

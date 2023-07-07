@@ -7,6 +7,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.sp
+import com.mohamedrejeb.richeditor.utils.customMerge
 import com.mohamedrejeb.richeditor.utils.isSpecifiedFieldsEquals
 
 public class RichSpan(
@@ -160,13 +161,18 @@ public class RichSpan(
     fun removeTextRange(textRange: TextRange): RichSpan? {
         if (textRange.min <= this.textRange.min && textRange.max >= fullTextRange.max) return null
 
-        // Remove text from start
-        if (textRange.min in this.textRange || (textRange.max - 1) in this.textRange) {
+        if (textRange.min <= this.textRange.min && textRange.max >= this.textRange.max) {
+            this.textRange = TextRange(start = 0, end = 0)
+            text = ""
+        }
+        // Remove text from start and end
+        else if (textRange.min in this.textRange || (textRange.max - 1) in this.textRange) {
             val startFirstHalf = 0 until (textRange.min - this.textRange.min)
             val startSecondHalf = (textRange.max - this.textRange.min) until (this.textRange.max - this.textRange.min)
             val newStartText =
                 (if (startFirstHalf.isEmpty()) "" else text.substring(startFirstHalf)) +
                 (if (startSecondHalf.isEmpty()) "" else text.substring(startSecondHalf))
+
             this.textRange = TextRange(start = this.textRange.min, end = this.textRange.min + newStartText.length)
             text = newStartText
         }
@@ -183,8 +189,15 @@ public class RichSpan(
         }
 
         // Check if the rich span style is empty
-        if (text.isEmpty() && children.isEmpty()) {
-            return null
+        if (text.isEmpty()) {
+            if (children.isEmpty()) {
+                return null
+            } else if (children.size == 1) {
+                val child = children.first()
+                child.parent = parent
+                child.spanStyle = spanStyle.customMerge(child.spanStyle)
+                return child
+            }
         }
 
         return this

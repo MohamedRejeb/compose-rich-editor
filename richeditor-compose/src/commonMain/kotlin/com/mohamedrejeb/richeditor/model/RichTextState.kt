@@ -395,21 +395,28 @@ class RichTextState(
         val endRemoveIndex = newTextFieldValue.selection.min
         val removeRange = TextRange(endRemoveIndex, startRemoveIndex)
 
+        println("removeRange: $removeRange")
+
         val startRichSpan = getRichSpanByTextIndex(textIndex = startRemoveIndex - 1) ?: return
         val endRichSpan = getRichSpanByTextIndex(textIndex = endRemoveIndex) ?: return
+
+        println("startRichSpan: $startRichSpan")
+        println("endRichSpan: $endRichSpan")
 
         // Check deleted paragraphs
         val startParagraphIndex = richParagraphList.indexOf(startRichSpan.paragraph)
         val endParagraphIndex = richParagraphList.indexOf(endRichSpan.paragraph)
-        if (endParagraphIndex < startParagraphIndex - 1) {
+        if (endParagraphIndex < startParagraphIndex - 1 && !singleParagraphMode) {
             richParagraphList.removeRange(endParagraphIndex + 1, startParagraphIndex)
         }
 
         // Check deleted spans
         startRichSpan.paragraph.removeTextRange(removeRange)
 
-        if (startParagraphIndex != endParagraphIndex) {
-            endRichSpan.paragraph.removeTextRange(removeRange)
+        if (!singleParagraphMode) {
+            if (startParagraphIndex != endParagraphIndex) {
+                endRichSpan.paragraph.removeTextRange(removeRange)
+            }
         }
     }
 

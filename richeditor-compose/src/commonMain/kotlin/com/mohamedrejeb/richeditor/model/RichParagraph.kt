@@ -64,7 +64,6 @@ public class RichParagraph(
         for (i in children.lastIndex downTo 0) {
             val child = children[i]
             val result = child.removeTextRange(textRange)
-            println(result)
             if (result != null) {
                 children[i] = result
             } else {

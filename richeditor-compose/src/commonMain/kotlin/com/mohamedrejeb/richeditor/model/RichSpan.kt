@@ -16,7 +16,7 @@ public class RichSpan(
     var parent: RichSpan? = null,
     var text: String = "",
     var textRange: TextRange = TextRange(start = 0, end = 0),
-    var spanStyle: SpanStyle = DefaultSpanStyle,
+    var spanStyle: SpanStyle = SpanStyle(),
 ) {
     val fullTextRange: TextRange get() {
         var textRange = this.textRange

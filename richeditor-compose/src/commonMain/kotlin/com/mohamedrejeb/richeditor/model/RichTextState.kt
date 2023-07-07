@@ -301,16 +301,18 @@ class RichTextState(
             var index = 0
             richParagraphList.forEachIndexed { i, richParagraphStyle ->
                 withStyle(richParagraphStyle.paragraphStyle) {
-                    index = append(
-                        richSpanList = richParagraphStyle.children,
-                        startIndex = index,
-                        text = newText,
-                        selection = newTextFieldValue.selection,
-                    )
-                    if (!singleParagraphMode) {
-                        if (i != richParagraphList.lastIndex) {
-                            append(" ")
-                            index++
+                    withStyle(RichSpan.DefaultSpanStyle) {
+                        index = append(
+                            richSpanList = richParagraphStyle.children,
+                            startIndex = index,
+                            text = newText,
+                            selection = newTextFieldValue.selection,
+                        )
+                        if (!singleParagraphMode) {
+                            if (i != richParagraphList.lastIndex) {
+                                append(" ")
+                                index++
+                            }
                         }
                     }
                 }

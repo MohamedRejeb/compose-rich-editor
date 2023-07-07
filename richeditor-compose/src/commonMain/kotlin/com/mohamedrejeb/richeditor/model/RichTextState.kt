@@ -41,6 +41,8 @@ class RichTextState(
     val selection get() = textFieldValue.selection
     val composition get() = textFieldValue.composition
 
+    internal var singleParagraphMode by mutableStateOf(false)
+
     private var currentAppliedSpanStyle: SpanStyle by mutableStateOf(
         getRichSpanByTextIndex(textIndex = textFieldValue.selection.min - 1)?.fullSpanStyle
             ?: RichSpan.DefaultSpanStyle
@@ -118,15 +120,9 @@ class RichTextState(
      * @see [toggleSpanStyle]
      */
     fun addSpanStyle(spanStyle: SpanStyle) {
-        println("addSpanStyle: $spanStyle")
-        println("toAddSpanStyle: $toAddSpanStyle")
-        println("toRemoveSpanStyle: $toRemoveSpanStyle")
         if (!currentSpanStyle.isSpecifiedFieldsEquals(spanStyle)) {
             toAddSpanStyle = toAddSpanStyle.customMerge(spanStyle)
             toRemoveSpanStyle = toRemoveSpanStyle.unmerge(spanStyle)
-            println("toAddSpanStyle: $toAddSpanStyle")
-            println("toRemoveSpanStyle: $toRemoveSpanStyle")
-            println("currentSpanStyle: ${currentSpanStyle.fontSize}")
         }
 
         if (!selection.collapsed)
@@ -269,8 +265,10 @@ class RichTextState(
      * @param newTextFieldValue the new text field value.
      */
     internal fun updateTextFieldValue(newTextFieldValue: TextFieldValue) {
-        // Check for paragraphs
-        checkForParagraphs(newTextFieldValue)
+        if (!singleParagraphMode) {
+            // Check for paragraphs
+            checkForParagraphs(newTextFieldValue)
+        }
 
         // Update the annotatedString and the textFieldValue with the new values
         updateAnnotatedString(newTextFieldValue)
@@ -296,7 +294,9 @@ class RichTextState(
      * @see [annotatedString]
      */
     private fun updateAnnotatedString(newTextFieldValue: TextFieldValue = textFieldValue) {
-        val newText = newTextFieldValue.text.replace("\n", " ")
+        val newText =
+            if (singleParagraphMode) newTextFieldValue.text
+            else newTextFieldValue.text.replace("\n", " ")
         annotatedString = buildAnnotatedString {
             var index = 0
             richParagraphList.forEachIndexed { i, richParagraphStyle ->
@@ -305,10 +305,13 @@ class RichTextState(
                         richSpanList = richParagraphStyle.children,
                         startIndex = index,
                         text = newText,
+                        selection = newTextFieldValue.selection,
                     )
-                    if (i != richParagraphList.lastIndex) {
-                        append(" ")
-                        index++
+                    if (!singleParagraphMode) {
+                        if (i != richParagraphList.lastIndex) {
+                            append(" ")
+                            index++
+                        }
                     }
                 }
             }
@@ -955,6 +958,8 @@ class RichTextState(
      * @return The [RichParagraph] that contains the given [textIndex], or null if no such [RichParagraph] exists.
      */
     private fun getRichParagraphByTextIndex(textIndex: Int): RichParagraph? {
+        if (singleParagraphMode) return richParagraphList.firstOrNull()
+
         var index = 0
         var paragraphIndex = -1
         return richParagraphList.firstOrNull { richParagraphStyle ->
@@ -982,6 +987,8 @@ class RichTextState(
      * or an empty list if no such [RichParagraph] exists.
      */
     private fun getRichParagraphListByTextRange(searchTextRange: TextRange): List<RichParagraph> {
+        if (singleParagraphMode) return richParagraphList.toList()
+
         var index = 0
         val richParagraphList = mutableListOf<RichParagraph>()
         this.richParagraphList.forEachIndexed { paragraphIndex, richParagraphStyle ->

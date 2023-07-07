@@ -1,14 +1,17 @@
 package com.mohamedrejeb.richeditor.ui
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -34,6 +37,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.isSpecified
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.RichTextValue
+import kotlin.math.max
 
 /**
  * Basic composable that enables users to edit rich text via hardware or software keyboard, but provides no decorations like hint or placeholder.
@@ -115,7 +119,7 @@ fun BasicRichTextEditor(
     decorationBox: @Composable (innerTextField: @Composable () -> Unit) -> Unit =
         @Composable { innerTextField -> innerTextField() }
 ) {
-    val test = rememberPagerState(initialPage = 0, )
+    val test = rememberPagerState(initialPage = 0)
     test.currentPage
     BasicTextField(
         value = value.textFieldValue,
@@ -291,6 +295,7 @@ internal fun BasicRichTextEditor(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     singleLine: Boolean = false,
+    singleParagraph: Boolean = true,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
     onTextLayout: (TextLayoutResult) -> Unit = {},
@@ -301,8 +306,8 @@ internal fun BasicRichTextEditor(
     contentPadding: PaddingValues
 ) {
     val density = LocalDensity.current
-    val layoutDirection = LocalLayoutDirection.current
     val localTextStyle = LocalTextStyle.current
+    val selectionColors = LocalTextSelectionColors.current
     val clipboardManager = LocalClipboardManager.current
     // TODO: Use RichClipboardManager
     val richClipboardManager = remember {
@@ -324,20 +329,26 @@ internal fun BasicRichTextEditor(
         }
     }
 
-    // Workaround for Android to fix a bug in BasicTextField where it doesn't select the correct text
-    // when the text contains multiple paragraphs.
-    LaunchedEffect(interactionSource) {
-        interactionSource.interactions.collect { interaction ->
-            if (interaction is PressInteraction.Release) {
-                val pressPosition = interaction.press.pressPosition
+    LaunchedEffect(singleParagraph) {
+        state.singleParagraphMode = singleParagraph
+    }
 
-                adjustTextIndicatorOffset(
-                    pressPosition = pressPosition,
-                    state = state,
-                    contentPadding = contentPadding,
-                    textStyle = textStyle,
-                    density = density
-                )
+    if (!singleParagraph) {
+        // Workaround for Android to fix a bug in BasicTextField where it doesn't select the correct text
+        // when the text contains multiple paragraphs.
+        LaunchedEffect(interactionSource) {
+            interactionSource.interactions.collect { interaction ->
+                if (interaction is PressInteraction.Release) {
+                    val pressPosition = interaction.press.pressPosition
+
+                    adjustTextIndicatorOffset(
+                        pressPosition = pressPosition,
+                        state = state,
+                        contentPadding = contentPadding,
+                        textStyle = textStyle,
+                        density = density
+                    )
+                }
             }
         }
     }
@@ -349,13 +360,20 @@ internal fun BasicRichTextEditor(
                 state.onTextFieldValueChange(it)
             },
             modifier = modifier
-                // Workaround for Desktop to fix a bug in BasicTextField where it doesn't select the correct text
-                // when the text contains multiple paragraphs.
-                .adjustTextIndicatorOffset(
-                    state = state,
-                    contentPadding = contentPadding,
-                    textStyle = localTextStyle,
-                    density = density,
+                .then(
+                    if (singleParagraph) {
+                        Modifier
+                    } else {
+                        Modifier
+                            // Workaround for Desktop to fix a bug in BasicTextField where it doesn't select the correct text
+                            // when the text contains multiple paragraphs.
+                            .adjustTextIndicatorOffset(
+                                state = state,
+                                contentPadding = contentPadding,
+                                textStyle = localTextStyle,
+                                density = density,
+                            )
+                    }
                 ),
             enabled = enabled,
             readOnly = readOnly,
@@ -394,13 +412,28 @@ internal fun adjustTextIndicatorOffset(
     var index = -1
     state.richParagraphList.firstOrNull { paragraph ->
         index++
-        val lineHeight =
-            if (
-                paragraph.paragraphStyle.lineHeight.isSpecified &&
-                paragraph.paragraphStyle.lineHeight.isSp &&
-                paragraph.paragraphStyle.lineHeight.value > 0f
-            ) with(density) { paragraph.paragraphStyle.lineHeight.toPx() }
-            else 0f
+        val lineHeight = 0f
+//            if (
+//                paragraph.paragraphStyle.lineHeight.isSpecified &&
+//                paragraph.paragraphStyle.lineHeight.isSp &&
+//                paragraph.paragraphStyle.lineHeight.value > 0f
+//            ) with(density) { paragraph.paragraphStyle.lineHeight.toPx() }
+//            else if (
+//                textStyle.lineHeight.isSpecified &&
+//                textStyle.lineHeight.isEm &&
+//                textStyle.lineHeight.value > 0f
+//            ) with(density) { textStyle.fontSize.toPx() } * paragraph.paragraphStyle.lineHeight.value
+//            else if (
+//                textStyle.lineHeight.isSpecified &&
+//                textStyle.lineHeight.isSp &&
+//                textStyle.lineHeight.value > 0f
+//            ) with(density) { textStyle.lineHeight.toPx() }
+//            else if (
+//                textStyle.lineHeight.isSpecified &&
+//                textStyle.lineHeight.isEm &&
+//                textStyle.lineHeight.value > 0f
+//            ) with(density) { textStyle.fontSize.toPx() } * textStyle.lineHeight.value
+//            else 0f
 
         val paragraphHeightSp = paragraph.getMaxFontSize()
         val paragraphHeight =
@@ -411,11 +444,17 @@ internal fun adjustTextIndicatorOffset(
             ) with(density) { paragraphHeightSp.toPx() }
             else with(density) { textStyle.fontSize.toPx() }
 
+        println("lineHeight: $lineHeight")
+        println("paragraphHeight: $paragraphHeight")
+
+//        textHeight += max(paragraphHeight, lineHeight)
         textHeight += paragraphHeight
         textHeight += lineHeight
 
         topPadding + textHeight > pressPosition.y
     } ?: return
+
+    println("paragraph: $index")
 
     val nextParagraph = state.richParagraphList.getOrNull(index + 1)
     val nextParagraphStart = nextParagraph?.children?.firstOrNull()?.textRange?.min

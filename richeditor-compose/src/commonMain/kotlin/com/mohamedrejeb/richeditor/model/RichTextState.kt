@@ -4,6 +4,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
@@ -14,6 +15,7 @@ import com.mohamedrejeb.richeditor.utils.append
 import com.mohamedrejeb.richeditor.utils.customMerge
 import com.mohamedrejeb.richeditor.utils.isSpecifiedFieldsEquals
 import com.mohamedrejeb.richeditor.utils.unmerge
+import kotlinx.coroutines.delay
 import kotlin.math.max
 
 @Composable
@@ -37,11 +39,14 @@ class RichTextState(
     public var textFieldValue by mutableStateOf(TextFieldValue())
         private set
 
-    // TODO: Force selection to be on top when background is applied to rich span
     val selection get() = textFieldValue.selection
     val composition get() = textFieldValue.composition
 
     internal var singleParagraphMode by mutableStateOf(false)
+
+    private var textLayoutResult: TextLayoutResult? by mutableStateOf(null)
+
+    private var lastPressPosition: Offset? by mutableStateOf(null)
 
     private var currentAppliedSpanStyle: SpanStyle by mutableStateOf(
         getRichSpanByTextIndex(textIndex = textFieldValue.selection.min - 1)?.fullSpanStyle
@@ -254,6 +259,16 @@ class RichTextState(
             handleAddingCharacters(newTextFieldValue)
         else if (newTextFieldValue.text.length < textFieldValue.text.length)
             handleRemovingCharacters(newTextFieldValue)
+        else if (
+            newTextFieldValue.text == textFieldValue.text &&
+            newTextFieldValue.selection != textFieldValue.selection
+        ) {
+            val lastPressPosition = this.lastPressPosition
+            if (lastPressPosition != null) {
+                adjustSelection(lastPressPosition, newTextFieldValue.selection)
+                return
+            }
+        }
 
         // Update text field value
         updateTextFieldValue(newTextFieldValue)
@@ -341,8 +356,6 @@ class RichTextState(
             startIndex = newTextFieldValue.selection.min - typedCharsCount,
             endIndex = newTextFieldValue.selection.min
         )
-        println("typedText: $typedText")
-        println("typedText isLB: ${typedText == "\n"}")
         val startTypeIndex = newTextFieldValue.selection.min - typedCharsCount
         val previousIndex = startTypeIndex - 1
 
@@ -403,21 +416,33 @@ class RichTextState(
         // Check deleted paragraphs
         val startParagraphIndex = richParagraphList.indexOf(startRichSpan.paragraph)
         val endParagraphIndex = richParagraphList.indexOf(endRichSpan.paragraph)
-        if (endParagraphIndex < startParagraphIndex - 1 && !singleParagraphMode) {
+        if (endParagraphIndex < startParagraphIndex - 1 && !singleParagraphMode)
             richParagraphList.removeRange(endParagraphIndex + 1, startParagraphIndex)
+
+        if (startParagraphIndex == endParagraphIndex && !singleParagraphMode) {
+            val firstNonEmptyChild = startRichSpan.paragraph.getFirstNonEmptyChild()
+            if (firstNonEmptyChild == null || firstNonEmptyChild.text.isEmpty()) {
+                // Remove the start paragraph if it's empty (and the end paragraph is the same)
+                richParagraphList.removeAt(startParagraphIndex)
+            }
         }
-        // Check deleted spans
+
+        // Remove spans from the start paragraph
         startRichSpan.paragraph.removeTextRange(removeRange)
 
         if (!singleParagraphMode) {
             if (startParagraphIndex != endParagraphIndex) {
+                // Remove spans from the end paragraph
                 endRichSpan.paragraph.removeTextRange(removeRange)
 
                 if (startRichSpan.paragraph.getFirstNonEmptyChild() == null) {
+                    // Remove the start paragraph if it's empty
                     richParagraphList.remove(startRichSpan.paragraph)
                 } else if (endRichSpan.paragraph.getFirstNonEmptyChild() == null) {
+                    // Remove the end paragraph if it's empty
                     richParagraphList.remove(endRichSpan.paragraph)
                 } else {
+                    // Merge the two paragraphs if they are not empty
                     mergeTwoRichParagraphs(
                         firstParagraph = endRichSpan.paragraph,
                         secondParagraph = startRichSpan.paragraph,
@@ -1068,13 +1093,100 @@ class RichTextState(
     private fun updateCurrentParagraphStyle() {
         currentAppliedParagraphStyle =
             if (selection.collapsed)
-                getRichParagraphByTextIndex(textIndex = max(0, textFieldValue.selection.min - 1))?.paragraphStyle
+                getRichParagraphByTextIndex(max(0, textFieldValue.selection.min - 1))?.paragraphStyle
                     ?: richParagraphList.firstOrNull()?.paragraphStyle
                     ?: RichParagraph.DefaultParagraphStyle
             else
                 getRichParagraphListByTextRange(selection)
                     .getCommonStyle()
                     ?: ParagraphStyle()
+    }
+
+    internal fun onTextLayout(textLayoutResult: TextLayoutResult) {
+        this.textLayoutResult = textLayoutResult
+    }
+
+    /**
+     * Adjusts the [selection] to the [pressPosition].
+     * This is a workaround for the [TextField] that the [selection] is not always correct when you have multiple lines.
+     *
+     * @param pressPosition The press position.
+     */
+    internal suspend fun adjustSelectionAndRegisterPressPosition(
+        pressPosition: Offset,
+    ) {
+        adjustSelection(pressPosition)
+        registerLastPressPosition(pressPosition)
+    }
+
+    /**
+     * Adjusts the [selection] to the [pressPosition].
+     * This is a workaround for the [TextField] that the [selection] is not always correct when you have multiple lines.
+     *
+     * @param pressPosition The press position.
+     * @param newSelection The new selection.
+     */
+    private fun adjustSelection(
+        pressPosition: Offset,
+        newSelection: TextRange? = null,
+    ) {
+        val selection = newSelection ?: this.selection
+        var pressX = pressPosition.x
+        var pressY = pressPosition.y
+        val textLayoutResult = this.textLayoutResult ?: return
+        var index = 0
+        for (i in 0 until textLayoutResult.lineCount) {
+            index = i
+            val start = textLayoutResult.getLineStart(i)
+            val top = textLayoutResult.getLineTop(i)
+
+            if (i == 0) {
+                if (start > 0f) pressX += start
+                if (top > 0f) pressY += top
+            }
+
+            if (i == 0 && top > pressY) break
+            if (top > pressY) {
+                index = i - 1
+                break
+            }
+        }
+        val selectedParagraph = richParagraphList.getOrNull(index) ?: return
+        val nextParagraph = richParagraphList.getOrNull(index + 1)
+        val nextParagraphStart = nextParagraph?.children?.firstOrNull()?.textRange?.min
+        if (
+            selection.collapsed &&
+            selection.min == nextParagraphStart
+        ) {
+            updateTextFieldValue(
+                textFieldValue.copy(
+                    selection = TextRange(selection.min - 1, selection.min - 1)
+                )
+            )
+        } else if (
+            selection.collapsed &&
+            index == richParagraphList.lastIndex &&
+            selectedParagraph.isEmpty() &&
+            selection.min == selectedParagraph.getFirstNonEmptyChild()?.textRange?.min?.minus(1)
+        ) {
+            updateTextFieldValue(
+                textFieldValue.copy(
+                    selection = TextRange(selection.min + 1, selection.min + 1)
+                )
+            )
+        } else if (newSelection != null) {
+            updateTextFieldValue(
+                textFieldValue.copy(
+                    selection = newSelection
+                )
+            )
+        }
+    }
+
+    private suspend fun registerLastPressPosition(pressPosition: Offset) {
+        lastPressPosition = pressPosition
+        delay(100)
+        lastPressPosition = null
     }
 
     /**

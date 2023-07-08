@@ -92,6 +92,14 @@ public class RichParagraph(
         return height
     }
 
+    fun isEmpty(): Boolean {
+        if (children.isEmpty()) return true
+        children.forEach { richSpan ->
+            if (!richSpan.isEmpty()) return false
+        }
+        return true
+    }
+
     fun getFirstNonEmptyChild(): RichSpan? {
         children.forEach { richSpan ->
             if (richSpan.text.isNotEmpty()) return richSpan
@@ -125,6 +133,7 @@ public class RichParagraph(
         val DefaultParagraphStyle = ParagraphStyle(
             textAlign = TextAlign.Left,
             lineBreak = LineBreak.Heading,
+            lineHeight = 42.sp,
         )
     }
 }

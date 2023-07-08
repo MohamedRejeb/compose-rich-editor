@@ -36,9 +36,6 @@ internal fun AnnotatedString.Builder.append(
     var index = startIndex
 
     withStyle(richSpan.spanStyle) {
-        println("index: ${index}")
-        println("richSpan.text: ${richSpan.text}")
-        println("richSpan.text.length: ${richSpan.text.length}")
         val newText = text.substring(index, index + richSpan.text.length)
         richSpan.text = newText
         if (
@@ -55,9 +52,6 @@ internal fun AnnotatedString.Builder.append(
                 if (selection.max - index < richSpan.text.length) richSpan.text.substring(selection.max - index)
                 else ""
 
-            println("beforeSelection: $beforeSelection")
-            println("selectedText: $selectedText")
-            println("afterSelection: $afterSelection")
             append(beforeSelection)
             withStyle(SpanStyle(background = Color.Transparent)) {
                 append(selectedText)

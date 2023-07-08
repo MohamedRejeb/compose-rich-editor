@@ -342,6 +342,7 @@ class RichTextState(
             endIndex = newTextFieldValue.selection.min
         )
         println("typedText: $typedText")
+        println("typedText isLB: ${typedText == "\n"}")
         val startTypeIndex = newTextFieldValue.selection.min - typedCharsCount
         val previousIndex = startTypeIndex - 1
 
@@ -436,7 +437,7 @@ class RichTextState(
             index = newTextFieldValue.text.lastIndexOf('\n', index)
 
             // If there are no more paragraphs, break
-            if (index == -1) break
+            if (index < textFieldValue.selection.min) break
 
             // Get the rich span style at the index to split it between two paragraphs
             val richSpan = getRichSpanByTextIndex(index)
@@ -456,7 +457,6 @@ class RichTextState(
             }
 
             // Create a new paragraph style
-            println("add new paragraph")
             val newParagraph = richSpan.paragraph.slice(
                 startIndex = index,
                 richSpan = richSpan,
@@ -1145,8 +1145,8 @@ class RichTextState(
             return richParagraphList.firstOrNull()?.getFirstNonEmptyChild()
 
         var index = 0
-        richParagraphList.forEachIndexed { paragraphIndex, richParagraphStyle ->
-            val result = richParagraphStyle.getRichSpanByTextIndex(
+        richParagraphList.forEachIndexed { paragraphIndex, richParagraph ->
+            val result = richParagraph.getRichSpanByTextIndex(
                 paragraphIndex = paragraphIndex,
                 textIndex = textIndex,
                 offset = index,

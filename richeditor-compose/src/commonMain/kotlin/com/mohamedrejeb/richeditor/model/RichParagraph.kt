@@ -20,6 +20,9 @@ public class RichParagraph(
         textIndex: Int,
         offset: Int = 0,
     ): Pair<Int, RichSpan?> {
+        // If the paragraph is empty, we add a RichSpan to avoid skipping the paragraph when searching
+        if (children.isEmpty()) children.add(RichSpan(paragraph = this))
+
         var index = offset
 
         // If the paragraph is not the first one, we add 1 to the index which stands for the line break
@@ -43,6 +46,9 @@ public class RichParagraph(
         searchTextRange: TextRange,
         offset: Int = 0,
     ): Pair<Int, List<RichSpan>> {
+        // If the paragraph is empty, we add a RichSpan to avoid skipping the paragraph when searching
+        if (children.isEmpty()) children.add(RichSpan(paragraph = this))
+
         var index = offset
 
         // If the paragraph is not the first one, we add 1 to the index which stands for the line break

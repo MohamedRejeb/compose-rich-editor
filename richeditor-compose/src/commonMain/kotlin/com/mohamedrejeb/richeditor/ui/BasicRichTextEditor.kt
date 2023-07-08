@@ -453,7 +453,7 @@ internal fun adjustTextIndicatorOffset(
         topPadding + textHeight > pressPosition.y
     } ?: return
 
-    println("paragraph: $index")
+    println("selectedParagraph: $index")
 
     val nextParagraph = state.richParagraphList.getOrNull(index + 1)
     val nextParagraphStart = nextParagraph?.children?.firstOrNull()?.textRange?.min

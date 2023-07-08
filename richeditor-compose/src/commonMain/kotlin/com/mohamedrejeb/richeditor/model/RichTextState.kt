@@ -341,6 +341,7 @@ class RichTextState(
             startIndex = newTextFieldValue.selection.min - typedCharsCount,
             endIndex = newTextFieldValue.selection.min
         )
+        println("typedText: $typedText")
         val startTypeIndex = newTextFieldValue.selection.min - typedCharsCount
         val previousIndex = startTypeIndex - 1
 
@@ -404,13 +405,23 @@ class RichTextState(
         if (endParagraphIndex < startParagraphIndex - 1 && !singleParagraphMode) {
             richParagraphList.removeRange(endParagraphIndex + 1, startParagraphIndex)
         }
-
         // Check deleted spans
         startRichSpan.paragraph.removeTextRange(removeRange)
 
         if (!singleParagraphMode) {
             if (startParagraphIndex != endParagraphIndex) {
                 endRichSpan.paragraph.removeTextRange(removeRange)
+
+                if (startRichSpan.paragraph.getFirstNonEmptyChild() == null) {
+                    richParagraphList.remove(startRichSpan.paragraph)
+                } else if (endRichSpan.paragraph.getFirstNonEmptyChild() == null) {
+                    richParagraphList.remove(endRichSpan.paragraph)
+                } else {
+                    mergeTwoRichParagraphs(
+                        firstParagraph = endRichSpan.paragraph,
+                        secondParagraph = startRichSpan.paragraph,
+                    )
+                }
             }
         }
     }
@@ -445,6 +456,7 @@ class RichTextState(
             }
 
             // Create a new paragraph style
+            println("add new paragraph")
             val newParagraph = richSpan.paragraph.slice(
                 startIndex = index,
                 richSpan = richSpan,
@@ -852,6 +864,15 @@ class RichTextState(
         return toShiftRichSpanList
     }
 
+    /**
+     * Slice [RichParagraph] by [startIndex] and [richSpan] that contains [startIndex].
+     * The passed [RichParagraph] will be modified, containing only the text before [startIndex].
+     * And the new [RichParagraph] will be returned, containing the text after [startIndex].
+     *
+     * @param startIndex The start index of the slice.
+     * @param richSpan The [RichSpan] that contains [startIndex].
+     * @return The new [RichParagraph].
+     */
     private fun RichParagraph.slice(
         startIndex: Int,
         richSpan: RichSpan,
@@ -922,6 +943,108 @@ class RichTextState(
         }
 
         return newRichParagraph
+    }
+
+    /**
+     * Slice [RichSpan] by [startIndex] and [richSpan] that contains [startIndex].
+     * The passed [RichSpan] will be modified, containing only the text before [startIndex].
+     * And the new [RichSpan] will be returned, containing the text after [startIndex].
+     *
+     * @param startIndex The start index of the slice.
+     * @param richSpan The [RichSpan] that contains [startIndex].
+     * @return The new [RichSpan].
+     */
+    private fun RichSpan.slice(
+        startIndex: Int,
+        richSpan: RichSpan,
+    ): RichSpan {
+        val newRichSpan = RichSpan(
+            paragraph = richSpan.paragraph,
+        )
+
+        var previousRichSpan: RichSpan
+        var currentRichSpan: RichSpan = richSpan
+
+        val textStartIndex = startIndex - richSpan.textRange.min
+        val beforeText = if (textStartIndex > 0) richSpan.text.substring(0, textStartIndex) else "" // + ' '
+        val afterText = richSpan.text.substring(textStartIndex + 1)
+
+        richSpan.text = beforeText
+        richSpan.textRange = TextRange(
+            richSpan.textRange.min,
+            richSpan.textRange.min + beforeText.length
+        )
+
+        val afterRichSpan = RichSpan(
+            paragraph = richSpan.paragraph,
+            parent = newRichSpan,
+            text = afterText,
+            textRange = TextRange(
+                startIndex,
+                startIndex + afterText.length
+            ),
+            spanStyle = richSpan.fullSpanStyle,
+        )
+
+        newRichSpan.children.add(afterRichSpan)
+
+        for (i in richSpan.children.lastIndex downTo 0) {
+            val childRichSpan = richSpan.children[i]
+            richSpan.children.removeAt(i)
+            childRichSpan.parent = afterRichSpan
+            afterRichSpan.children.add(childRichSpan)
+        }
+
+        while (true) {
+            previousRichSpan = currentRichSpan
+            currentRichSpan = currentRichSpan.parent ?: break
+
+            val index = currentRichSpan.children.indexOf(previousRichSpan)
+            if (index in 0 until currentRichSpan.children.lastIndex) {
+                ((index + 1)..currentRichSpan.children.lastIndex).forEach {
+                    val childRichSpan = currentRichSpan.children[it]
+                    childRichSpan.spanStyle = childRichSpan.fullSpanStyle
+                    childRichSpan.parent = null
+                    newRichSpan.children.add(childRichSpan)
+                }
+                currentRichSpan.children.removeRange(index + 1, currentRichSpan.children.size)
+            }
+        }
+
+        val index = richSpan.paragraph.children.indexOf(previousRichSpan)
+        if (index in 0 until richSpan.paragraph.children.lastIndex) {
+            ((index + 1)..richSpan.paragraph.children.lastIndex).forEach {
+                val childRichSpan = richSpan.paragraph.children[it]
+                childRichSpan.spanStyle = childRichSpan.fullSpanStyle
+                childRichSpan.parent = null
+                newRichSpan.children.add(childRichSpan)
+            }
+            richSpan.paragraph.children.removeRange(index + 1, richSpan.paragraph.children.size)
+        }
+
+        return newRichSpan
+    }
+
+    /**
+     * Merges two [RichParagraph]s into one.
+     * The [firstParagraph] will be modified, containing the text of both [firstParagraph] and [secondParagraph].
+     * And the [secondParagraph] will be removed.
+     *
+     * @param firstParagraph The first [RichParagraph].
+     * @param secondParagraph The second [RichParagraph].
+     */
+    private fun mergeTwoRichParagraphs(
+        firstParagraph: RichParagraph,
+        secondParagraph: RichParagraph,
+    ) {
+        // Update the children paragraph of the second paragraph to the first paragraph.
+        secondParagraph.updateChildrenParagraph(firstParagraph)
+
+        // Add the children of the second paragraph to the first paragraph.
+        firstParagraph.children.addAll(secondParagraph.children)
+
+        // Remove the second paragraph from the rich paragraph list.
+        richParagraphList.remove(secondParagraph)
     }
 
     /**

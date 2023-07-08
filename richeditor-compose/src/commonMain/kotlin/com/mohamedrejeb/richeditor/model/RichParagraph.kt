@@ -103,6 +103,18 @@ public class RichParagraph(
         return firstChild
     }
 
+    /**
+     * Update the paragraph of the children recursively
+     *
+     * @param newParagraph The new paragraph
+     */
+    fun updateChildrenParagraph(newParagraph: RichParagraph) {
+        children.forEach { childRichSpan ->
+            childRichSpan.paragraph = newParagraph
+            childRichSpan.updateChildrenParagraph(newParagraph)
+        }
+    }
+
     companion object {
         val DefaultParagraphStyle = ParagraphStyle(
             textAlign = TextAlign.Left,

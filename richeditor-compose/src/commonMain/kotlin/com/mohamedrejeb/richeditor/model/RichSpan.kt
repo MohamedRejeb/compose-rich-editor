@@ -10,8 +10,11 @@ import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.utils.customMerge
 import com.mohamedrejeb.richeditor.utils.isSpecifiedFieldsEquals
 
+/**
+ * A rich span is a part of a rich paragraph.
+ */
 public class RichSpan(
-    val key: Int = 0,
+    internal val key: Int? = null,
     val children: SnapshotStateList<RichSpan> = mutableStateListOf(),
     var paragraph: RichParagraph,
     var parent: RichSpan? = null,
@@ -19,7 +22,13 @@ public class RichSpan(
     var textRange: TextRange = TextRange(start = 0, end = 0),
     var spanStyle: SpanStyle = SpanStyle(),
 ) {
-    val fullTextRange: TextRange get() {
+    /**
+     * Return the full text range of the rich span.
+     * It merges the text range of the rich span with the text range of its children.
+     *
+     * @return The full text range of the rich span
+     */
+    private val fullTextRange: TextRange get() {
         var textRange = this.textRange
         var lastChild: RichSpan? = this
         while (true) {
@@ -33,8 +42,13 @@ public class RichSpan(
         return textRange
     }
 
-    val fullSpanStyle: SpanStyle
-        get() {
+    /**
+     * Return the full span style of the rich span.
+     * It merges the span style of the rich span with the span style of its parents.
+     *
+     * @return The full span style of the rich span
+     */
+    val fullSpanStyle: SpanStyle get() {
         var spanStyle = this.spanStyle
         var parent = this.parent
 
@@ -46,6 +60,11 @@ public class RichSpan(
         return spanStyle
     }
 
+    /**
+     * Check if the rich span is the first in the paragraph
+     *
+     * @return True if the rich span is the first in the paragraph, false otherwise
+     */
     val isFirstInParagraph: Boolean get() {
         var current: RichSpan
         var parent: RichSpan = this
@@ -60,6 +79,11 @@ public class RichSpan(
         return paragraph.children.firstOrNull() == current
     }
 
+    /**
+     * Check if the rich span is the last in the paragraph
+     *
+     * @return True if the rich span is the last in the paragraph, false otherwise
+     */
     val isLastInParagraph: Boolean get() {
         var current: RichSpan
         var parent: RichSpan = this
@@ -76,13 +100,29 @@ public class RichSpan(
         return paragraph.children.lastOrNull() == current
     }
 
+    /**
+     * Check if the rich span is empty.
+     * A rich span is empty if its text is empty and its children are empty
+     *
+     * @return True if the rich span is empty, false otherwise
+     */
     fun isEmpty(): Boolean = text.isEmpty() && isChildrenEmpty()
 
+    /**
+     * Check if the rich span children are empty
+     *
+     * @return True if the rich span children are empty, false otherwise
+     */
     private fun isChildrenEmpty(): Boolean =
         children.all { richSpan ->
             richSpan.text.isEmpty() && richSpan.isChildrenEmpty()
         }
 
+    /**
+     * Get the first non-empty child
+     *
+     * @return The first non-empty child or null if there is no non-empty child
+     */
     internal fun getFirstNonEmptyChild(): RichSpan? {
         children.forEach { richSpan ->
             if (richSpan.text.isNotEmpty()) return richSpan
@@ -94,6 +134,13 @@ public class RichSpan(
         return null
     }
 
+    /**
+     * Get the rich span by text index
+     *
+     * @param textIndex The text index to search
+     * @param offset The offset of the text range
+     * @return A pair of the offset and the rich span or null if the rich span is not found
+     */
     fun getRichSpanByTextIndex(
         textIndex: Int,
         offset: Int = 0,
@@ -130,6 +177,13 @@ public class RichSpan(
         return index to null
     }
 
+    /**
+     * Get the rich span list by text range
+     *
+     * @param searchTextRange The text range to search
+     * @param offset The offset of the text range
+     * @return The rich span list
+     */
     fun getRichSpanListByTextRange(
         searchTextRange: TextRange,
         offset: Int = 0,
@@ -158,9 +212,14 @@ public class RichSpan(
         return index to richSpanList
     }
 
+    /**
+     * Remove text range from the rich span
+     *
+     * @param textRange The text range to remove
+     * @return The rich span with the removed text range or null if the rich span is empty
+     */
     fun removeTextRange(textRange: TextRange): RichSpan? {
-        if (textRange.min <= this.textRange.min && textRange.max >= fullTextRange.max) return null
-
+        // Remove all text if it's in the text range
         if (textRange.min <= this.textRange.min && textRange.max >= this.textRange.max) {
             this.textRange = TextRange(start = 0, end = 0)
             text = ""
@@ -203,12 +262,23 @@ public class RichSpan(
         return this
     }
 
+    /**
+     * Get the closest parent rich span with the specified span style
+     *
+     * @param spanStyle The span style
+     * @return The closest parent rich span or null if not found
+     */
     fun getClosestRichSpan(spanStyle: SpanStyle): RichSpan? {
         if (spanStyle.isSpecifiedFieldsEquals(this.fullSpanStyle, strict = true)) return this
 
         return parent?.getClosestRichSpan(spanStyle)
     }
 
+    /**
+     * Get the max font size of the children recursively
+     *
+     * @return The max font size
+     */
     fun getMaxFontSize(): TextUnit {
         var height = if (spanStyle.fontSize.isSpecified) spanStyle.fontSize else 0.sp
         children.forEach { richSpan ->
@@ -218,6 +288,18 @@ public class RichSpan(
             }
         }
         return height
+    }
+
+    /**
+     * Update the paragraph of the children recursively
+     *
+     * @param newParagraph The new paragraph
+     */
+    fun updateChildrenParagraph(newParagraph: RichParagraph) {
+        children.forEach { childRichSpan ->
+            childRichSpan.paragraph = newParagraph
+            childRichSpan.updateChildrenParagraph(newParagraph)
+        }
     }
 
     override fun toString(): String {

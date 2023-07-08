@@ -284,7 +284,6 @@ fun BasicRichTextEditor(
  * innerTextField exactly once.
  *
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun BasicRichTextEditor(
     state: RichTextState,
@@ -295,7 +294,7 @@ internal fun BasicRichTextEditor(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     singleLine: Boolean = false,
-    singleParagraph: Boolean = true,
+    singleParagraph: Boolean = false,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
     onTextLayout: (TextLayoutResult) -> Unit = {},

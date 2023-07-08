@@ -36,6 +36,9 @@ internal fun AnnotatedString.Builder.append(
     var index = startIndex
 
     withStyle(richSpan.spanStyle) {
+        println("index: ${index}")
+        println("richSpan.text: ${richSpan.text}")
+        println("richSpan.text.length: ${richSpan.text.length}")
         val newText = text.substring(index, index + richSpan.text.length)
         richSpan.text = newText
         if (

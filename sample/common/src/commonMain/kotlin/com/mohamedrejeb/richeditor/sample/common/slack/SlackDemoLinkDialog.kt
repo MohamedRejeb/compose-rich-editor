@@ -118,6 +118,8 @@ fun SlackDemoLinkDialog(
                 OutlinedButton(
                     onClick = {
                         openLinkDialog.value = false
+                        text.value = ""
+                        link.value = ""
                     },
                     colors = ButtonDefaults.outlinedButtonColors(
                         containerColor = Color.Transparent,
@@ -144,8 +146,9 @@ fun SlackDemoLinkDialog(
                             text = text.value,
                             url = link.value
                         )
-
                         openLinkDialog.value = false
+                        text.value = ""
+                        link.value = ""
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF007a5a),

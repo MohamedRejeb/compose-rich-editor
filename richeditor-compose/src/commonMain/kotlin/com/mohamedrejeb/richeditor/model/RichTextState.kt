@@ -313,7 +313,7 @@ class RichTextState(
      *
      * @param newTextFieldValue the new text field value.
      */
-    internal fun updateTextFieldValue(newTextFieldValue: TextFieldValue) {
+    private fun updateTextFieldValue(newTextFieldValue: TextFieldValue) {
         if (!singleParagraphMode) {
             // Check for paragraphs
             checkForParagraphs(newTextFieldValue)
@@ -448,8 +448,8 @@ class RichTextState(
         val endRemoveIndex = newTextFieldValue.selection.min
         val removeRange = TextRange(endRemoveIndex, startRemoveIndex)
 
-        val startRichSpan = getRichSpanByTextIndex(textIndex = startRemoveIndex - 1) ?: return
-        val endRichSpan = getRichSpanByTextIndex(textIndex = endRemoveIndex) ?: return
+        val startRichSpan = getRichSpanByTextIndex(textIndex = startRemoveIndex - 1, true) ?: return
+        val endRichSpan = getRichSpanByTextIndex(textIndex = endRemoveIndex, true) ?: return
 
         // Check deleted paragraphs
         val startParagraphIndex = richParagraphList.indexOf(startRichSpan.paragraph)

@@ -15,6 +15,7 @@ import com.mohamedrejeb.richeditor.model.RichTextValue
 import com.mohamedrejeb.richeditor.sample.common.htmleditor.HtmlEditorScreen
 import com.mohamedrejeb.richeditor.sample.common.neweditor.NewEditorScreen
 import com.mohamedrejeb.richeditor.sample.common.richeditor.RichEditorScreen
+import com.mohamedrejeb.richeditor.sample.common.slack.SlackDemoScreen
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -74,6 +75,14 @@ fun HomeContent() {
                 },
             ) {
                 Text("HTML Editor Demo")
+            }
+
+            Button(
+                onClick = {
+                    navigator.push(SlackDemoScreen)
+                },
+            ) {
+                Text("Slack Demo")
             }
 
         }

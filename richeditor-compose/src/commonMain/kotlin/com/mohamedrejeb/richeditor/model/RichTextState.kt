@@ -28,11 +28,7 @@ fun rememberRichTextState(
 }
 
 class RichTextState(
-    initialRichParagraphList: List<RichParagraph> = listOf(
-        RichParagraph(
-            children = mutableStateListOf(),
-        )
-    ),
+    initialRichParagraphList: List<RichParagraph> = listOf(RichParagraph()),
 ) {
     public val richParagraphList = mutableStateListOf(*initialRichParagraphList.toTypedArray())
     internal var visualTransformation: VisualTransformation by mutableStateOf(VisualTransformation.None)
@@ -50,8 +46,14 @@ class RichTextState(
 
     private var currentAppliedSpanStyle: SpanStyle by mutableStateOf(
         getRichSpanByTextIndex(textIndex = textFieldValue.selection.min - 1)?.fullSpanStyle
-            ?: RichSpan.DefaultSpanStyle
+            ?: RichSpanStyle.DefaultSpanStyle
     )
+
+    var currentRichSpanStyle: RichSpanStyle by mutableStateOf(
+        getRichSpanByTextIndex(textIndex = textFieldValue.selection.min - 1)?.style
+            ?: RichSpanStyle.Default()
+    )
+        private set
 
     private var toAddSpanStyle: SpanStyle by mutableStateOf(SpanStyle())
     private var toRemoveSpanStyle: SpanStyle by mutableStateOf(SpanStyle())
@@ -156,6 +158,38 @@ class RichTextState(
 
         if (!selection.collapsed)
             handleRemovingStyleFromSelectedText()
+    }
+
+    fun addLink(
+        text: String,
+        url: String,
+    ) {
+        if (text.isEmpty()) return
+
+        val paragraph = richParagraphList.firstOrNull() ?: return
+        val linkStyle = RichSpanStyle.Link(
+            url = url,
+        )
+        val linkRichSpan = RichSpan(
+            text = text,
+            style = linkStyle,
+            paragraph = paragraph,
+        )
+
+        addRichSpanAtPosition(
+            linkRichSpan,
+            index = selection.min,
+        )
+
+        val beforeText = textFieldValue.text.substring(0, selection.min)
+        val afterText = textFieldValue.text.substring(selection.min)
+        val newText = "$beforeText$text$afterText"
+        updateTextFieldValue(
+            newTextFieldValue = textFieldValue.copy(
+                text = newText,
+                selection = TextRange(selection.min + text.length),
+            )
+        )
     }
 
     /**
@@ -316,7 +350,7 @@ class RichTextState(
             var index = 0
             richParagraphList.forEachIndexed { i, richParagraphStyle ->
                 withStyle(richParagraphStyle.paragraphStyle) {
-                    withStyle(RichSpan.DefaultSpanStyle) {
+                    withStyle(RichSpanStyle.DefaultSpanStyle) {
                         index = append(
                             richSpanList = richParagraphStyle.children,
                             startIndex = index,
@@ -386,11 +420,15 @@ class RichTextState(
                 )
             }
         } else {
+            if (richParagraphList.isEmpty()) {
+                richParagraphList.add(RichParagraph())
+            }
+
             val newRichSpan = RichSpan(
                 paragraph = richParagraphList.last(),
                 text = typedText,
                 textRange = TextRange(startTypeIndex, startTypeIndex + typedText.length),
-                spanStyle = toAddSpanStyle,
+                style = RichSpanStyle.fromSpanStyle(toAddSpanStyle),
             )
             richParagraphList.last().children.add(newRichSpan)
         }
@@ -663,9 +701,11 @@ class RichTextState(
                 startIndex,
                 startIndex + middleText.length
             ),
-            spanStyle = SpanStyle(
-                textDecoration = fullSpanStyle.textDecoration
-            ).customMerge(toAddSpanStyle),
+            style = RichSpanStyle.fromSpanStyle(
+                SpanStyle(
+                    textDecoration = fullSpanStyle.textDecoration
+                ).customMerge(toAddSpanStyle)
+            ),
         )
         if (middleText.isNotEmpty()) {
             richSpan.children.add(
@@ -742,7 +782,7 @@ class RichTextState(
                 startIndex,
                 startIndex + middleText.length
             ),
-            spanStyle = newSpanStyle.unmerge(parentRichSpan?.spanStyle),
+            style = RichSpanStyle.fromSpanStyle(newSpanStyle.unmerge(parentRichSpan?.spanStyle)),
         )
         val afterSpanStyle = RichSpan(
             paragraph = richSpan.paragraph,
@@ -752,7 +792,7 @@ class RichTextState(
                 startIndex + middleText.length,
                 startIndex + middleText.length + afterText.length
             ),
-            spanStyle = richSpanFullSpanStyle,
+            style = RichSpanStyle.fromSpanStyle(richSpanFullSpanStyle),
         )
 
         val toShiftRichSpanList: MutableList<RichSpan> = mutableListOf()
@@ -795,7 +835,7 @@ class RichTextState(
                             else {
                                 lastChild.children.add(childRichSpan)
                                 childRichSpan.parent = lastChild
-                                childRichSpan.spanStyle = RichSpan.DefaultSpanStyle
+                                childRichSpan.spanStyle = RichSpanStyle.DefaultSpanStyle
                                 for (i in childRichSpan.children.lastIndex downTo 0) {
                                     val child = childRichSpan.children[i]
                                     child.parent = lastChild
@@ -855,6 +895,87 @@ class RichTextState(
             } else {
                 richSpan.paragraph.children.remove(richSpan)
             }
+        }
+    }
+
+    private fun addRichSpanAtPosition(
+        vararg richSpan: RichSpan,
+        index: Int,
+    ) {
+        val previousIndex = index - 1
+
+        val activeRichSpan = getRichSpanByTextIndex(previousIndex)
+
+        if (activeRichSpan != null) {
+            val startIndex = max(0, index - activeRichSpan.textRange.min)
+            val beforeText = activeRichSpan.text.substring(0, startIndex)
+            val afterText = activeRichSpan.text.substring(startIndex)
+
+            // Simplify the richSpan tree if possible, by avoiding creating a new RichSpan.
+            if (
+                beforeText.isEmpty() &&
+                afterText.isEmpty() &&
+                activeRichSpan.children.isEmpty() &&
+                richSpan.size == 1
+            ) {
+                activeRichSpan.text = richSpan.first().text
+                activeRichSpan.style = richSpan.first().style
+                return
+            }
+
+            activeRichSpan.text = beforeText
+
+            var addedTextLength = 0
+            for (i in richSpan.lastIndex downTo 0) {
+                val newRichSpan = richSpan[i]
+                newRichSpan.paragraph = activeRichSpan.paragraph
+                newRichSpan.parent = activeRichSpan
+                activeRichSpan.children.add(
+                    0,
+                    newRichSpan
+                )
+                addedTextLength += newRichSpan.text.length
+            }
+            if (afterText.isNotEmpty()) {
+                activeRichSpan.children.add(
+                    1,
+                    RichSpan(
+                        paragraph = activeRichSpan.paragraph,
+                        parent = activeRichSpan,
+                        text = afterText,
+                        textRange = TextRange(
+                            index + addedTextLength,
+                            index + addedTextLength + afterText.length
+                        ),
+                    )
+                )
+            } else {
+                val firstRichSpan = activeRichSpan.children.firstOrNull()
+                val secondRichSpan = activeRichSpan.children.getOrNull(1)
+                if (
+                    firstRichSpan != null &&
+                    secondRichSpan != null &&
+                    firstRichSpan.spanStyle == secondRichSpan.spanStyle
+                ) {
+                    firstRichSpan.text += secondRichSpan.text
+                    firstRichSpan.children.addAll(secondRichSpan.children)
+                    activeRichSpan.children.removeAt(1)
+                }
+
+                if (
+                    firstRichSpan != null &&
+                    activeRichSpan.text.isEmpty() &&
+                    activeRichSpan.children.size == 1 &&
+                    richSpan.size == 1
+                ) {
+                    activeRichSpan.text = firstRichSpan.text
+                    activeRichSpan.spanStyle = richSpan.first().spanStyle.customMerge(firstRichSpan.spanStyle)
+                    activeRichSpan.children.clear()
+                    activeRichSpan.children.addAll(firstRichSpan.children)
+                }
+            }
+        } else {
+            richParagraphList.last().children.addAll(richSpan)
         }
     }
 
@@ -925,7 +1046,7 @@ class RichTextState(
                 startIndex,
                 startIndex + afterText.length
             ),
-            spanStyle = richSpan.fullSpanStyle,
+            style = RichSpanStyle.fromSpanStyle(richSpan.fullSpanStyle),
         )
 
         newRichParagraph.children.add(newRichSpan)
@@ -1008,7 +1129,7 @@ class RichTextState(
                 startIndex,
                 startIndex + afterText.length
             ),
-            spanStyle = richSpan.fullSpanStyle,
+            style = RichSpanStyle.fromSpanStyle(richSpan.fullSpanStyle),
         )
 
         newRichSpan.children.add(afterRichSpan)
@@ -1076,15 +1197,22 @@ class RichTextState(
      * Updates the [currentAppliedSpanStyle] to the [SpanStyle] that should be applied to the current selection.
      */
     private fun updateCurrentSpanStyle() {
-        currentAppliedSpanStyle =
-            if (selection.collapsed)
-                getRichSpanByTextIndex(textIndex = textFieldValue.selection.min - 1).also { println("richSpan: $it") }
-                    ?.fullSpanStyle
-                    ?: RichSpan.DefaultSpanStyle
-            else
-                getRichSpanListByTextRange(selection)
-                    .getCommonStyle()
-                    ?: RichSpan.DefaultSpanStyle
+        if (selection.collapsed) {
+            val richSpan = getRichSpanByTextIndex(textIndex = textFieldValue.selection.min - 1)
+
+            currentRichSpanStyle = richSpan
+                ?.style
+                ?: RichSpanStyle.Default()
+            currentAppliedSpanStyle = richSpan
+                ?.fullSpanStyle
+                ?: RichSpanStyle.DefaultSpanStyle
+        }
+        else {
+            currentRichSpanStyle = RichSpanStyle.Default()
+            currentAppliedSpanStyle = getRichSpanListByTextRange(selection)
+                .getCommonStyle()
+                ?: RichSpanStyle.DefaultSpanStyle
+        }
     }
 
     /**
@@ -1104,6 +1232,29 @@ class RichTextState(
 
     internal fun onTextLayout(textLayoutResult: TextLayoutResult) {
         this.textLayoutResult = textLayoutResult
+    }
+
+    internal fun getLinkByOffset(offset: Offset): String? {
+        val richSpan = getRichSpanByOffset(offset)
+        val style = richSpan?.style
+        return if (style is RichSpanStyle.Link) style.url
+            else null
+    }
+
+    internal fun isLink(offset: Offset): Boolean {
+        val richSpan = getRichSpanByOffset(offset)
+        return richSpan?.style is RichSpanStyle.Link
+    }
+
+    private fun getRichSpanByOffset(offset: Offset): RichSpan? {
+        this.textLayoutResult?.let { textLayoutResult ->
+            val position = textLayoutResult.getOffsetForPosition(offset)
+            println("position: $position")
+            return getRichSpanByTextIndex(position, true).also {
+                println("richSpan: $it")
+            }
+        }
+        return null
     }
 
     /**
@@ -1157,30 +1308,29 @@ class RichTextState(
         if (
             selection.collapsed &&
             selection.min == nextParagraphStart
-        ) {
+        )
             updateTextFieldValue(
                 textFieldValue.copy(
                     selection = TextRange(selection.min - 1, selection.min - 1)
                 )
             )
-        } else if (
+        else if (
             selection.collapsed &&
             index == richParagraphList.lastIndex &&
             selectedParagraph.isEmpty() &&
             selection.min == selectedParagraph.getFirstNonEmptyChild()?.textRange?.min?.minus(1)
-        ) {
+        )
             updateTextFieldValue(
                 textFieldValue.copy(
                     selection = TextRange(selection.min + 1, selection.min + 1)
                 )
             )
-        } else if (newSelection != null) {
+        else if (newSelection != null)
             updateTextFieldValue(
                 textFieldValue.copy(
                     selection = newSelection
                 )
             )
-        }
     }
 
     private suspend fun registerLastPressPosition(pressPosition: Offset) {
@@ -1250,9 +1400,10 @@ class RichTextState(
      * @param textIndex The text index to search for.
      * @return The [RichSpan] that contains the given [textIndex], or null if no such [RichSpan] exists.
      */
-    private fun getRichSpanByTextIndex(textIndex: Int): RichSpan? {
-        println("getRichSpanByTextIndex($textIndex)")
-
+    private fun getRichSpanByTextIndex(
+        textIndex: Int,
+        ignoreCustomFiltering: Boolean = false,
+    ): RichSpan? {
         if (textIndex <= 0)
             return richParagraphList.firstOrNull()?.getFirstNonEmptyChild()
 
@@ -1262,6 +1413,7 @@ class RichTextState(
                 paragraphIndex = paragraphIndex,
                 textIndex = textIndex,
                 offset = index,
+                ignoreCustomFiltering = ignoreCustomFiltering,
             )
             if (result.second != null)
                 return result.second
@@ -1291,6 +1443,22 @@ class RichTextState(
             index = result.first
         }
         return richSpanList
+    }
+
+    fun copy(): RichTextState {
+        val richParagraphList = richParagraphList.map { it.copy() }
+        val richTextState = RichTextState(richParagraphList)
+        richTextState.updateTextFieldValue(textFieldValue)
+        return richTextState
+    }
+
+    /**
+     * Clears the [RichTextState] and sets the [TextFieldValue] to an empty value.
+     */
+    fun clear() {
+        richParagraphList.clear()
+        richParagraphList.add(RichParagraph())
+        updateTextFieldValue(TextFieldValue())
     }
 
     companion object {

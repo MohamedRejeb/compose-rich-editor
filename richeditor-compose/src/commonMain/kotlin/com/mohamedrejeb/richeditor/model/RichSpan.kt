@@ -1,7 +1,5 @@
 package com.mohamedrejeb.richeditor.model
 
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.TextUnit
@@ -15,13 +13,20 @@ import com.mohamedrejeb.richeditor.utils.isSpecifiedFieldsEquals
  */
 public class RichSpan(
     internal val key: Int? = null,
-    val children: SnapshotStateList<RichSpan> = mutableStateListOf(),
+    val children: MutableList<RichSpan> = mutableListOf(),
     var paragraph: RichParagraph,
     var parent: RichSpan? = null,
     var text: String = "",
     var textRange: TextRange = TextRange(start = 0, end = 0),
-    var spanStyle: SpanStyle = SpanStyle(),
+//    var spanStyle: SpanStyle = SpanStyle(),
+    var style: RichSpanStyle = RichSpanStyle.Default(),
 ) {
+    var spanStyle
+        get() = style.spanStyle
+        set(value) {
+            style.spanStyle = value
+        }
+
     /**
      * Return the full text range of the rich span.
      * It merges the text range of the rich span with the text range of its children.
@@ -144,11 +149,21 @@ public class RichSpan(
     fun getRichSpanByTextIndex(
         textIndex: Int,
         offset: Int = 0,
+        ignoreCustomFiltering: Boolean = false
     ): Pair<Int, RichSpan?> {
         var index = offset
 
         // Set start text range
         textRange = TextRange(start = index, end = index + text.length)
+
+        if (!style.acceptNewTextInTheEdges && !ignoreCustomFiltering) {
+            val fullTextRange = fullTextRange
+            if (textIndex == fullTextRange.max - 1) {
+                index += fullTextRange.length
+                return index to null
+            }
+        }
+
         index += this.text.length
 
         // Check if the text index is in the start text range
@@ -167,6 +182,7 @@ public class RichSpan(
             val result = richSpan.getRichSpanByTextIndex(
                 textIndex = textIndex,
                 offset = index,
+                ignoreCustomFiltering = ignoreCustomFiltering,
             )
             if (result.second != null)
                 return result
@@ -302,13 +318,24 @@ public class RichSpan(
         }
     }
 
-    override fun toString(): String {
-        return "richSpan(text='$text', textRange=$textRange, fullTextRange=$fullTextRange)"
+    fun copy(
+        newParagraph: RichParagraph = paragraph,
+    ): RichSpan {
+        val newSpan = RichSpan(
+            paragraph = newParagraph,
+            text = text,
+            textRange = textRange,
+            style = style,
+        )
+        children.forEach { childRichSpan ->
+            val newRichSpan = childRichSpan.copy(newParagraph)
+            newRichSpan.parent = newSpan
+            newSpan.children.add(newRichSpan)
+        }
+        return newSpan
     }
 
-    companion object {
-        val DefaultSpanStyle = SpanStyle(
-            fontSize = 16.sp,
-        )
+    override fun toString(): String {
+        return "richSpan(text='$text', textRange=$textRange, fullTextRange=$fullTextRange)"
     }
 }

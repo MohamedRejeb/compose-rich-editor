@@ -1,7 +1,5 @@
 package com.mohamedrejeb.richeditor.model
 
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.LineBreak
@@ -12,13 +10,14 @@ import androidx.compose.ui.unit.sp
 
 public class RichParagraph(
     val key: Int = 0,
-    val children: SnapshotStateList<RichSpan> = mutableStateListOf(),
+    val children: MutableList<RichSpan> = mutableListOf(),
     var paragraphStyle: ParagraphStyle = DefaultParagraphStyle,
 ) {
     fun getRichSpanByTextIndex(
         paragraphIndex: Int,
         textIndex: Int,
         offset: Int = 0,
+        ignoreCustomFiltering: Boolean = false,
     ): Pair<Int, RichSpan?> {
         // If the paragraph is empty, we add a RichSpan to avoid skipping the paragraph when searching
         if (children.isEmpty()) children.add(RichSpan(paragraph = this))
@@ -32,6 +31,7 @@ public class RichParagraph(
             val result = richSpan.getRichSpanByTextIndex(
                 textIndex = textIndex,
                 offset = index,
+                ignoreCustomFiltering = ignoreCustomFiltering,
             )
             if (result.second != null)
                 return result
@@ -129,11 +129,22 @@ public class RichParagraph(
         }
     }
 
+    fun copy(): RichParagraph {
+        val newParagraph = RichParagraph(
+            paragraphStyle = paragraphStyle,
+        )
+        children.forEach { childRichSpan ->
+            val newRichSpan = childRichSpan.copy(newParagraph)
+            newRichSpan.paragraph = newParagraph
+            newParagraph.children.add(newRichSpan)
+        }
+        return newParagraph
+    }
+
     companion object {
         val DefaultParagraphStyle = ParagraphStyle(
             textAlign = TextAlign.Left,
             lineBreak = LineBreak.Heading,
-            lineHeight = 42.sp,
         )
     }
 }

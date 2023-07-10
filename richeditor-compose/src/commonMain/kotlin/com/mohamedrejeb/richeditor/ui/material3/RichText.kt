@@ -1,5 +1,7 @@
 package com.mohamedrejeb.richeditor.ui.material3
 
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.material.LocalContentColor
 import androidx.compose.material.Text
@@ -7,8 +9,14 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.Paragraph
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
@@ -162,8 +170,40 @@ fun RichText(
     onTextLayout: (TextLayoutResult) -> Unit = {},
     style: TextStyle = LocalTextStyle.current
 ) {
+    val uriHandler = LocalUriHandler.current
+    val pointerIcon = remember {
+        mutableStateOf(PointerIcon.Default)
+    }
+
     Text(
-        modifier = modifier,
+        modifier = modifier
+            .pointerHoverIcon(pointerIcon.value)
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        val position = event.changes.first().position
+                        val isLink = state.isLink(position)
+
+                        if (isLink) pointerIcon.value = PointerIcon.Hand
+                        else pointerIcon.value = PointerIcon.Default
+                    }
+                }
+            }
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = { offset ->
+                        state.getLinkByOffset(offset)?.let { url ->
+                            try {
+                                uriHandler.openUri(url)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }
+                    }
+                )
+            }
+        ,
         text = state.visualTransformation.filter(state.annotatedString).text,
         color = color,
         fontSize = fontSize,
@@ -178,7 +218,10 @@ fun RichText(
         softWrap = softWrap,
         maxLines = maxLines,
         inlineContent = inlineContent,
-        onTextLayout = onTextLayout,
+        onTextLayout = {
+            state.onTextLayout(it)
+            onTextLayout(it)
+       },
         style = style
     )
 }

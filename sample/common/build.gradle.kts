@@ -28,9 +28,16 @@ kotlin {
             baseName = "common"
             isStatic = true
         }
+        extraSpecAttributes["resources"] = "['src/commonMain/resources/**']"
     }
 
     sourceSets {
+        all {
+            languageSettings {
+                optIn("org.jetbrains.compose.resources.ExperimentalResourceApi")
+            }
+        }
+
         val commonMain by getting {
             dependencies {
                 api(compose.runtime)
@@ -38,6 +45,8 @@ kotlin {
                 api(compose.material)
                 api(compose.material3)
                 api(compose.materialIconsExtended)
+                @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
+                api(compose.components.resources)
 
                 implementation(libs.kotlinx.serialization.json)
 //                implementation("com.mohamedrejeb.richeditor:richeditor-compose:0.2.0")
@@ -87,6 +96,7 @@ kotlin {
 android {
     namespace = "com.mohamedrejeb.richeditor.sample.common"
     compileSdk = (findProperty("android.compileSdk") as String).toInt()
+    sourceSets["main"].resources.srcDirs("src/commonMain/resources")
 
     defaultConfig {
         minSdk = (findProperty("android.minSdk") as String).toInt()

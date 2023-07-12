@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mohamedrejeb.richeditor.model.RichParagraph
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 
@@ -215,6 +216,35 @@ fun SlackDemoPanel(
                 isSelected = state.currentSpanStyle.background == Color.Yellow,
                 icon = Icons.Outlined.Circle,
                 tint = Color.Yellow
+            )
+        }
+
+        item {
+            Box(
+                Modifier
+                    .height(24.dp)
+                    .width(1.dp)
+                    .background(Color(0xFF393B3D))
+            )
+        }
+
+        item {
+            SlackDemoPanelButton(
+                onClick = {
+                    state.toggleUnorderedList()
+                },
+                isSelected = state.currentRichParagraphType is RichParagraph.Type.UnorderedList,
+                icon = Icons.Outlined.FormatListBulleted,
+            )
+        }
+
+        item {
+            SlackDemoPanelButton(
+                onClick = {
+                    state.toggleOrderedList()
+                },
+                isSelected = state.currentRichParagraphType is RichParagraph.Type.OrderedList,
+                icon = Icons.Outlined.FormatListNumbered,
             )
         }
     }

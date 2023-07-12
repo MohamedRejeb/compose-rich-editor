@@ -44,3 +44,14 @@ internal fun List<RichParagraph>.getCommonStyle(): ParagraphStyle? {
         hyphens = hyphens
     )
 }
+
+internal fun List<RichParagraph>.getCommonType(): RichParagraph.Type? {
+    var type: RichParagraph.Type? = null
+
+    for (paragraph in this) {
+        if (type == null) type = paragraph.type
+        else if (type != paragraph.type) return null
+    }
+
+    return type
+}

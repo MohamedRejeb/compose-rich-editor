@@ -4,6 +4,7 @@ import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.sp
@@ -12,7 +13,35 @@ public class RichParagraph(
     val key: Int = 0,
     val children: MutableList<RichSpan> = mutableListOf(),
     var paragraphStyle: ParagraphStyle = DefaultParagraphStyle,
+    var type: Type = Type.Default,
 ) {
+    interface Type {
+        val style: ParagraphStyle get() = ParagraphStyle()
+        val startText : String get() = ""
+
+        val nextParagraphType: Type get() = Default
+
+        object Default : Type
+
+        object UnorderedList : Type {
+            override val style: ParagraphStyle = ParagraphStyle(
+                textIndent = TextIndent(firstLine = 20.sp),
+            )
+            override val startText: String = "• "
+            override val nextParagraphType: Type get() = UnorderedList
+        }
+
+        data class OrderedList(
+            var number: Int,
+        ) : Type {
+            override val style: ParagraphStyle = ParagraphStyle(
+                textIndent = TextIndent(firstLine = 20.sp),
+            )
+            override val startText: String get() = "$number. "
+            override val nextParagraphType: Type get() = OrderedList(number + 1)
+        }
+    }
+
     fun getRichSpanByTextIndex(
         paragraphIndex: Int,
         textIndex: Int,
@@ -23,6 +52,7 @@ public class RichParagraph(
         if (children.isEmpty()) children.add(RichSpan(paragraph = this))
 
         var index = offset
+        index += type.startText.length
 
         // If the paragraph is not the first one, we add 1 to the index which stands for the line break
         if (paragraphIndex > 0) index++
@@ -50,6 +80,7 @@ public class RichParagraph(
         if (children.isEmpty()) children.add(RichSpan(paragraph = this))
 
         var index = offset
+        index += type.startText.length
 
         // If the paragraph is not the first one, we add 1 to the index which stands for the line break
         if (paragraphIndex > 0) index++

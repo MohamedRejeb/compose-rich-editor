@@ -67,7 +67,7 @@ class RichTextState(
         get() = currentAppliedSpanStyle.customMerge(toAddSpanStyle).unmerge(toRemoveSpanStyle)
 
     private var currentAppliedParagraphStyle: ParagraphStyle by mutableStateOf(
-        getRichParagraphByTextIndex(textIndex = max(0, textFieldValue.selection.min - 1))?.paragraphStyle
+        getRichParagraphByTextIndex(textIndex = max(0, selection.min - 1))?.paragraphStyle
             ?: richParagraphList.firstOrNull()?.paragraphStyle
             ?: RichParagraph.DefaultParagraphStyle
     )
@@ -82,6 +82,12 @@ class RichTextState(
      */
     val currentParagraphStyle: ParagraphStyle
         get() = currentAppliedParagraphStyle.merge(toAddParagraphStyle).unmerge(toRemoveParagraphStyle)
+
+    var currentRichParagraphType: RichParagraph.Type by mutableStateOf(
+        getRichParagraphByTextIndex(textIndex = max(0, selection.min - 1))?.type
+            ?: RichParagraph.Type.Default
+    )
+        private set
 
     /**
      * The annotated string representing the rich text.
@@ -283,6 +289,109 @@ class RichTextState(
         }
     }
 
+    fun toggleUnorderedList() {
+        val paragraph = getRichParagraphByTextIndex(max(0, selection.min - 1)) ?: return
+        if (paragraph.type is RichParagraph.Type.UnorderedList) removeUnorderedList()
+        else addUnorderedList()
+    }
+
+    fun addUnorderedList() {
+        val paragraph = getRichParagraphByTextIndex(max(0, selection.min - 1)) ?: return
+        println("paragraph: ${paragraph.children.toList()}")
+        if (paragraph.type is RichParagraph.Type.UnorderedList) return
+        val type = RichParagraph.Type.UnorderedList
+        paragraph.type = type
+
+        val paragraphStartIndex = paragraph.getFirstNonEmptyChild()?.textRange?.min ?: selection.min
+        println("selection.min: ${selection.min}")
+        println("paragraphStartIndex: $paragraphStartIndex")
+        val beforeText = textFieldValue.text.substring(0, paragraphStartIndex)
+        val afterText = textFieldValue.text.substring(paragraphStartIndex)
+        println("beforeText: $beforeText")
+        println("afterText: $afterText")
+        updateTextFieldValue(
+            newTextFieldValue = textFieldValue.copy(
+                text = beforeText + type.startText + afterText,
+                selection = TextRange(selection.min + type.startText.length),
+            )
+        )
+    }
+
+    fun removeUnorderedList() {
+        val paragraph = getRichParagraphByTextIndex(max(0, selection.min - 1)) ?: return
+        if (paragraph.type !is RichParagraph.Type.UnorderedList) return
+
+        val oldType = paragraph.type
+        paragraph.type = RichParagraph.Type.Default
+
+        val paragraphStartIndex = paragraph.getFirstNonEmptyChild()?.textRange?.min ?: selection.min
+        val beforeText = textFieldValue.text.substring(0, paragraphStartIndex - oldType.startText.length)
+        val afterText = textFieldValue.text.substring(paragraphStartIndex)
+        updateTextFieldValue(
+            newTextFieldValue = textFieldValue.copy(
+                text = beforeText + afterText,
+                selection = TextRange(selection.min - oldType.startText.length),
+            )
+        )
+    }
+
+    fun toggleOrderedList() {
+        val paragraph = getRichParagraphByTextIndex(max(0, selection.min - 1)) ?: return
+        if (paragraph.type is RichParagraph.Type.OrderedList) removeOrderedList()
+        else addOrderedList()
+    }
+
+    fun addOrderedList() {
+        val paragraph = getRichParagraphByTextIndex(max(0, selection.min - 1)) ?: return
+        if (paragraph.type is RichParagraph.Type.OrderedList) return
+        val index = richParagraphList.indexOf(paragraph)
+        if (index == -1) return
+        val previousParagraphType = richParagraphList.getOrNull(index - 1)?.type
+        val orderedListNumber =
+            if (previousParagraphType is RichParagraph.Type.OrderedList)
+                previousParagraphType.number + 1
+            else 1
+
+        val type = RichParagraph.Type.OrderedList(number = orderedListNumber,)
+        paragraph.type = type
+
+        val paragraphStartIndex = paragraph.getFirstNonEmptyChild()?.textRange?.min ?: selection.min
+        val beforeText = textFieldValue.text.substring(0, paragraphStartIndex)
+        val afterText = textFieldValue.text.substring(paragraphStartIndex)
+        updateTextFieldValue(
+            newTextFieldValue = textFieldValue.copy(
+                text = beforeText + type.startText + afterText,
+                selection = TextRange(selection.min + type.startText.length),
+            )
+        )
+    }
+
+    fun removeOrderedList() {
+        val paragraph = getRichParagraphByTextIndex(max(0, selection.min - 1)) ?: return
+        if (paragraph.type !is RichParagraph.Type.OrderedList) return
+        val index = richParagraphList.indexOf(paragraph)
+        if (index == -1) return
+
+        for (i in richParagraphList.lastIndex downTo (index + 1)) {
+            val currentParagraphType = richParagraphList[i].type
+            if (currentParagraphType !is RichParagraph.Type.OrderedList) break
+            currentParagraphType.number--
+        }
+
+        val oldType = paragraph.type
+        paragraph.type = RichParagraph.Type.Default
+
+        val paragraphStartIndex = paragraph.getFirstNonEmptyChild()?.textRange?.min ?: selection.min
+        val beforeText = textFieldValue.text.substring(0, paragraphStartIndex - oldType.startText.length)
+        val afterText = textFieldValue.text.substring(paragraphStartIndex)
+        updateTextFieldValue(
+            newTextFieldValue = textFieldValue.copy(
+                text = beforeText + afterText,
+                selection = TextRange(selection.min - oldType.startText.length),
+            )
+        )
+    }
+
     /**
      * Handles the new text field value.
      *
@@ -314,9 +423,11 @@ class RichTextState(
      * @param newTextFieldValue the new text field value.
      */
     private fun updateTextFieldValue(newTextFieldValue: TextFieldValue) {
+        var newTextFieldValue = newTextFieldValue
+
         if (!singleParagraphMode) {
             // Check for paragraphs
-            checkForParagraphs(newTextFieldValue)
+            newTextFieldValue = checkForParagraphs(newTextFieldValue)
         }
 
         // Update the annotatedString and the textFieldValue with the new values
@@ -349,7 +460,9 @@ class RichTextState(
         annotatedString = buildAnnotatedString {
             var index = 0
             richParagraphList.forEachIndexed { i, richParagraphStyle ->
-                withStyle(richParagraphStyle.paragraphStyle) {
+                withStyle(richParagraphStyle.paragraphStyle.merge(richParagraphStyle.type.style)) {
+                    append(richParagraphStyle.type.startText)
+                    index += richParagraphStyle.type.startText.length
                     withStyle(RichSpanStyle.DefaultSpanStyle) {
                         index = append(
                             richSpanList = richParagraphStyle.children,
@@ -492,7 +605,8 @@ class RichTextState(
 
     private fun checkForParagraphs(
         newTextFieldValue: TextFieldValue
-    ) {
+    ): TextFieldValue {
+        var newTextFieldValue = newTextFieldValue
         var index = newTextFieldValue.text.lastIndex
 
         while (true) {
@@ -524,6 +638,15 @@ class RichTextState(
                 startIndex = index,
                 richSpan = richSpan,
             )
+            val beforeText = newTextFieldValue.text.substring(0, index + 1)
+            val afterText = newTextFieldValue.text.substring(index + 1)
+            newTextFieldValue = newTextFieldValue.copy(
+                text = beforeText + newParagraph.type.startText + afterText,
+                selection = TextRange(
+                    start = newTextFieldValue.selection.start + newParagraph.type.startText.length,
+                    end = newTextFieldValue.selection.end + newParagraph.type.startText.length,
+                ),
+            )
 
             // Add the new paragraph
             richParagraphList.add(paragraphIndex + 1, newParagraph)
@@ -531,6 +654,7 @@ class RichTextState(
             // Remove one from the index to continue searching for paragraphs
             index--
         }
+        return newTextFieldValue
     }
 
     /**
@@ -1023,12 +1147,20 @@ class RichTextState(
         startIndex: Int,
         richSpan: RichSpan,
     ): RichParagraph {
-        val newRichParagraph = RichParagraph(paragraphStyle = paragraphStyle)
+        val newRichParagraph = RichParagraph(
+            paragraphStyle = paragraphStyle,
+            type = type.nextParagraphType,
+        )
+
+        println("startIndex: $startIndex")
 
         var previousRichSpan: RichSpan
         var currentRichSpan: RichSpan = richSpan
 
         val textStartIndex = startIndex - richSpan.textRange.min
+
+        println("textStartIndex: $textStartIndex")
+
         val beforeText = if (textStartIndex > 0) richSpan.text.substring(0, textStartIndex) else "" // + ' '
         val afterText = richSpan.text.substring(textStartIndex + 1)
 
@@ -1219,15 +1351,27 @@ class RichTextState(
      * Updates the [currentAppliedParagraphStyle] to the [ParagraphStyle] that should be applied to the current selection.
      */
     private fun updateCurrentParagraphStyle() {
-        currentAppliedParagraphStyle =
-            if (selection.collapsed)
-                getRichParagraphByTextIndex(max(0, textFieldValue.selection.min - 1))?.paragraphStyle
-                    ?: richParagraphList.firstOrNull()?.paragraphStyle
-                    ?: RichParagraph.DefaultParagraphStyle
-            else
-                getRichParagraphListByTextRange(selection)
-                    .getCommonStyle()
-                    ?: ParagraphStyle()
+        currentRichParagraphType
+        if (selection.collapsed) {
+            val richParagraph = getRichParagraphByTextIndex(max(0, selection.min - 1))
+
+            currentRichParagraphType = richParagraph?.type
+                ?: richParagraphList.firstOrNull()?.type
+                ?: RichParagraph.Type.Default
+            currentAppliedParagraphStyle = richParagraph?.paragraphStyle
+                ?: richParagraphList.firstOrNull()?.paragraphStyle
+                ?: RichParagraph.DefaultParagraphStyle
+        }
+        else {
+            val richParagraphList = getRichParagraphListByTextRange(selection)
+
+            currentRichParagraphType = richParagraphList
+                .getCommonType()
+                ?: RichParagraph.Type.Default
+            currentAppliedParagraphStyle = richParagraphList
+                .getCommonStyle()
+                ?: ParagraphStyle()
+        }
     }
 
     internal fun onTextLayout(textLayoutResult: TextLayoutResult) {
@@ -1249,10 +1393,7 @@ class RichTextState(
     private fun getRichSpanByOffset(offset: Offset): RichSpan? {
         this.textLayoutResult?.let { textLayoutResult ->
             val position = textLayoutResult.getOffsetForPosition(offset)
-            println("position: $position")
-            return getRichSpanByTextIndex(position, true).also {
-                println("richSpan: $it")
-            }
+            return getRichSpanByTextIndex(position, true)
         }
         return null
     }
@@ -1304,7 +1445,7 @@ class RichTextState(
         }
         val selectedParagraph = richParagraphList.getOrNull(index) ?: return
         val nextParagraph = richParagraphList.getOrNull(index + 1)
-        val nextParagraphStart = nextParagraph?.children?.firstOrNull()?.textRange?.min
+        val nextParagraphStart = nextParagraph?.children?.firstOrNull()?.textRange?.min?.minus(nextParagraph.type.startText.length)
         if (
             selection.collapsed &&
             selection.min == nextParagraphStart

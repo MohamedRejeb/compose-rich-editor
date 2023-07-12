@@ -299,20 +299,22 @@ class RichTextState(
         val paragraph = getRichParagraphByTextIndex(max(0, selection.min - 1)) ?: return
         println("paragraph: ${paragraph.children.toList()}")
         if (paragraph.type is RichParagraph.Type.UnorderedList) return
+        val paragraphOldStartTextLength = paragraph.type.startText.length
         val type = RichParagraph.Type.UnorderedList
         paragraph.type = type
 
-        val paragraphStartIndex = paragraph.getFirstNonEmptyChild()?.textRange?.min ?: selection.min
+        val paragraphFirstChildStartIndex = paragraph.getFirstNonEmptyChild()?.textRange?.min ?: selection.min
+        val paragraphStartIndex = paragraphFirstChildStartIndex - paragraphOldStartTextLength
         println("selection.min: ${selection.min}")
-        println("paragraphStartIndex: $paragraphStartIndex")
+        println("paragraphStartIndex: $paragraphFirstChildStartIndex")
         val beforeText = textFieldValue.text.substring(0, paragraphStartIndex)
-        val afterText = textFieldValue.text.substring(paragraphStartIndex)
+        val afterText = textFieldValue.text.substring(paragraphFirstChildStartIndex)
         println("beforeText: $beforeText")
         println("afterText: $afterText")
         updateTextFieldValue(
             newTextFieldValue = textFieldValue.copy(
                 text = beforeText + type.startText + afterText,
-                selection = TextRange(selection.min + type.startText.length),
+                selection = TextRange(selection.min + type.startText.length - paragraphOldStartTextLength),
             )
         )
     }
@@ -352,16 +354,18 @@ class RichTextState(
                 previousParagraphType.number + 1
             else 1
 
-        val type = RichParagraph.Type.OrderedList(number = orderedListNumber,)
+        val paragraphOldStartTextLength = paragraph.type.startText.length
+        val type = RichParagraph.Type.OrderedList(number = orderedListNumber)
         paragraph.type = type
 
-        val paragraphStartIndex = paragraph.getFirstNonEmptyChild()?.textRange?.min ?: selection.min
+        val paragraphFirstChildStartIndex = paragraph.getFirstNonEmptyChild()?.textRange?.min ?: selection.min
+        val paragraphStartIndex = paragraphFirstChildStartIndex - paragraphOldStartTextLength
         val beforeText = textFieldValue.text.substring(0, paragraphStartIndex)
-        val afterText = textFieldValue.text.substring(paragraphStartIndex)
+        val afterText = textFieldValue.text.substring(paragraphFirstChildStartIndex)
         updateTextFieldValue(
             newTextFieldValue = textFieldValue.copy(
                 text = beforeText + type.startText + afterText,
-                selection = TextRange(selection.min + type.startText.length),
+                selection = TextRange(selection.min + type.startText.length - paragraphOldStartTextLength),
             )
         )
     }

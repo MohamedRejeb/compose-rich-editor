@@ -46,12 +46,12 @@ class RichTextState(
     private var lastPressPosition: Offset? by mutableStateOf(null)
 
     private var currentAppliedSpanStyle: SpanStyle by mutableStateOf(
-        getRichSpanByTextIndex(textIndex = textFieldValue.selection.min - 1)?.fullSpanStyle
+        getRichSpanByTextIndex(textIndex = selection.min - 1)?.fullSpanStyle
             ?: RichSpanStyle.DefaultSpanStyle
     )
 
     var currentRichSpanStyle: RichSpanStyle by mutableStateOf(
-        getRichSpanByTextIndex(textIndex = textFieldValue.selection.min - 1)?.style
+        getRichSpanByTextIndex(textIndex = selection.min - 1)?.style
             ?: RichSpanStyle.Default()
     )
         private set
@@ -68,7 +68,7 @@ class RichTextState(
         get() = currentAppliedSpanStyle.customMerge(toAddSpanStyle).unmerge(toRemoveSpanStyle)
 
     private var currentAppliedParagraphStyle: ParagraphStyle by mutableStateOf(
-        getRichParagraphByTextIndex(textIndex = max(0, selection.min - 1))?.paragraphStyle
+        getRichParagraphByTextIndex(textIndex = selection.min - 1)?.paragraphStyle
             ?: richParagraphList.firstOrNull()?.paragraphStyle
             ?: RichParagraph.DefaultParagraphStyle
     )
@@ -85,7 +85,7 @@ class RichTextState(
         get() = currentAppliedParagraphStyle.merge(toAddParagraphStyle).unmerge(toRemoveParagraphStyle)
 
     var currentRichParagraphType: RichParagraph.Type by mutableStateOf(
-        getRichParagraphByTextIndex(textIndex = max(0, selection.min - 1))?.type
+        getRichParagraphByTextIndex(textIndex = selection.min - 1)?.type
             ?: RichParagraph.Type.Default
     )
         private set
@@ -240,7 +240,7 @@ class RichTextState(
         if (!currentParagraphStyle.isSpecifiedFieldsEquals(paragraphStyle)) {
             // If the selection is collapsed, we add the paragraph style to the paragraph containing the selection
             if (selection.collapsed) {
-                val paragraph = getRichParagraphByTextIndex(max(0, selection.min - 1)) ?: return
+                val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
                 paragraph.paragraphStyle = paragraph.paragraphStyle.merge(paragraphStyle)
             }
             // If the selection is not collapsed, we add the paragraph style to all the paragraphs in the selection
@@ -274,7 +274,7 @@ class RichTextState(
         if (currentParagraphStyle.isSpecifiedFieldsEquals(paragraphStyle)) {
             // If the selection is collapsed, we remove the paragraph style from the paragraph containing the selection
             if (selection.collapsed) {
-                val paragraph = getRichParagraphByTextIndex(max(0, selection.min - 1)) ?: return
+                val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
                 paragraph.paragraphStyle = paragraph.paragraphStyle.unmerge(paragraphStyle)
             }
             // If the selection is not collapsed, we remove the paragraph style from all the paragraphs in the selection
@@ -291,13 +291,13 @@ class RichTextState(
     }
 
     fun toggleUnorderedList() {
-        val paragraph = getRichParagraphByTextIndex(max(0, selection.min - 1)) ?: return
+        val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
         if (paragraph.type is RichParagraph.Type.UnorderedList) removeUnorderedList()
         else addUnorderedList()
     }
 
     fun addUnorderedList() {
-        val paragraph = getRichParagraphByTextIndex(max(0, selection.min - 1)) ?: return
+        val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
 
         if (paragraph.type is RichParagraph.Type.UnorderedList) return
         val paragraphOldStartTextLength = paragraph.type.startText.length
@@ -319,7 +319,7 @@ class RichTextState(
     }
 
     fun removeUnorderedList() {
-        val paragraph = getRichParagraphByTextIndex(max(0, selection.min - 1)) ?: return
+        val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
         if (paragraph.type !is RichParagraph.Type.UnorderedList) return
 
         val oldType = paragraph.type
@@ -337,13 +337,14 @@ class RichTextState(
     }
 
     fun toggleOrderedList() {
-        val paragraph = getRichParagraphByTextIndex(max(0, selection.min - 1)) ?: return
+        val paragraph = getRichParagraphByTextIndex(selection.min - 1)
+        if (paragraph == null) return
         if (paragraph.type is RichParagraph.Type.OrderedList) removeOrderedList()
         else addOrderedList()
     }
 
     fun addOrderedList() {
-        val paragraph = getRichParagraphByTextIndex(max(0, selection.min - 1)) ?: return
+        val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
         if (paragraph.type is RichParagraph.Type.OrderedList) return
         val index = richParagraphList.indexOf(paragraph)
         if (index == -1) return
@@ -370,7 +371,7 @@ class RichTextState(
     }
 
     fun removeOrderedList() {
-        val paragraph = getRichParagraphByTextIndex(max(0, selection.min - 1)) ?: return
+        val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
         if (paragraph.type !is RichParagraph.Type.OrderedList) return
         val index = richParagraphList.indexOf(paragraph)
         if (index == -1) return
@@ -1401,7 +1402,7 @@ class RichTextState(
     private fun updateCurrentParagraphStyle() {
         currentRichParagraphType
         if (selection.collapsed) {
-            val richParagraph = getRichParagraphByTextIndex(max(0, selection.min - 1))
+            val richParagraph = getRichParagraphByTextIndex(selection.min - 1)
 
             currentRichParagraphType = richParagraph?.type
                 ?: richParagraphList.firstOrNull()?.type
@@ -1536,7 +1537,9 @@ class RichTextState(
      * @return The [RichParagraph] that contains the given [textIndex], or null if no such [RichParagraph] exists.
      */
     private fun getRichParagraphByTextIndex(textIndex: Int): RichParagraph? {
+        println("getRichParagraphByTextIndex: $textIndex")
         if (singleParagraphMode) return richParagraphList.firstOrNull()
+        if (textIndex < 0) return richParagraphList.firstOrNull()
 
         var index = 0
         var paragraphIndex = -1

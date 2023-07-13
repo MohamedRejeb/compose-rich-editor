@@ -8,7 +8,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.ComposeUIViewController
-import com.mohamedrejeb.richeditor.sample.common.htmleditor.HtmlEditorContent
 import platform.UIKit.*
 
 @Suppress("unused", "FunctionName")

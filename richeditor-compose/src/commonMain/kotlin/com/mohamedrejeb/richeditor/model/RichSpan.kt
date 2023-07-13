@@ -291,22 +291,6 @@ public class RichSpan(
     }
 
     /**
-     * Get the max font size of the children recursively
-     *
-     * @return The max font size
-     */
-    fun getMaxFontSize(): TextUnit {
-        var height = if (spanStyle.fontSize.isSpecified) spanStyle.fontSize else 0.sp
-        children.forEach { richSpan ->
-            val childHeight = richSpan.getMaxFontSize()
-            if (childHeight.isSpecified && childHeight > height) {
-                height = childHeight
-            }
-        }
-        return height
-    }
-
-    /**
      * Update the paragraph of the children recursively
      *
      * @param newParagraph The new paragraph

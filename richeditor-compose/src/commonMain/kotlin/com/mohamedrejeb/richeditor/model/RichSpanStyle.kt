@@ -21,7 +21,7 @@ interface RichSpanStyle {
     val acceptNewTextInTheEdges: Boolean
         get() = true
 
-    data class Link(
+    class Link(
         override var spanStyle: SpanStyle = SpanStyle(
             color = Color.Blue,
             textDecoration = TextDecoration.Underline,

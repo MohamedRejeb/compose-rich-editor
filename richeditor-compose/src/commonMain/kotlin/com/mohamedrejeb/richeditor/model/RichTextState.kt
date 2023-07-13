@@ -10,6 +10,7 @@ import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
+import com.mohamedrejeb.richeditor.model.RichParagraph.Type.Companion.startText
 import com.mohamedrejeb.richeditor.utils.*
 import com.mohamedrejeb.richeditor.utils.append
 import com.mohamedrejeb.richeditor.utils.customMerge
@@ -297,7 +298,7 @@ class RichTextState(
 
     fun addUnorderedList() {
         val paragraph = getRichParagraphByTextIndex(max(0, selection.min - 1)) ?: return
-        println("paragraph: ${paragraph.children.toList()}")
+
         if (paragraph.type is RichParagraph.Type.UnorderedList) return
         val paragraphOldStartTextLength = paragraph.type.startText.length
         val type = RichParagraph.Type.UnorderedList
@@ -305,12 +306,10 @@ class RichTextState(
 
         val paragraphFirstChildStartIndex = paragraph.getFirstNonEmptyChild()?.textRange?.min ?: selection.min
         val paragraphStartIndex = paragraphFirstChildStartIndex - paragraphOldStartTextLength
-        println("selection.min: ${selection.min}")
-        println("paragraphStartIndex: $paragraphFirstChildStartIndex")
+
         val beforeText = textFieldValue.text.substring(0, paragraphStartIndex)
         val afterText = textFieldValue.text.substring(paragraphFirstChildStartIndex)
-        println("beforeText: $beforeText")
-        println("afterText: $afterText")
+
         updateTextFieldValue(
             newTextFieldValue = textFieldValue.copy(
                 text = beforeText + type.startText + afterText,
@@ -397,18 +396,25 @@ class RichTextState(
     }
 
     /**
+     * Temporarily stores the new text field value, before it is validated.
+     */
+    private var tempTextFieldValue = textFieldValue
+
+    /**
      * Handles the new text field value.
      *
      * @param newTextFieldValue the new text field value.
      */
     internal fun onTextFieldValueChange(newTextFieldValue: TextFieldValue) {
-        if (newTextFieldValue.text.length > textFieldValue.text.length)
-            handleAddingCharacters(newTextFieldValue)
-        else if (newTextFieldValue.text.length < textFieldValue.text.length)
-            handleRemovingCharacters(newTextFieldValue)
+        tempTextFieldValue = newTextFieldValue
+
+        if (tempTextFieldValue.text.length > textFieldValue.text.length)
+            handleAddingCharacters()
+        else if (tempTextFieldValue.text.length < textFieldValue.text.length)
+            handleRemovingCharacters()
         else if (
-            newTextFieldValue.text == textFieldValue.text &&
-            newTextFieldValue.selection != textFieldValue.selection
+            tempTextFieldValue.text == textFieldValue.text &&
+            tempTextFieldValue.selection != textFieldValue.selection
         ) {
             val lastPressPosition = this.lastPressPosition
             if (lastPressPosition != null) {
@@ -418,7 +424,7 @@ class RichTextState(
         }
 
         // Update text field value
-        updateTextFieldValue(newTextFieldValue)
+        updateTextFieldValue()
     }
 
     /**
@@ -426,16 +432,16 @@ class RichTextState(
      *
      * @param newTextFieldValue the new text field value.
      */
-    private fun updateTextFieldValue(newTextFieldValue: TextFieldValue) {
-        var newTextFieldValue = newTextFieldValue
+    private fun updateTextFieldValue(newTextFieldValue: TextFieldValue = tempTextFieldValue) {
+        tempTextFieldValue = newTextFieldValue
 
         if (!singleParagraphMode) {
             // Check for paragraphs
-            newTextFieldValue = checkForParagraphs(newTextFieldValue)
+            checkForParagraphs()
         }
 
         // Update the annotatedString and the textFieldValue with the new values
-        updateAnnotatedString(newTextFieldValue)
+        updateAnnotatedString(tempTextFieldValue)
 
         // Clear un-applied styles
         toAddSpanStyle = SpanStyle()
@@ -446,6 +452,9 @@ class RichTextState(
 
         // Update current paragraph style
         updateCurrentParagraphStyle()
+
+        // Clear [tempTextFieldValue]
+        tempTextFieldValue = TextFieldValue()
     }
 
     /**
@@ -496,23 +505,42 @@ class RichTextState(
     /**
      * Handles adding characters to the text field.
      * This method will update the [richParagraphList] to reflect the new changes.
-     *
-     * @param newTextFieldValue the new text field value.
+     * This method will use the [tempTextFieldValue] to get the new characters.
      */
-    private fun handleAddingCharacters(
-        newTextFieldValue: TextFieldValue,
-    ) {
-        val typedCharsCount = newTextFieldValue.text.length - textFieldValue.text.length
-        val typedText = newTextFieldValue.text.substring(
-            startIndex = newTextFieldValue.selection.min - typedCharsCount,
-            endIndex = newTextFieldValue.selection.min
+    private fun handleAddingCharacters() {
+        val typedCharsCount = tempTextFieldValue.text.length - textFieldValue.text.length
+        var startTypeIndex = tempTextFieldValue.selection.min - typedCharsCount
+        val typedText = tempTextFieldValue.text.substring(
+            startIndex = startTypeIndex,
+            endIndex = startTypeIndex + typedCharsCount,
         )
-        val startTypeIndex = newTextFieldValue.selection.min - typedCharsCount
         val previousIndex = startTypeIndex - 1
 
         val activeRichSpan = getRichSpanByTextIndex(previousIndex)
 
         if (activeRichSpan != null) {
+            if (startTypeIndex < activeRichSpan.textRange.min) {
+                val indexDiff = activeRichSpan.textRange.min - startTypeIndex
+                val beforeTypedText = tempTextFieldValue.text.substring(
+                    startIndex = 0,
+                    endIndex = startTypeIndex,
+                )
+                val paragraphStartText = tempTextFieldValue.text.substring(
+                    startIndex = startTypeIndex + typedCharsCount,
+                    endIndex = activeRichSpan.textRange.min + typedCharsCount,
+                )
+                val afterTypedText = tempTextFieldValue.text.substring(
+                    startIndex = activeRichSpan.textRange.min + typedCharsCount,
+                    endIndex = tempTextFieldValue.text.length,
+                )
+                val newTypedText = beforeTypedText + paragraphStartText + typedText + afterTypedText
+                tempTextFieldValue = tempTextFieldValue.copy(
+                    text = newTypedText,
+                    selection = TextRange(tempTextFieldValue.selection.min + indexDiff),
+                )
+            }
+
+            startTypeIndex = max(startTypeIndex, activeRichSpan.textRange.min)
             val startIndex = max(0, startTypeIndex - activeRichSpan.textRange.min)
             val beforeText = activeRichSpan.text.substring(0, startIndex)
             val afterText = activeRichSpan.text.substring(startIndex)
@@ -531,6 +559,7 @@ class RichTextState(
                     beforeText = beforeText,
                     middleText = typedText,
                     afterText = afterText,
+//                    startIndex = startIndex,
                     startIndex = startTypeIndex,
                     richSpanFullSpanStyle = activeRichSpanFullSpanStyle,
                     newSpanStyle = newSpanStyle,
@@ -554,15 +583,12 @@ class RichTextState(
     /**
      * Handles removing characters from the text field value.
      * This method will update the [richParagraphList] to reflect the new changes.
-     *
-     * @param newTextFieldValue The new text field value.
+     * This method will use the [tempTextFieldValue] to get the removed characters.
      */
-    private fun handleRemovingCharacters(
-        newTextFieldValue: TextFieldValue
-    ) {
-        val removedChars = textFieldValue.text.length - newTextFieldValue.text.length
-        val startRemoveIndex = newTextFieldValue.selection.min + removedChars
-        val endRemoveIndex = newTextFieldValue.selection.min
+    private fun handleRemovingCharacters() {
+        val removedChars = textFieldValue.text.length - tempTextFieldValue.text.length
+        val startRemoveIndex = tempTextFieldValue.selection.min + removedChars
+        val endRemoveIndex = tempTextFieldValue.selection.min
         val removeRange = TextRange(endRemoveIndex, startRemoveIndex)
 
         val startRichSpan = getRichSpanByTextIndex(textIndex = startRemoveIndex - 1, true) ?: return
@@ -607,15 +633,12 @@ class RichTextState(
         }
     }
 
-    private fun checkForParagraphs(
-        newTextFieldValue: TextFieldValue
-    ): TextFieldValue {
-        var newTextFieldValue = newTextFieldValue
-        var index = newTextFieldValue.text.lastIndex
+    private fun checkForParagraphs() {
+        var index = tempTextFieldValue.text.lastIndex
 
         while (true) {
             // Search for the next paragraph
-            index = newTextFieldValue.text.lastIndexOf('\n', index)
+            index = tempTextFieldValue.text.lastIndexOf('\n', index)
 
             // If there are no more paragraphs, break
             if (index < textFieldValue.selection.min) break
@@ -637,18 +660,26 @@ class RichTextState(
                 continue
             }
 
+            // Make sure the index is not less than the minimum text range of the rich span style
+            // This is to make sure that the index is not in paragraph custom start text
+            val sliceIndex = max(index, richSpan.textRange.min)
+
             // Create a new paragraph style
             val newParagraph = richSpan.paragraph.slice(
-                startIndex = index,
+                startIndex = sliceIndex,
                 richSpan = richSpan,
             )
-            val beforeText = newTextFieldValue.text.substring(0, index + 1)
-            val afterText = newTextFieldValue.text.substring(index + 1)
-            newTextFieldValue = newTextFieldValue.copy(
+
+            // Get the text before and after the slice index
+            val beforeText = tempTextFieldValue.text.substring(0, sliceIndex + 1)
+            val afterText = tempTextFieldValue.text.substring(sliceIndex + 1)
+
+            // Update the text field value to include the new paragraph custom start text
+            tempTextFieldValue = tempTextFieldValue.copy(
                 text = beforeText + newParagraph.type.startText + afterText,
                 selection = TextRange(
-                    start = newTextFieldValue.selection.start + newParagraph.type.startText.length,
-                    end = newTextFieldValue.selection.end + newParagraph.type.startText.length,
+                    start = tempTextFieldValue.selection.start + newParagraph.type.startText.length,
+                    end = tempTextFieldValue.selection.end + newParagraph.type.startText.length,
                 ),
             )
 
@@ -658,7 +689,8 @@ class RichTextState(
             // Remove one from the index to continue searching for paragraphs
             index--
         }
-        return newTextFieldValue
+
+        println("text after: ${tempTextFieldValue.text}")
     }
 
     /**
@@ -806,6 +838,8 @@ class RichTextState(
         startIndex: Int,
     ) {
         val fullSpanStyle = richSpan.fullSpanStyle
+
+        println("richSpan: $richSpan")
 
         // Simplify the richSpan tree if possible, by avoiding creating a new RichSpan.
         if (
@@ -1161,7 +1195,17 @@ class RichTextState(
         var previousRichSpan: RichSpan
         var currentRichSpan: RichSpan = richSpan
 
-        val textStartIndex = startIndex - richSpan.textRange.min
+        val textStartIndex = if (startIndex == type.startRichSpan.textRange.min)
+            startIndex - richSpan.textRange.min + type.startRichSpan.text.length
+        else
+            startIndex - richSpan.textRange.min
+
+
+        newRichParagraph.type.startRichSpan.paragraph = newRichParagraph
+        newRichParagraph.type.startRichSpan.textRange = TextRange(
+            0,
+            newRichParagraph.type.startRichSpan.text.length
+        )
 
         println("textStartIndex: $textStartIndex")
 
@@ -1549,8 +1593,12 @@ class RichTextState(
         textIndex: Int,
         ignoreCustomFiltering: Boolean = false,
     ): RichSpan? {
-        if (textIndex <= 0)
-            return richParagraphList.firstOrNull()?.getFirstNonEmptyChild()
+        // If the text index is equal or less than 0, we can return the first non-empty child of the first paragraph.
+        if (textIndex <= 0) {
+            val firstParagraph = richParagraphList.firstOrNull() ?: return null
+
+            return firstParagraph.getFirstNonEmptyChild()
+        }
 
         var index = 0
         richParagraphList.forEachIndexed { paragraphIndex, richParagraph ->

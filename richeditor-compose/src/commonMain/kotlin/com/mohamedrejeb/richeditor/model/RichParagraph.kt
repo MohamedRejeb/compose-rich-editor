@@ -8,6 +8,7 @@ import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.sp
+import com.mohamedrejeb.richeditor.model.RichParagraph.Type.Companion.startText
 
 public class RichParagraph(
     val key: Int = 0,
@@ -17,17 +18,23 @@ public class RichParagraph(
 ) {
     interface Type {
         val style: ParagraphStyle get() = ParagraphStyle()
-        val startText : String get() = ""
+        val startRichSpan: RichSpan get() = RichSpan(paragraph = RichParagraph(type = this))
 
         val nextParagraphType: Type get() = Default
+
+        fun copy(): Type = this
 
         object Default : Type
 
         object UnorderedList : Type {
             override val style: ParagraphStyle = ParagraphStyle(
                 textIndent = TextIndent(firstLine = 20.sp),
+                lineHeight = 20.sp,
             )
-            override val startText: String = "• "
+            override val startRichSpan: RichSpan = RichSpan(
+                paragraph = RichParagraph(type = this),
+                text = "• ",
+            )
             override val nextParagraphType: Type get() = UnorderedList
         }
 
@@ -36,9 +43,19 @@ public class RichParagraph(
         ) : Type {
             override val style: ParagraphStyle = ParagraphStyle(
                 textIndent = TextIndent(firstLine = 20.sp),
+                lineHeight = 20.sp,
             )
-            override val startText: String get() = "$number. "
+            override val startRichSpan: RichSpan = RichSpan(
+                paragraph = RichParagraph(type = this),
+                text = "$number. ",
+            )
             override val nextParagraphType: Type get() = OrderedList(number + 1)
+
+            override fun copy(): Type = OrderedList(number)
+        }
+
+        companion object {
+            val Type.startText : String get() = startRichSpan.text
         }
     }
 
@@ -52,7 +69,16 @@ public class RichParagraph(
         if (children.isEmpty()) children.add(RichSpan(paragraph = this))
 
         var index = offset
+
+        // Set the startRichSpan paragraph and textRange to ensure that it has the correct and latest values
+        type.startRichSpan.paragraph = this
+        type.startRichSpan.textRange = TextRange(index, index + type.startText.length)
+
+        // Add the startText length to the index
         index += type.startText.length
+
+        // Check if the textIndex is in the startRichSpan current paragraph
+        if (index > textIndex) return index to getFirstNonEmptyChild()
 
         // If the paragraph is not the first one, we add 1 to the index which stands for the line break
         if (paragraphIndex > 0) index++
@@ -112,17 +138,6 @@ public class RichParagraph(
         return this
     }
 
-    fun getMaxFontSize(): TextUnit {
-        var height = 0.sp
-        children.forEach { richSpan ->
-            val childHeight = richSpan.getMaxFontSize()
-            if (childHeight.isSpecified && childHeight > height) {
-                height = childHeight
-            }
-        }
-        return height
-    }
-
     fun isEmpty(): Boolean {
         if (children.isEmpty()) return true
         children.forEach { richSpan ->
@@ -163,6 +178,7 @@ public class RichParagraph(
     fun copy(): RichParagraph {
         val newParagraph = RichParagraph(
             paragraphStyle = paragraphStyle,
+            type = type.copy(),
         )
         children.forEach { childRichSpan ->
             val newRichSpan = childRichSpan.copy(newParagraph)

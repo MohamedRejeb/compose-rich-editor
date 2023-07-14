@@ -313,7 +313,10 @@ class RichTextState(
         updateTextFieldValue(
             newTextFieldValue = textFieldValue.copy(
                 text = beforeText + type.startText + afterText,
-                selection = TextRange(selection.min + type.startText.length - paragraphOldStartTextLength),
+                selection = TextRange(
+                    selection.min + type.startText.length - paragraphOldStartTextLength,
+                    selection.max + type.startText.length - paragraphOldStartTextLength,
+                ),
             )
         )
     }
@@ -331,14 +334,16 @@ class RichTextState(
         updateTextFieldValue(
             newTextFieldValue = textFieldValue.copy(
                 text = beforeText + afterText,
-                selection = TextRange(selection.min - oldType.startText.length),
+                selection = TextRange(
+                    selection.min - oldType.startText.length,
+                    selection.max - oldType.startText.length,
+                ),
             )
         )
     }
 
     fun toggleOrderedList() {
-        val paragraph = getRichParagraphByTextIndex(selection.min - 1)
-        if (paragraph == null) return
+        val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
         if (paragraph.type is RichParagraph.Type.OrderedList) removeOrderedList()
         else addOrderedList()
     }
@@ -354,6 +359,11 @@ class RichTextState(
                 previousParagraphType.number + 1
             else 1
 
+        adjustOrderedListsNumbers(
+            startParagraphIndex = index + 1,
+            startNumber = orderedListNumber + 1,
+        )
+
         val paragraphOldStartTextLength = paragraph.type.startText.length
         val type = RichParagraph.Type.OrderedList(number = orderedListNumber)
         paragraph.type = type
@@ -365,7 +375,10 @@ class RichTextState(
         updateTextFieldValue(
             newTextFieldValue = textFieldValue.copy(
                 text = beforeText + type.startText + afterText,
-                selection = TextRange(selection.min + type.startText.length - paragraphOldStartTextLength),
+                selection = TextRange(
+                    selection.min + type.startText.length - paragraphOldStartTextLength,
+                    selection.max + type.startText.length - paragraphOldStartTextLength,
+                ),
             )
         )
     }
@@ -376,10 +389,10 @@ class RichTextState(
         val index = richParagraphList.indexOf(paragraph)
         if (index == -1) return
 
-        for (i in richParagraphList.lastIndex downTo (index + 1)) {
+        for (i in (index + 1) .. richParagraphList.lastIndex) {
             val currentParagraphType = richParagraphList[i].type
             if (currentParagraphType !is RichParagraph.Type.OrderedList) break
-            currentParagraphType.number--
+            richParagraphList[i].type = RichParagraph.Type.OrderedList(number = i - index)
         }
 
         val oldType = paragraph.type
@@ -391,7 +404,10 @@ class RichTextState(
         updateTextFieldValue(
             newTextFieldValue = textFieldValue.copy(
                 text = beforeText + afterText,
-                selection = TextRange(selection.min - oldType.startText.length),
+                selection = TextRange(
+                    selection.min - oldType.startText.length,
+                    selection.max - oldType.startText.length
+                ),
             )
         )
     }
@@ -587,50 +603,243 @@ class RichTextState(
      * This method will use the [tempTextFieldValue] to get the removed characters.
      */
     private fun handleRemovingCharacters() {
-        val removedChars = textFieldValue.text.length - tempTextFieldValue.text.length
-        val startRemoveIndex = tempTextFieldValue.selection.min + removedChars
-        val endRemoveIndex = tempTextFieldValue.selection.min
-        val removeRange = TextRange(endRemoveIndex, startRemoveIndex)
+        // Todo Fix error when selecting the paragraph end index on delete
+        //  How to reproduce -> start: paragraph end, end: next paragraph middle
 
-        val startRichSpan = getRichSpanByTextIndex(textIndex = startRemoveIndex - 1, true) ?: return
-        val endRichSpan = getRichSpanByTextIndex(textIndex = endRemoveIndex, true) ?: return
+        // still having other issues like adding multiple custom paragraphs them removing them from the middle
+        val removedCharsCount = textFieldValue.text.length - tempTextFieldValue.text.length
+        val minRemoveIndex = tempTextFieldValue.selection.min
+        val maxRemoveIndex = tempTextFieldValue.selection.min + removedCharsCount
+        val removeRange = TextRange(minRemoveIndex, maxRemoveIndex)
+
+        val minRichSpan = getRichSpanByTextIndex(textIndex = minRemoveIndex, true) ?: return
+        val maxRichSpan = getRichSpanByTextIndex(textIndex = maxRemoveIndex - 1, true) ?: return
 
         // Check deleted paragraphs
-        val startParagraphIndex = richParagraphList.indexOf(startRichSpan.paragraph)
-        val endParagraphIndex = richParagraphList.indexOf(endRichSpan.paragraph)
-        if (endParagraphIndex < startParagraphIndex - 1 && !singleParagraphMode)
-            richParagraphList.removeRange(endParagraphIndex + 1, startParagraphIndex)
+        val minParagraphIndex = richParagraphList.indexOf(minRichSpan.paragraph)
+        val maxParagraphIndex = richParagraphList.indexOf(maxRichSpan.paragraph)
+        if (minParagraphIndex < maxParagraphIndex - 1 && !singleParagraphMode)
+            richParagraphList.removeRange(minParagraphIndex + 1, maxParagraphIndex)
 
-        if (startParagraphIndex == endParagraphIndex && !singleParagraphMode) {
-            val firstNonEmptyChild = startRichSpan.paragraph.getFirstNonEmptyChild()
-            if (firstNonEmptyChild == null || firstNonEmptyChild.text.isEmpty()) {
-                // Remove the start paragraph if it's empty (and the end paragraph is the same)
-                richParagraphList.removeAt(startParagraphIndex)
+        // Get the first non-empty child of the min paragraph
+        val minFirstNonEmptyChild = minRichSpan.paragraph.getFirstNonEmptyChild()
+        val minParagraphStartTextLength = minRichSpan.paragraph.type.startRichSpan.text.length
+        val minParagraphFirstChildMinIndex = minFirstNonEmptyChild?.textRange?.min ?: minParagraphStartTextLength
+
+        // Get the first non-empty child of the max paragraph
+        val maxFirstNonEmptyChild = maxRichSpan.paragraph.getFirstNonEmptyChild()
+        val maxParagraphStartTextLength = maxRichSpan.paragraph.type.startRichSpan.text.length
+        val maxParagraphFirstChildMinIndex = maxFirstNonEmptyChild?.textRange?.min ?: maxParagraphStartTextLength
+
+        if (minParagraphIndex == maxParagraphIndex && !singleParagraphMode) {
+            if (minFirstNonEmptyChild == null || minFirstNonEmptyChild.text.isEmpty()) {
+                if (minRichSpan.paragraph.type.startText.isEmpty()) {
+                    // Remove the min paragraph if it's empty (and the max paragraph is the same)
+                    richParagraphList.removeAt(minParagraphIndex)
+                }
             }
         }
 
-        // Remove spans from the start paragraph
-        startRichSpan.paragraph.removeTextRange(removeRange)
+        // Handle Remove the min paragraph custom text
+        if (minRemoveIndex < minParagraphFirstChildMinIndex) {
+            handleRemoveMinParagraphStartText(
+                removeIndex = minRemoveIndex,
+                paragraphStartTextLength = minParagraphStartTextLength,
+                paragraphFirstChildMinIndex = minParagraphFirstChildMinIndex,
+            )
+
+            minRichSpan.paragraph.type = RichParagraph.Type.Default
+        }
+
+        // Handle Remove the max paragraph custom text
+        if (maxRemoveIndex < maxParagraphFirstChildMinIndex) {
+            handleRemoveMaxParagraphStartText(
+                minRemoveIndex = minRemoveIndex,
+                maxRemoveIndex = maxRemoveIndex,
+                paragraphStartTextLength = maxParagraphStartTextLength,
+                paragraphFirstChildMinIndex = maxParagraphFirstChildMinIndex,
+            )
+
+            maxRichSpan.paragraph.type = RichParagraph.Type.Default
+        }
+
+        // Remove spans from the max paragraph
+        maxRichSpan.paragraph.removeTextRange(removeRange)
 
         if (!singleParagraphMode) {
-            if (startParagraphIndex != endParagraphIndex) {
-                // Remove spans from the end paragraph
-                endRichSpan.paragraph.removeTextRange(removeRange)
+            if (maxParagraphIndex != minParagraphIndex) {
+                // Remove spans from the min paragraph
+                minRichSpan.paragraph.removeTextRange(removeRange)
 
-                if (startRichSpan.paragraph.getFirstNonEmptyChild() == null) {
-                    // Remove the start paragraph if it's empty
-                    richParagraphList.remove(startRichSpan.paragraph)
-                } else if (endRichSpan.paragraph.getFirstNonEmptyChild() == null) {
-                    // Remove the end paragraph if it's empty
-                    richParagraphList.remove(endRichSpan.paragraph)
+                if (maxRichSpan.paragraph.getFirstNonEmptyChild() == null) {
+                    // Remove the max paragraph if it's empty
+                    richParagraphList.remove(maxRichSpan.paragraph)
+                } else if (minRichSpan.paragraph.getFirstNonEmptyChild() == null) {
+                    // Set the min paragraph type to the max paragraph type
+                    // Since the max paragraph is going to take the min paragraph's place
+                    maxRichSpan.paragraph.type = minRichSpan.paragraph.type
+
+                    // Remove the min paragraph if it's empty
+                    richParagraphList.remove(minRichSpan.paragraph)
                 } else {
                     // Merge the two paragraphs if they are not empty
                     mergeTwoRichParagraphs(
-                        firstParagraph = endRichSpan.paragraph,
-                        secondParagraph = startRichSpan.paragraph,
+                        firstParagraph = minRichSpan.paragraph,
+                        secondParagraph = maxRichSpan.paragraph,
                     )
                 }
             }
+        }
+
+        checkOrderedListsNumbers(
+            startParagraphIndex = minParagraphIndex - 1,
+            endParagraphIndex = minParagraphIndex + 1,
+        )
+//        val previousParagraph = richParagraphList.getOrNull(minParagraphIndex - 1)
+//        if (previousParagraph != null) {
+//            val previousParagraphType = previousParagraph.type
+//            if (previousParagraphType is RichParagraph.Type.OrderedList) {
+//                adjustOrderedListsNumbers(
+//                    startParagraphIndex = minParagraphIndex,
+//                    startNumber = previousParagraphType.number + 1
+//                )
+//            } else {
+//                adjustOrderedListsNumbers(
+//                    startParagraphIndex = minParagraphIndex,
+//                    startNumber = 1
+//                )
+//            }
+//        } else {
+//            richParagraphList.getOrNull(minParagraphIndex)?.let { minParagraph ->
+//                val minParagraphType = minParagraph.type
+//                if (minParagraphType is RichParagraph.Type.OrderedList) {
+//                    adjustOrderedListsNumbers(
+//                        startParagraphIndex = minParagraphIndex,
+//                        startNumber = minParagraphType.number
+//                    )
+//                } else {
+//                    adjustOrderedListsNumbers(
+//                        startParagraphIndex = minParagraphIndex + 1,
+//                        startNumber = 1
+//                    )
+//                }
+//            }
+//        }
+    }
+
+    private fun handleRemoveMinParagraphStartText(
+        removeIndex: Int,
+        paragraphStartTextLength: Int,
+        paragraphFirstChildMinIndex: Int,
+    ) {
+        if (removeIndex < paragraphFirstChildMinIndex && paragraphStartTextLength > 0) {
+            val indexDiff = paragraphStartTextLength - (paragraphFirstChildMinIndex - removeIndex)
+            val beforeTextEndIndex = paragraphFirstChildMinIndex - paragraphStartTextLength
+
+            val beforeText =
+                if (beforeTextEndIndex <= 0)
+                    ""
+                else
+                    tempTextFieldValue.text.substring(
+                        startIndex = 0,
+                        endIndex = beforeTextEndIndex,
+                    )
+            val afterText =
+                if (tempTextFieldValue.text.length <= removeIndex)
+                    ""
+                else
+                    tempTextFieldValue.text.substring(
+                        startIndex = removeIndex,
+                        endIndex = tempTextFieldValue.text.length,
+                    )
+            val newText = beforeText + afterText
+            val newSelection = TextRange(removeIndex - indexDiff)
+
+            tempTextFieldValue = tempTextFieldValue.copy(
+                text = newText,
+                selection = newSelection,
+            )
+        }
+    }
+
+    private fun handleRemoveMaxParagraphStartText(
+        minRemoveIndex: Int,
+        maxRemoveIndex: Int,
+        paragraphStartTextLength: Int,
+        paragraphFirstChildMinIndex: Int,
+    ) {
+        if (maxRemoveIndex < paragraphFirstChildMinIndex && paragraphStartTextLength > 0) {
+            paragraphStartTextLength - (paragraphFirstChildMinIndex - maxRemoveIndex)
+            val beforeTextEndIndex = minRemoveIndex
+
+            val beforeText =
+                if (beforeTextEndIndex <= 0)
+                    ""
+                else
+                    tempTextFieldValue.text.substring(
+                        startIndex = 0,
+                        endIndex = beforeTextEndIndex,
+                    )
+
+            val afterTextStartIndex = minRemoveIndex + (paragraphFirstChildMinIndex - maxRemoveIndex)
+
+            val afterText =
+                if (tempTextFieldValue.text.length <= afterTextStartIndex)
+                    ""
+                else
+                    tempTextFieldValue.text.substring(
+                        startIndex = afterTextStartIndex,
+                        endIndex = tempTextFieldValue.text.length,
+                    )
+            val newText = beforeText + afterText
+
+            println("beforeText: $beforeText")
+            println("afterText: $afterText")
+
+            tempTextFieldValue = tempTextFieldValue.copy(
+                text = newText,
+            )
+        }
+
+        println("richParagraphList: ${richParagraphList.size}")
+    }
+
+    private fun adjustOrderedListsNumbers(
+        startParagraphIndex: Int,
+        startNumber: Int,
+    ) {
+        var number = startNumber
+        // Update the paragraph type of the paragraphs after the new paragraph
+        for (i in (startParagraphIndex)..richParagraphList.lastIndex) {
+            val currentParagraph = richParagraphList[i]
+            val currentParagraphType = currentParagraph.type
+            if (currentParagraphType is RichParagraph.Type.OrderedList) {
+                currentParagraph.type = RichParagraph.Type.OrderedList(number = number)
+            } else break
+            number++
+        }
+    }
+
+    private fun checkOrderedListsNumbers(
+        startParagraphIndex: Int,
+        endParagraphIndex: Int,
+    ) {
+        var number = 1
+        val startParagraph = richParagraphList.getOrNull(startParagraphIndex)
+        val startParagraphType = startParagraph?.type
+        if (startParagraphType is RichParagraph.Type.OrderedList) {
+            number = startParagraphType.number + 1
+        }
+        // Update the paragraph type of the paragraphs after the new paragraph
+        for (i in (startParagraphIndex + 1)..richParagraphList.lastIndex) {
+            val currentParagraph = richParagraphList[i]
+            val currentParagraphType = currentParagraph.type
+            if (currentParagraphType is RichParagraph.Type.OrderedList) {
+                currentParagraph.type = RichParagraph.Type.OrderedList(number = number)
+                number++
+            }
+            else if (i >= endParagraphIndex) break
+            else number = 1
         }
     }
 
@@ -687,11 +896,18 @@ class RichTextState(
             // Add the new paragraph
             richParagraphList.add(paragraphIndex + 1, newParagraph)
 
+            // Update the paragraph type of the paragraphs after the new paragraph
+            val newParagraphType = newParagraph.type
+            if (newParagraphType is RichParagraph.Type.OrderedList) {
+                adjustOrderedListsNumbers(
+                    startParagraphIndex = paragraphIndex + 2,
+                    startNumber = newParagraphType.number + 1,
+                )
+            }
+
             // Remove one from the index to continue searching for paragraphs
             index--
         }
-
-        println("text after: ${tempTextFieldValue.text}")
     }
 
     /**
@@ -839,8 +1055,6 @@ class RichTextState(
         startIndex: Int,
     ) {
         val fullSpanStyle = richSpan.fullSpanStyle
-
-        println("richSpan: $richSpan")
 
         // Simplify the richSpan tree if possible, by avoiding creating a new RichSpan.
         if (
@@ -1191,8 +1405,6 @@ class RichTextState(
             type = type.nextParagraphType,
         )
 
-        println("startIndex: $startIndex")
-
         var previousRichSpan: RichSpan
         var currentRichSpan: RichSpan = richSpan
 
@@ -1207,8 +1419,6 @@ class RichTextState(
             0,
             newRichParagraph.type.startRichSpan.text.length
         )
-
-        println("textStartIndex: $textStartIndex")
 
         val beforeText = if (textStartIndex > 0) richSpan.text.substring(0, textStartIndex) else "" // + ' '
         val afterText = richSpan.text.substring(textStartIndex + 1)
@@ -1537,7 +1747,6 @@ class RichTextState(
      * @return The [RichParagraph] that contains the given [textIndex], or null if no such [RichParagraph] exists.
      */
     private fun getRichParagraphByTextIndex(textIndex: Int): RichParagraph? {
-        println("getRichParagraphByTextIndex: $textIndex")
         if (singleParagraphMode) return richParagraphList.firstOrNull()
         if (textIndex < 0) return richParagraphList.firstOrNull()
 
@@ -1600,7 +1809,7 @@ class RichTextState(
         if (textIndex <= 0) {
             val firstParagraph = richParagraphList.firstOrNull() ?: return null
 
-            return firstParagraph.getFirstNonEmptyChild()
+            return firstParagraph.getFirstNonEmptyChild(0)
         }
 
         var index = 0

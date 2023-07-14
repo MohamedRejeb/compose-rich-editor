@@ -103,6 +103,7 @@ fun NewEditorContent() {
                 ) {
                     richTextState.richParagraphList.forEachIndexed { index, richParagraphStyle ->
                         Text("Paragraph $index: ${richParagraphStyle.children.size} children")
+                        Text(" - Start Text: ${richParagraphStyle.type.startRichSpan}")
                         richParagraphStyle.children.forEachIndexed { index, richTextStyle ->
                             RichTextStyleTreeRepresentation(index, richTextStyle, " -")
                         }

@@ -1,5 +1,9 @@
 package com.mohamedrejeb.richeditor.sample.common.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Circle
@@ -13,8 +17,11 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mohamedrejeb.richeditor.model.RichParagraph
 import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.sample.common.slack.SlackDemoPanelButton
 
 @Composable
 fun NewRichTextStyleRow(
@@ -163,6 +170,35 @@ fun NewRichTextStyleRow(
                 isSelected = richTextState.currentSpanStyle.background == Color.Yellow,
                 icon = Icons.Outlined.Circle,
                 tint = Color.Yellow
+            )
+        }
+
+        item {
+            Box(
+                Modifier
+                    .height(24.dp)
+                    .width(1.dp)
+                    .background(Color(0xFF393B3D))
+            )
+        }
+
+        item {
+            NewRichTextStyleButton(
+                onClick = {
+                    richTextState.toggleUnorderedList()
+                },
+                isSelected = richTextState.currentRichParagraphType is RichParagraph.Type.UnorderedList,
+                icon = Icons.Outlined.FormatListBulleted,
+            )
+        }
+
+        item {
+            NewRichTextStyleButton(
+                onClick = {
+                    richTextState.toggleOrderedList()
+                },
+                isSelected = richTextState.currentRichParagraphType is RichParagraph.Type.OrderedList,
+                icon = Icons.Outlined.FormatListNumbered,
             )
         }
     }

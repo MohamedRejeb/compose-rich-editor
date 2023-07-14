@@ -39,7 +39,7 @@ public class RichParagraph(
         }
 
         data class OrderedList(
-            var number: Int,
+            val number: Int,
         ) : Type {
             override val style: ParagraphStyle = ParagraphStyle(
                 textIndent = TextIndent(firstLine = 20.sp),
@@ -75,6 +75,9 @@ public class RichParagraph(
 
         var index = offset
 
+        // If the paragraph is not the first one, we add 1 to the index which stands for the line break
+        if (paragraphIndex > 0) index++
+
         // Set the startRichSpan paragraph and textRange to ensure that it has the correct and latest values
         type.startRichSpan.paragraph = this
         type.startRichSpan.textRange = TextRange(index, index + type.startText.length)
@@ -88,10 +91,7 @@ public class RichParagraph(
         println("children: $children")
 
         // Check if the textIndex is in the startRichSpan current paragraph
-        if (index > textIndex) return index to getFirstNonEmptyChild()
-
-        // If the paragraph is not the first one, we add 1 to the index which stands for the line break
-        if (paragraphIndex > 0) index++
+        if (index > textIndex) return index to getFirstNonEmptyChild(offset = index)
 
         children.forEach { richSpan ->
             val result = richSpan.getRichSpanByTextIndex(
@@ -156,11 +156,15 @@ public class RichParagraph(
         return true
     }
 
-    fun getFirstNonEmptyChild(): RichSpan? {
+    fun getFirstNonEmptyChild(offset: Int? = null): RichSpan? {
         children.forEach { richSpan ->
-            if (richSpan.text.isNotEmpty()) return richSpan
+            if (richSpan.text.isNotEmpty()) {
+                if (offset != null)
+                    richSpan.textRange = TextRange(offset, offset + richSpan.text.length)
+                return richSpan
+            }
             else {
-                val result = richSpan.getFirstNonEmptyChild()
+                val result = richSpan.getFirstNonEmptyChild(offset)
                 if (result != null) return result
             }
         }
@@ -168,6 +172,8 @@ public class RichParagraph(
         children.clear()
         if (firstChild != null) {
             firstChild.children.clear()
+            if (offset != null)
+                firstChild.textRange = TextRange(offset, offset + firstChild.text.length)
             children.add(firstChild)
         }
         return firstChild

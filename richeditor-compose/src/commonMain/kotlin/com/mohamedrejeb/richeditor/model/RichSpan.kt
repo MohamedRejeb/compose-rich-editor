@@ -128,12 +128,22 @@ public class RichSpan(
      *
      * @return The first non-empty child or null if there is no non-empty child
      */
-    internal fun getFirstNonEmptyChild(): RichSpan? {
+    internal fun getFirstNonEmptyChild(offset: Int? = null): RichSpan? {
         children.forEach { richSpan ->
-            if (richSpan.text.isNotEmpty()) return richSpan
+            if (richSpan.text.isNotEmpty()) {
+                if (offset != null)
+                    richSpan.textRange = TextRange(offset, offset + richSpan.text.length)
+
+                return richSpan
+            }
             else {
-                val result = richSpan.getFirstNonEmptyChild()
-                if (result != null) return result
+                val result = richSpan.getFirstNonEmptyChild(offset)
+                if (result != null) {
+                    if (offset != null)
+                        richSpan.textRange = TextRange(offset, offset + richSpan.text.length)
+
+                    return result
+                }
             }
         }
         return null
@@ -171,7 +181,7 @@ public class RichSpan(
             (textIndex in textRange || (isFirstInParagraph && textIndex + 1 == textRange.min))
         ) {
             return if (text.isEmpty()) {
-                index to paragraph.getFirstNonEmptyChild()
+                index to paragraph.getFirstNonEmptyChild(index)
             } else {
                 index to this
             }

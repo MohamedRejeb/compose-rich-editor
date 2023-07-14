@@ -603,10 +603,6 @@ class RichTextState(
      * This method will use the [tempTextFieldValue] to get the removed characters.
      */
     private fun handleRemovingCharacters() {
-        // Todo Fix error when selecting the paragraph end index on delete
-        //  How to reproduce -> start: paragraph end, end: next paragraph middle
-
-        // still having other issues like adding multiple custom paragraphs them removing them from the middle
         val removedCharsCount = textFieldValue.text.length - tempTextFieldValue.text.length
         val minRemoveIndex = tempTextFieldValue.selection.min
         val maxRemoveIndex = tempTextFieldValue.selection.min + removedCharsCount
@@ -689,42 +685,42 @@ class RichTextState(
                     )
                 }
             }
+
+            if (
+                minRemoveIndex == minParagraphFirstChildMinIndex - minParagraphStartTextLength - 1
+            ) {
+                if (
+                    minRemoveIndex == minParagraphFirstChildMinIndex - minParagraphStartTextLength - 1 &&
+                    minParagraphStartTextLength > 0
+                ) {
+                    val beforeText = tempTextFieldValue.text.substring(
+                        startIndex = 0,
+                        endIndex = minRemoveIndex,
+                    )
+                    val afterText = tempTextFieldValue.text.substring(
+                        startIndex = minRemoveIndex + 1,
+                        endIndex = tempTextFieldValue.text.length,
+                    )
+                    tempTextFieldValue = tempTextFieldValue.copy(
+                        text = beforeText + afterText,
+                        selection = TextRange(tempTextFieldValue.selection.min - 1),
+                    )
+                }
+
+                richParagraphList.getOrNull(minParagraphIndex - 1)?.let { previousParagraph ->
+                    // Merge the two paragraphs if the line break is removed
+                    mergeTwoRichParagraphs(
+                        firstParagraph = previousParagraph,
+                        secondParagraph = maxRichSpan.paragraph,
+                    )
+                }
+            }
         }
 
         checkOrderedListsNumbers(
             startParagraphIndex = minParagraphIndex - 1,
             endParagraphIndex = minParagraphIndex + 1,
         )
-//        val previousParagraph = richParagraphList.getOrNull(minParagraphIndex - 1)
-//        if (previousParagraph != null) {
-//            val previousParagraphType = previousParagraph.type
-//            if (previousParagraphType is RichParagraph.Type.OrderedList) {
-//                adjustOrderedListsNumbers(
-//                    startParagraphIndex = minParagraphIndex,
-//                    startNumber = previousParagraphType.number + 1
-//                )
-//            } else {
-//                adjustOrderedListsNumbers(
-//                    startParagraphIndex = minParagraphIndex,
-//                    startNumber = 1
-//                )
-//            }
-//        } else {
-//            richParagraphList.getOrNull(minParagraphIndex)?.let { minParagraph ->
-//                val minParagraphType = minParagraph.type
-//                if (minParagraphType is RichParagraph.Type.OrderedList) {
-//                    adjustOrderedListsNumbers(
-//                        startParagraphIndex = minParagraphIndex,
-//                        startNumber = minParagraphType.number
-//                    )
-//                } else {
-//                    adjustOrderedListsNumbers(
-//                        startParagraphIndex = minParagraphIndex + 1,
-//                        startNumber = 1
-//                    )
-//                }
-//            }
-//        }
     }
 
     private fun handleRemoveMinParagraphStartText(
@@ -796,8 +792,14 @@ class RichTextState(
             println("beforeText: $beforeText")
             println("afterText: $afterText")
 
+            val newSelection = if (paragraphFirstChildMinIndex - paragraphStartTextLength > minRemoveIndex)
+                TextRange(tempTextFieldValue.selection.min - (paragraphFirstChildMinIndex - paragraphStartTextLength - minRemoveIndex))
+            else
+                tempTextFieldValue.selection
+
             tempTextFieldValue = tempTextFieldValue.copy(
                 text = newText,
+//                selection = newSelection,
             )
         }
 

@@ -13,7 +13,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -305,18 +304,11 @@ internal fun BasicRichTextEditor(
     val richClipboardManager = remember {
         object : ClipboardManager {
             override fun setText(annotatedString: AnnotatedString) {
-//                println("setText: $annotatedString")
-//                clipboardManager.setText(AnnotatedString("Copy hhh"))
-//                val stringBuilder = StringBuilder()
-//                stringBuilder.append(state.annotatedString.text)
-//                stringBuilder[0] = 'a'
-
-                clipboardManager.setText(state.annotatedString)
+                clipboardManager.setText(annotatedString)
             }
 
             override fun getText(): AnnotatedString? {
-                val annotatedString = clipboardManager.getText()
-                return annotatedString
+                return clipboardManager.getText()
             }
         }
     }
@@ -334,8 +326,7 @@ internal fun BasicRichTextEditor(
                     val pressPosition = interaction.pressPosition
                     val topPadding = with(density) { contentPadding.calculateTopPadding().toPx() }
                     val startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() }
-                    println("pressPosition: $pressPosition")
-//                    delay(100)
+
                     adjustTextIndicatorOffset(
                         pressPosition = pressPosition,
                         state = state,

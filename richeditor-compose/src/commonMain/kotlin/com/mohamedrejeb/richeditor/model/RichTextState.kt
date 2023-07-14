@@ -766,15 +766,14 @@ class RichTextState(
     ) {
         if (maxRemoveIndex < paragraphFirstChildMinIndex && paragraphStartTextLength > 0) {
             paragraphStartTextLength - (paragraphFirstChildMinIndex - maxRemoveIndex)
-            val beforeTextEndIndex = minRemoveIndex
 
             val beforeText =
-                if (beforeTextEndIndex <= 0)
+                if (minRemoveIndex <= 0)
                     ""
                 else
                     tempTextFieldValue.text.substring(
                         startIndex = 0,
-                        endIndex = beforeTextEndIndex,
+                        endIndex = minRemoveIndex,
                     )
 
             val afterTextStartIndex = minRemoveIndex + (paragraphFirstChildMinIndex - maxRemoveIndex)
@@ -789,21 +788,10 @@ class RichTextState(
                     )
             val newText = beforeText + afterText
 
-            println("beforeText: $beforeText")
-            println("afterText: $afterText")
-
-            val newSelection = if (paragraphFirstChildMinIndex - paragraphStartTextLength > minRemoveIndex)
-                TextRange(tempTextFieldValue.selection.min - (paragraphFirstChildMinIndex - paragraphStartTextLength - minRemoveIndex))
-            else
-                tempTextFieldValue.selection
-
             tempTextFieldValue = tempTextFieldValue.copy(
                 text = newText,
-//                selection = newSelection,
             )
         }
-
-        println("richParagraphList: ${richParagraphList.size}")
     }
 
     private fun adjustOrderedListsNumbers(
@@ -1762,10 +1750,6 @@ class RichTextState(
                 offset = index,
             )
             index = result.first
-            if (result.second != null) {
-                println("span: ${result.second}")
-                println("paragraph: $paragraphIndex")
-            }
             result.second != null
         }
     }

@@ -85,11 +85,6 @@ public class RichParagraph(
         // Add the startText length to the index
         index += type.startText.length
 
-        println("offset: $offset")
-        println("index: $index")
-        println("textIndex: $textIndex")
-        println("children: $children")
-
         // Check if the textIndex is in the startRichSpan current paragraph
         if (index > textIndex) return index to getFirstNonEmptyChild(offset = index)
 

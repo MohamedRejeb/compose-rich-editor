@@ -1963,10 +1963,25 @@ class RichTextState internal constructor(
     companion object {
         val Saver: Saver<RichTextState, *> = listSaver(
             save = {
-                listOf<String>()
+                listOf(
+                    it.toHtml(),
+                    it.selection.start.toString(),
+                    it.selection.end.toString(),
+                )
             },
             restore = {
-                RichTextState()
+                val html = it[0]
+                val selectionStart = it[1].toInt()
+                val selectionEnd = it[2].toInt()
+                val selection = TextRange(selectionStart, selectionEnd)
+                val richTextState = RichTextState()
+                richTextState.setHtml(html)
+                richTextState.updateTextFieldValue(
+                    richTextState.textFieldValue.copy(
+                        selection = selection
+                    )
+                )
+                richTextState
             }
         )
     }

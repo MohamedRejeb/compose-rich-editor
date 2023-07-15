@@ -35,7 +35,7 @@ import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditorDefaults
 import org.jetbrains.compose.resources.painterResource
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun SlackDemoContent() {
     val navigator = LocalNavigator.currentOrThrow
@@ -55,7 +55,7 @@ fun SlackDemoContent() {
             topBar = {
                 Column {
                     TopAppBar(
-                        title = { Text("Compose Rich Editor: Slack Demo") },
+                        title = { Text("Slack Demo") },
                         navigationIcon = {
                             IconButton(
                                 onClick = { navigator.pop() }
@@ -78,8 +78,9 @@ fun SlackDemoContent() {
         ) { paddingValue ->
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
                     .padding(paddingValue)
+                    .consumeWindowInsets(paddingValue)
+                    .fillMaxSize()
             ) {
                 Column(
                     modifier = Modifier

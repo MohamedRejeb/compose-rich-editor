@@ -17,7 +17,7 @@ import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 import com.mohamedrejeb.richeditor.ui.test.DebugRichTextEditor
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun NewEditorContent() {
     val navigator = LocalNavigator.currentOrThrow
@@ -46,6 +46,7 @@ fun NewEditorContent() {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValue)
+                    .consumeWindowInsets(paddingValue)
             ) {
                 RichTextStyleRow(
                     modifier = Modifier.fillMaxWidth(),

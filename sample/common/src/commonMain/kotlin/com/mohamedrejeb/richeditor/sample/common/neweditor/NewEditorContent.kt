@@ -11,10 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.mohamedrejeb.richeditor.model.RichSpan
-import com.mohamedrejeb.richeditor.model.RichTextValue
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
-import com.mohamedrejeb.richeditor.sample.common.components.NewRichTextStyleRow
+import com.mohamedrejeb.richeditor.sample.common.components.RichTextStyleRow
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 
@@ -22,16 +20,6 @@ import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 @Composable
 fun NewEditorContent() {
     val navigator = LocalNavigator.currentOrThrow
-
-    var basicRichTextValue by remember { mutableStateOf(RichTextValue()) }
-    var richTextValue by remember { mutableStateOf(
-        RichTextValue.from(
-            """
-            <p><b>RichTextEditor</b> is a <i>composable</i> that allows you to edit <u>rich text</u> content.</p>
-            """.trimIndent()
-        )
-    ) }
-    var outlinedRichTextValue by remember { mutableStateOf(RichTextValue()) }
 
     val richTextState = rememberRichTextState()
 
@@ -67,9 +55,9 @@ fun NewEditorContent() {
 
                 Spacer(Modifier.height(8.dp))
 
-                NewRichTextStyleRow(
+                RichTextStyleRow(
                     modifier = Modifier.fillMaxWidth(),
-                    richTextState = richTextState,
+                    state = richTextState,
                 )
 
                 RichTextEditor(
@@ -81,45 +69,7 @@ fun NewEditorContent() {
                 )
 
                 Divider(modifier = Modifier.padding(vertical = 20.dp))
-
-                Text(
-                    text = "Annoation Length: ${richTextState.annotatedString.text.length}",
-                )
-
-                Text(
-                    text = "Text Length: ${richTextState.textFieldValue.text.length}",
-                )
-
-                Text(
-                    text = "Selection: ${richTextState.selection}",
-                )
-
-                Text(
-                    text = "tree representation:",
-                )
-
-                key(
-                   richTextState.annotatedString
-                ) {
-                    richTextState.richParagraphList.forEachIndexed { index, richParagraphStyle ->
-                        Text("Paragraph $index: ${richParagraphStyle.children.size} children")
-                        Text(" - Start Text: ${richParagraphStyle.type.startRichSpan}")
-                        richParagraphStyle.children.forEachIndexed { index, richTextStyle ->
-                            RichTextStyleTreeRepresentation(index, richTextStyle, " -")
-                        }
-
-                        Divider(modifier = Modifier.padding(vertical = 20.dp))
-                    }
-                }
             }
         }
-    }
-}
-
-@Composable
-fun RichTextStyleTreeRepresentation(index: Int, richSpan: RichSpan, startText: String) {
-    Text("${startText}Text $index `$richSpan`: ${richSpan.children.size} children")
-    richSpan.children.forEachIndexed { index, richSpan ->
-        RichTextStyleTreeRepresentation(index, richSpan, "$startText-")
     }
 }

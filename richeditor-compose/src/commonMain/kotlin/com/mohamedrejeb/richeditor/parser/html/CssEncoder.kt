@@ -3,13 +3,16 @@ package com.mohamedrejeb.richeditor.parser.html
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.BaselineShift
-import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.*
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.sp
+import com.mohamedrejeb.richeditor.model.RichParagraph
 
 internal object CssEncoder {
 
@@ -133,6 +136,21 @@ internal object CssEncoder {
     }
 
     /**
+     * Converts the given CSS style map into a [ParagraphStyle].
+     *
+     * @param cssStyleMap the CSS style map to convert.
+     * @return the converted [ParagraphStyle].
+     */
+    internal fun parseCssStyleMapToParagraphStyle(cssStyleMap: Map<String, String>): ParagraphStyle {
+        return ParagraphStyle(
+            textAlign = cssStyleMap["text-align"]?.let { parseCssTextAlign(it) },
+            textDirection = cssStyleMap["direction"]?.let { parseCssTextDirection(it) },
+            lineHeight = cssStyleMap["line-height"]?.let { parseCssLineHeight(it) } ?: TextUnit.Unspecified,
+            textIndent = cssStyleMap["text-indent"]?.let { parseCssTextIndent(it) },
+        )
+    }
+
+    /**
      * Parses a CSS color string and returns a [Color] or `null` if the color string could not be parsed.
      *
      * @param cssColor the CSS color string to parse.
@@ -211,6 +229,26 @@ internal object CssEncoder {
             }
         }
         return null
+    }
+
+    internal fun parseCssTextSize(cssTextSize: String): TextUnit {
+        if (cssTextSize == "0") return TextUnit.Unspecified
+        val sizeRegex = Regex("""([-]?\d+(\.\d+)?)\s*(px|pt|em|rem|%)""")
+        val sizeMatchResult = sizeRegex.find(cssTextSize)
+
+        if (sizeMatchResult != null && sizeMatchResult.groupValues.size == 4) {
+            val value = sizeMatchResult.groupValues[1].toFloat()
+            val unit = sizeMatchResult.groupValues[3]
+            return when (unit) {
+                "px" -> value.sp
+                "pt" -> (value * 1.333f).sp
+                "em" -> value.em
+                "rem" -> value.em
+                "%" -> (value / 100f).em
+                else -> TextUnit.Unspecified
+            }
+        }
+        return TextUnit.Unspecified
     }
 
     /**
@@ -329,6 +367,65 @@ internal object CssEncoder {
             }
             else -> null
         }
+    }
+
+    /**
+     * Parses a CSS text align string and returns a [TextAlign] or `null` if the text align string could not be parsed.
+     *
+     * @param cssTextAlign the CSS text align string to parse.
+     * @return the parsed [TextAlign] or `null` if the text align string could not be parsed.
+     */
+    internal fun parseCssTextAlign(cssTextAlign: String): TextAlign? {
+        return when (cssTextAlign) {
+            "left" -> TextAlign.Left
+            "right" -> TextAlign.Right
+            "center" -> TextAlign.Center
+            "justify" -> TextAlign.Justify
+            else -> null
+        }
+    }
+
+    /**
+     * Parses a CSS text direction string and returns a [TextDirection] or `null` if the text direction string could not be parsed.
+     *
+     * @param cssTextDirection the CSS text direction string to parse.
+     * @return the parsed [TextDirection] or `null` if the text direction string could not be parsed.
+     */
+    internal fun parseCssTextDirection(cssTextDirection: String): TextDirection? {
+        return when (cssTextDirection) {
+            "ltr" -> TextDirection.Ltr
+            "rtl" -> TextDirection.Rtl
+            else -> null
+        }
+    }
+
+    /**
+     * Parses a CSS text line height string and returns a [TextUnit] or `null` if the text line height string could not be parsed.
+     *
+     * @param cssLineHeight the CSS text line height string to parse.
+     * @return the parsed [TextUnit] or `null` if the text line height string could not be parsed.
+     */
+    internal fun parseCssLineHeight(cssLineHeight: String): TextUnit {
+        return when {
+            cssLineHeight.isBlank() -> TextUnit.Unspecified
+            cssLineHeight == "normal" -> TextUnit.Unspecified
+            cssLineHeight.toFloatOrNull() != null -> cssLineHeight.toFloat().em
+            else -> parseCssTextSize(cssLineHeight)
+        }
+    }
+
+    /**
+     * Parses a CSS text indent string and returns a [TextIndent] or `null` if the text indent string could not be parsed.
+     *
+     * @param cssTextIndent the CSS text indent string to parse.
+     * @return the parsed [TextIndent] or `null` if the text indent string could not be parsed.
+     */
+    internal fun parseCssTextIndent(cssTextIndent: String): TextIndent? {
+        if (cssTextIndent.isBlank()) return null
+
+        val textUnit = parseCssTextSize(cssTextIndent)
+        return if (textUnit.isSpecified) TextIndent(textUnit)
+            else null
     }
 
     /**

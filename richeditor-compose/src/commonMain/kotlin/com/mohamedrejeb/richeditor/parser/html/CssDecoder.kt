@@ -3,12 +3,17 @@ package com.mohamedrejeb.richeditor.parser.html
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.isSpecified
+import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.BaselineShift
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.isSpecified
+import androidx.compose.ui.unit.isUnspecified
 import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.utils.maxDecimals
 import kotlin.math.roundToInt
@@ -28,10 +33,10 @@ internal object CssDecoder {
     }
 
     /**
-     * Converts the given CSS style map into a [SpanStyle].
+     * Decodes the given span style into a CSS style map.
      *
-     * @param cssStyleMap the CSS style map to convert.
-     * @return the converted [SpanStyle].
+     * @param spanStyle the span style to decode.
+     * @return the decoded CSS style map.
      */
     internal fun decodeSpanStyleToCssStyleMap(spanStyle: SpanStyle): Map<String, String> {
         val cssStyleMap = mutableMapOf<String, String>()
@@ -40,7 +45,9 @@ internal object CssDecoder {
             cssStyleMap["color"] = decodeColorToCss(spanStyle.color)
         }
         if (spanStyle.fontSize.isSpecified) {
-            cssStyleMap["font-size"] = "${spanStyle.fontSize.value}px"
+            decodeTextUnitToCss(spanStyle.fontSize)?.let { fontSize ->
+                cssStyleMap["font-size"] = fontSize
+            }
         }
         spanStyle.fontWeight?.let { fontWeight ->
             cssStyleMap["font-weight"] = decodeFontWeightToCss(fontWeight)
@@ -49,7 +56,9 @@ internal object CssDecoder {
             cssStyleMap["font-style"] = decodeFontStyleToCss(fontStyle)
         }
         if (spanStyle.letterSpacing.isSpecified) {
-            cssStyleMap["letter-spacing"] = "${spanStyle.letterSpacing.value}px"
+            decodeTextUnitToCss(spanStyle.letterSpacing)?.let { letterSpacing ->
+                cssStyleMap["letter-spacing"] = letterSpacing
+            }
         }
         spanStyle.baselineShift?.let { baselineShift ->
             cssStyleMap["baseline-shift"] = decodeBaselineShiftToCss(baselineShift)
@@ -62,6 +71,34 @@ internal object CssDecoder {
         }
         spanStyle.shadow?.let { shadow ->
             cssStyleMap["text-shadow"] = decodeTextShadowToCss(shadow)
+        }
+
+        return cssStyleMap
+    }
+
+    /**
+     * Decodes the give [ParagraphStyle] into a CSS style map.
+     *
+     * @param paragraphStyle the paragraph style to decode.
+     * @return the decoded CSS style map.
+     */
+    internal fun decodeParagraphStyleToCssStyleMap(paragraphStyle: ParagraphStyle): Map<String, String> {
+        val cssStyleMap = mutableMapOf<String, String>()
+
+        decodeTextAlignToCss(paragraphStyle.textAlign, paragraphStyle.textDirection)?.let { textAlign ->
+            cssStyleMap["text-align"] = textAlign
+        }
+
+        decodeTextDirectionToCss(paragraphStyle.textDirection)?.let { textDirection ->
+            cssStyleMap["direction"] = textDirection
+        }
+
+        decodeTextUnitToCss(paragraphStyle.lineHeight)?.let { lineHeight ->
+            cssStyleMap["line-height"] = lineHeight
+        }
+
+        decodeTextUnitToCss(paragraphStyle.textIndent?.firstLine)?.let { textIndent ->
+            cssStyleMap["text-indent"] = textIndent
         }
 
         return cssStyleMap
@@ -88,6 +125,22 @@ internal object CssDecoder {
      */
     internal fun decodeSizeToCss(size: Float): String {
         return "${size}px"
+    }
+
+    /**
+     * Decodes the given [TextUnit] to a CSS text unit string.
+     *
+     * @param textUnit the text unit to decode.
+     * @return the decoded CSS text unit string.
+     */
+    internal fun decodeTextUnitToCss(textUnit: TextUnit?): String? {
+        return when {
+            textUnit == null -> null
+            textUnit.isUnspecified -> null
+            textUnit.isSp -> "${textUnit.value}px"
+            textUnit.isEm -> "${textUnit.value}em"
+            else -> null
+        }
     }
 
     /**
@@ -169,6 +222,42 @@ internal object CssDecoder {
         val blurRadius = decodeSizeToCss(shadow.blurRadius)
 
         return "$offsetX $offsetY $blurRadius $color"
+    }
+
+    /**
+     * Decodes the given [TextAlign] to a CSS text align string.
+     *
+     * @param textAlign the text align to decode.
+     * @param textDirection the text direction to decode.
+     * @return the decoded CSS text align string.
+     */
+    internal fun decodeTextAlignToCss(
+        textAlign: TextAlign?,
+        textDirection: TextDirection? = null
+    ): String? {
+        return when (textAlign) {
+            TextAlign.Left -> "left"
+            TextAlign.Center -> "center"
+            TextAlign.Right -> "right"
+            TextAlign.Justify -> "justify"
+            TextAlign.Start -> if (textDirection == TextDirection.Rtl) "right" else "left"
+            TextAlign.End -> if (textDirection == TextDirection.Rtl) "left" else "right"
+            else -> null
+        }
+    }
+
+    /**
+     * Decodes the given [TextDirection] to a CSS text direction string.
+     *
+     * @param textDirection the text direction to decode.
+     * @return the decoded CSS text direction string.
+     */
+    internal fun decodeTextDirectionToCss(textDirection: TextDirection?): String? {
+        return when (textDirection) {
+            TextDirection.Ltr -> "ltr"
+            TextDirection.Rtl -> "rtl"
+            else -> null
+        }
     }
 
 }

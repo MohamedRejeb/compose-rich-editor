@@ -8,10 +8,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.mohamedrejeb.richeditor.model.RichTextValue
+import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -24,9 +23,7 @@ fun HtmlEditorContent() {
     var html by remember {
         mutableStateOf(TextFieldValue(""))
     }
-    var richTextValue by remember {
-        mutableStateOf(RichTextValue())
-    }
+    val richTextState = rememberRichTextState()
 
     ComposeRichEditorTheme(false) {
         Scaffold(
@@ -67,7 +64,6 @@ fun HtmlEditorContent() {
                         html = html,
                         onHtmlChange = {
                             html = it
-                            richTextValue = RichTextValue.from(it.text)
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -75,11 +71,7 @@ fun HtmlEditorContent() {
                     )
                 } else {
                     RichTextToHtml(
-                        richTextValue = richTextValue,
-                        onRichTextValueChange = {
-                            richTextValue = it
-                            html = TextFieldValue(it.toHtml())
-                        },
+                        richTextState = richTextState,
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)

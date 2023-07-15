@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.model.RichParagraph.Type.Companion.startText
 
-public class RichParagraph(
+internal class RichParagraph(
     val key: Int = 0,
     val children: MutableList<RichSpan> = mutableListOf(),
     var paragraphStyle: ParagraphStyle = DefaultParagraphStyle,

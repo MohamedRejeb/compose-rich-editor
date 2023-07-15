@@ -2,24 +2,21 @@ package com.mohamedrejeb.richeditor.sample.common.htmleditor
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.mohamedrejeb.richeditor.model.RichTextValue
+import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.sample.common.components.OldRichTextStyleRow
 import com.mohamedrejeb.richeditor.sample.common.components.RichTextStyleRow
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RichTextToHtml(
-    richTextValue: RichTextValue,
-    onRichTextValueChange: (RichTextValue) -> Unit,
+    richTextState: RichTextState,
     modifier: Modifier = Modifier,
 ) {
-    val html = richTextValue.toHtml()
-
     Row(
         modifier = modifier
             .padding(20.dp)
@@ -37,10 +34,7 @@ fun RichTextToHtml(
             Spacer(Modifier.height(8.dp))
 
             RichTextStyleRow(
-                value = richTextValue,
-                onValueChanged = {
-                    onRichTextValueChange(it)
-                },
+                state = richTextState,
                 modifier = Modifier
                     .fillMaxWidth()
             )
@@ -51,10 +45,7 @@ fun RichTextToHtml(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-                value = richTextValue,
-                onValueChange = {
-                    onRichTextValueChange(it)
-                },
+                state = richTextState,
             )
         }
 
@@ -82,7 +73,7 @@ fun RichTextToHtml(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                text = html,
+                text = richTextState.annotatedString.text,
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)

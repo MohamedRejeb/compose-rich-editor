@@ -1,21 +1,18 @@
 package com.mohamedrejeb.richeditor.sample.common.slack
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
@@ -25,8 +22,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mohamedrejeb.richeditor.model.RichParagraph
-import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 
 @Composable
@@ -161,7 +156,7 @@ fun SlackDemoPanel(
                 onClick = {
                     openLinkDialog.value = true
                 },
-                isSelected = state.currentRichSpanStyle is RichSpanStyle.Link,
+                isSelected = state.isLink,
                 icon = Icons.Outlined.Link
             )
         }
@@ -233,7 +228,7 @@ fun SlackDemoPanel(
                 onClick = {
                     state.toggleUnorderedList()
                 },
-                isSelected = state.currentRichParagraphType is RichParagraph.Type.UnorderedList,
+                isSelected = state.isUnorderedList,
                 icon = Icons.Outlined.FormatListBulleted,
             )
         }
@@ -243,7 +238,7 @@ fun SlackDemoPanel(
                 onClick = {
                     state.toggleOrderedList()
                 },
-                isSelected = state.currentRichParagraphType is RichParagraph.Type.OrderedList,
+                isSelected = state.isOrderedList,
                 icon = Icons.Outlined.FormatListNumbered,
             )
         }

@@ -3,7 +3,7 @@ package com.mohamedrejeb.richeditor.parser.html
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class RichTextHtmlParserTest {
+internal class RichTextStateHtmlParserTest {
     @Test
     fun testRemoveHtmlTextExtraSpaces() {
         val html = """

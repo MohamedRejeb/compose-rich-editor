@@ -1,41 +1,27 @@
 [versions]
-plugin-android = "7.4.2"
-plugin-kotlin = "1.8.20"
-plugin-gver = "0.46.0"
-
-compose-compiler = "1.4.6"
+agp = "7.4.2"
+kotlin = "1.8.20"
 compose = "1.4.0"
-kotlinx-serialization = "1.5.0"
-kotlinx-coroutines = "1.6.4"
-jetbrains-kotlin-wrappers = "1.0.0-pre.510"
-androidx-appcompat = "1.6.1"
+
+ksoup = "0.2.0-dev01"
+
+# For sample
+compose-compiler = "1.4.6"
 activity-compose = "1.7.0"
-compose-uitooling = "1.4.1"
-composeImageLoader = "1.3.1"
+voyager = "1.0.0-rc05"
+richeditor = "1.0.0-alpha01"
+android-minSdk = "21"
+android-compileSdk = "33"
 
 [libraries]
-plugin-android = { module = "com.android.tools.build:gradle", version.ref = "plugin-android" }
-plugin-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "plugin-kotlin" }
-plugin-kotlin-serialization = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "plugin-kotlin" }
-plugin-gver = { module = "com.github.ben-manes:gradle-versions-plugin", version.ref = "plugin-gver" }
-jetbrains-compose-gradle-plugin = { group = "org.jetbrains.compose", name = "compose-gradle-plugin", version.ref = "compose" }
+ksoup = { module = "com.mohamedrejeb.ksoup:ksoup-html", version.ref = "ksoup" }
 
-jetbrains-kotlin-wrappers-bom = { group = "org.jetbrains.kotlin-wrappers", name = "kotlin-wrappers-bom", version.ref = "jetbrains-kotlin-wrappers" }
-#jetbrains-kotlinWrappers-kotlinStyled = { group = "org.jetbrains.kotlin-wrappers", name = "kotlin-styled" }
-
-kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
-kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
-kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
-
-kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
-
+# For sample
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity-compose" }
+voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
+richeditor-compose = { module = "com.mohamedrejeb.richeditor:richeditor-compose", version.ref = "richeditor" }
 
-[bundles]
-plugins = [
-    "plugin-android",
-    "plugin-kotlin",
-    "plugin-kotlin-serialization",
-    "plugin-gver",
-    "jetbrains-compose-gradle-plugin",
-]
+[plugins]
+androidLibrary = { id = "com.android.library", version.ref = "agp" }
+kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose" }

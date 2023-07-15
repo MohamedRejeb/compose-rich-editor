@@ -1,7 +1,6 @@
 plugins {
     kotlin("multiplatform")
     kotlin("native.cocoapods")
-    kotlin("plugin.serialization")
     id("org.jetbrains.compose")
     id("com.android.library")
 }
@@ -48,14 +47,11 @@ kotlin {
                 @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
                 api(compose.components.resources)
 
-                implementation(libs.kotlinx.serialization.json)
 //                implementation("com.mohamedrejeb.richeditor:richeditor-compose:0.2.0")
                 implementation(project(":richeditor-compose"))
 
-                val voyagerVersion = "1.0.0-rc05"
-
-                // Navigator
-                implementation("cafe.adriel.voyager:voyager-navigator:$voyagerVersion")
+                // Voyager Navigator
+                implementation(libs.voyager.navigator)
             }
         }
 
@@ -95,12 +91,11 @@ kotlin {
 
 android {
     namespace = "com.mohamedrejeb.richeditor.sample.common"
-    compileSdk = (findProperty("android.compileSdk") as String).toInt()
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
     sourceSets["main"].resources.srcDirs("src/commonMain/resources")
 
     defaultConfig {
-        minSdk = (findProperty("android.minSdk") as String).toInt()
-        targetSdk = (findProperty("android.targetSdk") as String).toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
     }
 
     compileOptions {

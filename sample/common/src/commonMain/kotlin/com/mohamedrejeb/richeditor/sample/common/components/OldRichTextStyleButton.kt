@@ -8,17 +8,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.SpanStyle
-import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.RichTextStyle
 import com.mohamedrejeb.richeditor.model.RichTextValue
 
 @Composable
-fun NewRichTextStyleButton(
-    onClick: () -> Unit,
+fun OldRichTextStyleButton(
+    style: RichTextStyle,
+    value: RichTextValue,
+    onValueChanged: (RichTextValue) -> Unit,
     icon: ImageVector,
-    tint: Color? = null,
-    isSelected: Boolean = false,
+    tint: Color? = null
 ) {
     IconButton(
         modifier = Modifier
@@ -26,9 +25,11 @@ fun NewRichTextStyleButton(
             // from losing focus when clicking on the button
             // (Happens only on Desktop)
             .focusProperties { canFocus = false },
-        onClick = onClick,
+        onClick = {
+            onValueChanged(value.toggleStyle(style))
+        },
         colors = IconButtonDefaults.iconButtonColors(
-            contentColor = if (isSelected) {
+            contentColor = if (value.currentStyles.contains(style)) {
                 MaterialTheme.colorScheme.onPrimary
             } else {
                 MaterialTheme.colorScheme.onBackground
@@ -41,7 +42,7 @@ fun NewRichTextStyleButton(
             tint = tint ?: LocalContentColor.current,
             modifier = Modifier
                 .background(
-                    color = if (isSelected) {
+                    color = if (value.currentStyles.contains(style)) {
                         MaterialTheme.colorScheme.primary
                     } else {
                         Color.Transparent

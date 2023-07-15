@@ -9,6 +9,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -202,8 +203,7 @@ fun RichText(
                         }
                     }
                 )
-            }
-        ,
+            },
         text = state.visualTransformation.filter(state.annotatedString).text,
         color = color,
         fontSize = fontSize,
@@ -221,7 +221,7 @@ fun RichText(
         onTextLayout = {
             state.onTextLayout(it)
             onTextLayout(it)
-       },
+        },
         style = style
     )
 }

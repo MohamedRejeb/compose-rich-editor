@@ -6,11 +6,11 @@ plugins {
 
 android {
     namespace = "com.mohamedrejeb.richeditor.android"
-    compileSdk = (findProperty("android.compileSdk") as String).toInt()
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        minSdk = (findProperty("android.minSdk") as String).toInt()
-        targetSdk = (findProperty("android.targetSdk") as String).toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        targetSdk = libs.versions.android.compileSdk.get().toInt()
 
         applicationId = "com.mohamedrejeb.richeditor.android"
         versionCode = 1

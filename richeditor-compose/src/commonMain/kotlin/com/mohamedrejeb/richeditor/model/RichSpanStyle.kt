@@ -5,8 +5,8 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.sp
 
-interface RichSpanStyle {
-    var spanStyle: SpanStyle
+internal interface RichSpanStyle {
+    val spanStyle: SpanStyle
 
     val data: MutableMap<String, String>
 
@@ -22,7 +22,7 @@ interface RichSpanStyle {
         get() = true
 
     class Link(
-        override var spanStyle: SpanStyle = SpanStyle(
+        override val spanStyle: SpanStyle = SpanStyle(
             color = Color.Blue,
             textDecoration = TextDecoration.Underline,
         ),
@@ -35,7 +35,7 @@ interface RichSpanStyle {
     }
 
     class Default : RichSpanStyle {
-        override var spanStyle: SpanStyle = SpanStyle()
+        override val spanStyle: SpanStyle = SpanStyle()
         override val data: MutableMap<String, String> = mutableMapOf()
     }
 
@@ -43,10 +43,5 @@ interface RichSpanStyle {
         internal val DefaultSpanStyle = SpanStyle(
             fontSize = 16.sp,
         )
-
-        fun fromSpanStyle(spanStyle: SpanStyle): RichSpanStyle =
-            Default().apply {
-                this.spanStyle = spanStyle
-            }
     }
 }

@@ -28,6 +28,20 @@ internal fun AnnotatedString.Builder.append(
 }
 
 internal fun AnnotatedString.Builder.append(
+    richSpanList: List<RichSpan>,
+    startIndex: Int,
+): Int {
+    var index = startIndex
+    richSpanList.forEach { richSpan ->
+        index = append(
+            richSpan = richSpan,
+            startIndex = index,
+        )
+    }
+    return index
+}
+
+internal fun AnnotatedString.Builder.append(
     richSpan: RichSpan,
     startIndex: Int,
     text: String,
@@ -35,7 +49,7 @@ internal fun AnnotatedString.Builder.append(
 ): Int {
     var index = startIndex
 
-    withStyle(richSpan.spanStyle) {
+    withStyle(richSpan.spanStyle.merge(richSpan.style.spanStyle)) {
         val newText = text.substring(index, index + richSpan.text.length)
         richSpan.text = newText
         if (
@@ -67,6 +81,26 @@ internal fun AnnotatedString.Builder.append(
                 startIndex = index,
                 text = text,
                 selection = selection,
+            )
+        }
+    }
+    return index
+}
+
+internal fun AnnotatedString.Builder.append(
+    richSpan: RichSpan,
+    startIndex: Int,
+): Int {
+    var index = startIndex
+
+    withStyle(richSpan.spanStyle.merge(richSpan.style.spanStyle)) {
+        richSpan.textRange = TextRange(index, index + richSpan.text.length)
+        append(richSpan.text)
+        index += richSpan.text.length
+        richSpan.children.forEach { richSpan ->
+            index = append(
+                richSpan = richSpan,
+                startIndex = index,
             )
         }
     }

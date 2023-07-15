@@ -11,22 +11,16 @@ import com.mohamedrejeb.richeditor.utils.isSpecifiedFieldsEquals
 /**
  * A rich span is a part of a rich paragraph.
  */
-public class RichSpan(
+internal class RichSpan(
     internal val key: Int? = null,
     val children: MutableList<RichSpan> = mutableListOf(),
     var paragraph: RichParagraph,
     var parent: RichSpan? = null,
     var text: String = "",
     var textRange: TextRange = TextRange(start = 0, end = 0),
-//    var spanStyle: SpanStyle = SpanStyle(),
+    var spanStyle: SpanStyle = SpanStyle(),
     var style: RichSpanStyle = RichSpanStyle.Default(),
 ) {
-    var spanStyle
-        get() = style.spanStyle
-        set(value) {
-            style.spanStyle = value
-        }
-
     /**
      * Return the full text range of the rich span.
      * It merges the text range of the rich span with the text range of its children.
@@ -320,6 +314,7 @@ public class RichSpan(
             text = text,
             textRange = textRange,
             style = style,
+            spanStyle = spanStyle,
         )
         children.forEach { childRichSpan ->
             val newRichSpan = childRichSpan.copy(newParagraph)

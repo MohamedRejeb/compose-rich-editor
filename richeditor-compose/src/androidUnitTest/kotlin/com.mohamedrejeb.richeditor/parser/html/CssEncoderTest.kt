@@ -5,8 +5,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.BaselineShift
-import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.*
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -236,8 +238,6 @@ internal class CssEncoderTest {
         val textShadow2 = "1px 1px 2px black"
         val textShadow3 = "#fc0 1px 0 10px"
         val textShadow4 = "red 2px 5px"
-//        val textShadow5 = "5px 10px" // Not handled yet
-//        val textShadow6 = "1px 1px 2px red, 0 0" // Not handled yet
 
         assertEquals(
             Shadow(
@@ -270,6 +270,116 @@ internal class CssEncoderTest {
                 color = Color(255, 0, 0)
             ),
             CssEncoder.parseCssTextShadow(textShadow4)
+        )
+    }
+
+    @Test
+    fun testParseCssTextAlign() {
+        val textAlign = "left"
+        val textAlign2 = "right"
+        val textAlign3 = "center"
+        val textAlign4 = "justify"
+        val textAlign5 = "wrong"
+
+        assertEquals(
+            TextAlign.Left,
+            CssEncoder.parseCssTextAlign(textAlign),
+        )
+        assertEquals(
+            TextAlign.Right,
+            CssEncoder.parseCssTextAlign(textAlign2),
+        )
+        assertEquals(
+            TextAlign.Center,
+            CssEncoder.parseCssTextAlign(textAlign3),
+        )
+        assertEquals(
+            TextAlign.Justify,
+            CssEncoder.parseCssTextAlign(textAlign4),
+        )
+        assertEquals(
+            null,
+            CssEncoder.parseCssTextAlign(textAlign5),
+        )
+    }
+
+    @Test
+    fun testParseCssTextDirection() {
+        val textDirection = "ltr"
+        val textDirection2 = "rtl"
+        val textDirection3 = "wrong"
+
+        assertEquals(
+            TextDirection.Ltr,
+            CssEncoder.parseCssTextDirection(textDirection),
+        )
+        assertEquals(
+            TextDirection.Rtl,
+            CssEncoder.parseCssTextDirection(textDirection2),
+        )
+        assertEquals(
+            null,
+            CssEncoder.parseCssTextDirection(textDirection3),
+        )
+    }
+
+    @Test
+    fun testParseCssLineHeight() {
+        val lineHeight = "1.5"
+        val lineHeight2 = "normal"
+        val lineHeight3 = "wrong"
+        val lineHeight4 = "150%"
+        val lineHeight5 = "3em"
+        val lineHeight6 = "24px"
+
+        assertEquals(
+            1.5.em,
+            CssEncoder.parseCssLineHeight(lineHeight),
+        )
+        assertEquals(
+            TextUnit.Unspecified,
+            CssEncoder.parseCssLineHeight(lineHeight2),
+        )
+        assertEquals(
+            TextUnit.Unspecified,
+            CssEncoder.parseCssLineHeight(lineHeight3),
+        )
+        assertEquals(
+            1.5.em,
+            CssEncoder.parseCssLineHeight(lineHeight4),
+        )
+        assertEquals(
+            3.em,
+            CssEncoder.parseCssLineHeight(lineHeight5),
+        )
+        assertEquals(
+            24.sp,
+            CssEncoder.parseCssLineHeight(lineHeight6),
+        )
+    }
+
+    @Test
+    fun testParseCssTextIndent() {
+        val textIndent1 = "wrong"
+        val textIndent2 = "150%"
+        val textIndent3 = "3em"
+        val textIndent4 = "24px"
+
+        assertEquals(
+            null,
+            CssEncoder.parseCssTextIndent(textIndent1),
+        )
+        assertEquals(
+            TextIndent(1.5.em),
+            CssEncoder.parseCssTextIndent(textIndent2),
+        )
+        assertEquals(
+            TextIndent(3.em),
+            CssEncoder.parseCssTextIndent(textIndent3),
+        )
+        assertEquals(
+            TextIndent(24.sp),
+            CssEncoder.parseCssTextIndent(textIndent4),
         )
     }
 }

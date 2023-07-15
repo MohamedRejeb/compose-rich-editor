@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mohamedrejeb.richeditor.model.RichTextValue
-import com.mohamedrejeb.richeditor.sample.common.components.RichTextStyleRow
+import com.mohamedrejeb.richeditor.sample.common.components.OldRichTextStyleRow
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
@@ -66,9 +66,9 @@ fun RichEditorContent() {
 
                 Spacer(Modifier.height(8.dp))
 
-                RichTextStyleRow(
+                OldRichTextStyleRow(
                     modifier = Modifier.fillMaxWidth(),
-                    value = basicRichTextValue,
+                    state = basicRichTextValue,
                     onValueChanged = {
                         basicRichTextValue = it
                     },
@@ -92,9 +92,9 @@ fun RichEditorContent() {
 
                 Spacer(Modifier.height(8.dp))
 
-                RichTextStyleRow(
+                OldRichTextStyleRow(
                     modifier = Modifier.fillMaxWidth(),
-                    value = richTextValue,
+                    state = richTextValue,
                     onValueChanged = {
                         richTextValue = it
                     },
@@ -118,9 +118,9 @@ fun RichEditorContent() {
 
                 Spacer(Modifier.height(8.dp))
 
-                RichTextStyleRow(
+                OldRichTextStyleRow(
                     modifier = Modifier.fillMaxWidth(),
-                    value = outlinedRichTextValue,
+                    state = outlinedRichTextValue,
                     onValueChanged = {
                         outlinedRichTextValue = it
                     },

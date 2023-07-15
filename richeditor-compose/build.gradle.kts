@@ -1,12 +1,18 @@
 plugins {
     kotlin("multiplatform")
-    kotlin("plugin.serialization")
     id("org.jetbrains.compose")
     id("com.android.library")
 }
 
 kotlin {
-    android()
+    android {
+        publishLibraryVariants("release")
+        compilations.all {
+            kotlinOptions {
+                jvmTarget = "1.8"
+            }
+        }
+    }
     jvm("desktop") {
         jvmToolchain(11)
     }
@@ -26,9 +32,7 @@ kotlin {
                 api(compose.material3)
                 api(compose.materialIconsExtended)
 
-                implementation(libs.kotlinx.serialization.json)
-
-                implementation("com.mohamedrejeb.ksoup:ksoup-html:0.1.2")
+                implementation(libs.ksoup)
             }
         }
 
@@ -70,15 +74,9 @@ kotlin {
 
 android {
     namespace = "com.mohamedrejeb.richeditor"
-    compileSdk = (findProperty("android.compileSdk") as String).toInt()
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        minSdk = (findProperty("android.minSdk") as String).toInt()
-        targetSdk = (findProperty("android.targetSdk") as String).toInt()
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        minSdk = libs.versions.android.minSdk.get().toInt()
     }
 }

@@ -43,15 +43,11 @@ kotlin {
         }
 
         val androidMain by getting {
-            dependencies {
-                api("androidx.appcompat:appcompat:1.6.1")
-            }
+            dependencies {}
         }
 
         val desktopMain by getting {
-            dependencies {
-                api(compose.preview)
-            }
+            dependencies {}
         }
 
         val jsMain by getting {

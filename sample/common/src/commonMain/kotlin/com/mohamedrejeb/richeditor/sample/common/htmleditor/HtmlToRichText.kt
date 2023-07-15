@@ -2,6 +2,7 @@ package com.mohamedrejeb.richeditor.sample.common.htmleditor
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -74,14 +75,21 @@ fun HtmlToRichText(
 
             Spacer(Modifier.height(8.dp))
 
-            RichText(
-                state = richTextState,
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
                     .border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.extraSmall)
                     .padding(vertical = 12.dp, horizontal = 12.dp)
-            )
+            ) {
+                item {
+                    RichText(
+                        state = richTextState,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    )
+                }
+            }
         }
     }
 }

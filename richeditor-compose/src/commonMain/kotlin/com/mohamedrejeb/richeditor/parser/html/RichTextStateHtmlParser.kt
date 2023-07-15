@@ -180,13 +180,13 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
         var lastParagraphGroupTagName: String? = null
 
-        richTextState.richParagraphList.forEach { richParagraph ->
+        richTextState.richParagraphList.forEachIndexed { index, richParagraph ->
             val paragraphGroupTagName = decodeHtmlElementFromRichParagraphType(richParagraph.type)
 
             // Close last paragraph group tag if needed
             if (
                 (lastParagraphGroupTagName == "ol" || lastParagraphGroupTagName == "ul") &&
-                lastParagraphGroupTagName != paragraphGroupTagName
+                (lastParagraphGroupTagName != paragraphGroupTagName)
             ) builder.append("</$lastParagraphGroupTagName>")
 
             // Open new paragraph group tag if needed
@@ -217,6 +217,12 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
             // Save last paragraph group tag name
             lastParagraphGroupTagName = paragraphGroupTagName
+
+            // Close last paragraph group tag if needed
+            if (
+                (lastParagraphGroupTagName == "ol" || lastParagraphGroupTagName == "ul") &&
+                index == richTextState.richParagraphList.lastIndex
+            ) builder.append("</$lastParagraphGroupTagName>")
         }
 
         return builder.toString()

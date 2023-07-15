@@ -15,6 +15,7 @@ import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.sample.common.components.RichTextStyleRow
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
+import com.mohamedrejeb.richeditor.ui.test.DebugRichTextEditor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,35 +41,16 @@ fun NewEditorContent() {
             modifier = Modifier
                 .fillMaxSize()
         ) { paddingValue ->
-            Column(
+            DebugRichTextEditor(
+                richTextState = richTextState,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValue)
-                    .padding(20.dp)
-                    .verticalScroll(rememberScrollState())
             ) {
-                // BasicRichTextEditor
-                Text(
-                    text = "BasicRichTextEditor:",
-                    style = MaterialTheme.typography.titleMedium
-                )
-
-                Spacer(Modifier.height(8.dp))
-
                 RichTextStyleRow(
                     modifier = Modifier.fillMaxWidth(),
                     state = richTextState,
                 )
-
-                RichTextEditor(
-                    state = richTextState,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(300.dp)
-                        .padding(8.dp),
-                )
-
-                Divider(modifier = Modifier.padding(vertical = 20.dp))
             }
         }
     }

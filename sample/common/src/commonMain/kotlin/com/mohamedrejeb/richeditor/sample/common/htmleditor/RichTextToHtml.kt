@@ -17,6 +17,10 @@ fun RichTextToHtml(
     richTextState: RichTextState,
     modifier: Modifier = Modifier,
 ) {
+    val html by remember(richTextState.annotatedString) {
+        mutableStateOf(richTextState.toHtml())
+    }
+
     Row(
         modifier = modifier
             .padding(20.dp)
@@ -73,7 +77,7 @@ fun RichTextToHtml(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                text = richTextState.annotatedString.text,
+                text = html,
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)

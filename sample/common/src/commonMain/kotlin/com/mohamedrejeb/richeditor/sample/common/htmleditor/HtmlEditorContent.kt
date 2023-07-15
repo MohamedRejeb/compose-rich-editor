@@ -25,6 +25,12 @@ fun HtmlEditorContent() {
     }
     val richTextState = rememberRichTextState()
 
+    LaunchedEffect(richTextState.annotatedString, isHtmlToRichText) {
+        if (!isHtmlToRichText) {
+            html = TextFieldValue(richTextState.toHtml())
+        }
+    }
+
     ComposeRichEditorTheme(false) {
         Scaffold(
             topBar = {
@@ -64,6 +70,7 @@ fun HtmlEditorContent() {
                         html = html,
                         onHtmlChange = {
                             html = it
+                            richTextState.setHtml(it.text)
                         },
                         modifier = Modifier
                             .fillMaxWidth()

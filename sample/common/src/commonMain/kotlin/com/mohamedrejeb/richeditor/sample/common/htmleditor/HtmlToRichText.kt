@@ -21,7 +21,6 @@ fun HtmlToRichText(
     val richTextState = rememberRichTextState()
 
     LaunchedEffect(html.text) {
-        println("HTML: ${html.text}")
         richTextState.setHtml(html.text)
     }
 
@@ -68,7 +67,7 @@ fun HtmlToRichText(
                 .weight(1f)
         ) {
             Text(
-                text = "HTML Preview:",
+                text = "Rich Text:",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier
             )

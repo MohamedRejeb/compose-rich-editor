@@ -176,13 +176,93 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
     }
 
     override fun decode(richTextState: RichTextState): String {
-
         val builder = StringBuilder()
 
-        builder.append("<p>")
+        var lastParagraphGroupTagName: String? = null
 
+        richTextState.richParagraphList.forEach { richParagraph ->
+            val paragraphGroupTagName = decodeHtmlElementFromRichParagraphType(richParagraph.type)
+
+            // Close last paragraph group tag if needed
+            if (
+                (lastParagraphGroupTagName == "ol" || lastParagraphGroupTagName == "ul") &&
+                lastParagraphGroupTagName != paragraphGroupTagName
+            ) builder.append("</$lastParagraphGroupTagName>")
+
+            // Open new paragraph group tag if needed
+            if (
+                (paragraphGroupTagName == "ol" || paragraphGroupTagName == "ul") &&
+                lastParagraphGroupTagName != paragraphGroupTagName
+            ) builder.append("<$paragraphGroupTagName>")
+
+            // Create paragraph tag name
+            val paragraphTagName =
+                if (paragraphGroupTagName == "ol" || paragraphGroupTagName == "ul") "li"
+                else "p"
+
+            // Create paragraph css
+            val paragraphCssMap = CssDecoder.decodeParagraphStyleToCssStyleMap(richParagraph.paragraphStyle)
+            val paragraphCss = CssDecoder.decodeCssStyleMap(paragraphCssMap)
+
+            // Append paragraph opening tag
+            builder.append("<$paragraphTagName style=\"$paragraphCss\">")
+
+            // Append paragraph children
+            richParagraph.children.forEach { richSpan ->
+                builder.append(decodeRichSpanToHtml(richSpan))
+            }
+
+            // Append paragraph closing tag
+            builder.append("</$paragraphTagName>")
+
+            // Save last paragraph group tag name
+            lastParagraphGroupTagName = paragraphGroupTagName
+        }
 
         return builder.toString()
+    }
+
+    private fun decodeRichSpanToHtml(richSpan: RichSpan): String {
+        val stringBuilder = StringBuilder()
+
+        // Get HTML element and attributes
+        val spanHtml = decodeHtmlElementFromRichSpanStyle(richSpan.style)
+        val tagName = spanHtml.first
+        val tagAttributes = spanHtml.second
+
+        // Convert attributes map to HTML string
+        val tagAttributesStringBuilder = StringBuilder()
+        tagAttributes.forEach { (key, value) ->
+            tagAttributesStringBuilder.append(" $key=\"$value\"")
+        }
+
+        // Convert span style to CSS string
+        val spanCssMap = CssDecoder.decodeSpanStyleToCssStyleMap(richSpan.spanStyle)
+        val spanCss = CssDecoder.decodeCssStyleMap(spanCssMap)
+
+        val isRequireOpeningTag = tagName != "span" || tagAttributes.isNotEmpty() || spanCss.isNotEmpty()
+
+        if (isRequireOpeningTag) {
+            // Append HTML element with attributes and style
+            stringBuilder.append("<$tagName$tagAttributesStringBuilder")
+            if (spanCss.isNotEmpty()) stringBuilder.append(" style=\"$spanCss\"")
+            stringBuilder.append(">")
+        }
+
+        // Append text
+        stringBuilder.append(richSpan.text)
+
+        // Append children
+        richSpan.children.forEach { child ->
+            stringBuilder.append(decodeRichSpanToHtml(child))
+        }
+
+        if (isRequireOpeningTag) {
+            // Append closing HTML element
+            stringBuilder.append("</$tagName>")
+        }
+
+        return stringBuilder.toString()
     }
 
     /**

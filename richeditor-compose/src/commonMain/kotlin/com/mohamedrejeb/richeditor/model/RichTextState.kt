@@ -581,17 +581,18 @@ class RichTextState internal constructor(
                 newSpanStyle == activeRichSpanFullSpanStyle
             ) {
                 activeRichSpan.text = beforeText + typedText + afterText
+                println("activeRichSpan.text 1 = ${activeRichSpan.text}")
             } else {
                 handleUpdatingRichSpan(
                     richSpan = activeRichSpan,
                     beforeText = beforeText,
                     middleText = typedText,
                     afterText = afterText,
-//                    startIndex = startIndex,
                     startIndex = startTypeIndex,
                     richSpanFullSpanStyle = activeRichSpanFullSpanStyle,
                     newSpanStyle = newSpanStyle,
                 )
+                println("activeRichSpan.text 2 = ${activeRichSpan.text}")
             }
         } else {
             if (richParagraphList.isEmpty()) {
@@ -1018,7 +1019,10 @@ class RichTextState internal constructor(
     ) {
         if (richSpanFullSpanStyle == newSpanStyle) return
 
-        if (toRemoveSpanStyle == SpanStyle()) {
+        if (
+            toRemoveSpanStyle == SpanStyle() ||
+            !richSpanFullSpanStyle.isSpecifiedFieldsEquals(toRemoveSpanStyle)
+        ) {
             handleApplyingStyleToRichSpan(
                 richSpan = richSpan,
                 beforeText = beforeText,
@@ -1936,6 +1940,15 @@ class RichTextState internal constructor(
                 orderedListNumber = 0
             }
         }
+    }
+
+    /**
+     * Decodes the [RichTextState] to a html string.
+     *
+     * @return The html string.
+     */
+    fun toHtml(): String {
+        return RichTextStateHtmlParser.decode(this)
     }
 
     /**

@@ -23,7 +23,6 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         val handler = KsoupHtmlHandler
             .Builder()
             .onText {
-                println("onText: $it")
                 if (skipText) return@onText
 
                 val lastOpenedTag = openedTags.lastOrNull()?.first
@@ -33,13 +32,10 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     input = it,
                     trimStart = stringBuilder.lastOrNull() == ' ' || stringBuilder.lastOrNull() == '\n',
                 )
-                println("addedText: $addedText")
                 if (addedText.isEmpty()) return@onText
 
                 if (lastClosedTag in htmlBlockElements) {
-                    println("entering lastClosedTag")
                     if (addedText.isBlank()) return@onText
-                    println("passing lastClosedTag")
                     lastClosedTag = null
                     currentRichSpan = null
                     richParagraphList.add(RichParagraph())
@@ -67,7 +63,6 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 }
             }
             .onOpenTag { name, attributes, _ ->
-                println("onOpenTag: $name")
                 openedTags.add(name to attributes)
 
                 if (name == "ul" || name == "ol") {
@@ -110,7 +105,6 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                         lastClosedTag = null
                         currentRichSpan = null
                         richParagraphList.add(RichParagraph())
-                        println("added new paragraph")
                     }
 
                     val richSpanStyle = encodeHtmlElementToRichSpanStyle(name, attributes)
@@ -149,7 +143,6 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 lastClosedTag = null
             }
             .onCloseTag { name, _ ->
-                println("onCloseTag: $name")
                 openedTags.removeLastOrNull()
                 currentStyles.removeLastOrNull()
                 lastClosedTag = name

@@ -653,21 +653,8 @@ class RichTextState internal constructor(
             }
         }
 
-        println("minRemoveIndex: $minRemoveIndex")
-        println("maxRemoveIndex: $maxRemoveIndex")
-
-        println("minRichSpan: $minRichSpan")
-        println("maxRichSpan: $maxRichSpan")
-
-        println("minFirstNonEmptyChild: $minFirstNonEmptyChild")
-        println("maxFirstNonEmptyChild: $maxFirstNonEmptyChild")
-
-        println("minParagraphFirstChildMinIndex: $minParagraphFirstChildMinIndex")
-        println("maxParagraphFirstChildMinIndex: $maxParagraphFirstChildMinIndex")
-
         // Handle Remove the min paragraph custom text
         if (minRemoveIndex < minParagraphFirstChildMinIndex) {
-            println("handleRemoveMinParagraphStartText")
             handleRemoveMinParagraphStartText(
                 removeIndex = minRemoveIndex,
                 paragraphStartTextLength = minParagraphStartTextLength,
@@ -679,7 +666,6 @@ class RichTextState internal constructor(
 
         // Handle Remove the max paragraph custom text
         if (maxRemoveIndex < maxParagraphFirstChildMinIndex) {
-            println("handleRemoveMaxParagraphStartText")
             handleRemoveMaxParagraphStartText(
                 minRemoveIndex = minRemoveIndex,
                 maxRemoveIndex = maxRemoveIndex,
@@ -689,8 +675,6 @@ class RichTextState internal constructor(
 
             maxRichSpan.paragraph.type = RichParagraph.Type.Default
         }
-
-        println("before: ${minRichSpan.paragraph}")
 
         // Remove spans from the max paragraph
         maxRichSpan.paragraph.removeTextRange(removeRange, maxParagraphFirstChildMinIndex)
@@ -722,7 +706,6 @@ class RichTextState internal constructor(
             if (
                 minRemoveIndex == minParagraphFirstChildMinIndex - minParagraphStartTextLength - 1
             ) {
-                println("enter last")
                 if (
                     minRemoveIndex == minParagraphFirstChildMinIndex - minParagraphStartTextLength - 1 &&
                     minParagraphStartTextLength > 0
@@ -755,8 +738,6 @@ class RichTextState internal constructor(
             startParagraphIndex = minParagraphIndex - 1,
             endParagraphIndex = minParagraphIndex + 1,
         )
-
-        println("after: ${minRichSpan.paragraph}")
     }
 
     private fun handleRemoveMinParagraphStartText(
@@ -906,16 +887,10 @@ class RichTextState internal constructor(
                 richSpan = richSpan,
             )
 
-            println("sliceIndex: $sliceIndex")
-            println("richSpan: $richSpan")
-            println("newParagraph: ${newParagraph.children}")
 
             // Get the text before and after the slice index
             val beforeText = tempTextFieldValue.text.substring(0, sliceIndex + 1)
             val afterText = tempTextFieldValue.text.substring(sliceIndex + 1)
-
-            println("beforeText: $beforeText")
-            println("afterText: $afterText")
 
             // Update the text field value to include the new paragraph custom start text
             tempTextFieldValue = tempTextFieldValue.copy(
@@ -1948,8 +1923,6 @@ class RichTextState internal constructor(
                 OffsetMapping.Identity
             )
         }
-
-        println("new Text: ${textFieldValue.text}")
 
         // Update current span style
         updateCurrentSpanStyle()

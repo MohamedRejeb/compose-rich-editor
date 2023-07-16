@@ -1,12 +1,18 @@
 plugins {
     kotlin("multiplatform")
-    kotlin("plugin.serialization")
     id("org.jetbrains.compose")
     id("com.android.library")
 }
 
 kotlin {
-    android()
+    android {
+        publishLibraryVariants("release")
+        compilations.all {
+            kotlinOptions {
+                jvmTarget = "1.8"
+            }
+        }
+    }
     jvm("desktop") {
         jvmToolchain(11)
     }
@@ -26,28 +32,22 @@ kotlin {
                 api(compose.material3)
                 api(compose.materialIconsExtended)
 
-                implementation(libs.kotlinx.serialization.json)
-
-                implementation("com.mohamedrejeb.ksoup:ksoup-html:0.1.2")
+                implementation(libs.ksoup)
             }
         }
 
-        val commonTest by getting {
+        val androidMain by getting {
+            dependencies {}
+        }
+
+        val androidUnitTest by getting {
             dependencies {
                 implementation(kotlin("test"))
             }
         }
 
-        val androidMain by getting {
-            dependencies {
-                api("androidx.appcompat:appcompat:1.6.1")
-            }
-        }
-
         val desktopMain by getting {
-            dependencies {
-                api(compose.preview)
-            }
+            dependencies {}
         }
 
         val jsMain by getting {
@@ -69,16 +69,10 @@ kotlin {
 }
 
 android {
-    namespace = "com.mocoding.richeditor"
-    compileSdk = (findProperty("android.compileSdk") as String).toInt()
+    namespace = "com.mohamedrejeb.richeditor"
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        minSdk = (findProperty("android.minSdk") as String).toInt()
-        targetSdk = (findProperty("android.targetSdk") as String).toInt()
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        minSdk = libs.versions.android.minSdk.get().toInt()
     }
 }

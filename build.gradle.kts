@@ -1,18 +1,10 @@
 group = "com.mohamedrejeb.richeditor"
-version = "0.2.0"
+version = "1.0.0-alpha01"
 
-buildscript {
-    repositories {
-        gradlePluginPortal()
-        google()
-        mavenCentral()
-        mavenLocal()
-        maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
-    }
-
-    dependencies {
-        classpath(libs.bundles.plugins)
-    }
+plugins {
+    alias(libs.plugins.androidLibrary).apply(false)
+    alias(libs.plugins.kotlinMultiplatform).apply(false)
+    alias(libs.plugins.composeMultiplatform).apply(false)
 }
 
 allprojects {
@@ -24,7 +16,7 @@ allprojects {
     }
 
     group = "com.mohamedrejeb.richeditor"
-    version = "0.2.0"
+    version = "1.0.0-alpha01"
 
 //    apply(plugin = "org.jetbrains.dokka")
     apply(plugin = "maven-publish")

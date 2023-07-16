@@ -1,13 +1,18 @@
 plugins {
     kotlin("multiplatform")
     kotlin("native.cocoapods")
-    kotlin("plugin.serialization")
     id("org.jetbrains.compose")
     id("com.android.library")
 }
 
 kotlin {
-    android()
+    android {
+        compilations.all {
+            kotlinOptions {
+                jvmTarget = "1.8"
+            }
+        }
+    }
     jvm("desktop") {
         jvmToolchain(11)
     }
@@ -28,9 +33,16 @@ kotlin {
             baseName = "common"
             isStatic = true
         }
+        extraSpecAttributes["resources"] = "['src/commonMain/resources/**']"
     }
 
     sourceSets {
+        all {
+            languageSettings {
+                optIn("org.jetbrains.compose.resources.ExperimentalResourceApi")
+            }
+        }
+
         val commonMain by getting {
             dependencies {
                 api(compose.runtime)
@@ -38,15 +50,17 @@ kotlin {
                 api(compose.material)
                 api(compose.material3)
                 api(compose.materialIconsExtended)
+                @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
+                api(compose.components.resources)
 
-                implementation(libs.kotlinx.serialization.json)
-                implementation("com.mohamedrejeb.richeditor:richeditor-compose:0.2.0")
-//                implementation(project(":richeditor-compose"))
+//                implementation("com.mohamedrejeb.richeditor:richeditor-compose:0.2.0")
+                implementation(project(":richeditor-compose"))
 
-                val voyagerVersion = "1.0.0-rc05"
+                // Voyager Navigator
+                implementation(libs.voyager.navigator)
 
-                // Navigator
-                implementation("cafe.adriel.voyager:voyager-navigator:$voyagerVersion")
+                // WindowInsets
+                implementation("com.moriatsushi.insetsx:insetsx:0.1.0-alpha10")
             }
         }
 
@@ -77,24 +91,17 @@ kotlin {
             iosX64Main.dependsOn(this)
             iosArm64Main.dependsOn(this)
             iosSimulatorArm64Main.dependsOn(this)
-            dependencies {
-
-            }
+            dependencies {}
         }
     }
 }
 
 android {
-    namespace = "com.mocoding.richeditor.sample.common"
-    compileSdk = (findProperty("android.compileSdk") as String).toInt()
+    namespace = "com.mohamedrejeb.richeditor.sample.common"
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    sourceSets["main"].resources.srcDirs("src/commonMain/resources")
 
     defaultConfig {
-        minSdk = (findProperty("android.minSdk") as String).toInt()
-        targetSdk = (findProperty("android.targetSdk") as String).toInt()
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        minSdk = libs.versions.android.minSdk.get().toInt()
     }
 }

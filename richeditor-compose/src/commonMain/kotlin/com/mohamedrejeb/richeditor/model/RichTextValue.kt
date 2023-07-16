@@ -20,6 +20,14 @@ import com.mohamedrejeb.richeditor.utils.RichTextValueBuilder
  * @see RichTextStyle
  * @see RichTextPart
  */
+@Deprecated(
+    message = "Use rememberRichTextState instead",
+    replaceWith = ReplaceWith(
+        expression = "rememberRichTextState()",
+        imports = ["com.mohamedrejeb.richeditor.model.rememberRichTextState"]
+    ),
+    level = DeprecationLevel.WARNING,
+)
 @Immutable
 data class RichTextValue internal constructor(
     internal val textFieldValue: TextFieldValue,
@@ -135,6 +143,7 @@ data class RichTextValue internal constructor(
      * Create an HTML string from the [RichTextValue]
      *
      * @return an HTML string from the [RichTextValue]
+     * @since 0.2.0
      */
     fun toHtml(): String {
         return RichTextHtmlParser.decode(this)
@@ -144,6 +153,7 @@ data class RichTextValue internal constructor(
      * Create an [AnnotatedString] from the [RichTextValue]
      *
      * @return an [AnnotatedString] from the [RichTextValue]
+     * @since 0.2.0
      */
     fun toAnnotatedString(): AnnotatedString {
         return RichTextAnnotatedStringParser.decode(this)
@@ -155,6 +165,7 @@ data class RichTextValue internal constructor(
          *
          * @param html the HTML string
          * @return a [RichTextValue] from the HTML string
+         * @since 0.2.0
          */
         fun from(html: String): RichTextValue {
             return RichTextHtmlParser.encode(html)
@@ -165,6 +176,7 @@ data class RichTextValue internal constructor(
          *
          * @param annotatedString the [AnnotatedString]
          * @return a [RichTextValue] from the [AnnotatedString]
+         * @since 0.2.0
          */
         @ExperimentalRichTextApi
         fun from(annotatedString: AnnotatedString): RichTextValue {

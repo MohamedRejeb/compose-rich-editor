@@ -11,28 +11,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.mohamedrejeb.richeditor.model.RichTextValue
+import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.sample.common.components.RichTextStyleRow
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
+import com.moriatsushi.insetsx.ExperimentalSoftwareKeyboardApi
+import com.moriatsushi.insetsx.safeDrawingPadding
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, ExperimentalSoftwareKeyboardApi::class)
 @Composable
 fun RichEditorContent() {
     val navigator = LocalNavigator.currentOrThrow
 
-    var basicRichTextValue by remember { mutableStateOf(RichTextValue()) }
-    var richTextValue by remember { mutableStateOf(
-        RichTextValue.from(
+    val basicRichTextState = rememberRichTextState()
+    val richTextState = rememberRichTextState()
+    val outlinedRichTextState = rememberRichTextState()
+
+    LaunchedEffect(Unit) {
+        richTextState.setHtml(
             """
             <p><b>RichTextEditor</b> is a <i>composable</i> that allows you to edit <u>rich text</u> content.</p>
             """.trimIndent()
         )
-    ) }
-    var outlinedRichTextValue by remember { mutableStateOf(RichTextValue()) }
+    }
 
     ComposeRichEditorTheme {
         Scaffold(
@@ -50,6 +54,7 @@ fun RichEditorContent() {
             },
             modifier = Modifier
                 .fillMaxSize()
+                .safeDrawingPadding()
         ) { paddingValue ->
             Column(
                 modifier = Modifier
@@ -68,18 +73,12 @@ fun RichEditorContent() {
 
                 RichTextStyleRow(
                     modifier = Modifier.fillMaxWidth(),
-                    value = basicRichTextValue,
-                    onValueChanged = {
-                        basicRichTextValue = it
-                    },
+                    state = basicRichTextState,
                 )
 
                 BasicRichTextEditor(
                     modifier = Modifier.fillMaxWidth(),
-                    value = basicRichTextValue,
-                    onValueChange = {
-                        basicRichTextValue = it
-                    },
+                    state = basicRichTextState,
                 )
 
                 Divider(modifier = Modifier.padding(vertical = 20.dp))
@@ -94,18 +93,12 @@ fun RichEditorContent() {
 
                 RichTextStyleRow(
                     modifier = Modifier.fillMaxWidth(),
-                    value = richTextValue,
-                    onValueChanged = {
-                        richTextValue = it
-                    },
+                    state = richTextState,
                 )
 
                 RichTextEditor(
                     modifier = Modifier.fillMaxWidth(),
-                    value = richTextValue,
-                    onValueChange = {
-                        richTextValue = it
-                    },
+                    state = richTextState,
                 )
 
                 Divider(modifier = Modifier.padding(vertical = 20.dp))
@@ -120,18 +113,12 @@ fun RichEditorContent() {
 
                 RichTextStyleRow(
                     modifier = Modifier.fillMaxWidth(),
-                    value = outlinedRichTextValue,
-                    onValueChanged = {
-                        outlinedRichTextValue = it
-                    },
+                    state = outlinedRichTextState,
                 )
 
                 OutlinedRichTextEditor(
                     modifier = Modifier.fillMaxWidth(),
-                    value = outlinedRichTextValue,
-                    onValueChange = {
-                        outlinedRichTextValue = it
-                    },
+                    state = outlinedRichTextState,
                 )
 
                 Divider(modifier = Modifier.padding(vertical = 20.dp))
@@ -146,7 +133,7 @@ fun RichEditorContent() {
 
                 RichText(
                     modifier = Modifier.fillMaxWidth(),
-                    richText = richTextValue,
+                    state = richTextState,
                 )
             }
         }

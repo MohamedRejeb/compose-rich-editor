@@ -5,14 +5,14 @@ plugins {
 }
 
 android {
-    namespace = "com.mocoding.richeditor.android"
-    compileSdk = (findProperty("android.compileSdk") as String).toInt()
+    namespace = "com.mohamedrejeb.richeditor.android"
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        minSdk = (findProperty("android.minSdk") as String).toInt()
-        targetSdk = (findProperty("android.targetSdk") as String).toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        targetSdk = libs.versions.android.compileSdk.get().toInt()
 
-        applicationId = "com.mocoding.richeditor.android"
+        applicationId = "com.mohamedrejeb.richeditor.android"
         versionCode = 1
         versionName = "1.0"
     }
@@ -24,11 +24,11 @@ android {
         kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "1.8"
     }
     dependencies {
         implementation(project(":sample:common"))

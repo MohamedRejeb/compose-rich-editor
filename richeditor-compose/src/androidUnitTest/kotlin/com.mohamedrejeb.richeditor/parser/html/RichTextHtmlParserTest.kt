@@ -14,7 +14,7 @@ internal class RichTextHtmlParserTest {
 
         assertEquals(
             "Hello World! Welcome to Compose Rich Text Editor!",
-            RichTextHtmlParser.removeHtmlTextExtraSpaces(html)
+            removeHtmlTextExtraSpaces(html)
         )
     }
 }

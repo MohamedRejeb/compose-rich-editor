@@ -73,15 +73,15 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                 openedTags.removeLastOrNull()
                 currentStyles.removeLastOrNull()
 
-                if (name in htmlBlockElements) {
+                if (name in htmlBlockElements && text.lastOrNull()?.toString() != "\n") {
                     text += "\n"
                 }
 
-                when (name) {
-                    "br" -> {
-                        text += "\n"
-                    }
-                }
+//                when (name) {
+//                    "br" -> {
+//                        text += "\n"
+//                    }
+//                }
             }
             .build()
 
@@ -105,8 +105,16 @@ internal object RichTextHtmlParser : RichTextParser<String> {
 
         val builder = StringBuilder()
 
+        builder.append("<p>")
+
         for (part in parts) {
-            val partText = text.substring(part.fromIndex, part.toIndex + 1).replace("\n", "<br>")
+            val isInlined = part.fromIndex > 0 && text[part.fromIndex - 1] != '\n' && text[part.fromIndex] != '\n'
+
+            val partText = text
+                .substring(part.fromIndex..part.toIndex)
+                .removePrefix("\n")
+                .removeSuffix("\n")
+                .replace("\n", "<br>")
             val partStyles = part.styles.toMutableSet()
 
             val tagName = partStyles
@@ -115,7 +123,7 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                     partStyles.remove(it)
                     htmlElementsStyleDecodeMap[it]
                 }
-                ?: if (part.fromIndex > 0 && text[part.fromIndex - 1] != '\n') "span" else "p"
+                ?: if (isInlined) "span" else "p"
 
             val tagStyle =
                 if (partStyles.isEmpty()) ""
@@ -127,49 +135,17 @@ internal object RichTextHtmlParser : RichTextParser<String> {
                     " style=\"${CssDecoder.decodeCssStyleMap(cssStyleMap)}\""
                 }
 
-            builder.append("<$tagName$tagStyle>$partText</$tagName>")
+//            if (!isInlined && tagName != "p") builder.append("<p>")
+            // Skip span tag if it's empty to improve html output
+            if (tagName == "span" && tagStyle.isEmpty())
+                builder.append(partText)
+            else
+                builder.append("<$tagName$tagStyle>$partText</$tagName>")
+//            if (!isInlined && tagName != "p") builder.append("</p>")
         }
 
         return builder.toString()
     }
-
-    /**
-     * Removes extra spaces from the given input. Because in HTML, extra spaces are ignored as well as new lines.
-     *
-     * @param input the input to remove extra spaces from.
-     * @return the input without extra spaces.
-     */
-    internal fun removeHtmlTextExtraSpaces(input: String, trimStart: Boolean = false): String {
-        return input
-            .replace("\n", " ")
-            .replace("\\s+".toRegex(), " ")
-            .let {
-                if (trimStart) it.trimStart()
-                else it
-            }
-    }
-
-    /**
-     * HTML inline elements.
-     *
-     * @see <a href="https://www.w3schools.com/html/html_blocks.asp">HTML blocks</a>
-     */
-    private val htmlInlineElements = setOf(
-        "a", "abbr", "acronym", "b", "bdo", "big", "br", "button", "cite", "code", "dfn", "em", "i", "img", "input",
-        "kbd", "label", "map", "object", "q", "samp", "script", "select", "small", "span", "strong", "sub", "sup",
-        "textarea", "time", "tt", "var"
-    )
-
-    /**
-     * HTML block elements.
-     *
-     * @see <a href="https://www.w3schools.com/html/html_blocks.asp">HTML blocks</a>
-     */
-    private val htmlBlockElements = setOf(
-        "address", "article", "aside", "blockquote", "canvas", "dd", "div", "dl", "fieldset", "figcaption",
-        "figure", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6", "header", "hgroup", "hr", "li", "main", "nav",
-        "noscript", "ol", "p", "pre", "section", "table", "tfoot", "ul", "video"
-    )
 
     /**
      * Encodes HTML elements to [RichTextStyle].
@@ -217,21 +193,6 @@ internal object RichTextHtmlParser : RichTextParser<String> {
         RichTextStyle.H4 to "h4",
         RichTextStyle.H5 to "h5",
         RichTextStyle.H6 to "h6",
-    )
-
-    /**
-     * HTML elements that should be skipped.
-     */
-    private val skippedHtmlElements = setOf(
-        "head",
-        "meta",
-        "title",
-        "style",
-        "script",
-        "noscript",
-        "link",
-        "base",
-        "template",
     )
 
 }

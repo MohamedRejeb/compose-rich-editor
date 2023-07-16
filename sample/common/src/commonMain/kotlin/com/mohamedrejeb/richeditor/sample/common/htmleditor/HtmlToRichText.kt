@@ -2,30 +2,31 @@ package com.mohamedrejeb.richeditor.sample.common.htmleditor
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.ExperimentalTextApi
-import androidx.compose.ui.text.UrlAnnotation
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.mohamedrejeb.richeditor.model.RichTextValue
+import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HtmlToRichText(
+    html: TextFieldValue,
+    onHtmlChange: (TextFieldValue) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var html by remember {
-        mutableStateOf(TextFieldValue())
+    val richTextState = rememberRichTextState()
+
+    LaunchedEffect(html.text) {
+        richTextState.setHtml(html.text)
     }
-    val richTextValue = RichTextValue.from(html.text)
 
     Row(
         modifier = modifier
-            .fillMaxSize()
             .padding(20.dp)
     ) {
         Column(
@@ -34,7 +35,7 @@ fun HtmlToRichText(
                 .weight(1f)
         ) {
             Text(
-                text = "HTML Code:",
+                text = "HTML code:",
                 style = MaterialTheme.typography.titleMedium
             )
 
@@ -46,7 +47,7 @@ fun HtmlToRichText(
                     .weight(1f),
                 value = html,
                 onValueChange = {
-                    html = it
+                    onHtmlChange(it)
                 },
             )
         }
@@ -67,21 +68,28 @@ fun HtmlToRichText(
                 .weight(1f)
         ) {
             Text(
-                text = "HTML Preview:",
+                text = "Rich Text:",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier
             )
 
             Spacer(Modifier.height(8.dp))
 
-            RichText(
-                richText = richTextValue,
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
                     .border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.extraSmall)
                     .padding(vertical = 12.dp, horizontal = 12.dp)
-            )
+            ) {
+                item {
+                    RichText(
+                        state = richTextState,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    )
+                }
+            }
         }
     }
 }

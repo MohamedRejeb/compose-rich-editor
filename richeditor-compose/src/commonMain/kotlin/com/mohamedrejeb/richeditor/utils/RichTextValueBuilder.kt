@@ -12,6 +12,7 @@ import kotlin.math.min
  * A builder for [RichTextValue]
  * @see RichTextValue
  */
+@Deprecated("Use rememberRichTextState instead")
 internal class RichTextValueBuilder {
 
     private var textFieldValue: TextFieldValue = TextFieldValue()
@@ -141,19 +142,19 @@ internal class RichTextValueBuilder {
     fun updateTextFieldValue(newTextFieldValue: TextFieldValue): RichTextValueBuilder {
         // Workaround to add unordered list support, it's going to be improved,
         // But for now if it works, it works :D
-        var newTextFieldValue = newTextFieldValue
-        if (newTextFieldValue.text.length > textFieldValue.text.length) {
-            newTextFieldValue = handleAddingCharacters(newTextFieldValue)
-        } else if (newTextFieldValue.text.length < textFieldValue.text.length) {
-            handleRemovingCharacters(newTextFieldValue)
+        var mNewTextFieldValue = newTextFieldValue
+        if (mNewTextFieldValue.text.length > textFieldValue.text.length) {
+            mNewTextFieldValue = handleAddingCharacters(mNewTextFieldValue)
+        } else if (mNewTextFieldValue.text.length < textFieldValue.text.length) {
+            handleRemovingCharacters(mNewTextFieldValue)
         }
 
-        updateCurrentStyles(newTextFieldValue = newTextFieldValue)
+        updateCurrentStyles(newTextFieldValue = mNewTextFieldValue)
 
-        collapseParts(textLastIndex = newTextFieldValue.text.lastIndex)
+        collapseParts(textLastIndex = mNewTextFieldValue.text.lastIndex)
 
         return this
-            .setTextFieldValue(newTextFieldValue)
+            .setTextFieldValue(mNewTextFieldValue)
     }
 
     /**
@@ -176,25 +177,25 @@ internal class RichTextValueBuilder {
     private fun handleAddingCharacters(
         newTextFieldValue: TextFieldValue,
     ): TextFieldValue {
-        var newTextFieldValue = newTextFieldValue
-        var typedChars = newTextFieldValue.text.length - textFieldValue.text.length
-        val startTypeIndex = newTextFieldValue.selection.min - typedChars
+        var mNewTextFieldValue = newTextFieldValue
+        var typedChars = mNewTextFieldValue.text.length - textFieldValue.text.length
+        val startTypeIndex = mNewTextFieldValue.selection.min - typedChars
 
         // Workaround to add unordered list support, it's going to be changed in the future
         // when I'm going to add ordered list support but for now if it works, it works :D
         if (
-            newTextFieldValue.text.getOrNull(startTypeIndex - 2) == '\n' &&
-            newTextFieldValue.text.getOrNull(startTypeIndex - 1) == '-' &&
-            newTextFieldValue.text.getOrNull(startTypeIndex) == ' '
+            mNewTextFieldValue.text.getOrNull(startTypeIndex - 2) == '\n' &&
+            mNewTextFieldValue.text.getOrNull(startTypeIndex - 1) == '-' &&
+            mNewTextFieldValue.text.getOrNull(startTypeIndex) == ' '
         ) {
-            var newText = newTextFieldValue.text
+            var newText = mNewTextFieldValue.text
             newText = newText.removeRange(startTypeIndex - 1..startTypeIndex)
             val firstHalf = newText.substring(0..startTypeIndex-2)
             val secondHalf = newText.substring(startTypeIndex-1..newText.lastIndex)
             val unorderedListPrefix = "  •  "
             newText = firstHalf + unorderedListPrefix + secondHalf
             typedChars+=3
-            newTextFieldValue = newTextFieldValue.copy(
+            mNewTextFieldValue = mNewTextFieldValue.copy(
                 text = newText,
                 selection = TextRange(startTypeIndex + typedChars)
             )
@@ -284,7 +285,7 @@ internal class RichTextValueBuilder {
                 )
             }
         }
-        return newTextFieldValue
+        return mNewTextFieldValue
     }
 
     /**
@@ -303,7 +304,7 @@ internal class RichTextValueBuilder {
 
         val removedIndexes = mutableSetOf<Int>()
 
-        parts.forEachIndexed { index, part ->
+        parts.fastForEachIndexed { index, part ->
             if (removeRange.last < part.fromIndex) {
                 // Example: L|orem| ipsum *dolor* sit amet.
                 parts[index] = part.copy(
@@ -336,7 +337,7 @@ internal class RichTextValueBuilder {
             }
         }
 
-        removedIndexes.reversed().forEach { parts.removeAt(it) }
+        removedIndexes.reversed().fastForEach { parts.removeAt(it) }
     }
 
     /**
@@ -371,14 +372,14 @@ internal class RichTextValueBuilder {
         val endRangeMap = mutableMapOf<Int, Int>()
         val removedIndexes = mutableSetOf<Int>()
 
-        parts.forEachIndexed { index, part ->
+        parts.fastForEachIndexed { index, part ->
             startRangeMap[part.fromIndex] = index
             endRangeMap[part.toIndex] = index
         }
 
-        parts.forEachIndexed { index, part ->
+        parts.fastForEachIndexed { index, part ->
             if (removedIndexes.contains(index)) {
-                return@forEachIndexed
+                return@fastForEachIndexed
             }
 
             val start = part.fromIndex
@@ -386,7 +387,7 @@ internal class RichTextValueBuilder {
 
             if (end < start) {
                 removedIndexes.add(index)
-                return@forEachIndexed
+                return@fastForEachIndexed
             }
 
             if (startRangeMap.containsKey(end + 1)) {
@@ -423,7 +424,7 @@ internal class RichTextValueBuilder {
             )
         }
 
-        removedIndexes.reversed().forEach { parts.removeAt(it) }
+        removedIndexes.reversed().fastForEach { parts.removeAt(it) }
     }
 
     /**
@@ -434,9 +435,9 @@ internal class RichTextValueBuilder {
         newTextFieldValue: TextFieldValue
     ) {
         val newStyles = parts
-            .firstOrNull {
+            .fastFirstOrNull {
                 if (newTextFieldValue.selection.min == 0 && it.fromIndex == 0) {
-                    return@firstOrNull true
+                    return@fastFirstOrNull true
                 }
                 (newTextFieldValue.selection.min - 1) in (it.fromIndex..it.toIndex)
             }
@@ -505,9 +506,9 @@ internal class RichTextValueBuilder {
             part.fromIndex < toIndex && part.toIndex >= fromIndex
         }
 
-        selectedParts.forEach { part ->
+        selectedParts.fastForEach { part ->
             val index = parts.indexOf(part)
-            if (index !in parts.indices) return@forEach
+            if (index !in parts.indices) return@fastForEach
 
             if (part.fromIndex < fromIndex && part.toIndex >= toIndex) {
                 parts[index] = part.copy(

@@ -6,7 +6,12 @@ import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.BaselineShift
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -91,6 +96,51 @@ internal class CssDecoderTest {
         assertEquals(
             "-12.0px",
             CssDecoder.decodeSizeToCss(size6)
+        )
+    }
+
+    @Test
+    fun testDecodeTextUnitToCss() {
+        val textUnit = 12.em
+        val textUnit2 = 16.em
+        val textUnit3 = 192.em
+        val textUnit4 = 1.92.em
+        val textUnit5 = 12.5.em
+        val textUnit6 = 24.sp
+        val textUnit7 = TextUnit.Unspecified
+        val textUnit8: TextUnit? = null
+
+        assertEquals(
+            "12.0em",
+            CssDecoder.decodeTextUnitToCss(textUnit)
+        )
+        assertEquals(
+            "16.0em",
+            CssDecoder.decodeTextUnitToCss(textUnit2)
+        )
+        assertEquals(
+            "192.0em",
+            CssDecoder.decodeTextUnitToCss(textUnit3)
+        )
+        assertEquals(
+            "1.92em",
+            CssDecoder.decodeTextUnitToCss(textUnit4)
+        )
+        assertEquals(
+            "12.5em",
+            CssDecoder.decodeTextUnitToCss(textUnit5)
+        )
+        assertEquals(
+            "24.0px",
+            CssDecoder.decodeTextUnitToCss(textUnit6)
+        )
+        assertEquals(
+            null,
+            CssDecoder.decodeTextUnitToCss(textUnit7)
+        )
+        assertEquals(
+            null,
+            CssDecoder.decodeTextUnitToCss(textUnit8)
         )
     }
 
@@ -243,6 +293,74 @@ internal class CssDecoderTest {
         assertEquals(
             "1.0px 1.0px 2.0px rgba(255, 204, 0, 1.0)",
             CssDecoder.decodeTextShadowToCss(textShadow3)
+        )
+    }
+
+    @Test
+    fun testDecodeTextAlignToCss() {
+        val textAlign = TextAlign.Left
+        val textAlign2 = TextAlign.Right
+        val textAlign3 = TextAlign.Center
+        val textAlign4 = TextAlign.Justify
+        val textAlign5 = TextAlign.Start
+        val textAlign6 = TextAlign.End
+        val textAlign7: TextAlign? = null
+
+        assertEquals(
+            "left",
+            CssDecoder.decodeTextAlignToCss(textAlign)
+        )
+        assertEquals(
+            "right",
+            CssDecoder.decodeTextAlignToCss(textAlign2)
+        )
+        assertEquals(
+            "center",
+            CssDecoder.decodeTextAlignToCss(textAlign3)
+        )
+        assertEquals(
+            "justify",
+            CssDecoder.decodeTextAlignToCss(textAlign4)
+        )
+        assertEquals(
+            "left",
+            CssDecoder.decodeTextAlignToCss(textAlign5, TextDirection.Ltr)
+        )
+        assertEquals(
+            "right",
+            CssDecoder.decodeTextAlignToCss(textAlign5, TextDirection.Rtl)
+        )
+        assertEquals(
+            "right",
+            CssDecoder.decodeTextAlignToCss(textAlign6, TextDirection.Ltr)
+        )
+        assertEquals(
+            "left",
+            CssDecoder.decodeTextAlignToCss(textAlign6, TextDirection.Rtl)
+        )
+        assertEquals(
+            null,
+            CssDecoder.decodeTextAlignToCss(textAlign7)
+        )
+    }
+
+    @Test
+    fun testDecodeTextDirectionToCss() {
+        val textDirection = TextDirection.Ltr
+        val textDirection2 = TextDirection.Rtl
+        val textDirection3: TextDirection? = null
+
+        assertEquals(
+            "ltr",
+            CssDecoder.decodeTextDirectionToCss(textDirection)
+        )
+        assertEquals(
+            "rtl",
+            CssDecoder.decodeTextDirectionToCss(textDirection2)
+        )
+        assertEquals(
+            null,
+            CssDecoder.decodeTextDirectionToCss(textDirection3)
         )
     }
 }

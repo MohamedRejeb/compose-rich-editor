@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 
 internal class RichParagraphStyleTest {
     private val paragraph = RichParagraph(key = 0)
-    private val richSpanLists = listOf(
+    private val richSpanLists get() = listOf(
         RichSpan(
             key = 0,
             paragraph = paragraph,

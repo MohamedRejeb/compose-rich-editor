@@ -30,6 +30,22 @@ internal fun AnnotatedString.Builder.append(
 internal fun AnnotatedString.Builder.append(
     richSpanList: List<RichSpan>,
     startIndex: Int,
+    selection: TextRange,
+): Int {
+    var index = startIndex
+    richSpanList.forEach { richSpan ->
+        index = append(
+            richSpan = richSpan,
+            startIndex = index,
+            selection = selection,
+        )
+    }
+    return index
+}
+
+internal fun AnnotatedString.Builder.append(
+    richSpanList: List<RichSpan>,
+    startIndex: Int,
 ): Int {
     var index = startIndex
     richSpanList.forEach { richSpan ->
@@ -80,6 +96,38 @@ internal fun AnnotatedString.Builder.append(
                 richSpan = richSpan,
                 startIndex = index,
                 text = text,
+                selection = selection,
+            )
+        }
+    }
+    return index
+}
+
+internal fun AnnotatedString.Builder.append(
+    richSpan: RichSpan,
+    startIndex: Int,
+    selection: TextRange,
+): Int {
+    var index = startIndex
+
+    withStyle(richSpan.spanStyle.merge(richSpan.style.spanStyle)) {
+        richSpan.textRange = TextRange(index, index + richSpan.text.length)
+        if (
+            !selection.collapsed &&
+            selection.min < index + richSpan.text.length &&
+            selection.max > index
+        ) {
+            val selectedText = richSpan.text.substring(
+                max(0, selection.min - index),
+                min(selection.max - index, richSpan.text.length)
+            )
+            append(selectedText)
+        }
+        index += richSpan.text.length
+        richSpan.children.forEach { richSpan ->
+            index = append(
+                richSpan = richSpan,
+                startIndex = index,
                 selection = selection,
             )
         }

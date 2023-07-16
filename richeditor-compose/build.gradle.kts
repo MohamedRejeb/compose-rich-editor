@@ -36,14 +36,14 @@ kotlin {
             }
         }
 
-        val commonTest by getting {
+        val androidMain by getting {
+            dependencies {}
+        }
+
+        val androidUnitTest by getting {
             dependencies {
                 implementation(kotlin("test"))
             }
-        }
-
-        val androidMain by getting {
-            dependencies {}
         }
 
         val desktopMain by getting {

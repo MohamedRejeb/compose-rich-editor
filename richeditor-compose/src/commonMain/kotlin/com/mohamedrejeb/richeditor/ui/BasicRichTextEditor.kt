@@ -6,7 +6,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateStartPadding
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -110,8 +109,6 @@ fun BasicRichTextEditor(
     decorationBox: @Composable (innerTextField: @Composable () -> Unit) -> Unit =
         @Composable { innerTextField -> innerTextField() }
 ) {
-    val test = rememberPagerState(initialPage = 0)
-    test.currentPage
     BasicTextField(
         value = value.textFieldValue,
         onValueChange = {
@@ -275,7 +272,6 @@ fun BasicRichTextEditor(
  * innerTextField exactly once.
  *
  */
-@OptIn(ExperimentalTextApi::class)
 @Composable
 internal fun BasicRichTextEditor(
     state: RichTextState,
@@ -300,17 +296,11 @@ internal fun BasicRichTextEditor(
     val localTextStyle = LocalTextStyle.current
     val layoutDirection = LocalLayoutDirection.current
     val clipboardManager = LocalClipboardManager.current
-    // TODO: Use RichClipboardManager
-    val richClipboardManager = remember {
-        object : ClipboardManager {
-            override fun setText(annotatedString: AnnotatedString) {
-                clipboardManager.setText(annotatedString)
-            }
-
-            override fun getText(): AnnotatedString? {
-                return clipboardManager.getText()
-            }
-        }
+    val richClipboardManager = remember(state) {
+        RichTextClipboardManager(
+            richTextState = state,
+            clipboardManager = clipboardManager
+        )
     }
 
     LaunchedEffect(singleParagraph) {
@@ -337,7 +327,6 @@ internal fun BasicRichTextEditor(
             }
         }
     }
-    val textMeasurer = rememberTextMeasurer()
 
     CompositionLocalProvider(LocalClipboardManager provides richClipboardManager) {
         BasicTextField(

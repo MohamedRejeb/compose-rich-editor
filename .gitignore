@@ -3,7 +3,6 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
-local.properties
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
@@ -42,4 +41,12 @@ bin/
 ### Mac OS ###
 .DS_Store
 
+### Android ###
 local.properties
+
+### Docs ###
+docs/api
+site
+
+### Python ###
+venv/

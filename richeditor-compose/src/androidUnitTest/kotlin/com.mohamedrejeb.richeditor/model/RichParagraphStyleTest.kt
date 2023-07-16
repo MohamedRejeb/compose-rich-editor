@@ -31,8 +31,8 @@ internal class RichParagraphStyleTest {
         RichSpan(
             key = 1,
             paragraph = paragraph,
-            text = "8",
-            textRange = TextRange(8, 9),
+            text = "78",
+            textRange = TextRange(7, 9),
         )
     )
     private val richParagraph = RichParagraph(key = 0,)

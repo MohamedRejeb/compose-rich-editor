@@ -13,6 +13,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextGeometricTransform
 import androidx.compose.ui.unit.TextUnit
 import com.mohamedrejeb.richeditor.model.RichSpan
+import com.mohamedrejeb.richeditor.model.RichSpanStyle
 
 internal fun List<RichSpan>.getCommonStyle(strict: Boolean = false): SpanStyle? {
     if (this.isEmpty()) return null
@@ -72,4 +73,20 @@ internal fun List<RichSpan>.getCommonStyle(strict: Boolean = false): SpanStyle? 
         textDecoration = textDecoration,
         shadow = shadow,
     )
+}
+
+internal fun List<RichSpan>.getCommonRichStyle(): RichSpanStyle? {
+    var richSpanStyle: RichSpanStyle? = null
+
+    for (index in indices) {
+        val item = get(index)
+        if (richSpanStyle == null) {
+            richSpanStyle = item.style
+        } else if (richSpanStyle::class != item.style::class) {
+            richSpanStyle = null
+            break
+        }
+    }
+
+    return richSpanStyle
 }

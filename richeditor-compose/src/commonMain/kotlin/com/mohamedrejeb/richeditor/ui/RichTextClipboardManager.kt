@@ -50,6 +50,7 @@ internal class RichTextClipboardManager(
                             richSpanList = richParagraphStyle.children,
                             startIndex = index,
                             selection = selection,
+                            richTextConfig = richTextState.richTextConfig,
                         )
                         if (!richTextState.singleParagraphMode) {
                             if (i != richTextState.richParagraphList.lastIndex) {

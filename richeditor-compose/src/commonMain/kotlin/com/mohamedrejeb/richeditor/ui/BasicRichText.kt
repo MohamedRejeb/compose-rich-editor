@@ -16,9 +16,13 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
+import com.mohamedrejeb.richeditor.model.RichSpan
+import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.utils.fastForEach
 
 @Composable
 fun BasicRichText(
@@ -40,18 +44,7 @@ fun BasicRichText(
     BasicText(
         text = state.visualTransformation.filter(state.annotatedString).text,
         modifier = modifier
-            .drawBehind {
-                state.styledRichSpanList.forEach { richSpan ->
-                    state.textLayoutResult?.let { textLayoutResult ->
-                        with(richSpan.style) {
-                            drawCustomStyle(
-                                layoutResult = textLayoutResult,
-                                textRange = richSpan.textRange,
-                            )
-                        }
-                    }
-                }
-            }
+            .drawRichSpanStyle(state)
             .pointerHoverIcon(pointerIcon.value)
             .pointerInput(Unit) {
                 awaitEachGesture {

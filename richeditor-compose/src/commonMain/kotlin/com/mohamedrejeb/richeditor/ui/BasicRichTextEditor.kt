@@ -26,7 +26,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
-import com.mohamedrejeb.richeditor.model.RichSpanStyle.Default.drawCustomStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.RichTextValue
 import kotlinx.coroutines.CoroutineScope
@@ -85,7 +84,6 @@ import kotlinx.coroutines.CoroutineScope
  * innerTextField exactly once.
  *
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 @Deprecated(
     message = "use state instead of value",
@@ -337,23 +335,11 @@ internal fun BasicRichTextEditor(
                 state.onTextFieldValueChange(it)
             },
             modifier = modifier
-                .drawBehind {
-                    val topPadding = with(density) { contentPadding.calculateTopPadding().toPx() }
-                    val startPadding = with(density) { contentPadding.calculateLeftPadding(layoutDirection).toPx() }
-
-                    state.styledRichSpanList.forEach { richSpan ->
-                        state.textLayoutResult?.let { textLayoutResult ->
-                            with(richSpan.style) {
-                                drawCustomStyle(
-                                    layoutResult = textLayoutResult,
-                                    textRange = richSpan.textRange,
-                                    topPadding = topPadding,
-                                    startPadding = startPadding,
-                                )
-                            }
-                        }
-                    }
-                }
+                .drawRichSpanStyle(
+                    richTextState = state,
+                    topPadding = with(density) { contentPadding.calculateTopPadding().toPx() },
+                    startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() },
+                )
                 .then(
                     if (singleParagraph) {
                         Modifier

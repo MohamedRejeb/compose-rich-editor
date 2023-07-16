@@ -4,8 +4,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -16,7 +14,7 @@ import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
 
 @Composable
-fun DebugRichTextEditor(
+internal fun DebugRichTextEditor(
     modifier: Modifier = Modifier,
     richTextState: RichTextState,
     content: @Composable () -> Unit,
@@ -81,8 +79,8 @@ fun DebugRichTextEditor(
             richTextState.richParagraphList.fastForEachIndexed { index, richParagraphStyle ->
                 Text("Paragraph $index: ${richParagraphStyle.children.size} children")
                 Text(" - Start Text: ${richParagraphStyle.type.startRichSpan}")
-                richParagraphStyle.children.fastForEachIndexed { index, richTextStyle ->
-                    RichTextStyleTreeRepresentation(index, richTextStyle, " -")
+                richParagraphStyle.children.fastForEachIndexed { childIndex, richTextStyle ->
+                    RichTextStyleTreeRepresentation(childIndex, richTextStyle, " -")
                 }
 
                 Divider(modifier = Modifier.padding(vertical = 20.dp))
@@ -94,8 +92,8 @@ fun DebugRichTextEditor(
 @Composable
 private fun RichTextStyleTreeRepresentation(index: Int, richSpan: RichSpan, startText: String) {
     Text("${startText}Text $index `$richSpan`: ${richSpan.children.size} children")
-    richSpan.children.fastForEachIndexed { index, richSpan ->
-        RichTextStyleTreeRepresentation(index, richSpan, "$startText-")
+    richSpan.children.fastForEachIndexed { childIndex, childRichSpan ->
+        RichTextStyleTreeRepresentation(childIndex, childRichSpan, "$startText-")
     }
 }
 
@@ -107,7 +105,7 @@ internal fun getRichTextStyleTreeRepresentation(
 ) {
     stringBuilder.append("${startText}Text $index `$richSpan`: ${richSpan.children.size} children")
     stringBuilder.appendLine()
-    richSpan.children.fastForEachIndexed { index, richSpan ->
-        getRichTextStyleTreeRepresentation(stringBuilder, index, richSpan, "$startText-")
+    richSpan.children.fastForEachIndexed { childIndex, childRichSpan ->
+        getRichTextStyleTreeRepresentation(stringBuilder, childIndex, childRichSpan, "$startText-")
     }
 }

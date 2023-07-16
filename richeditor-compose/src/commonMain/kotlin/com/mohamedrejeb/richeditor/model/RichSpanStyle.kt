@@ -17,7 +17,7 @@ import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
 import com.mohamedrejeb.richeditor.utils.getBoundingBoxes
 
 internal interface RichSpanStyle {
-    val spanStyle: SpanStyle
+    val spanStyle: (RichTextConfig) -> SpanStyle
 
     val data: MutableMap<String, String>
 
@@ -35,17 +35,21 @@ internal interface RichSpanStyle {
     fun DrawScope.drawCustomStyle(
         layoutResult: TextLayoutResult,
         textRange: TextRange,
+        richTextConfig: RichTextConfig,
         topPadding: Float = 0f,
         startPadding: Float = 0f,
     ) {}
 
     class Link(
-        override val spanStyle: SpanStyle = SpanStyle(
-            color = Color.Blue,
-            textDecoration = TextDecoration.Underline,
-        ),
         val url: String,
     ) : RichSpanStyle {
+        override val spanStyle: (RichTextConfig) -> SpanStyle = {
+            SpanStyle(
+                color = it.linkColor,
+                textDecoration = it.linkTextDecoration,
+            )
+        }
+
         override val data: MutableMap<String, String> = mutableMapOf(
             "url" to url,
         )
@@ -54,22 +58,26 @@ internal interface RichSpanStyle {
 
     class Code(
         private val cornerRadius: TextUnit = 8.sp,
-        private val textColor: Color = Color(0xFFd7882d),
-        private val backgroundColor: Color = Color.Transparent,
-        private val strokeColor: Color = Color(0xFF494b4d),
         private val strokeWidth: TextUnit = 1.sp,
         private val padding: TextPaddingValues = TextPaddingValues(horizontal = 2.sp, vertical = 2.sp)
     ): RichSpanStyle {
-        override val spanStyle: SpanStyle = SpanStyle(color = textColor)
+        override val spanStyle: (RichTextConfig) -> SpanStyle = {
+            SpanStyle(
+                color = it.codeColor,
+            )
+        }
         override val data: MutableMap<String, String> = mutableMapOf()
 
         override fun DrawScope.drawCustomStyle(
             layoutResult: TextLayoutResult,
             textRange: TextRange,
+            richTextConfig: RichTextConfig,
             topPadding: Float,
             startPadding: Float,
         ) {
             val path = Path()
+            val backgroundColor = richTextConfig.codeBackgroundColor
+            val strokeColor = richTextConfig.codeStrokeColor
             val cornerRadius = CornerRadius(cornerRadius.toPx())
             val boxes = layoutResult.getBoundingBoxes(
                 startOffset = textRange.start,
@@ -109,7 +117,7 @@ internal interface RichSpanStyle {
     }
 
     object Default : RichSpanStyle {
-        override val spanStyle: SpanStyle = SpanStyle()
+        override val spanStyle: (RichTextConfig) -> SpanStyle = { SpanStyle() }
         override val data: MutableMap<String, String> = mutableMapOf()
     }
 

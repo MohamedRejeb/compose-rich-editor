@@ -5,11 +5,15 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextDecoration
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichParagraph.Type.Companion.startText
 import com.mohamedrejeb.richeditor.parser.html.RichTextStateHtmlParser
 import com.mohamedrejeb.richeditor.utils.*
@@ -113,10 +117,30 @@ class RichTextState internal constructor(
     val isUnorderedList get() = currentRichParagraphType is RichParagraph.Type.UnorderedList
     val isOrderedList get() = currentRichParagraphType is RichParagraph.Type.OrderedList
 
+    internal var richTextConfig by mutableStateOf(RichTextConfig())
+
     init {
         updateRichParagraphList(initialRichParagraphList)
     }
 
+    @ExperimentalRichTextApi
+    fun setConfig(
+        linkColor: Color = Color.Unspecified,
+        linkTextDecoration: TextDecoration? = null,
+        codeColor: Color = Color.Unspecified,
+        codeBackgroundColor: Color = Color.Unspecified,
+        codeStrokeColor: Color = Color.Unspecified,
+    ) {
+        richTextConfig = RichTextConfig(
+            linkColor = if (linkColor.isSpecified) linkColor else richTextConfig.linkColor,
+            linkTextDecoration = if (linkTextDecoration != null) linkTextDecoration else richTextConfig.linkTextDecoration,
+            codeColor = if (codeColor.isSpecified) codeColor else richTextConfig.codeColor,
+            codeBackgroundColor = if (codeBackgroundColor.isSpecified) codeBackgroundColor else richTextConfig.codeBackgroundColor,
+            codeStrokeColor = if (codeStrokeColor.isSpecified) codeStrokeColor else richTextConfig.codeStrokeColor,
+        )
+
+        updateTextFieldValue(textFieldValue)
+    }
 
     /**
      * Toggle the [SpanStyle]
@@ -232,12 +256,18 @@ class RichTextState internal constructor(
         if (toRemoveRichSpanStyle is RichSpanStyle.Code)
             toRemoveRichSpanStyle = RichSpanStyle.Default
         toAddRichSpanStyle = RichSpanStyle.Code()
+
+        if (!selection.collapsed)
+            handleAddingStyleToSelectedText()
     }
 
     fun removeCode() {
         if (toAddRichSpanStyle is RichSpanStyle.Code)
             toAddRichSpanStyle = RichSpanStyle.Default
         toRemoveRichSpanStyle = RichSpanStyle.Code()
+
+        if (!selection.collapsed)
+            handleAddingStyleToSelectedText()
     }
 
     /**
@@ -551,7 +581,8 @@ class RichTextState internal constructor(
                             selection = newTextFieldValue.selection,
                             onStyledRichSpan = {
                                 styledRichSpanList.add(it)
-                            }
+                            },
+                            richTextConfig = richTextConfig,
                         )
                         if (!singleParagraphMode) {
                             if (i != richParagraphList.lastIndex) {
@@ -624,7 +655,6 @@ class RichTextState internal constructor(
                 else if (toRemoveRichSpanStyle::class == activeRichSpan.style::class) RichSpanStyle.Default
                 else activeRichSpan.style
 
-            println("paragraph before: ${activeRichSpan.paragraph}")
             if (
                 (
                     toAddSpanStyle == SpanStyle() && toRemoveSpanStyle == SpanStyle() &&
@@ -643,7 +673,6 @@ class RichTextState internal constructor(
                     newSpanStyle = newSpanStyle,
                 )
             }
-            println("paragraph after: ${activeRichSpan.paragraph}")
         } else {
             if (richParagraphList.isEmpty()) {
                 richParagraphList.add(RichParagraph())
@@ -993,11 +1022,12 @@ class RichTextState internal constructor(
 
             handleUpdatingRichSpan(
                 richSpan = richSpan,
-                newSpanStyle = newSpanStyle,
                 startIndex = startApplyStyleIndex,
                 beforeText = beforeText,
                 middleText = middleText,
                 afterText = afterText,
+                newSpanStyle = newSpanStyle,
+
             )
         }
 
@@ -1037,11 +1067,11 @@ class RichTextState internal constructor(
 
             handleUpdatingRichSpan(
                 richSpan = richSpan,
-                newSpanStyle = newSpanStyle,
                 startIndex = startApplyStyleIndex,
                 beforeText = beforeText,
                 middleText = middleText,
                 afterText = afterText,
+                newSpanStyle = newSpanStyle,
             )
         }
 
@@ -1664,7 +1694,11 @@ class RichTextState internal constructor(
                 ?: RichSpanStyle.DefaultSpanStyle
         }
         else {
-            currentRichSpanStyle = RichSpanStyle.Default
+            val richSpanList = getRichSpanListByTextRange(selection)
+
+            currentRichSpanStyle = richSpanList
+                .getCommonRichStyle()
+                ?: RichSpanStyle.Default
             currentAppliedSpanStyle = getRichSpanListByTextRange(selection)
                 .getCommonStyle()
                 ?: RichSpanStyle.DefaultSpanStyle
@@ -1921,6 +1955,13 @@ class RichTextState internal constructor(
         val richParagraphList = richParagraphList.map { it.copy() }
         val richTextState = RichTextState(richParagraphList)
         richTextState.updateTextFieldValue(textFieldValue)
+        richTextState.setConfig(
+            linkColor = richTextConfig.linkColor,
+            linkTextDecoration = richTextConfig.linkTextDecoration,
+            codeColor = richTextConfig.codeColor,
+            codeBackgroundColor = richTextConfig.codeBackgroundColor,
+            codeStrokeColor = richTextConfig.codeStrokeColor,
+        )
         return richTextState
     }
 
@@ -1972,6 +2013,7 @@ class RichTextState internal constructor(
                         index = append(
                             richSpanList = richParagraphStyle.children,
                             startIndex = index,
+                            richTextConfig = richTextConfig,
                         )
                         if (!singleParagraphMode) {
                             if (i != richParagraphList.lastIndex) {

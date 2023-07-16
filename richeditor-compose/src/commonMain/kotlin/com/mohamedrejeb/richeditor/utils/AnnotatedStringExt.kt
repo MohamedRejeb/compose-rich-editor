@@ -7,6 +7,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.withStyle
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
+import com.mohamedrejeb.richeditor.model.RichTextConfig
 import kotlin.math.max
 import kotlin.math.min
 
@@ -16,6 +17,7 @@ internal fun AnnotatedString.Builder.append(
     text: String,
     selection: TextRange,
     onStyledRichSpan: (RichSpan) -> Unit,
+    richTextConfig: RichTextConfig,
 ): Int {
     var index = startIndex
     richSpanList.fastForEach { richSpan ->
@@ -25,6 +27,7 @@ internal fun AnnotatedString.Builder.append(
             text = text,
             selection = selection,
             onStyledRichSpan = onStyledRichSpan,
+            richTextConfig = richTextConfig,
         )
     }
     return index
@@ -34,6 +37,7 @@ internal fun AnnotatedString.Builder.append(
     richSpanList: List<RichSpan>,
     startIndex: Int,
     selection: TextRange,
+    richTextConfig: RichTextConfig,
 ): Int {
     var index = startIndex
     richSpanList.fastForEach { richSpan ->
@@ -41,6 +45,7 @@ internal fun AnnotatedString.Builder.append(
             richSpan = richSpan,
             startIndex = index,
             selection = selection,
+            richTextConfig = richTextConfig,
         )
     }
     return index
@@ -49,12 +54,14 @@ internal fun AnnotatedString.Builder.append(
 internal fun AnnotatedString.Builder.append(
     richSpanList: List<RichSpan>,
     startIndex: Int,
+    richTextConfig: RichTextConfig,
 ): Int {
     var index = startIndex
     richSpanList.fastForEach { richSpan ->
         index = append(
             richSpan = richSpan,
             startIndex = index,
+            richTextConfig = richTextConfig,
         )
     }
     return index
@@ -66,10 +73,11 @@ internal fun AnnotatedString.Builder.append(
     text: String,
     selection: TextRange,
     onStyledRichSpan: (RichSpan) -> Unit,
+    richTextConfig: RichTextConfig,
 ): Int {
     var index = startIndex
 
-    withStyle(richSpan.spanStyle.merge(richSpan.style.spanStyle)) {
+    withStyle(richSpan.spanStyle.merge(richSpan.style.spanStyle(richTextConfig))) {
         val newText = text.substring(index, index + richSpan.text.length)
         richSpan.text = newText
         richSpan.textRange = TextRange(index, index + richSpan.text.length)
@@ -108,6 +116,7 @@ internal fun AnnotatedString.Builder.append(
                 text = text,
                 selection = selection,
                 onStyledRichSpan = onStyledRichSpan,
+                richTextConfig = richTextConfig,
             )
         }
     }
@@ -118,10 +127,11 @@ internal fun AnnotatedString.Builder.append(
     richSpan: RichSpan,
     startIndex: Int,
     selection: TextRange,
+    richTextConfig: RichTextConfig,
 ): Int {
     var index = startIndex
 
-    withStyle(richSpan.spanStyle.merge(richSpan.style.spanStyle)) {
+    withStyle(richSpan.spanStyle.merge(richSpan.style.spanStyle(richTextConfig))) {
         richSpan.textRange = TextRange(index, index + richSpan.text.length)
         if (
             !selection.collapsed &&
@@ -140,6 +150,7 @@ internal fun AnnotatedString.Builder.append(
                 richSpan = richSpan,
                 startIndex = index,
                 selection = selection,
+                richTextConfig = richTextConfig,
             )
         }
     }
@@ -149,10 +160,11 @@ internal fun AnnotatedString.Builder.append(
 internal fun AnnotatedString.Builder.append(
     richSpan: RichSpan,
     startIndex: Int,
+    richTextConfig: RichTextConfig,
 ): Int {
     var index = startIndex
 
-    withStyle(richSpan.spanStyle.merge(richSpan.style.spanStyle)) {
+    withStyle(richSpan.spanStyle.merge(richSpan.style.spanStyle(richTextConfig))) {
         richSpan.textRange = TextRange(index, index + richSpan.text.length)
         append(richSpan.text)
         index += richSpan.text.length
@@ -160,6 +172,7 @@ internal fun AnnotatedString.Builder.append(
             index = append(
                 richSpan = richSpan,
                 startIndex = index,
+                richTextConfig = richTextConfig,
             )
         }
     }

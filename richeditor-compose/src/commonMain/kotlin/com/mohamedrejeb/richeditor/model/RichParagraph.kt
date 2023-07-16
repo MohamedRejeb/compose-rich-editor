@@ -8,6 +8,8 @@ import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.model.RichParagraph.Type.Companion.startText
 import com.mohamedrejeb.richeditor.ui.test.getRichTextStyleTreeRepresentation
+import com.mohamedrejeb.richeditor.utils.fastForEach
+import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
 
 internal class RichParagraph(
     val key: Int = 0,
@@ -87,7 +89,7 @@ internal class RichParagraph(
         // Check if the textIndex is in the startRichSpan current paragraph
         if (index > textIndex) return index to getFirstNonEmptyChild(offset = index)
 
-        children.forEach { richSpan ->
+        children.fastForEach { richSpan ->
             val result = richSpan.getRichSpanByTextIndex(
                 textIndex = textIndex,
                 offset = index,
@@ -116,7 +118,7 @@ internal class RichParagraph(
         if (paragraphIndex > 0) index++
 
         val richSpanList = mutableListOf<RichSpan>()
-        children.forEach { richSpan ->
+        children.fastForEach { richSpan ->
             val result = richSpan.getRichSpanListByTextRange(
                 searchTextRange = searchTextRange,
                 offset = index,
@@ -154,14 +156,14 @@ internal class RichParagraph(
 
     fun isEmpty(): Boolean {
         if (children.isEmpty()) return true
-        children.forEach { richSpan ->
+        children.fastForEach { richSpan ->
             if (!richSpan.isEmpty()) return false
         }
         return true
     }
 
     fun getFirstNonEmptyChild(offset: Int? = null): RichSpan? {
-        children.forEach { richSpan ->
+        children.fastForEach { richSpan ->
             if (richSpan.text.isNotEmpty()) {
                 if (offset != null)
                     richSpan.textRange = TextRange(offset, offset + richSpan.text.length)
@@ -189,7 +191,7 @@ internal class RichParagraph(
      * @param newParagraph The new paragraph
      */
     fun updateChildrenParagraph(newParagraph: RichParagraph) {
-        children.forEach { childRichSpan ->
+        children.fastForEach { childRichSpan ->
             childRichSpan.paragraph = newParagraph
             childRichSpan.updateChildrenParagraph(newParagraph)
         }
@@ -200,7 +202,7 @@ internal class RichParagraph(
             paragraphStyle = paragraphStyle,
             type = type.copy(),
         )
-        children.forEach { childRichSpan ->
+        children.fastForEach { childRichSpan ->
             val newRichSpan = childRichSpan.copy(newParagraph)
             newRichSpan.paragraph = newParagraph
             newParagraph.children.add(newRichSpan)
@@ -212,7 +214,7 @@ internal class RichParagraph(
         val stringBuilder = StringBuilder()
         stringBuilder.append(" - Start Text: ${type.startRichSpan}")
         stringBuilder.appendLine()
-        children.forEachIndexed { index, richTextStyle ->
+        children.fastForEachIndexed { index, richTextStyle ->
             getRichTextStyleTreeRepresentation(stringBuilder, index, richTextStyle, " -")
         }
         return stringBuilder.toString()

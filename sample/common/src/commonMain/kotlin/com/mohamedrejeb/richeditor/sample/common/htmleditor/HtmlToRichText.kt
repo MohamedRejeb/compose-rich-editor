@@ -35,7 +35,7 @@ fun HtmlToRichText(
                 .weight(1f)
         ) {
             Text(
-                text = "HTML Code:",
+                text = "HTML code:",
                 style = MaterialTheme.typography.titleMedium
             )
 

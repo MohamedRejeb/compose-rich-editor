@@ -6,6 +6,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.withStyle
 import com.mohamedrejeb.richeditor.model.RichSpan
+import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import kotlin.math.max
 import kotlin.math.min
 
@@ -14,14 +15,16 @@ internal fun AnnotatedString.Builder.append(
     startIndex: Int,
     text: String,
     selection: TextRange,
+    onStyledRichSpan: (RichSpan) -> Unit,
 ): Int {
     var index = startIndex
-    richSpanList.forEach { richSpan ->
+    richSpanList.fastForEach { richSpan ->
         index = append(
             richSpan = richSpan,
             startIndex = index,
             text = text,
             selection = selection,
+            onStyledRichSpan = onStyledRichSpan,
         )
     }
     return index
@@ -33,7 +36,7 @@ internal fun AnnotatedString.Builder.append(
     selection: TextRange,
 ): Int {
     var index = startIndex
-    richSpanList.forEach { richSpan ->
+    richSpanList.fastForEach { richSpan ->
         index = append(
             richSpan = richSpan,
             startIndex = index,
@@ -48,7 +51,7 @@ internal fun AnnotatedString.Builder.append(
     startIndex: Int,
 ): Int {
     var index = startIndex
-    richSpanList.forEach { richSpan ->
+    richSpanList.fastForEach { richSpan ->
         index = append(
             richSpan = richSpan,
             startIndex = index,
@@ -62,12 +65,14 @@ internal fun AnnotatedString.Builder.append(
     startIndex: Int,
     text: String,
     selection: TextRange,
+    onStyledRichSpan: (RichSpan) -> Unit,
 ): Int {
     var index = startIndex
 
     withStyle(richSpan.spanStyle.merge(richSpan.style.spanStyle)) {
         val newText = text.substring(index, index + richSpan.text.length)
         richSpan.text = newText
+        richSpan.textRange = TextRange(index, index + richSpan.text.length)
         if (
             !selection.collapsed &&
             selection.min < index + richSpan.text.length &&
@@ -90,13 +95,19 @@ internal fun AnnotatedString.Builder.append(
         } else {
             append(newText)
         }
+
+        if (richSpan.style !is RichSpanStyle.Default) {
+            onStyledRichSpan(richSpan)
+        }
+
         index += richSpan.text.length
-        richSpan.children.forEach { richSpan ->
+        richSpan.children.fastForEach { richSpan ->
             index = append(
                 richSpan = richSpan,
                 startIndex = index,
                 text = text,
                 selection = selection,
+                onStyledRichSpan = onStyledRichSpan,
             )
         }
     }
@@ -124,7 +135,7 @@ internal fun AnnotatedString.Builder.append(
             append(selectedText)
         }
         index += richSpan.text.length
-        richSpan.children.forEach { richSpan ->
+        richSpan.children.fastForEach { richSpan ->
             index = append(
                 richSpan = richSpan,
                 startIndex = index,
@@ -145,7 +156,7 @@ internal fun AnnotatedString.Builder.append(
         richSpan.textRange = TextRange(index, index + richSpan.text.length)
         append(richSpan.text)
         index += richSpan.text.length
-        richSpan.children.forEach { richSpan ->
+        richSpan.children.fastForEach { richSpan ->
             index = append(
                 richSpan = richSpan,
                 startIndex = index,

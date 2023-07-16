@@ -76,7 +76,7 @@ import com.mohamedrejeb.richeditor.model.RichTextValue
     replaceWith = ReplaceWith(
         expression = "OutlinedRichTextEditor(state =, )",
     ),
-    level = DeprecationLevel.WARNING
+    level = DeprecationLevel.ERROR
 )
 fun OutlinedRichTextEditor(
     value: RichTextValue,

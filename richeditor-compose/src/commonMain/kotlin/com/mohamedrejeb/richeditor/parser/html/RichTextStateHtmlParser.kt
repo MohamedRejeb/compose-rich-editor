@@ -7,6 +7,8 @@ import com.mohamedrejeb.richeditor.model.*
 import com.mohamedrejeb.richeditor.model.RichParagraph
 import com.mohamedrejeb.richeditor.parser.RichTextStateParser
 import com.mohamedrejeb.richeditor.utils.customMerge
+import com.mohamedrejeb.richeditor.utils.fastForEach
+import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
 
 internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
@@ -173,7 +175,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
         var lastParagraphGroupTagName: String? = null
 
-        richTextState.richParagraphList.forEachIndexed { index, richParagraph ->
+        richTextState.richParagraphList.fastForEachIndexed { index, richParagraph ->
             val paragraphGroupTagName = decodeHtmlElementFromRichParagraphType(richParagraph.type)
 
             // Close last paragraph group tag if needed
@@ -201,7 +203,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
             builder.append("<$paragraphTagName style=\"$paragraphCss\">")
 
             // Append paragraph children
-            richParagraph.children.forEach { richSpan ->
+            richParagraph.children.fastForEach { richSpan ->
                 builder.append(decodeRichSpanToHtml(richSpan))
             }
 
@@ -252,7 +254,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         stringBuilder.append(richSpan.text)
 
         // Append children
-        richSpan.children.forEach { child ->
+        richSpan.children.fastForEach { child ->
             stringBuilder.append(decodeRichSpanToHtml(child))
         }
 
@@ -324,7 +326,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 val href = attributes["href"] ?: ""
                 return RichSpanStyle.Link(url = href)
             }
-            else -> RichSpanStyle.Default()
+            else -> RichSpanStyle.Default
         }
     }
 

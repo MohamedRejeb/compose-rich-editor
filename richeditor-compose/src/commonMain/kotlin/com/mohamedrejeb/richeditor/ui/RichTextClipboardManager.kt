@@ -8,6 +8,7 @@ import com.mohamedrejeb.richeditor.model.RichParagraph.Type.Companion.startText
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.utils.append
+import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
 import kotlin.math.max
 import kotlin.math.min
 
@@ -30,7 +31,7 @@ internal class RichTextClipboardManager(
         val selection = richTextState.selection
         val richTextAnnotatedString = buildAnnotatedString {
             var index = 0
-            richTextState.richParagraphList.forEachIndexed { i, richParagraphStyle ->
+            richTextState.richParagraphList.fastForEachIndexed { i, richParagraphStyle ->
                 withStyle(richParagraphStyle.paragraphStyle.merge(richParagraphStyle.type.style)) {
                     if (
                         !selection.collapsed &&

@@ -48,7 +48,8 @@ class RichTextState internal constructor(
 
     internal var singleParagraphMode by mutableStateOf(false)
 
-    private var textLayoutResult: TextLayoutResult? by mutableStateOf(null)
+    internal var textLayoutResult: TextLayoutResult? by mutableStateOf(null)
+        private set
 
     private var lastPressPosition: Offset? by mutableStateOf(null)
 
@@ -59,14 +60,21 @@ class RichTextState internal constructor(
 
     private var currentRichSpanStyle: RichSpanStyle by mutableStateOf(
         getRichSpanByTextIndex(textIndex = selection.min - 1)?.style
-            ?: RichSpanStyle.Default()
+            ?: RichSpanStyle.Default
     )
         private set
 
     val isLink get() = currentRichSpanStyle is RichSpanStyle.Link
+    val isCode get() = (
+            currentRichSpanStyle is RichSpanStyle.Code ||
+            toAddRichSpanStyle is RichSpanStyle.Code) &&
+            toRemoveRichSpanStyle !is RichSpanStyle.Code
 
     private var toAddSpanStyle: SpanStyle by mutableStateOf(SpanStyle())
     private var toRemoveSpanStyle: SpanStyle by mutableStateOf(SpanStyle())
+
+    private var toAddRichSpanStyle: RichSpanStyle by mutableStateOf(RichSpanStyle.Default)
+    private var toRemoveRichSpanStyle: RichSpanStyle by mutableStateOf(RichSpanStyle.Default)
 
     /**
      * The current span style.
@@ -75,6 +83,9 @@ class RichTextState internal constructor(
      */
     val currentSpanStyle: SpanStyle
         get() = currentAppliedSpanStyle.customMerge(toAddSpanStyle).unmerge(toRemoveSpanStyle)
+
+    internal var styledRichSpanList = mutableStateListOf<RichSpan>()
+        private set
 
     private var currentAppliedParagraphStyle: ParagraphStyle by mutableStateOf(
         getRichParagraphByTextIndex(textIndex = selection.min - 1)?.paragraphStyle
@@ -210,6 +221,25 @@ class RichTextState internal constructor(
         )
     }
 
+    fun toggleCode() {
+        if (isCode)
+            removeCode()
+        else
+            addCode()
+    }
+
+    fun addCode() {
+        if (toRemoveRichSpanStyle is RichSpanStyle.Code)
+            toRemoveRichSpanStyle = RichSpanStyle.Default
+        toAddRichSpanStyle = RichSpanStyle.Code()
+    }
+
+    fun removeCode() {
+        if (toAddRichSpanStyle is RichSpanStyle.Code)
+            toAddRichSpanStyle = RichSpanStyle.Default
+        toRemoveRichSpanStyle = RichSpanStyle.Code()
+    }
+
     /**
      * Toggle the [ParagraphStyle]
      * If the passed paragraph style doesn't exist in the [currentParagraphStyle] it's going to be added.
@@ -258,7 +288,7 @@ class RichTextState internal constructor(
             else {
                 val paragraphs = getRichParagraphListByTextRange(selection)
                 if (paragraphs.isEmpty()) return
-                paragraphs.forEach { it.paragraphStyle = it.paragraphStyle.merge(paragraphStyle) }
+                paragraphs.fastForEach { it.paragraphStyle = it.paragraphStyle.merge(paragraphStyle) }
             }
             // We update the annotated string to reflect the changes
             updateAnnotatedString()
@@ -292,7 +322,7 @@ class RichTextState internal constructor(
             else {
                 val paragraphs = getRichParagraphListByTextRange(selection)
                 if (paragraphs.isEmpty()) return
-                paragraphs.forEach { it.paragraphStyle = it.paragraphStyle.unmerge(paragraphStyle) }
+                paragraphs.fastForEach { it.paragraphStyle = it.paragraphStyle.unmerge(paragraphStyle) }
             }
             // We update the annotated string to reflect the changes
             updateAnnotatedString()
@@ -474,6 +504,8 @@ class RichTextState internal constructor(
         // Clear un-applied styles
         toAddSpanStyle = SpanStyle()
         toRemoveSpanStyle = SpanStyle()
+        toAddRichSpanStyle = RichSpanStyle.Default
+        toRemoveRichSpanStyle = RichSpanStyle.Default
 
         // Update current span style
         updateCurrentSpanStyle()
@@ -498,12 +530,14 @@ class RichTextState internal constructor(
         val newText =
             if (singleParagraphMode) newTextFieldValue.text
             else newTextFieldValue.text.replace("\n", " ")
+
+        styledRichSpanList.clear()
         annotatedString = buildAnnotatedString {
             var index = 0
-            richParagraphList.forEachIndexed { i, richParagraphStyle ->
+            richParagraphList.fastForEachIndexed { i, richParagraphStyle ->
                 if (index > newText.length) {
                     richParagraphList.removeAt(i)
-                    return@forEachIndexed
+                    return@fastForEachIndexed
                 }
 
                 withStyle(richParagraphStyle.paragraphStyle.merge(richParagraphStyle.type.style)) {
@@ -515,6 +549,9 @@ class RichTextState internal constructor(
                             startIndex = index,
                             text = newText,
                             selection = newTextFieldValue.selection,
+                            onStyledRichSpan = {
+                                styledRichSpanList.add(it)
+                            }
                         )
                         if (!singleParagraphMode) {
                             if (i != richParagraphList.lastIndex) {
@@ -582,10 +619,17 @@ class RichTextState internal constructor(
 
             val activeRichSpanFullSpanStyle = activeRichSpan.fullSpanStyle
             val newSpanStyle = activeRichSpanFullSpanStyle.customMerge(toAddSpanStyle).unmerge(toRemoveSpanStyle)
+            val newRichSpanStyle =
+                if (toAddRichSpanStyle !is RichSpanStyle.Default) toAddRichSpanStyle
+                else if (toRemoveRichSpanStyle::class == activeRichSpan.style::class) RichSpanStyle.Default
+                else activeRichSpan.style
 
+            println("paragraph before: ${activeRichSpan.paragraph}")
             if (
-                (toAddSpanStyle == SpanStyle() && toRemoveSpanStyle == SpanStyle()) ||
-                newSpanStyle == activeRichSpanFullSpanStyle
+                (
+                    toAddSpanStyle == SpanStyle() && toRemoveSpanStyle == SpanStyle() &&
+                    toAddRichSpanStyle is RichSpanStyle.Default && toRemoveRichSpanStyle::class != activeRichSpan.style::class
+                ) || (newSpanStyle == activeRichSpanFullSpanStyle && newRichSpanStyle::class == activeRichSpan.style::class)
             ) {
                 activeRichSpan.text = beforeText + typedText + afterText
             } else {
@@ -599,6 +643,7 @@ class RichTextState internal constructor(
                     newSpanStyle = newSpanStyle,
                 )
             }
+            println("paragraph after: ${activeRichSpan.paragraph}")
         } else {
             if (richParagraphList.isEmpty()) {
                 richParagraphList.add(RichParagraph())
@@ -1022,12 +1067,17 @@ class RichTextState internal constructor(
         startIndex: Int,
         richSpanFullSpanStyle: SpanStyle = richSpan.fullSpanStyle,
         newSpanStyle: SpanStyle = richSpanFullSpanStyle.customMerge(toAddSpanStyle).unmerge(toRemoveSpanStyle),
+        newRichSpanStyle: RichSpanStyle =
+            if (toAddRichSpanStyle !is RichSpanStyle.Default) toAddRichSpanStyle
+            else if (toRemoveRichSpanStyle::class == richSpan.style::class) RichSpanStyle.Default
+            else richSpan.style,
     ) {
-        if (richSpanFullSpanStyle == newSpanStyle) return
+        if (richSpanFullSpanStyle == newSpanStyle && newRichSpanStyle::class == richSpan.style::class) return
 
         if (
-            toRemoveSpanStyle == SpanStyle() ||
-            !richSpanFullSpanStyle.isSpecifiedFieldsEquals(toRemoveSpanStyle)
+            (toRemoveSpanStyle == SpanStyle() ||
+            !richSpanFullSpanStyle.isSpecifiedFieldsEquals(toRemoveSpanStyle)) &&
+            (toRemoveRichSpanStyle is RichSpanStyle.Default || newRichSpanStyle::class == richSpan.style::class)
         ) {
             handleApplyingStyleToRichSpan(
                 richSpan = richSpan,
@@ -1045,6 +1095,7 @@ class RichTextState internal constructor(
                 startIndex = startIndex,
                 richSpanFullSpanStyle = richSpanFullSpanStyle,
                 newSpanStyle = newSpanStyle,
+                newRichSpanStyle = newRichSpanStyle,
             )
         }
     }
@@ -1077,6 +1128,7 @@ class RichTextState internal constructor(
             richSpan.spanStyle = richSpan.spanStyle.copy(
                 textDecoration = fullSpanStyle.textDecoration
             ).customMerge(toAddSpanStyle)
+            richSpan.style = toAddRichSpanStyle
             return
         }
 
@@ -1092,6 +1144,7 @@ class RichTextState internal constructor(
             spanStyle = SpanStyle(
                 textDecoration = fullSpanStyle.textDecoration
             ).customMerge(toAddSpanStyle),
+            style = toAddRichSpanStyle,
         )
 
         if (middleText.isNotEmpty()) {
@@ -1158,9 +1211,10 @@ class RichTextState internal constructor(
         startIndex: Int,
         richSpanFullSpanStyle: SpanStyle,
         newSpanStyle: SpanStyle,
+        newRichSpanStyle: RichSpanStyle,
     ) {
         richSpan.text = beforeText
-        val parentRichSpan = richSpan.getClosestRichSpan(newSpanStyle)
+        val parentRichSpan = richSpan.getClosestRichSpan(newSpanStyle, newRichSpanStyle)
         val newRichSpan = RichSpan(
             paragraph = richSpan.paragraph,
             parent = parentRichSpan,
@@ -1170,6 +1224,7 @@ class RichTextState internal constructor(
                 startIndex + middleText.length
             ),
             spanStyle = newSpanStyle.unmerge(parentRichSpan?.spanStyle),
+            style = newRichSpanStyle,
         )
         val afterRichSpan = RichSpan(
             paragraph = richSpan.paragraph,
@@ -1180,6 +1235,7 @@ class RichTextState internal constructor(
                 startIndex + middleText.length + afterText.length
             ),
             spanStyle = richSpanFullSpanStyle,
+            style = richSpan.style,
         )
 
         val toShiftRichSpanList: MutableList<RichSpan> = mutableListOf()
@@ -1602,13 +1658,13 @@ class RichTextState internal constructor(
 
             currentRichSpanStyle = richSpan
                 ?.style
-                ?: RichSpanStyle.Default()
+                ?: RichSpanStyle.Default
             currentAppliedSpanStyle = richSpan
                 ?.fullSpanStyle
                 ?: RichSpanStyle.DefaultSpanStyle
         }
         else {
-            currentRichSpanStyle = RichSpanStyle.Default()
+            currentRichSpanStyle = RichSpanStyle.Default
             currentAppliedSpanStyle = getRichSpanListByTextRange(selection)
                 .getCommonStyle()
                 ?: RichSpanStyle.DefaultSpanStyle
@@ -1761,7 +1817,7 @@ class RichTextState internal constructor(
 
         var index = 0
         var paragraphIndex = -1
-        return richParagraphList.firstOrNull { richParagraphStyle ->
+        return richParagraphList.fastFirstOrNull { richParagraphStyle ->
             paragraphIndex++
             val result = richParagraphStyle.getRichSpanByTextIndex(
                 paragraphIndex = paragraphIndex,
@@ -1786,7 +1842,7 @@ class RichTextState internal constructor(
 
         var index = 0
         val richParagraphList = mutableListOf<RichParagraph>()
-        this.richParagraphList.forEachIndexed { paragraphIndex, richParagraphStyle ->
+        this.richParagraphList.fastForEachIndexed { paragraphIndex, richParagraphStyle ->
             val result = richParagraphStyle.getRichSpanListByTextRange(
                 paragraphIndex = paragraphIndex,
                 searchTextRange = searchTextRange,
@@ -1818,7 +1874,7 @@ class RichTextState internal constructor(
         }
 
         var index = 0
-        richParagraphList.forEachIndexed { paragraphIndex, richParagraph ->
+        richParagraphList.fastForEachIndexed { paragraphIndex, richParagraph ->
             val result = richParagraph.getRichSpanByTextIndex(
                 paragraphIndex = paragraphIndex,
                 textIndex = textIndex,
@@ -1843,7 +1899,7 @@ class RichTextState internal constructor(
     private fun getRichSpanListByTextRange(searchTextRange: TextRange): List<RichSpan> {
         var index = 0
         val richSpanList = mutableListOf<RichSpan>()
-        richParagraphList.forEachIndexed { paragraphIndex, richParagraphStyle ->
+        richParagraphList.fastForEachIndexed { paragraphIndex, richParagraphStyle ->
             val result = richParagraphStyle.getRichSpanListByTextRange(
                 paragraphIndex = paragraphIndex,
                 searchTextRange = searchTextRange,
@@ -1866,6 +1922,21 @@ class RichTextState internal constructor(
         val richTextState = RichTextState(richParagraphList)
         richTextState.updateTextFieldValue(textFieldValue)
         return richTextState
+    }
+
+    /**
+     * Updates the [RichTextState] with the given [text].
+     *
+     * @param text The text to update the [RichTextState] with.
+     */
+    fun setText(text: String) {
+        val richParagraphList = listOf(RichParagraph())
+        val richSpan = RichSpan(
+            text = text,
+            paragraph = richParagraphList.first(),
+        )
+        richParagraphList.first().children.add(richSpan)
+        updateRichParagraphList(richParagraphList)
     }
 
     /**
@@ -1893,7 +1964,7 @@ class RichTextState internal constructor(
 
         annotatedString = buildAnnotatedString {
             var index = 0
-            richParagraphList.forEachIndexed { i, richParagraphStyle ->
+            richParagraphList.fastForEachIndexed { i, richParagraphStyle ->
                 withStyle(richParagraphStyle.paragraphStyle.merge(richParagraphStyle.type.style)) {
                     append(richParagraphStyle.type.startText)
                     index += richParagraphStyle.type.startText.length
@@ -1936,7 +2007,7 @@ class RichTextState internal constructor(
 
     private fun checkParagraphsType() {
         var orderedListNumber = 0
-        richParagraphList.forEachIndexed { _, richParagraph ->
+        richParagraphList.fastForEachIndexed { _, richParagraph ->
             if (richParagraph.type is RichParagraph.Type.OrderedList) {
                 orderedListNumber++
                 richParagraph.type = RichParagraph.Type.OrderedList(orderedListNumber)

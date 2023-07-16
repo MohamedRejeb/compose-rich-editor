@@ -242,5 +242,24 @@ fun SlackDemoPanel(
                 icon = Icons.Outlined.FormatListNumbered,
             )
         }
+
+        item {
+            Box(
+                Modifier
+                    .height(24.dp)
+                    .width(1.dp)
+                    .background(Color(0xFF393B3D))
+            )
+        }
+
+        item {
+            SlackDemoPanelButton(
+                onClick = {
+                    state.toggleCode()
+                },
+                isSelected = state.isCode,
+                icon = Icons.Outlined.Code,
+            )
+        }
     }
 }

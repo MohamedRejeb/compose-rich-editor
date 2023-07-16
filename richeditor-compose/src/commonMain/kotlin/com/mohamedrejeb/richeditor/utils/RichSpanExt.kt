@@ -36,8 +36,8 @@ internal fun List<RichSpan>.getCommonStyle(strict: Boolean = false): SpanStyle? 
     var textDecoration: TextDecoration? = firstSpanStyle.textDecoration
     var shadow: Shadow? = firstSpanStyle.shadow
 
-    otherStyleList.forEach {
-        if (it.text.isEmpty()) return@forEach
+    otherStyleList.fastForEach {
+        if (it.text.isEmpty()) return@fastForEach
 
         val otherSpanStyle = it.fullSpanStyle
         if (otherSpanStyle.color != color) color = Color.Unspecified

@@ -304,7 +304,7 @@ internal class RichTextValueBuilder {
 
         val removedIndexes = mutableSetOf<Int>()
 
-        parts.forEachIndexed { index, part ->
+        parts.fastForEachIndexed { index, part ->
             if (removeRange.last < part.fromIndex) {
                 // Example: L|orem| ipsum *dolor* sit amet.
                 parts[index] = part.copy(
@@ -337,7 +337,7 @@ internal class RichTextValueBuilder {
             }
         }
 
-        removedIndexes.reversed().forEach { parts.removeAt(it) }
+        removedIndexes.reversed().fastForEach { parts.removeAt(it) }
     }
 
     /**
@@ -372,14 +372,14 @@ internal class RichTextValueBuilder {
         val endRangeMap = mutableMapOf<Int, Int>()
         val removedIndexes = mutableSetOf<Int>()
 
-        parts.forEachIndexed { index, part ->
+        parts.fastForEachIndexed { index, part ->
             startRangeMap[part.fromIndex] = index
             endRangeMap[part.toIndex] = index
         }
 
-        parts.forEachIndexed { index, part ->
+        parts.fastForEachIndexed { index, part ->
             if (removedIndexes.contains(index)) {
-                return@forEachIndexed
+                return@fastForEachIndexed
             }
 
             val start = part.fromIndex
@@ -387,7 +387,7 @@ internal class RichTextValueBuilder {
 
             if (end < start) {
                 removedIndexes.add(index)
-                return@forEachIndexed
+                return@fastForEachIndexed
             }
 
             if (startRangeMap.containsKey(end + 1)) {
@@ -424,7 +424,7 @@ internal class RichTextValueBuilder {
             )
         }
 
-        removedIndexes.reversed().forEach { parts.removeAt(it) }
+        removedIndexes.reversed().fastForEach { parts.removeAt(it) }
     }
 
     /**
@@ -435,9 +435,9 @@ internal class RichTextValueBuilder {
         newTextFieldValue: TextFieldValue
     ) {
         val newStyles = parts
-            .firstOrNull {
+            .fastFirstOrNull {
                 if (newTextFieldValue.selection.min == 0 && it.fromIndex == 0) {
-                    return@firstOrNull true
+                    return@fastFirstOrNull true
                 }
                 (newTextFieldValue.selection.min - 1) in (it.fromIndex..it.toIndex)
             }
@@ -506,9 +506,9 @@ internal class RichTextValueBuilder {
             part.fromIndex < toIndex && part.toIndex >= fromIndex
         }
 
-        selectedParts.forEach { part ->
+        selectedParts.fastForEach { part ->
             val index = parts.indexOf(part)
-            if (index !in parts.indices) return@forEach
+            if (index !in parts.indices) return@fastForEach
 
             if (part.fromIndex < fromIndex && part.toIndex >= toIndex) {
                 parts[index] = part.copy(

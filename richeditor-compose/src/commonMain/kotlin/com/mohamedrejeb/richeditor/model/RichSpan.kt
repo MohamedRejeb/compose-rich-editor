@@ -3,6 +3,7 @@ package com.mohamedrejeb.richeditor.model
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import com.mohamedrejeb.richeditor.utils.customMerge
+import com.mohamedrejeb.richeditor.utils.fastForEach
 import com.mohamedrejeb.richeditor.utils.isSpecifiedFieldsEquals
 
 /**
@@ -16,7 +17,7 @@ internal class RichSpan(
     var text: String = "",
     var textRange: TextRange = TextRange(start = 0, end = 0),
     var spanStyle: SpanStyle = SpanStyle(),
-    var style: RichSpanStyle = RichSpanStyle.Default(),
+    var style: RichSpanStyle = RichSpanStyle.Default,
 ) {
     /**
      * Return the full text range of the rich span.
@@ -120,7 +121,7 @@ internal class RichSpan(
      * @return The first non-empty child or null if there is no non-empty child
      */
     internal fun getFirstNonEmptyChild(offset: Int? = null): RichSpan? {
-        children.forEach { richSpan ->
+        children.fastForEach { richSpan ->
             if (richSpan.text.isNotEmpty()) {
                 if (offset != null)
                     richSpan.textRange = TextRange(offset, offset + richSpan.text.length)
@@ -179,7 +180,7 @@ internal class RichSpan(
         }
 
         // Check if the text index is in the children
-        children.forEach { richSpan ->
+        children.fastForEach { richSpan ->
             val result = richSpan.getRichSpanByTextIndex(
                 textIndex = textIndex,
                 offset = index,
@@ -217,7 +218,7 @@ internal class RichSpan(
             richSpanList.add(this)
 
         // Check if the text index is in the children
-        children.forEach { richSpan ->
+        children.fastForEach { richSpan ->
             val result = richSpan.getRichSpanListByTextRange(
                 searchTextRange = searchTextRange,
                 offset = index,
@@ -302,10 +303,13 @@ internal class RichSpan(
      * @param spanStyle The span style
      * @return The closest parent rich span or null if not found
      */
-    fun getClosestRichSpan(spanStyle: SpanStyle): RichSpan? {
-        if (spanStyle.isSpecifiedFieldsEquals(this.fullSpanStyle, strict = true)) return this
+    fun getClosestRichSpan(spanStyle: SpanStyle, newRichSpanStyle: RichSpanStyle): RichSpan? {
+        if (
+            spanStyle.isSpecifiedFieldsEquals(this.fullSpanStyle, strict = true) &&
+            newRichSpanStyle::class == style::class
+        ) return this
 
-        return parent?.getClosestRichSpan(spanStyle)
+        return parent?.getClosestRichSpan(spanStyle, newRichSpanStyle)
     }
 
     /**
@@ -314,7 +318,7 @@ internal class RichSpan(
      * @param newParagraph The new paragraph
      */
     fun updateChildrenParagraph(newParagraph: RichParagraph) {
-        children.forEach { childRichSpan ->
+        children.fastForEach { childRichSpan ->
             childRichSpan.paragraph = newParagraph
             childRichSpan.updateChildrenParagraph(newParagraph)
         }
@@ -330,7 +334,7 @@ internal class RichSpan(
             style = style,
             spanStyle = spanStyle,
         )
-        children.forEach { childRichSpan ->
+        children.fastForEach { childRichSpan ->
             val newRichSpan = childRichSpan.copy(newParagraph)
             newRichSpan.parent = newSpan
             newSpan.children.add(newRichSpan)

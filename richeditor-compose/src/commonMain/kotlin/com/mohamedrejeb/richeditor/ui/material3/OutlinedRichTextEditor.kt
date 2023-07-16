@@ -95,7 +95,7 @@ import kotlin.math.roundToInt
     replaceWith = ReplaceWith(
         expression = "OutlinedRichTextEditor(state = )",
     ),
-    level = DeprecationLevel.WARNING
+    level = DeprecationLevel.ERROR
 )
 fun OutlinedRichTextEditor(
     value: RichTextValue,

@@ -79,7 +79,7 @@ import com.mohamedrejeb.richeditor.model.RichTextValue
     replaceWith = ReplaceWith(
         expression = "RichTextEditor(state =, )",
     ),
-    level = DeprecationLevel.WARNING
+    level = DeprecationLevel.ERROR
 )
 fun RichTextEditor(
     value: RichTextValue,

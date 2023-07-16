@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
+import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
 
 @Composable
 fun DebugRichTextEditor(
@@ -77,10 +78,10 @@ fun DebugRichTextEditor(
         key(
             richTextState.annotatedString
         ) {
-            richTextState.richParagraphList.forEachIndexed { index, richParagraphStyle ->
+            richTextState.richParagraphList.fastForEachIndexed { index, richParagraphStyle ->
                 Text("Paragraph $index: ${richParagraphStyle.children.size} children")
                 Text(" - Start Text: ${richParagraphStyle.type.startRichSpan}")
-                richParagraphStyle.children.forEachIndexed { index, richTextStyle ->
+                richParagraphStyle.children.fastForEachIndexed { index, richTextStyle ->
                     RichTextStyleTreeRepresentation(index, richTextStyle, " -")
                 }
 
@@ -93,7 +94,7 @@ fun DebugRichTextEditor(
 @Composable
 private fun RichTextStyleTreeRepresentation(index: Int, richSpan: RichSpan, startText: String) {
     Text("${startText}Text $index `$richSpan`: ${richSpan.children.size} children")
-    richSpan.children.forEachIndexed { index, richSpan ->
+    richSpan.children.fastForEachIndexed { index, richSpan ->
         RichTextStyleTreeRepresentation(index, richSpan, "$startText-")
     }
 }
@@ -106,7 +107,7 @@ internal fun getRichTextStyleTreeRepresentation(
 ) {
     stringBuilder.append("${startText}Text $index `$richSpan`: ${richSpan.children.size} children")
     stringBuilder.appendLine()
-    richSpan.children.forEachIndexed { index, richSpan ->
+    richSpan.children.fastForEachIndexed { index, richSpan ->
         getRichTextStyleTreeRepresentation(stringBuilder, index, richSpan, "$startText-")
     }
 }

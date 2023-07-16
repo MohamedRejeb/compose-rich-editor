@@ -21,7 +21,7 @@ internal fun List<RichParagraph>.getCommonStyle(): ParagraphStyle? {
     var lineBreak: LineBreak? = firstParagraphStyle.lineBreak
     var hyphens: Hyphens? = firstParagraphStyle.hyphens
 
-    otherStyleList.forEach {
+    otherStyleList.fastForEach {
         val otherParagraphStyle = it.paragraphStyle
         if (otherParagraphStyle.textAlign != textAlign) textAlign = null
         if (otherParagraphStyle.textDirection != textDirection) textDirection = null

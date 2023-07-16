@@ -12,6 +12,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -25,6 +26,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
+import com.mohamedrejeb.richeditor.model.RichSpanStyle.Default.drawCustomStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.RichTextValue
 import kotlinx.coroutines.CoroutineScope
@@ -335,6 +337,23 @@ internal fun BasicRichTextEditor(
                 state.onTextFieldValueChange(it)
             },
             modifier = modifier
+                .drawBehind {
+                    val topPadding = with(density) { contentPadding.calculateTopPadding().toPx() }
+                    val startPadding = with(density) { contentPadding.calculateLeftPadding(layoutDirection).toPx() }
+
+                    state.styledRichSpanList.forEach { richSpan ->
+                        state.textLayoutResult?.let { textLayoutResult ->
+                            with(richSpan.style) {
+                                drawCustomStyle(
+                                    layoutResult = textLayoutResult,
+                                    textRange = richSpan.textRange,
+                                    topPadding = topPadding,
+                                    startPadding = startPadding,
+                                )
+                            }
+                        }
+                    }
+                }
                 .then(
                     if (singleParagraph) {
                         Modifier

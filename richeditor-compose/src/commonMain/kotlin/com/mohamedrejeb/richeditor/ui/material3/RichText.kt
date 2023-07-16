@@ -1,22 +1,16 @@
 package com.mohamedrejeb.richeditor.ui.material3
 
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.text.InlineTextContent
-import androidx.compose.material.LocalContentColor
-import androidx.compose.material.Text
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.input.pointer.PointerIcon
-import androidx.compose.ui.input.pointer.pointerHoverIcon
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.Paragraph
 import androidx.compose.ui.text.TextLayoutResult
@@ -30,6 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.RichTextValue
+import com.mohamedrejeb.richeditor.ui.BasicRichText
 
 /**
  * High level element that displays rich text and provides semantics / accessibility information.
@@ -73,7 +68,7 @@ import com.mohamedrejeb.richeditor.model.RichTextValue
     replaceWith = ReplaceWith(
         expression = "RichText(state =)",
     ),
-    level = DeprecationLevel.WARNING
+    level = DeprecationLevel.ERROR
 )
 fun RichText(
     richText: RichTextValue,
@@ -171,57 +166,34 @@ fun RichText(
     onTextLayout: (TextLayoutResult) -> Unit = {},
     style: TextStyle = LocalTextStyle.current
 ) {
-    val uriHandler = LocalUriHandler.current
-    val pointerIcon = remember {
-        mutableStateOf(PointerIcon.Default)
+    val textColor = color.takeOrElse {
+        style.color.takeOrElse {
+            LocalContentColor.current
+        }
     }
-
-    Text(
-        modifier = modifier
-            .pointerHoverIcon(pointerIcon.value)
-            .pointerInput(Unit) {
-                awaitEachGesture {
-                    while (true) {
-                        val event = awaitPointerEvent()
-                        val position = event.changes.first().position
-                        val isLink = state.isLink(position)
-
-                        if (isLink) pointerIcon.value = PointerIcon.Hand
-                        else pointerIcon.value = PointerIcon.Default
-                    }
-                }
-            }
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = { offset ->
-                        state.getLinkByOffset(offset)?.let { url ->
-                            try {
-                                uriHandler.openUri(url)
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-                        }
-                    }
-                )
-            },
-        text = state.visualTransformation.filter(state.annotatedString).text,
-        color = color,
-        fontSize = fontSize,
-        fontStyle = fontStyle,
-        fontWeight = fontWeight,
-        fontFamily = fontFamily,
-        letterSpacing = letterSpacing,
-        textDecoration = textDecoration,
-        textAlign = textAlign,
-        lineHeight = lineHeight,
+    // NOTE(text-perf-review): It might be worthwhile writing a bespoke merge implementation that
+    // will avoid reallocating if all of the options here are the defaults
+    val mergedStyle = style.merge(
+        TextStyle(
+            color = textColor,
+            fontSize = fontSize,
+            fontWeight = fontWeight,
+            textAlign = textAlign,
+            lineHeight = lineHeight,
+            fontFamily = fontFamily,
+            textDecoration = textDecoration,
+            fontStyle = fontStyle,
+            letterSpacing = letterSpacing
+        )
+    )
+    BasicRichText(
+        state = state,
+        modifier = modifier,
+        style = mergedStyle,
+        onTextLayout = onTextLayout,
         overflow = overflow,
         softWrap = softWrap,
         maxLines = maxLines,
-        inlineContent = inlineContent,
-        onTextLayout = {
-            state.onTextLayout(it)
-            onTextLayout(it)
-        },
-        style = style
+        inlineContent = inlineContent
     )
 }

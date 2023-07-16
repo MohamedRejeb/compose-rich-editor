@@ -3,7 +3,7 @@ agp = "7.4.2"
 kotlin = "1.8.20"
 compose = "1.4.0"
 
-ksoup = "0.1.3"
+ksoup = "0.1.4"
 
 # For sample
 compose-compiler = "1.4.6"

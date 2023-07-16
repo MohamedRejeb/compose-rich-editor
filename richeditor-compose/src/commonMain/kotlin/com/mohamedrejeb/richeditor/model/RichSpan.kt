@@ -2,9 +2,6 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.isSpecified
-import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.utils.customMerge
 import com.mohamedrejeb.richeditor.utils.isSpecifiedFieldsEquals
 
@@ -235,19 +232,30 @@ internal class RichSpan(
     /**
      * Remove text range from the rich span
      *
-     * @param textRange The text range to remove
+     * @param removeTextRange The text range to remove
      * @return The rich span with the removed text range or null if the rich span is empty
      */
-    fun removeTextRange(textRange: TextRange): RichSpan? {
+    fun removeTextRange(
+        removeTextRange: TextRange,
+        offset: Int,
+    ): Pair<Int, RichSpan?> {
+        var index = offset
+
+        // Set start text range
+        textRange = TextRange(start = index, end = index + text.length)
+
+        // Add text length to the index
+        index += text.length
+
         // Remove all text if it's in the text range
-        if (textRange.min <= this.textRange.min && textRange.max >= this.textRange.max) {
+        if (removeTextRange.min <= this.textRange.min && removeTextRange.max >= this.textRange.max) {
             this.textRange = TextRange(start = 0, end = 0)
             text = ""
         }
         // Remove text from start and end
-        else if (textRange.min in this.textRange || (textRange.max - 1) in this.textRange) {
-            val startFirstHalf = 0 until (textRange.min - this.textRange.min)
-            val startSecondHalf = (textRange.max - this.textRange.min) until (this.textRange.max - this.textRange.min)
+        else if (removeTextRange.min in this.textRange || (removeTextRange.max - 1) in this.textRange) {
+            val startFirstHalf = 0 until (removeTextRange.min - this.textRange.min)
+            val startSecondHalf = (removeTextRange.max - this.textRange.min) until (this.textRange.max - this.textRange.min)
             val newStartText =
                 (if (startFirstHalf.isEmpty()) "" else text.substring(startFirstHalf)) +
                 (if (startSecondHalf.isEmpty()) "" else text.substring(startSecondHalf))
@@ -257,29 +265,35 @@ internal class RichSpan(
         }
 
         // Remove text from children
-        for (i in children.lastIndex downTo 0) {
+        val toRemoveIndices = mutableListOf<Int>()
+        for (i in 0..children.lastIndex) {
             val richSpan = children[i]
-            val result = richSpan.removeTextRange(textRange)
-            if (result == null) {
-                children.removeAt(i)
+            val result = richSpan.removeTextRange(removeTextRange, index)
+            val newRichSpan = result.second
+            if (newRichSpan == null) {
+                toRemoveIndices.add(i)
             } else {
-                children[i] = result
+                children[i] = newRichSpan
             }
+            index = result.first
+        }
+        for (i in toRemoveIndices.lastIndex downTo 0) {
+            children.removeAt(toRemoveIndices[i])
         }
 
         // Check if the rich span style is empty
         if (text.isEmpty()) {
             if (children.isEmpty()) {
-                return null
+                return index to null
             } else if (children.size == 1) {
                 val child = children.first()
                 child.parent = parent
                 child.spanStyle = spanStyle.customMerge(child.spanStyle)
-                return child
+                return index to child
             }
         }
 
-        return this
+        return index to this
     }
 
     /**

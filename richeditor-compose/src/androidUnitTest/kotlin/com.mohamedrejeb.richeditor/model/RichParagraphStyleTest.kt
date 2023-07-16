@@ -43,14 +43,14 @@ internal class RichParagraphStyleTest {
         richParagraph.children.addAll(richSpanLists)
         assertEquals(
             null,
-            richParagraph.removeTextRange(TextRange(0, 20))
+            richParagraph.removeTextRange(TextRange(0, 20), 0)
         )
 
         richParagraph.children.clear()
         richParagraph.children.addAll(richSpanLists)
         assertEquals(
             1,
-            richParagraph.removeTextRange(TextRange(0, 8))?.children?.size
+            richParagraph.removeTextRange(TextRange(0, 8), 0)?.children?.size
         )
     }
 

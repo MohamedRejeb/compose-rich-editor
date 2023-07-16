@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 
 internal class RichSpanTest {
     private val paragraph = RichParagraph(key = 0)
-    private val richSpan = RichSpan(
+    private val richSpan get() = RichSpan(
         key = 0,
         paragraph = paragraph,
         text = "012",
@@ -65,96 +65,96 @@ internal class RichSpanTest {
     @Test
     fun testRemoveTextRangeStart() {
         // Remove all start text
-        val removeAllStartText = richSpan.removeTextRange(TextRange(0, 3))
+        val removeAllStartText = richSpan.removeTextRange(TextRange(0, 3), 0)
         assertEquals(
             "",
-            removeAllStartText?.text
+            removeAllStartText.second?.text
         )
         assertEquals(
             2,
-            removeAllStartText?.children?.size
+            removeAllStartText.second?.children?.size
         )
         assertEquals(
             "34",
-            removeAllStartText?.children?.first()?.text
+            removeAllStartText.second?.children?.first()?.text
         )
     }
 
     @Test
     fun testRemoveTextRangeStartPart() {
         // Remove part of start text
-        val removePartOfStartText = richSpan.removeTextRange(TextRange(1, 3))
+        val removePartOfStartText = richSpan.removeTextRange(TextRange(1, 3), 0)
         assertEquals(
             "0",
-            removePartOfStartText?.text
+            removePartOfStartText.second?.text
         )
         assertEquals(
             2,
-            removePartOfStartText?.children?.size
+            removePartOfStartText.second?.children?.size
         )
         assertEquals(
             "34",
-            removePartOfStartText?.children?.first()?.text
+            removePartOfStartText.second?.children?.first()?.text
         )
     }
 
     @Test
     fun testRemoveTextRangeFirstChild() {
         // Remove first child
-        val removeFirstChild = richSpan.removeTextRange(TextRange(3, 7))
+        val removeFirstChild = richSpan.removeTextRange(TextRange(3, 7), 0)
         assertEquals(
             "012",
-            removeFirstChild?.text
+            removeFirstChild.second?.text
         )
         assertEquals(
             1,
-            removeFirstChild?.children?.size
+            removeFirstChild.second?.children?.size
         )
         assertEquals(
             "7",
-            removeFirstChild?.children?.first()?.text
+            removeFirstChild.second?.children?.first()?.text
         )
     }
 
     @Test
     fun testRemoveTextRangeLastChild() {
         // Remove last child
-        val removeLastChild = richSpan.removeTextRange(TextRange(5, 8))
+        val removeLastChild = richSpan.removeTextRange(TextRange(5, 8), 0)
         assertEquals(
             "012",
-            removeLastChild?.text
+            removeLastChild.second?.text
         )
         assertEquals(
             1,
-            removeLastChild?.children?.size
+            removeLastChild.second?.children?.size
         )
         assertEquals(
             "34",
-            removeLastChild?.children?.first()?.text
+            removeLastChild.second?.children?.first()?.text
         )
     }
 
     @Test
     fun testRemoveTextRangeTwoChildren() {
         // Remove the two children
-        val removeTwoChildren = richSpan.removeTextRange(TextRange(3, 8))
+        val removeTwoChildren = richSpan.removeTextRange(TextRange(3, 8), 0)
         assertEquals(
             "012",
-            removeTwoChildren?.text
+            removeTwoChildren.second?.text
         )
         assertEquals(
             0,
-            removeTwoChildren?.children?.size
+            removeTwoChildren.second?.children?.size
         )
     }
 
     @Test
     fun testRemoveTextRangeAlLText() {
         // Remove all the text
-        val removeAllText = richSpan.removeTextRange(TextRange(0, 20))
+        val removeAllText = richSpan.removeTextRange(TextRange(0, 20), 0)
         assertEquals(
             null,
-            removeAllText
+            removeAllText.second
         )
     }
 

@@ -5,10 +5,9 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextIndent
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.model.RichParagraph.Type.Companion.startText
+import com.mohamedrejeb.richeditor.ui.test.getRichTextStyleTreeRepresentation
 
 internal class RichParagraph(
     val key: Int = 0,
@@ -128,15 +127,25 @@ internal class RichParagraph(
         return index to richSpanList
     }
 
-    fun removeTextRange(textRange: TextRange): RichParagraph? {
-        for (i in children.lastIndex downTo 0) {
+    fun removeTextRange(
+        textRange: TextRange,
+        offset: Int,
+    ): RichParagraph? {
+        var index = offset
+        val toRemoveIndices = mutableListOf<Int>()
+        for (i in 0..children.lastIndex) {
             val child = children[i]
-            val result = child.removeTextRange(textRange)
-            if (result != null) {
-                children[i] = result
+            val result = child.removeTextRange(textRange, index)
+            val newRichSpan = result.second
+            if (newRichSpan != null) {
+                children[i] = newRichSpan
             } else {
-                children.removeAt(i)
+                toRemoveIndices.add(i)
             }
+            index = result.first
+        }
+        for (i in toRemoveIndices.lastIndex downTo 0) {
+            children.removeAt(toRemoveIndices[i])
         }
 
         if (children.isEmpty()) return null
@@ -197,6 +206,16 @@ internal class RichParagraph(
             newParagraph.children.add(newRichSpan)
         }
         return newParagraph
+    }
+
+    override fun toString(): String {
+        val stringBuilder = StringBuilder()
+        stringBuilder.append(" - Start Text: ${type.startRichSpan}")
+        stringBuilder.appendLine()
+        children.forEachIndexed { index, richTextStyle ->
+            getRichTextStyleTreeRepresentation(stringBuilder, index, richTextStyle, " -")
+        }
+        return stringBuilder.toString()
     }
 
     companion object {

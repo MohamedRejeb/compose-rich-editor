@@ -501,6 +501,11 @@ class RichTextState internal constructor(
         annotatedString = buildAnnotatedString {
             var index = 0
             richParagraphList.forEachIndexed { i, richParagraphStyle ->
+                if (index > newText.length) {
+                    richParagraphList.removeAt(i)
+                    return@forEachIndexed
+                }
+
                 withStyle(richParagraphStyle.paragraphStyle.merge(richParagraphStyle.type.style)) {
                     append(richParagraphStyle.type.startText)
                     index += richParagraphStyle.type.startText.length
@@ -513,8 +518,10 @@ class RichTextState internal constructor(
                         )
                         if (!singleParagraphMode) {
                             if (i != richParagraphList.lastIndex) {
-                                append(" ")
-                                index++
+                                if (index < newText.length) {
+                                    append(" ")
+                                    index++
+                                }
                             }
                         }
                     }
@@ -581,7 +588,6 @@ class RichTextState internal constructor(
                 newSpanStyle == activeRichSpanFullSpanStyle
             ) {
                 activeRichSpan.text = beforeText + typedText + afterText
-                println("activeRichSpan.text 1 = ${activeRichSpan.text}")
             } else {
                 handleUpdatingRichSpan(
                     richSpan = activeRichSpan,
@@ -592,7 +598,6 @@ class RichTextState internal constructor(
                     richSpanFullSpanStyle = activeRichSpanFullSpanStyle,
                     newSpanStyle = newSpanStyle,
                 )
-                println("activeRichSpan.text 2 = ${activeRichSpan.text}")
             }
         } else {
             if (richParagraphList.isEmpty()) {
@@ -648,8 +653,21 @@ class RichTextState internal constructor(
             }
         }
 
+        println("minRemoveIndex: $minRemoveIndex")
+        println("maxRemoveIndex: $maxRemoveIndex")
+
+        println("minRichSpan: $minRichSpan")
+        println("maxRichSpan: $maxRichSpan")
+
+        println("minFirstNonEmptyChild: $minFirstNonEmptyChild")
+        println("maxFirstNonEmptyChild: $maxFirstNonEmptyChild")
+
+        println("minParagraphFirstChildMinIndex: $minParagraphFirstChildMinIndex")
+        println("maxParagraphFirstChildMinIndex: $maxParagraphFirstChildMinIndex")
+
         // Handle Remove the min paragraph custom text
         if (minRemoveIndex < minParagraphFirstChildMinIndex) {
+            println("handleRemoveMinParagraphStartText")
             handleRemoveMinParagraphStartText(
                 removeIndex = minRemoveIndex,
                 paragraphStartTextLength = minParagraphStartTextLength,
@@ -661,6 +679,7 @@ class RichTextState internal constructor(
 
         // Handle Remove the max paragraph custom text
         if (maxRemoveIndex < maxParagraphFirstChildMinIndex) {
+            println("handleRemoveMaxParagraphStartText")
             handleRemoveMaxParagraphStartText(
                 minRemoveIndex = minRemoveIndex,
                 maxRemoveIndex = maxRemoveIndex,
@@ -671,13 +690,15 @@ class RichTextState internal constructor(
             maxRichSpan.paragraph.type = RichParagraph.Type.Default
         }
 
+        println("before: ${minRichSpan.paragraph}")
+
         // Remove spans from the max paragraph
-        maxRichSpan.paragraph.removeTextRange(removeRange)
+        maxRichSpan.paragraph.removeTextRange(removeRange, maxParagraphFirstChildMinIndex)
 
         if (!singleParagraphMode) {
             if (maxParagraphIndex != minParagraphIndex) {
                 // Remove spans from the min paragraph
-                minRichSpan.paragraph.removeTextRange(removeRange)
+                minRichSpan.paragraph.removeTextRange(removeRange, minParagraphFirstChildMinIndex)
 
                 if (maxRichSpan.paragraph.getFirstNonEmptyChild() == null) {
                     // Remove the max paragraph if it's empty
@@ -701,6 +722,7 @@ class RichTextState internal constructor(
             if (
                 minRemoveIndex == minParagraphFirstChildMinIndex - minParagraphStartTextLength - 1
             ) {
+                println("enter last")
                 if (
                     minRemoveIndex == minParagraphFirstChildMinIndex - minParagraphStartTextLength - 1 &&
                     minParagraphStartTextLength > 0
@@ -733,6 +755,8 @@ class RichTextState internal constructor(
             startParagraphIndex = minParagraphIndex - 1,
             endParagraphIndex = minParagraphIndex + 1,
         )
+
+        println("after: ${minRichSpan.paragraph}")
     }
 
     private fun handleRemoveMinParagraphStartText(
@@ -882,9 +906,16 @@ class RichTextState internal constructor(
                 richSpan = richSpan,
             )
 
+            println("sliceIndex: $sliceIndex")
+            println("richSpan: $richSpan")
+            println("newParagraph: ${newParagraph.children}")
+
             // Get the text before and after the slice index
             val beforeText = tempTextFieldValue.text.substring(0, sliceIndex + 1)
             val afterText = tempTextFieldValue.text.substring(sliceIndex + 1)
+
+            println("beforeText: $beforeText")
+            println("afterText: $afterText")
 
             // Update the text field value to include the new paragraph custom start text
             tempTextFieldValue = tempTextFieldValue.copy(
@@ -1087,6 +1118,7 @@ class RichTextState internal constructor(
                 textDecoration = fullSpanStyle.textDecoration
             ).customMerge(toAddSpanStyle),
         )
+
         if (middleText.isNotEmpty()) {
             richSpan.children.add(
                 0,
@@ -1164,7 +1196,7 @@ class RichTextState internal constructor(
             ),
             spanStyle = newSpanStyle.unmerge(parentRichSpan?.spanStyle),
         )
-        val afterSpanStyle = RichSpan(
+        val afterRichSpan = RichSpan(
             paragraph = richSpan.paragraph,
             parent = parentRichSpan,
             text = afterText,
@@ -1180,8 +1212,8 @@ class RichTextState internal constructor(
         var currentRichSpan: RichSpan? = richSpan
 
         toShiftRichSpanList.add(newRichSpan)
-        if (afterSpanStyle.text.isNotEmpty())
-            toShiftRichSpanList.add(afterSpanStyle)
+        if (afterRichSpan.text.isNotEmpty())
+            toShiftRichSpanList.add(afterRichSpan)
 
         while (true) {
             previousRichSpan = currentRichSpan
@@ -1196,9 +1228,8 @@ class RichTextState internal constructor(
                     ((index + 1)..currentRichSpan.children.lastIndex).forEach {
                         val childRichSpan = currentRichSpan.children[it]
 
-                        // Remove empty RichSpan.
+                        // Ignore shifting empty RichSpan.
                         if (childRichSpan.text.isEmpty() && childRichSpan.children.isEmpty()) {
-                            currentRichSpan.children.removeAt(it)
                             return@forEach
                         }
 

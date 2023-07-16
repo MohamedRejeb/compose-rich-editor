@@ -2,6 +2,7 @@ package com.mohamedrejeb.richeditor.ui.test
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -46,12 +47,24 @@ fun DebugRichTextEditor(
         Divider(modifier = Modifier.padding(vertical = 20.dp))
 
         Text(
-            text = "Annoation Length: ${richTextState.annotatedString.text.length}",
+            text = "Annotation Length: ${richTextState.annotatedString.text.length}",
         )
+
+        SelectionContainer {
+            Text(
+                text = "Annotation Text: ${richTextState.annotatedString.text}",
+            )
+        }
 
         Text(
             text = "Text Length: ${richTextState.textFieldValue.text.length}",
         )
+
+        SelectionContainer {
+            Text(
+                text = "Text Length: ${richTextState.textFieldValue.text}",
+            )
+        }
 
         Text(
             text = "Selection: ${richTextState.selection}",
@@ -82,5 +95,18 @@ private fun RichTextStyleTreeRepresentation(index: Int, richSpan: RichSpan, star
     Text("${startText}Text $index `$richSpan`: ${richSpan.children.size} children")
     richSpan.children.forEachIndexed { index, richSpan ->
         RichTextStyleTreeRepresentation(index, richSpan, "$startText-")
+    }
+}
+
+internal fun getRichTextStyleTreeRepresentation(
+    stringBuilder: StringBuilder,
+    index: Int,
+    richSpan: RichSpan,
+    startText: String
+) {
+    stringBuilder.append("${startText}Text $index `$richSpan`: ${richSpan.children.size} children")
+    stringBuilder.appendLine()
+    richSpan.children.forEachIndexed { index, richSpan ->
+        getRichTextStyleTreeRepresentation(stringBuilder, index, richSpan, "$startText-")
     }
 }

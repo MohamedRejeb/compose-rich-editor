@@ -161,7 +161,7 @@ To convert `RichTextState` to HTML, use `RichTextState.toHtml` method:
 val html = richTextState.toHtml()
 ```
 
-Check out Compose Rich Editor's [full documentation](docs/getting_started.md) for more details.
+Check out Compose Rich Editor's [full documentation](https://mohamedrejeb.github.io/Compose-Rich-Editor/) for more details.
 
 ## Web live demo
 You can try out the web demo [here](https://compose-richeditor.netlify.app/).

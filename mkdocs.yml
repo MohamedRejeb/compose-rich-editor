@@ -1,0 +1,95 @@
+# Project information
+site_name: 'Compose Rich Editor'
+site_description: 'A rich text editor for Jetpack Compose and Compose multiplatform.'
+site_author: 'Mohamed Rejeb'
+site_url: 'https://github.com/MohamedRejeb/Compose-Rich-Editor'
+remote_branch: gh-pages
+edit_uri: ""
+
+# Repository
+repo_name: 'Compose-Rich-Editor'
+repo_url: 'https://github.com/MohamedRejeb/Compose-Rich-Editor'
+
+# Configuration
+theme:
+  name: 'material'
+  language: 'en'
+  favicon: 'images/logo-dark.ico'
+  logo: 'images/logo-dark.svg'
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+      primary: white
+      accent: white
+    - scheme: slate
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+      primary: teal
+      accent: lime
+  font:
+    text: 'Roboto'
+    code: 'Roboto Mono'
+
+# Social
+extra:
+  social:
+    - icon: fontawesome/brands/github-alt
+      link: https://github.com/MohamedRejeb
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/MohamadRejeb
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/mohamedrejeb/
+
+# Navigation
+nav:
+  - 'Overview': index.md
+  - 'Getting Started': getting_started.md
+  - 'RichTextState': rich_text_state.md
+  - 'Span Style': span_style.md
+  - 'Paragraph Style': paragraph_style.md
+  - 'Links': links.md
+  - 'Code Blocks': code_blocks.md
+  - 'Ordered/Unordered lists': ordered_unordered_lists.md
+  - 'HTML import/export': html_import_export.md
+  #- 'Compose Components': compose.md
+  - 'Upgrading from 0.x to 1.x': upgrading.md
+  #- 'Change Log': changelog.md
+  #- 'Contributing': contributing.md
+  - 'Code of Conduct': code_of_conduct.md
+
+# CSS
+extra_css:
+  - 'css/site.css'
+
+# Extensions
+markdown_extensions:
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - admonition
+  - pymdownx.arithmatex:
+      generic: true
+  - footnotes
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.mark
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+
+# Plugins
+plugins:
+  - search
+  - minify:
+      minify_html: true
+
+# Copyright
+copyright: |
+  &copy; 2023 <a href="https://github.com/MohamedRejeb"  target="_blank" rel="noopener">Mohamed Rejeb</a>

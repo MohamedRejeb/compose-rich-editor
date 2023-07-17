@@ -21,7 +21,7 @@ import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 import com.moriatsushi.insetsx.ExperimentalSoftwareKeyboardApi
 import com.moriatsushi.insetsx.safeDrawingPadding
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, ExperimentalSoftwareKeyboardApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSoftwareKeyboardApi::class)
 @Composable
 fun RichEditorContent() {
     val navigator = LocalNavigator.currentOrThrow

@@ -53,8 +53,8 @@ kotlin {
                 @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
                 api(compose.components.resources)
 
-//                implementation("com.mohamedrejeb.richeditor:richeditor-compose:0.2.0")
-                implementation(project(":richeditor-compose"))
+                implementation("com.mohamedrejeb.richeditor:richeditor-compose:1.0.0-alpha01")
+//                implementation(project(":richeditor-compose"))
 
                 // Voyager Navigator
                 implementation(libs.voyager.navigator)

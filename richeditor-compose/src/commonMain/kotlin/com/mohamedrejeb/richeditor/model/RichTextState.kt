@@ -572,7 +572,9 @@ class RichTextState internal constructor(
 
                 withStyle(richParagraphStyle.paragraphStyle.merge(richParagraphStyle.type.style)) {
                     append(richParagraphStyle.type.startText)
-                    index += richParagraphStyle.type.startText.length
+                    val richParagraphStartTextLength = richParagraphStyle.type.startText.length
+                    richParagraphStyle.type.startRichSpan.textRange = TextRange(index, index + richParagraphStartTextLength)
+                    index += richParagraphStartTextLength
                     withStyle(RichSpanStyle.DefaultSpanStyle) {
                         index = append(
                             richSpanList = richParagraphStyle.children,
@@ -960,7 +962,6 @@ class RichTextState internal constructor(
                 startIndex = sliceIndex,
                 richSpan = richSpan,
             )
-
 
             // Get the text before and after the slice index
             val beforeText = tempTextFieldValue.text.substring(0, sliceIndex + 1)
@@ -2008,7 +2009,9 @@ class RichTextState internal constructor(
             richParagraphList.fastForEachIndexed { i, richParagraphStyle ->
                 withStyle(richParagraphStyle.paragraphStyle.merge(richParagraphStyle.type.style)) {
                     append(richParagraphStyle.type.startText)
-                    index += richParagraphStyle.type.startText.length
+                    val richParagraphStartTextLength = richParagraphStyle.type.startText.length
+                    richParagraphStyle.type.startRichSpan.textRange = TextRange(index, index + richParagraphStartTextLength)
+                    index += richParagraphStartTextLength
                     withStyle(RichSpanStyle.DefaultSpanStyle) {
                         index = append(
                             richSpanList = richParagraphStyle.children,

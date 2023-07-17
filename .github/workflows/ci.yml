@@ -20,4 +20,5 @@ jobs:
           path: .cache
       - run: pip install mkdocs-material
       - run: pip install pillow cairosvg
+      - run: pip install mkdocs-minify-plugin
       - run: mkdocs gh-deploy --force

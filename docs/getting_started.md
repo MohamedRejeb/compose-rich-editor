@@ -65,8 +65,6 @@ val isCentered = currentParagraphStyle.textAlign = TextAlign.Center
 
 Check out [the full documentation](span_style.md) for more info.
 
-See the docs [here](../api/coil-singleton/coil/) for more information.
-
 ## Supported Styling Formats
 
 The styling format supported by Compose Rich Editor:

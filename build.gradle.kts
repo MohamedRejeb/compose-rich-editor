@@ -1,5 +1,5 @@
 group = "com.mohamedrejeb.richeditor"
-version = "1.0.0-alpha01"
+version = "1.0.0-alpha02"
 
 plugins {
     alias(libs.plugins.androidLibrary).apply(false)
@@ -16,7 +16,7 @@ allprojects {
     }
 
     group = "com.mohamedrejeb.richeditor"
-    version = "1.0.0-alpha01"
+    version = "1.0.0-alpha02"
 
 //    apply(plugin = "org.jetbrains.dokka")
     apply(plugin = "maven-publish")

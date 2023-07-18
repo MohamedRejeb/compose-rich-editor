@@ -9,7 +9,7 @@ ksoup = "0.1.4"
 compose-compiler = "1.4.6"
 activity-compose = "1.7.0"
 voyager = "1.0.0-rc05"
-richeditor = "1.0.0-alpha01"
+richeditor = "1.0.0-alpha02"
 android-minSdk = "21"
 android-compileSdk = "33"
 

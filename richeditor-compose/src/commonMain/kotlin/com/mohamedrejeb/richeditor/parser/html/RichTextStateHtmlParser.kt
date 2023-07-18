@@ -150,7 +150,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 lastClosedTag = name
 
                 if (name == "ul" || name == "ol") {
-                    skipText = true
+                    skipText = false
                     return@onCloseTag
                 }
 
@@ -225,6 +225,9 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
     private fun decodeRichSpanToHtml(richSpan: RichSpan): String {
         val stringBuilder = StringBuilder()
+
+        // Check if span is empty
+        if (richSpan.isEmpty()) return ""
 
         // Get HTML element and attributes
         val spanHtml = decodeHtmlElementFromRichSpanStyle(richSpan.style)

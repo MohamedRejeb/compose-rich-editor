@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
 import com.mohamedrejeb.richeditor.utils.getBoundingBoxes
 
-internal interface RichSpanStyle {
+interface RichSpanStyle {
     val spanStyle: (RichTextConfig) -> SpanStyle
 
     val data: MutableMap<String, String>

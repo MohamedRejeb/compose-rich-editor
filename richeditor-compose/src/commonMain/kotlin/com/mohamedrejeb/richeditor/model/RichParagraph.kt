@@ -11,7 +11,7 @@ import com.mohamedrejeb.richeditor.ui.test.getRichTextStyleTreeRepresentation
 import com.mohamedrejeb.richeditor.utils.fastForEach
 import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
 
-internal class RichParagraph(
+class RichParagraph(
     val key: Int = 0,
     val children: MutableList<RichSpan> = mutableListOf(),
     var paragraphStyle: ParagraphStyle = DefaultParagraphStyle,

@@ -9,7 +9,7 @@ import com.mohamedrejeb.richeditor.utils.isSpecifiedFieldsEquals
 /**
  * A rich span is a part of a rich paragraph.
  */
-internal class RichSpan(
+class RichSpan(
     internal val key: Int? = null,
     val children: MutableList<RichSpan> = mutableListOf(),
     var paragraph: RichParagraph,

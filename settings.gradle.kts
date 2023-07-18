@@ -29,5 +29,6 @@ include(
     ":sample:desktop",
     ":sample:web",
     ":sample:common",
-    ":richeditor-compose"
+    ":richeditor-compose",
+    ":markdown"
 )

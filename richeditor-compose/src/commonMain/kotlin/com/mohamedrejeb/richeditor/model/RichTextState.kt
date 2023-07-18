@@ -1997,7 +1997,7 @@ class RichTextState internal constructor(
      *
      * @param newRichParagraphList The [RichParagraph]s to update the [RichTextState] with.
      */
-    private fun updateRichParagraphList(newRichParagraphList: List<RichParagraph>) {
+    fun updateRichParagraphList(newRichParagraphList: List<RichParagraph>) {
         richParagraphList.clear()
         richParagraphList.addAll(newRichParagraphList)
 

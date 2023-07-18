@@ -1,4 +1,4 @@
-package com.mohamedrajeb.richeditor.markdown
+package com.mohamedrejeb.richeditor.markdown
 
 import com.mohamedrejeb.richeditor.model.RichParagraph
 import com.mohamedrejeb.richeditor.model.RichSpan
@@ -19,7 +19,7 @@ fun RichTextState.setMarkdown(markdown: String) {
     updateRichParagraphList(parser.paragraphs)
 }
 
-class MarkdownRichTextStateParser(
+internal class MarkdownRichTextStateParser(
 //    val onBackground: Color,
     val paragraphs: MutableList<RichParagraph>
 ) {
@@ -55,7 +55,7 @@ class MarkdownRichTextStateParser(
 
 internal typealias Parser = MarkdownRichTextStateParser
 
-fun Parser.parseMarkdown(markdown: String) {
+internal fun Parser.parseMarkdown(markdown: String) {
     val parser = MarkdownParser(GFMFlavourDescriptor())
     val tree = parser.buildMarkdownTreeFromString(markdown)
     for (node in tree.children) {

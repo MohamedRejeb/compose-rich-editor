@@ -30,7 +30,7 @@ kotlin {
                 api(compose.foundation)
                 api(compose.material3)
                 api(project(":richeditor-compose"))
-                api("org.jetbrains:markdown:0.3.1")
+
             }
         }
 

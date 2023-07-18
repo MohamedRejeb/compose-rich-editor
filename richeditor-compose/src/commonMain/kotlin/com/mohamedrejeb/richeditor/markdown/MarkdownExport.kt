@@ -1,4 +1,4 @@
-package com.mohamedrajeb.richeditor.markdown
+package com.mohamedrejeb.richeditor.markdown
 
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle

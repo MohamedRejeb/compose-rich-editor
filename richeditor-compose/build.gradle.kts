@@ -33,6 +33,9 @@ kotlin {
                 api(compose.materialIconsExtended)
 
                 implementation(libs.ksoup)
+
+                // Markdown parsing library
+                api("org.jetbrains:markdown:0.3.1")
             }
         }
 

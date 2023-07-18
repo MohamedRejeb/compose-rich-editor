@@ -53,8 +53,6 @@ kotlin {
                 @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
                 api(compose.components.resources)
 
-                implementation(project(":markdown"))
-
 //                implementation("com.mohamedrejeb.richeditor:richeditor-compose:1.0.0-alpha01")
                 implementation(project(":richeditor-compose"))
 

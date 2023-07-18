@@ -1,4 +1,4 @@
-package com.mohamedrajeb.richeditor.markdown
+package com.mohamedrejeb.richeditor.markdown
 
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
@@ -16,7 +16,7 @@ import org.intellij.markdown.ast.getTextInNode
 import org.intellij.markdown.flavours.gfm.GFMElementTypes
 import org.intellij.markdown.flavours.gfm.GFMTokenTypes
 
-object MarkdownSpanStyles {
+internal object MarkdownSpanStyles {
     val linkSpanStyle = SpanStyle(textDecoration = TextDecoration.Underline, fontWeight = FontWeight.Bold)
     val italic = SpanStyle(fontStyle = FontStyle.Italic)
     val bold = SpanStyle(fontWeight = FontWeight.Bold)
@@ -187,7 +187,7 @@ internal fun Parser.buildSpans(
     return list
 }
 
-fun Parser.appendAutoLink(content: String,parent : RichParagraph, node: ASTNode): RichSpan {
+internal fun Parser.appendAutoLink(content: String, parent : RichParagraph, node: ASTNode): RichSpan {
     val destination = node.getTextInNode(content).toString()
     return RichSpan(
         paragraph = parent,
@@ -197,7 +197,7 @@ fun Parser.appendAutoLink(content: String,parent : RichParagraph, node: ASTNode)
     )
 }
 
-fun Parser.appendMarkdownLink(content: String, parent : RichParagraph, node: ASTNode): RichSpan? {
+internal fun Parser.appendMarkdownLink(content: String, parent : RichParagraph, node: ASTNode): RichSpan? {
     val linkText = node.findChildOfType(MarkdownElementTypes.LINK_TEXT)?.children?.innerList() ?: return null
     val destination =
         node.findChildOfType(MarkdownElementTypes.LINK_DESTINATION)?.getTextInNode(content)?.toString()

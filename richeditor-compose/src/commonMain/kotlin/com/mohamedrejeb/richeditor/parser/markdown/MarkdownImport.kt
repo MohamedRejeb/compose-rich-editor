@@ -286,29 +286,21 @@ internal fun ASTNode.unorderedList(
         level = level
     ) { listItemIndex ->
 
-        fun children(): MutableList<RichSpan> {
-//            print("LISTITEM->")
-            return parser.buildSpans(
-                content = content,
-                parent = paragraph,
-                children = children.filter { it.type != MarkdownTokenTypes.EOL }
+        paragraph.children.add(
+            RichSpan(
+                children = parser.buildSpans(
+                    content = content,
+                    parent = paragraph,
+                    children = children.filter { it.type != MarkdownTokenTypes.EOL }
+                ),//.apply {
+//                        if(listItemIndex > -1){
+//                            add(RichSpan(text = "\n", paragraph = paragraph))
+//                        }
+//                    }
+                paragraph = paragraph,
             )
-        }
+        )
 
-        fun appendTextListItem() {
-            paragraph.children.add(
-                RichSpan(
-                    children = children().apply {
-                        if(listItemIndex > -1){
-                            add(RichSpan(text = "\n", paragraph = paragraph))
-                        }
-                    },
-                    paragraph = paragraph,
-                )
-            )
-        }
-
-        appendTextListItem()
     }
     paragraph.let { parser.paragraphs.add(it) }
 }
@@ -330,14 +322,17 @@ internal fun ASTNode.orderedList(
         val listNumber = findChildOfType(MarkdownTokenTypes.LIST_NUMBER)?.getTextInNode(content)
         if (paragraph == null) {
             paragraph = RichParagraph(
-                type = RichParagraph.Type.OrderedList(listNumber.toString().toIntOrNull() ?: 0)
+                type = RichParagraph.Type.OrderedList(listNumber.toString().toIntOrNull() ?: 1)
             )
         }
-        paragraph!!.children.addAll(
-            parser.buildSpans(
-                content,
-                paragraph!!,
-                children.filter { it.type != MarkdownTokenTypes.EOL }
+        paragraph!!.children.add(
+            RichSpan(
+                paragraph = paragraph!!,
+                children = parser.buildSpans(
+                    content,
+                    paragraph!!,
+                    children.filter { it.type != MarkdownTokenTypes.EOL }
+                )
             )
         )
     }

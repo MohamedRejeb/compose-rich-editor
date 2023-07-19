@@ -11,6 +11,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
+import com.mohamedrejeb.richeditor.parser.markdown.toMarkdown
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
 import com.moriatsushi.insetsx.ExperimentalSoftwareKeyboardApi
 import com.moriatsushi.insetsx.safeDrawingPadding
@@ -29,8 +30,7 @@ fun MarkdownEditorContent() {
 
     LaunchedEffect(richTextState.annotatedString, isMarkdownToRichText) {
         if (!isMarkdownToRichText) {
-            // TODO to Markdown
-            markdown = TextFieldValue(richTextState.toHtml())
+            markdown = TextFieldValue(richTextState.toMarkdown())
         }
     }
 
@@ -71,8 +71,8 @@ fun MarkdownEditorContent() {
             ) {
                 if (isMarkdownToRichText) {
                     MarkdownToRichText(
-                        html = markdown,
-                        onHtmlChange = {
+                        markdown = markdown,
+                        onMarkdownChange = {
                             markdown = it
 //                            richTextState.setHtml(it.text)
                         },

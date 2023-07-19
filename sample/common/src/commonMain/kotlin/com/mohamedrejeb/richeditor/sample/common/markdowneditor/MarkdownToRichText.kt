@@ -8,21 +8,21 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.mohamedrejeb.richeditor.markdown.setMarkdown
+import com.mohamedrejeb.richeditor.parser.markdown.setMarkdown
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MarkdownToRichText(
-    html: TextFieldValue,
-    onHtmlChange: (TextFieldValue) -> Unit,
+    markdown: TextFieldValue,
+    onMarkdownChange: (TextFieldValue) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val richTextState = rememberRichTextState()
 
-    LaunchedEffect(html.text) {
-        richTextState.setMarkdown(html.text)
+    LaunchedEffect(markdown.text) {
+        richTextState.setMarkdown(markdown.text)
     }
 
     Row(
@@ -45,9 +45,9 @@ fun MarkdownToRichText(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-                value = html,
+                value = markdown,
                 onValueChange = {
-                    onHtmlChange(it)
+                    onMarkdownChange(it)
                 },
             )
         }

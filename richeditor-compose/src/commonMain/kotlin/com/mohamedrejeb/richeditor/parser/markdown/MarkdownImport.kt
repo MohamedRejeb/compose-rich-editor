@@ -1,4 +1,4 @@
-package com.mohamedrejeb.richeditor.markdown
+package com.mohamedrejeb.richeditor.parser.markdown
 
 import com.mohamedrejeb.richeditor.model.RichParagraph
 import com.mohamedrejeb.richeditor.model.RichSpan

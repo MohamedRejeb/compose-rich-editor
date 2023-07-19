@@ -1,4 +1,4 @@
-package com.mohamedrejeb.richeditor.markdown
+package com.mohamedrejeb.richeditor.parser.markdown
 
 import org.intellij.markdown.IElementType
 import org.intellij.markdown.ast.ASTNode

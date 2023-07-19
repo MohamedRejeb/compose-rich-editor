@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.parser.markdown.toMarkdown
 import com.mohamedrejeb.richeditor.sample.common.components.RichTextStyleRow
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
 
@@ -18,7 +19,7 @@ fun RichTextToMarkdown(
     modifier: Modifier = Modifier,
 ) {
     val html by remember(richTextState.annotatedString) {
-        mutableStateOf(richTextState.toHtml())
+        mutableStateOf(richTextState.toMarkdown())
     }
 
     Row(
@@ -69,7 +70,7 @@ fun RichTextToMarkdown(
                 .weight(1f)
         ) {
             Text(
-                text = "HTML code:",
+                text = "Markdown code:",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier
             )

@@ -1,4 +1,4 @@
-package com.mohamedrejeb.richeditor.markdown
+package com.mohamedrejeb.richeditor.parser.markdown
 
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle

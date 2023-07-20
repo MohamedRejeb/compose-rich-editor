@@ -357,7 +357,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         tagName: String,
     ): RichParagraph.Type {
         return when (tagName) {
-            "ul" -> RichParagraph.Type.UnorderedList
+            "ul" -> RichParagraph.Type.UnorderedList()
             "ol" -> RichParagraph.Type.OrderedList(1)
             else -> RichParagraph.Type.Default
         }

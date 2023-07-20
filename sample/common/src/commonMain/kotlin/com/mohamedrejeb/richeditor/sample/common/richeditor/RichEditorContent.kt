@@ -18,7 +18,6 @@ import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
-import com.mohamedrejeb.richeditor.ui.test.DebugRichTextEditor
 import com.moriatsushi.insetsx.ExperimentalSoftwareKeyboardApi
 import com.moriatsushi.insetsx.safeDrawingPadding
 
@@ -57,97 +56,86 @@ fun RichEditorContent() {
                 .fillMaxSize()
                 .safeDrawingPadding()
         ) { paddingValue ->
-            DebugRichTextEditor(
-                richTextState = basicRichTextState,
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValue)
+                    .padding(20.dp)
+                    .verticalScroll(rememberScrollState())
             ) {
+                // BasicRichTextEditor
+                Text(
+                    text = "BasicRichTextEditor:",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Spacer(Modifier.height(8.dp))
+
                 RichTextStyleRow(
                     modifier = Modifier.fillMaxWidth(),
                     state = basicRichTextState,
                 )
+
+                BasicRichTextEditor(
+                    modifier = Modifier.fillMaxWidth(),
+                    state = basicRichTextState,
+                )
+
+                Divider(modifier = Modifier.padding(vertical = 20.dp))
+
+                // RichTextEditor
+                Text(
+                    text = "RichTextEditor:",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                RichTextStyleRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    state = richTextState,
+                )
+
+                RichTextEditor(
+                    modifier = Modifier.fillMaxWidth(),
+                    state = richTextState,
+                )
+
+                Divider(modifier = Modifier.padding(vertical = 20.dp))
+
+                // OutlinedRichTextEditor
+                Text(
+                    text = "OutlinedRichTextEditor:",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                RichTextStyleRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    state = outlinedRichTextState,
+                )
+
+                OutlinedRichTextEditor(
+                    modifier = Modifier.fillMaxWidth(),
+                    state = outlinedRichTextState,
+                )
+
+                Divider(modifier = Modifier.padding(vertical = 20.dp))
+
+                // RichText
+                Text(
+                    text = "RichText:",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                RichText(
+                    modifier = Modifier.fillMaxWidth(),
+                    state = richTextState,
+                )
             }
-//            Column(
-//                modifier = Modifier
-//                    .fillMaxSize()
-//                    .padding(paddingValue)
-//                    .padding(20.dp)
-//                    .verticalScroll(rememberScrollState())
-//            ) {
-//                // BasicRichTextEditor
-//                Text(
-//                    text = "BasicRichTextEditor:",
-//                    style = MaterialTheme.typography.titleMedium
-//                )
-//
-//                Spacer(Modifier.height(8.dp))
-//
-//                RichTextStyleRow(
-//                    modifier = Modifier.fillMaxWidth(),
-//                    state = basicRichTextState,
-//                )
-//
-//                BasicRichTextEditor(
-//                    modifier = Modifier.fillMaxWidth(),
-//                    state = basicRichTextState,
-//                )
-//
-//                Divider(modifier = Modifier.padding(vertical = 20.dp))
-//
-//                // RichTextEditor
-//                Text(
-//                    text = "RichTextEditor:",
-//                    style = MaterialTheme.typography.titleMedium
-//                )
-//
-//                Spacer(Modifier.height(8.dp))
-//
-//                RichTextStyleRow(
-//                    modifier = Modifier.fillMaxWidth(),
-//                    state = richTextState,
-//                )
-//
-//                RichTextEditor(
-//                    modifier = Modifier.fillMaxWidth(),
-//                    state = richTextState,
-//                )
-//
-//                Divider(modifier = Modifier.padding(vertical = 20.dp))
-//
-//                // OutlinedRichTextEditor
-//                Text(
-//                    text = "OutlinedRichTextEditor:",
-//                    style = MaterialTheme.typography.titleMedium
-//                )
-//
-//                Spacer(Modifier.height(8.dp))
-//
-//                RichTextStyleRow(
-//                    modifier = Modifier.fillMaxWidth(),
-//                    state = outlinedRichTextState,
-//                )
-//
-//                OutlinedRichTextEditor(
-//                    modifier = Modifier.fillMaxWidth(),
-//                    state = outlinedRichTextState,
-//                )
-//
-//                Divider(modifier = Modifier.padding(vertical = 20.dp))
-//
-//                // RichText
-//                Text(
-//                    text = "RichText:",
-//                    style = MaterialTheme.typography.titleMedium
-//                )
-//
-//                Spacer(Modifier.height(8.dp))
-//
-//                RichText(
-//                    modifier = Modifier.fillMaxWidth(),
-//                    state = richTextState,
-//                )
-//            }
         }
     }
 }

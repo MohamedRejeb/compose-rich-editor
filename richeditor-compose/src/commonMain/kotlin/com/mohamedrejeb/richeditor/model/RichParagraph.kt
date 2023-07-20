@@ -27,7 +27,7 @@ internal class RichParagraph(
 
         object Default : Type
 
-        object UnorderedList : Type {
+        class UnorderedList : Type {
             override val style: ParagraphStyle = ParagraphStyle(
                 textIndent = TextIndent(firstLine = 20.sp),
                 lineHeight = 20.sp,
@@ -36,7 +36,9 @@ internal class RichParagraph(
                 paragraph = RichParagraph(type = this),
                 text = "• ",
             )
-            override val nextParagraphType: Type get() = UnorderedList
+            override val nextParagraphType: Type get() = UnorderedList()
+
+            override fun copy(): Type = UnorderedList()
         }
 
         data class OrderedList(
@@ -66,14 +68,6 @@ internal class RichParagraph(
         offset: Int = 0,
         ignoreCustomFiltering: Boolean = false,
     ): Pair<Int, RichSpan?> {
-        // If the paragraph is empty, we add a RichSpan to avoid skipping the paragraph when searching
-        if (children.isEmpty()) children.add(
-            RichSpan(
-                paragraph = this,
-                textRange = TextRange(offset + type.startText.length),
-            )
-        )
-
         var index = offset
 
         // If the paragraph is not the first one, we add 1 to the index which stands for the line break
@@ -85,6 +79,14 @@ internal class RichParagraph(
 
         // Add the startText length to the index
         index += type.startText.length
+
+        // If the paragraph is empty, we add a RichSpan to avoid skipping the paragraph when searching
+        if (children.isEmpty()) children.add(
+            RichSpan(
+                paragraph = this,
+                textRange = TextRange(index),
+            )
+        )
 
         // Check if the textIndex is in the startRichSpan current paragraph
         if (index > textIndex) return index to getFirstNonEmptyChild(offset = index)
@@ -108,14 +110,25 @@ internal class RichParagraph(
         searchTextRange: TextRange,
         offset: Int = 0,
     ): Pair<Int, List<RichSpan>> {
-        // If the paragraph is empty, we add a RichSpan to avoid skipping the paragraph when searching
-        if (children.isEmpty()) children.add(RichSpan(paragraph = this))
-
         var index = offset
-        index += type.startText.length
 
         // If the paragraph is not the first one, we add 1 to the index which stands for the line break
         if (paragraphIndex > 0) index++
+
+        // Set the startRichSpan paragraph and textRange to ensure that it has the correct and latest values
+        type.startRichSpan.paragraph = this
+        type.startRichSpan.textRange = TextRange(index, index + type.startText.length)
+
+        // Add the startText length to the index
+        index += type.startText.length
+
+        // If the paragraph is empty, we add a RichSpan to avoid skipping the paragraph when searching
+        if (children.isEmpty()) children.add(
+            RichSpan(
+                paragraph = this,
+                textRange = TextRange(index),
+            )
+        )
 
         val richSpanList = mutableListOf<RichSpan>()
         children.fastForEach { richSpan ->

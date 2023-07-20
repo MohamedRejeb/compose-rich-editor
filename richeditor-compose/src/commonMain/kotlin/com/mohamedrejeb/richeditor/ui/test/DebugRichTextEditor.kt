@@ -14,7 +14,7 @@ import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
 
 @Composable
-internal fun DebugRichTextEditor(
+public fun DebugRichTextEditor(
     modifier: Modifier = Modifier,
     richTextState: RichTextState,
     content: @Composable () -> Unit,

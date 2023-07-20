@@ -14,6 +14,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.sample.common.htmleditor.HtmlEditorScreen
+import com.mohamedrejeb.richeditor.sample.common.markdowneditor.MarkdownEditorScreen
 import com.mohamedrejeb.richeditor.sample.common.richeditor.RichEditorScreen
 import com.mohamedrejeb.richeditor.sample.common.slack.SlackDemoScreen
 import com.mohamedrejeb.richeditor.ui.material3.RichText
@@ -76,6 +77,14 @@ fun HomeContent() {
                 },
             ) {
                 Text("HTML Editor Demo")
+            }
+
+            Button(
+                onClick = {
+                    navigator.push(MarkdownEditorScreen)
+                },
+            ) {
+                Text("Markdown Editor Demo")
             }
 
             Button(

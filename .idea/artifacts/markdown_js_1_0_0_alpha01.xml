@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="markdown-js-1.0.0-alpha01">
+    <output-path>$PROJECT_DIR$/markdown/build/libs</output-path>
+    <root id="archive" name="markdown-js-1.0.0-alpha01.jar">
+      <element id="module-output" name="compose-richeditor.markdown.jsMain" />
+    </root>
+  </artifact>
+</component>

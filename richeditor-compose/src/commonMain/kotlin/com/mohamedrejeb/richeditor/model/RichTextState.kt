@@ -526,8 +526,16 @@ class RichTextState internal constructor(
             checkForParagraphs()
         }
 
-        // Update the annotatedString and the textFieldValue with the new values
-        updateAnnotatedString(tempTextFieldValue)
+        if (
+            tempTextFieldValue.text == textFieldValue.text &&
+            tempTextFieldValue.selection != textFieldValue.selection
+        ) {
+            // Update selection
+            textFieldValue = tempTextFieldValue
+        } else {
+            // Update the annotatedString and the textFieldValue with the new values
+            updateAnnotatedString(tempTextFieldValue)
+        }
 
         // Clear un-applied styles
         toAddSpanStyle = SpanStyle()

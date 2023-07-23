@@ -26,16 +26,16 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                api(compose.runtime)
-                api(compose.foundation)
-                api(compose.material)
-                api(compose.material3)
-                api(compose.materialIconsExtended)
+                implementation(compose.runtime)
+                implementation(compose.foundation)
+                implementation(compose.material)
+                implementation(compose.material3)
 
+                // HTML parsing library
                 implementation(libs.ksoup)
 
                 // Markdown parsing library
-                api("org.jetbrains:markdown:0.3.1")
+                implementation(libs.jetbrains.markdown)
             }
         }
 

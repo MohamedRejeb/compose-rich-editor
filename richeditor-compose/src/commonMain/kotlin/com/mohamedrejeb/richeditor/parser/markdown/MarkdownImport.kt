@@ -1,9 +1,13 @@
 package com.mohamedrejeb.richeditor.parser.markdown
 
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import com.mohamedrejeb.richeditor.model.RichParagraph
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.utils.fastForEach
+import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.MarkdownTokenTypes
 import org.intellij.markdown.ast.ASTNode
@@ -14,15 +18,15 @@ import org.intellij.markdown.flavours.gfm.GFMTokenTypes
 import org.intellij.markdown.parser.MarkdownParser
 
 fun RichTextState.setMarkdown(markdown: String) {
-    val parser = Parser(mutableListOf())
-    parser.parseMarkdown(markdown)
-    updateRichParagraphList(parser.paragraphs)
+    val paragraphs = RichTextStateMarkdownParser.encode(markdown).richParagraphList
+    updateRichParagraphList(paragraphs)
 }
 
 internal class MarkdownRichTextStateParser(
 //    val onBackground: Color,
     val paragraphs: MutableList<RichParagraph>
 ) {
+
 
 
     fun getLastOrNewParagraph(): RichParagraph {
@@ -55,22 +59,90 @@ internal class MarkdownRichTextStateParser(
 
 internal typealias Parser = MarkdownRichTextStateParser
 
+internal fun encodeMarkdownToRichText(
+    markdown: String,
+    onOpenNode: (node: ASTNode) -> Unit,
+    onCloseNode: (node: ASTNode) -> Unit,
+    onText: (text: String) -> Unit,
+) {
+    val parser = MarkdownParser(GFMFlavourDescriptor())
+    val tree = parser.buildMarkdownTreeFromString(markdown)
+    tree.children.fastForEach { node ->
+        encodeMarkdownNodeToRichText(
+            node = node,
+            markdown = markdown,
+            onOpenNode = onOpenNode,
+            onCloseNode = onCloseNode,
+            onText = onText,
+        )
+    }
+}
+
+private fun encodeMarkdownNodeToRichText(
+    node: ASTNode,
+    markdown: String,
+    onOpenNode: (node: ASTNode) -> Unit,
+    onCloseNode: (node: ASTNode) -> Unit,
+    onText: (text: String) -> Unit,
+) {
+    when (node.type) {
+        MarkdownTokenTypes.TEXT -> onText(node.getTextInNode(markdown).toString())
+        else -> {
+            onOpenNode(node)
+            node.children.fastForEach { child ->
+                encodeMarkdownNodeToRichText(
+                    node = child,
+                    markdown = markdown,
+                    onOpenNode = onOpenNode,
+                    onCloseNode = onCloseNode,
+                    onText = onText,
+                )
+            }
+            onCloseNode(node)
+        }
+    }
+}
+
 internal fun Parser.parseMarkdown(markdown: String) {
     val parser = MarkdownParser(GFMFlavourDescriptor())
     val tree = parser.buildMarkdownTreeFromString(markdown)
-    for (node in tree.children) {
-        if (!importIntoState(
+    for ((index, node) in tree.children.withIndex()) {
+        richTextStyleTreeRepresentation(
+            index = index,
+            node = node,
+            startText = "",
+            text = markdown
+        )
+
+        if (
+            !importIntoState(
                 node = node,
-                markdown
+                content = markdown
             )
         ) {
             for (child in node.children) {
                 importIntoState(
                     node = node,
-                    markdown
+                    content = markdown
                 )
             }
         }
+    }
+}
+
+private fun richTextStyleTreeRepresentation(
+    index: Int,
+    node: ASTNode,
+    startText: String,
+    text: String
+) {
+    println("$startText Index->${index}")
+    println("$startText Type->${node.type}")
+    println("$startText Text->${node.getTextInNode(text)}")
+    println("$startText StartOffset->${node.startOffset}")
+    println("$startText EndOffset->${node.endOffset}")
+    node.children.fastForEachIndexed { childIndex, childRichSpan ->
+        richTextStyleTreeRepresentation(childIndex, childRichSpan, "$startText-", text)
     }
 }
 
@@ -94,10 +166,12 @@ private fun Parser.importIntoState(
     }
 
     var handled = true
+
+
     when (node.type) {
         MarkdownTokenTypes.TEXT -> {
             val text = node.getTextInNode(content).toString()
-//            print("TEXT->$text")
+//            println("TEXT->$text")
             appendText(text)
         }
 //        MarkdownTokenTypes.EOL -> Spacer(Modifier.padding(4.dp))
@@ -277,7 +351,7 @@ internal fun ASTNode.unorderedList(
     level: Int = 0
 ) {
     val paragraph = RichParagraph(
-        type = RichParagraph.Type.UnorderedList
+        type = RichParagraph.Type.UnorderedList()
     )
 //    print("UNORDERED_LIST->")
     listItems(

@@ -4,6 +4,7 @@ kotlin = "1.8.20"
 compose = "1.4.0"
 
 ksoup = "0.1.4"
+jetbrainsMarkdown = "0.3.1"
 
 # For sample
 compose-compiler = "1.4.6"
@@ -15,6 +16,7 @@ android-compileSdk = "33"
 
 [libraries]
 ksoup = { module = "com.mohamedrejeb.ksoup:ksoup-html", version.ref = "ksoup" }
+jetbrains-markdown = { module = "org.jetbrains:markdown", version.ref = "jetbrainsMarkdown" }
 
 # For sample
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity-compose" }

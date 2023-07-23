@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.LayoutDirection
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.RichTextValue
 import kotlinx.coroutines.CoroutineScope
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
 
 /**
  * Basic composable that enables users to edit rich text via hardware or software keyboard, but provides no decorations like hint or placeholder.
@@ -272,6 +274,7 @@ fun BasicRichTextEditor(
  * innerTextField exactly once.
  *
  */
+@OptIn(ExperimentalTime::class)
 @Composable
 internal fun BasicRichTextEditor(
     state: RichTextState,
@@ -332,7 +335,12 @@ internal fun BasicRichTextEditor(
         BasicTextField(
             value = state.textFieldValue,
             onValueChange = {
-                state.onTextFieldValueChange(it)
+                println("newSelection: ${it.selection}")
+                measureTime {
+                    state.onTextFieldValueChange(it)
+                }.also {
+                    println("duration: ${it.inWholeSeconds}")
+                }
             },
             modifier = modifier
                 .drawRichSpanStyle(

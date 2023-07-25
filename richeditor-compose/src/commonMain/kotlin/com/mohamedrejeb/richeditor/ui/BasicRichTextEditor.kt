@@ -335,12 +335,7 @@ internal fun BasicRichTextEditor(
         BasicTextField(
             value = state.textFieldValue,
             onValueChange = {
-                println("newSelection: ${it.selection}")
-                measureTime {
-                    state.onTextFieldValueChange(it)
-                }.also {
-                    println("duration: ${it.inWholeSeconds}")
-                }
+                state.onTextFieldValueChange(it)
             },
             modifier = modifier
                 .drawRichSpanStyle(

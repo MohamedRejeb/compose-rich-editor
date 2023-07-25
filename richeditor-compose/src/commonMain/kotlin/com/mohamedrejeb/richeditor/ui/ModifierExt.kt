@@ -7,7 +7,7 @@ import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.utils.fastForEach
 
-fun Modifier.drawRichSpanStyle(
+internal fun Modifier.drawRichSpanStyle(
     richTextState: RichTextState,
     topPadding: Float = 0f,
     startPadding: Float = 0f,
@@ -34,7 +34,6 @@ fun Modifier.drawRichSpanStyle(
             }
 
             styledRichSpanList.fastForEach { (style, textRange) ->
-                println("drawRichSpanStyle: $style, $textRange")
                 richTextState.textLayoutResult?.let { textLayoutResult ->
                     with(style) {
                         val textLength = richTextState.annotatedString.length

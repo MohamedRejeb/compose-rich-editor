@@ -7,6 +7,10 @@ package com.mohamedrejeb.richeditor.model
  * @param styles the styles to apply to the part.
  * @see RichTextStyle
  */
+@Deprecated(
+    message = "Old class used with RichTextValue",
+    level = DeprecationLevel.WARNING,
+)
 internal data class RichTextPart(
     val fromIndex: Int,
     val toIndex: Int,

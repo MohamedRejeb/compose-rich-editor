@@ -16,6 +16,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichParagraph.Type.Companion.startText
 import com.mohamedrejeb.richeditor.parser.html.RichTextStateHtmlParser
+import com.mohamedrejeb.richeditor.parser.markdown.RichTextStateMarkdownParser
 import com.mohamedrejeb.richeditor.utils.*
 import com.mohamedrejeb.richeditor.utils.append
 import com.mohamedrejeb.richeditor.utils.customMerge
@@ -2000,6 +2001,16 @@ class RichTextState internal constructor(
     }
 
     /**
+     * Updates the [RichTextState] with the given [markdown].
+     *
+     * @param markdown The markdown to update the [RichTextState] with.
+     */
+    fun setMarkdown(markdown: String) {
+        val richParagraphList = RichTextStateMarkdownParser.encode(markdown).richParagraphList
+        updateRichParagraphList(richParagraphList)
+    }
+
+    /**
      * Updates the [RichTextState] with the given [newRichParagraphList].
      * The [RichTextState] will be updated with the given [newRichParagraphList] and the [annotatedString] will be updated.
      *
@@ -2083,6 +2094,15 @@ class RichTextState internal constructor(
      */
     fun toHtml(): String {
         return RichTextStateHtmlParser.decode(this)
+    }
+
+    /**
+     * Decodes the [RichTextState] to a markdown string.
+     *
+     * @return The html string.
+     */
+    fun toMarkdown(): String {
+        return RichTextStateMarkdownParser.decode(this)
     }
 
     /**

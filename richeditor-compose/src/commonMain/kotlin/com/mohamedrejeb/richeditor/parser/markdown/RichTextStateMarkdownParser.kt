@@ -1,12 +1,12 @@
 package com.mohamedrejeb.richeditor.parser.markdown
 
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextDecoration
 import com.mohamedrejeb.richeditor.model.*
 import com.mohamedrejeb.richeditor.model.RichParagraph
 import com.mohamedrejeb.richeditor.parser.RichTextStateParser
-import com.mohamedrejeb.richeditor.parser.html.*
-import com.mohamedrejeb.richeditor.parser.html.CssDecoder
-import com.mohamedrejeb.richeditor.utils.customMerge
+import com.mohamedrejeb.richeditor.parser.utils.*
 import com.mohamedrejeb.richeditor.utils.fastForEach
 import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
 import org.intellij.markdown.MarkdownElementTypes
@@ -165,98 +165,60 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     override fun decode(richTextState: RichTextState): String {
         val builder = StringBuilder()
 
-        var lastParagraphGroupTagName: String? = null
+        richTextState.richParagraphList.fastForEach { richParagraph ->
+            // Append paragraph start text
+            builder.append(richParagraph.type.startRichSpan.text)
 
-        richTextState.richParagraphList.fastForEachIndexed { index, richParagraph ->
-            val paragraphGroupTagName = decodeHtmlElementFromRichParagraphType(richParagraph.type)
-
-            // Close last paragraph group tag if needed
-            if (
-                (lastParagraphGroupTagName == "ol" || lastParagraphGroupTagName == "ul") &&
-                (lastParagraphGroupTagName != paragraphGroupTagName)
-            ) builder.append("</$lastParagraphGroupTagName>")
-
-            // Open new paragraph group tag if needed
-            if (
-                (paragraphGroupTagName == "ol" || paragraphGroupTagName == "ul") &&
-                lastParagraphGroupTagName != paragraphGroupTagName
-            ) builder.append("<$paragraphGroupTagName>")
-
-            // Create paragraph tag name
-            val paragraphTagName =
-                if (paragraphGroupTagName == "ol" || paragraphGroupTagName == "ul") "li"
-                else "p"
-
-            // Create paragraph css
-            val paragraphCssMap = CssDecoder.decodeParagraphStyleToCssStyleMap(richParagraph.paragraphStyle)
-            val paragraphCss = CssDecoder.decodeCssStyleMap(paragraphCssMap)
-
-            // Append paragraph opening tag
-            builder.append("<$paragraphTagName style=\"$paragraphCss\">")
+            richParagraph.getFirstNonEmptyChild()?.let { firstNonEmptyChild ->
+                if (firstNonEmptyChild.text.isNotEmpty()) {
+                    // Append markdown line start text
+                    builder.append(getMarkdownLineStartTextFromFirstRichSpan(firstNonEmptyChild))
+                }
+            }
 
             // Append paragraph children
             richParagraph.children.fastForEach { richSpan ->
-                builder.append(decodeRichSpanToHtml(richSpan))
+                builder.append(decodeRichSpanToMarkdown(richSpan))
             }
 
-            // Append paragraph closing tag
-            builder.append("</$paragraphTagName>")
-
-            // Save last paragraph group tag name
-            lastParagraphGroupTagName = paragraphGroupTagName
-
-            // Close last paragraph group tag if needed
-            if (
-                (lastParagraphGroupTagName == "ol" || lastParagraphGroupTagName == "ul") &&
-                index == richTextState.richParagraphList.lastIndex
-            ) builder.append("</$lastParagraphGroupTagName>")
+            // Append new line
+            builder.append("\n")
         }
 
         return builder.toString()
     }
 
-    private fun decodeRichSpanToHtml(richSpan: RichSpan): String {
+    private fun decodeRichSpanToMarkdown(richSpan: RichSpan): String {
         val stringBuilder = StringBuilder()
 
         // Check if span is empty
         if (richSpan.isEmpty()) return ""
 
-        // Get HTML element and attributes
-        val spanHtml = decodeHtmlElementFromRichSpanStyle(richSpan.style)
-        val tagName = spanHtml.first
-        val tagAttributes = spanHtml.second
-
-        // Convert attributes map to HTML string
-        val tagAttributesStringBuilder = StringBuilder()
-        tagAttributes.forEach { (key, value) ->
-            tagAttributesStringBuilder.append(" $key=\"$value\"")
-        }
-
         // Convert span style to CSS string
-        val spanCssMap = CssDecoder.decodeSpanStyleToCssStyleMap(richSpan.spanStyle)
-        val spanCss = CssDecoder.decodeCssStyleMap(spanCssMap)
+        var markdownOpen = ""
+        if ((richSpan.spanStyle.fontWeight?.weight ?: 400) > 400) markdownOpen += "**"
+        if (richSpan.spanStyle.fontStyle == FontStyle.Italic) markdownOpen += "*"
+        if (richSpan.spanStyle.textDecoration == TextDecoration.LineThrough) markdownOpen += "~~"
 
-        val isRequireOpeningTag = tagName != "span" || tagAttributes.isNotEmpty() || spanCss.isNotEmpty()
+        // Append markdown open
+        stringBuilder.append(markdownOpen)
+        println("open $markdownOpen")
 
-        if (isRequireOpeningTag) {
-            // Append HTML element with attributes and style
-            stringBuilder.append("<$tagName$tagAttributesStringBuilder")
-            if (spanCss.isNotEmpty()) stringBuilder.append(" style=\"$spanCss\"")
-            stringBuilder.append(">")
-        }
+        // Apply rich span style to markdown
+        val spanMarkdown = decodeMarkdownElementFromRichSpan(richSpan.text, richSpan.style)
+
+        println("spanMarkdown $spanMarkdown")
 
         // Append text
-        stringBuilder.append(richSpan.text)
+        stringBuilder.append(spanMarkdown)
 
         // Append children
         richSpan.children.fastForEach { child ->
-            stringBuilder.append(decodeRichSpanToHtml(child))
+            stringBuilder.append(decodeRichSpanToMarkdown(child))
         }
 
-        if (isRequireOpeningTag) {
-            // Append closing HTML element
-            stringBuilder.append("</$tagName>")
-        }
+        // Append markdown close
+        stringBuilder.append(markdownOpen.reversed().also { println("close $it") })
 
         return stringBuilder.toString()
     }
@@ -310,32 +272,48 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     }
 
     /**
-     * Decodes HTML elements from [RichSpanStyle].
+     * Decodes HTML elements from [RichSpan].
      */
-    private fun decodeHtmlElementFromRichSpanStyle(
+    private fun decodeMarkdownElementFromRichSpan(
+        text: String,
         richSpanStyle: RichSpanStyle,
-    ): Pair<String, Map<String, String>> {
+    ): String {
         return when (richSpanStyle) {
-            is RichSpanStyle.Link -> {
-                return "a" to mapOf(
-                    "href" to richSpanStyle.url,
-                    "target" to "_blank"
-                )
-            }
-            else -> "span" to emptyMap()
+            is RichSpanStyle.Link -> "[$text](${richSpanStyle.url})"
+            is RichSpanStyle.Code -> "`$text`"
+            else -> text
         }
     }
 
     /**
-     * Decodes HTML elements from [RichParagraph.Type].
+     * Returns the markdown line start text from the first [RichSpan].
+     * This is used to determine the markdown line start text from the first [RichSpan] spanStyle.
+     * For example, if the first [RichSpan] spanStyle is [H1SPanStyle], the markdown line start text will be "# ".
      */
-    private fun decodeHtmlElementFromRichParagraphType(
-        richParagraphType: RichParagraph.Type,
-    ): String {
-        return when (richParagraphType) {
-            is RichParagraph.Type.UnorderedList -> "ul"
-            is RichParagraph.Type.OrderedList -> "ol"
-            else -> "p"
+    private fun getMarkdownLineStartTextFromFirstRichSpan(firstRichSpan: RichSpan): String {
+        if ((firstRichSpan.spanStyle.fontWeight?.weight ?: 400) <= 400) return ""
+        val fontSize = firstRichSpan.spanStyle.fontSize
+
+        return if (fontSize.isEm) {
+            when {
+                fontSize >= H1SPanStyle.fontSize -> "# "
+                fontSize >= H1SPanStyle.fontSize -> "## "
+                fontSize >= H1SPanStyle.fontSize -> "### "
+                fontSize >= H1SPanStyle.fontSize -> "#### "
+                fontSize >= H1SPanStyle.fontSize -> "##### "
+                fontSize >= H1SPanStyle.fontSize -> "###### "
+                else -> ""
+            }
+        } else {
+            when {
+                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "# "
+                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "## "
+                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "### "
+                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "#### "
+                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "##### "
+                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "###### "
+                else -> ""
+            }
         }
     }
 

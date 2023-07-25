@@ -15,6 +15,10 @@ import androidx.compose.ui.unit.sp
  * A style that can be applied to a [RichTextPart].
  * @see RichTextPart
  */
+@Deprecated(
+    message = "Old interface used with RichTextValue",
+    level = DeprecationLevel.WARNING,
+)
 interface RichTextStyle {
     /**
      * Applies the style to the given [spanStyle].

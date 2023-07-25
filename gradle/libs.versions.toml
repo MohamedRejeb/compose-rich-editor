@@ -2,6 +2,7 @@
 agp = "7.4.2"
 kotlin = "1.8.20"
 compose = "1.4.0"
+dokka = "1.8.20"
 
 ksoup = "0.1.4"
 jetbrainsMarkdown = "0.3.1"
@@ -10,7 +11,7 @@ jetbrainsMarkdown = "0.3.1"
 compose-compiler = "1.4.6"
 activity-compose = "1.7.0"
 voyager = "1.0.0-rc05"
-richeditor = "1.0.0-alpha02"
+richeditor = "1.0.0-beta01"
 android-minSdk = "21"
 android-compileSdk = "33"
 
@@ -27,3 +28,4 @@ richeditor-compose = { module = "com.mohamedrejeb.richeditor:richeditor-compose"
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }

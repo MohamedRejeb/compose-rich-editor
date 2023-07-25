@@ -7,7 +7,7 @@ import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.utils.fastForEach
 
-fun Modifier.drawRichSpanStyle(
+internal fun Modifier.drawRichSpanStyle(
     richTextState: RichTextState,
     topPadding: Float = 0f,
     startPadding: Float = 0f,
@@ -36,13 +36,17 @@ fun Modifier.drawRichSpanStyle(
             styledRichSpanList.fastForEach { (style, textRange) ->
                 richTextState.textLayoutResult?.let { textLayoutResult ->
                     with(style) {
-                        drawCustomStyle(
-                            layoutResult = textLayoutResult,
-                            textRange = textRange,
-                            topPadding = topPadding,
-                            startPadding = startPadding,
-                            richTextConfig = richTextState.richTextConfig,
-                        )
+                        val textLength = richTextState.annotatedString.length
+                        val measuredTextLength = textLayoutResult.multiParagraph.intrinsics.annotatedString.length
+                        if (textLength == measuredTextLength) {
+                            drawCustomStyle(
+                                layoutResult = textLayoutResult,
+                                textRange = textRange,
+                                topPadding = topPadding,
+                                startPadding = startPadding,
+                                richTextConfig = richTextState.richTextConfig,
+                            )
+                        }
                     }
                 }
             }

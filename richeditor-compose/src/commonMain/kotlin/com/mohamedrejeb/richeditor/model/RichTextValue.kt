@@ -8,8 +8,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
-import com.mohamedrejeb.richeditor.parser.annotatedstring.RichTextAnnotatedStringParser
-import com.mohamedrejeb.richeditor.parser.html.RichTextHtmlParser
 import com.mohamedrejeb.richeditor.utils.RichTextValueBuilder
 
 /**
@@ -146,7 +144,7 @@ data class RichTextValue internal constructor(
      * @since 0.2.0
      */
     fun toHtml(): String {
-        return RichTextHtmlParser.decode(this)
+        return annotatedString.text
     }
 
     /**
@@ -156,7 +154,7 @@ data class RichTextValue internal constructor(
      * @since 0.2.0
      */
     fun toAnnotatedString(): AnnotatedString {
-        return RichTextAnnotatedStringParser.decode(this)
+        return annotatedString
     }
 
     companion object {
@@ -168,7 +166,9 @@ data class RichTextValue internal constructor(
          * @since 0.2.0
          */
         fun from(html: String): RichTextValue {
-            return RichTextHtmlParser.encode(html)
+            return RichTextValueBuilder
+                .from(html)
+                .build()
         }
 
         /**
@@ -180,7 +180,9 @@ data class RichTextValue internal constructor(
          */
         @ExperimentalRichTextApi
         fun from(annotatedString: AnnotatedString): RichTextValue {
-            return RichTextAnnotatedStringParser.encode(annotatedString)
+            return RichTextValueBuilder
+                .from(annotatedString.text)
+                .build()
         }
 
         /**
@@ -189,14 +191,16 @@ data class RichTextValue internal constructor(
         val Saver = Saver<RichTextValue, Any>(
             save = {
                 arrayListOf(
-                    RichTextHtmlParser.decode(it),
+                    it.annotatedString.text,
                 )
             },
             restore = {
                 val list = it as? List<*> ?: return@Saver null
-                val htmlString = list[0] as? String ?: return@Saver null
+                val text = list[0] as? String ?: return@Saver null
 
-                RichTextHtmlParser.encode(htmlString)
+                RichTextValueBuilder
+                    .from(text)
+                    .build()
             }
         )
     }

@@ -16,6 +16,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichParagraph.Type.Companion.startText
 import com.mohamedrejeb.richeditor.parser.html.RichTextStateHtmlParser
+import com.mohamedrejeb.richeditor.parser.markdown.RichTextStateMarkdownParser
 import com.mohamedrejeb.richeditor.utils.*
 import com.mohamedrejeb.richeditor.utils.append
 import com.mohamedrejeb.richeditor.utils.customMerge
@@ -47,7 +48,18 @@ class RichTextState internal constructor(
     var annotatedString by mutableStateOf(AnnotatedString(text = ""))
         private set
 
-    val selection get() = textFieldValue.selection
+    /**
+     * The selection of the rich text.
+     */
+    var selection
+        get() = textFieldValue.selection
+        set(value) {
+            if (value.min >= 0 && value.max <= textFieldValue.text.length) {
+                val newTextFieldValue = textFieldValue.copy(selection = value)
+                updateTextFieldValue(newTextFieldValue)
+            }
+        }
+
     val composition get() = textFieldValue.composition
 
     internal var singleParagraphMode by mutableStateOf(false)
@@ -567,7 +579,7 @@ class RichTextState internal constructor(
             if (singleParagraphMode) newTextFieldValue.text
             else newTextFieldValue.text.replace("\n", " ")
 
-        styledRichSpanList.clear()
+        val newStyledRichSpanList = mutableListOf<RichSpan>()
         annotatedString = buildAnnotatedString {
             var index = 0
             richParagraphList.fastForEachIndexed { i, richParagraph ->
@@ -588,7 +600,7 @@ class RichTextState internal constructor(
                             text = newText,
                             selection = newTextFieldValue.selection,
                             onStyledRichSpan = {
-                                styledRichSpanList.add(it)
+                                newStyledRichSpanList.add(it)
                             },
                             richTextConfig = richTextConfig,
                         )
@@ -604,6 +616,7 @@ class RichTextState internal constructor(
                 }
             }
         }
+        styledRichSpanList.clear()
         textFieldValue = newTextFieldValue.copy(text = newText)
         visualTransformation = VisualTransformation { _ ->
             TransformedText(
@@ -611,6 +624,7 @@ class RichTextState internal constructor(
                 OffsetMapping.Identity
             )
         }
+        styledRichSpanList.addAll(newStyledRichSpanList)
     }
 
     /**
@@ -1998,6 +2012,16 @@ class RichTextState internal constructor(
     }
 
     /**
+     * Updates the [RichTextState] with the given [markdown].
+     *
+     * @param markdown The markdown to update the [RichTextState] with.
+     */
+    fun setMarkdown(markdown: String) {
+        val richParagraphList = RichTextStateMarkdownParser.encode(markdown).richParagraphList
+        updateRichParagraphList(richParagraphList)
+    }
+
+    /**
      * Updates the [RichTextState] with the given [newRichParagraphList].
      * The [RichTextState] will be updated with the given [newRichParagraphList] and the [annotatedString] will be updated.
      *
@@ -2010,6 +2034,7 @@ class RichTextState internal constructor(
         if (richParagraphList.isEmpty())
             richParagraphList.add(RichParagraph())
 
+        val newStyledRichSpanList = mutableListOf<RichSpan>()
         annotatedString = buildAnnotatedString {
             var index = 0
             richParagraphList.fastForEachIndexed { i, richParagraphStyle ->
@@ -2022,6 +2047,9 @@ class RichTextState internal constructor(
                         index = append(
                             richSpanList = richParagraphStyle.children,
                             startIndex = index,
+                            onStyledRichSpan = {
+                                newStyledRichSpanList.add(it)
+                            },
                             richTextConfig = richTextConfig,
                         )
                         if (!singleParagraphMode) {
@@ -2035,6 +2063,7 @@ class RichTextState internal constructor(
             }
         }
 
+        styledRichSpanList.clear()
         textFieldValue = TextFieldValue(
             text = annotatedString.text,
             selection = TextRange(annotatedString.text.length),
@@ -2045,6 +2074,7 @@ class RichTextState internal constructor(
                 OffsetMapping.Identity
             )
         }
+        styledRichSpanList.addAll(newStyledRichSpanList)
 
         // Update current span style
         updateCurrentSpanStyle()
@@ -2075,6 +2105,15 @@ class RichTextState internal constructor(
      */
     fun toHtml(): String {
         return RichTextStateHtmlParser.decode(this)
+    }
+
+    /**
+     * Decodes the [RichTextState] to a markdown string.
+     *
+     * @return The html string.
+     */
+    fun toMarkdown(): String {
+        return RichTextStateMarkdownParser.decode(this)
     }
 
     /**

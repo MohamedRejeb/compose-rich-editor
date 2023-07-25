@@ -2,9 +2,7 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.style.LineBreak
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextIndent
+import androidx.compose.ui.text.style.*
 import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.model.RichParagraph.Type.Companion.startText
 import com.mohamedrejeb.richeditor.ui.test.getRichTextStyleTreeRepresentation
@@ -29,7 +27,7 @@ internal class RichParagraph(
 
         class UnorderedList : Type {
             override val style: ParagraphStyle = ParagraphStyle(
-                textIndent = TextIndent(firstLine = 20.sp),
+                textIndent = TextIndent(firstLine = 20.sp, restLine = 38.sp),
                 lineHeight = 20.sp,
             )
             override val startRichSpan: RichSpan = RichSpan(
@@ -45,7 +43,7 @@ internal class RichParagraph(
             val number: Int,
         ) : Type {
             override val style: ParagraphStyle = ParagraphStyle(
-                textIndent = TextIndent(firstLine = 20.sp),
+                textIndent = TextIndent(firstLine = 20.sp, restLine = 42.sp),
                 lineHeight = 20.sp,
             )
             override val startRichSpan: RichSpan = RichSpan(
@@ -236,7 +234,7 @@ internal class RichParagraph(
     companion object {
         val DefaultParagraphStyle = ParagraphStyle(
             textAlign = TextAlign.Left,
-            lineBreak = LineBreak.Heading,
+            lineBreak = LineBreak.Paragraph,
         )
     }
 }

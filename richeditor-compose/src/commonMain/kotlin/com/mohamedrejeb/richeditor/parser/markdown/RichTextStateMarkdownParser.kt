@@ -1,12 +1,12 @@
 package com.mohamedrejeb.richeditor.parser.markdown
 
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextDecoration
 import com.mohamedrejeb.richeditor.model.*
 import com.mohamedrejeb.richeditor.model.RichParagraph
 import com.mohamedrejeb.richeditor.parser.RichTextStateParser
-import com.mohamedrejeb.richeditor.parser.html.*
-import com.mohamedrejeb.richeditor.parser.html.CssDecoder
-import com.mohamedrejeb.richeditor.utils.customMerge
+import com.mohamedrejeb.richeditor.parser.utils.*
 import com.mohamedrejeb.richeditor.utils.fastForEach
 import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
 import org.intellij.markdown.MarkdownElementTypes
@@ -22,22 +22,14 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         val openedNodes = mutableListOf<ASTNode>()
         val stringBuilder = StringBuilder()
         val currentStyles: MutableList<RichTextStyle> = mutableListOf()
-        val richParagraphList = mutableListOf<RichParagraph>()
+        val richParagraphList = mutableListOf(RichParagraph())
         var currentRichSpan: RichSpan? = null
-        var lastClosedNode: ASTNode? = null
+        var currentRichParagraphType: RichParagraph.Type = RichParagraph.Type.Default
 
         encodeMarkdownToRichText(
             markdown = input,
             onText = { text ->
-                println("onText: $text")
                 if (text.isEmpty()) return@encodeMarkdownToRichText
-
-                if (lastClosedNode?.type in markdownBlockElements) {
-                    if (text.isBlank()) return@encodeMarkdownToRichText
-                    lastClosedNode = null
-                    currentRichSpan = null
-                    richParagraphList.add(RichParagraph())
-                }
 
                 stringBuilder.append(text)
 
@@ -61,7 +53,6 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 }
             },
             onOpenNode = { node ->
-                println("onOpenNode: ${node.type}")
                 openedNodes.add(node)
 
                 val tagSpanStyle = markdownElementsSpanStyleEncodeMap[node.type]
@@ -69,33 +60,29 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 if (node.type in markdownBlockElements) {
                     stringBuilder.append(' ')
 
-                    val newRichParagraph = RichParagraph()
-                    var paragraphType: RichParagraph.Type = RichParagraph.Type.Default
-                    /*if (name == "li") {
-                        skipText = false
-                        openedNodes.getOrNull(openedNodes.lastIndex - 1)?.first?.let { lastOpenedTag ->
-                            paragraphType = RichTextStateHtmlParser.encodeHtmlElementToRichParagraphType(lastOpenedTag)
-                        }
-                    }*/
-                    newRichParagraph.type = paragraphType
-                    richParagraphList.add(newRichParagraph)
+                    val currentRichParagraph = richParagraphList.last()
 
-                    val newRichSpan = RichSpan(paragraph = newRichParagraph)
+                    // Get paragraph type from markdown element
+                    if (currentRichParagraphType == RichParagraph.Type.Default) {
+                        val paragraphType = encodeRichParagraphTypeFromMarkdownElement(node)
+                        currentRichParagraphType = paragraphType
+                    }
+
+                    // Set paragraph type if an element is a list item
+                    if (node.type == MarkdownElementTypes.LIST_ITEM) {
+                        currentRichParagraph.type = currentRichParagraphType.nextParagraphType
+                    }
+
+                    val newRichSpan = RichSpan(paragraph = currentRichParagraph)
                     newRichSpan.spanStyle = tagSpanStyle ?: SpanStyle()
 
                     if (newRichSpan.spanStyle != SpanStyle()) {
                         currentRichSpan = newRichSpan
-                        newRichParagraph.children.add(newRichSpan)
+                        currentRichParagraph.children.add(newRichSpan)
                     } else {
                         currentRichSpan = null
                     }
                 } else if (node.type != MarkdownTokenTypes.EOL) {
-                    if (lastClosedNode?.type in markdownBlockElements) {
-                        lastClosedNode = null
-                        currentRichSpan = null
-                        richParagraphList.add(RichParagraph())
-                    }
-
                     val richSpanStyle = encodeMarkdownElementToRichSpanStyle(node, input)
 
                     if (richParagraphList.isEmpty())
@@ -107,28 +94,20 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     newRichSpan.style = richSpanStyle
 
                     if (currentRichSpan != null) {
-                        if (currentRichSpan?.isEmpty() == true) {
-                            currentRichSpan?.spanStyle = currentRichSpan?.spanStyle?.merge(newRichSpan.spanStyle) ?: newRichSpan.spanStyle
-                            currentRichSpan?.style = newRichSpan.style
-                        } else {
-                            newRichSpan.parent = currentRichSpan
-                            currentRichSpan?.children?.add(newRichSpan)
-                            currentRichSpan = newRichSpan
-                        }
+                        newRichSpan.parent = currentRichSpan
+                        currentRichSpan?.children?.add(newRichSpan)
+                        currentRichSpan = newRichSpan
                     } else {
                         currentRichParagraph.children.add(newRichSpan)
                         currentRichSpan = newRichSpan
                     }
                 }
-
-                lastClosedNode = null
             },
             onCloseNode = { node ->
-                println("onCloseNode: ${node.type}")
                 openedNodes.removeLastOrNull()
                 currentStyles.removeLastOrNull()
-                lastClosedNode = node
 
+                // Remove empty spans
                 if (currentRichSpan?.isEmpty() == true) {
                     val parent = currentRichSpan?.parent
                     if (parent != null)
@@ -136,14 +115,42 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     else
                         currentRichSpan?.paragraph?.children?.remove(currentRichSpan)
                 }
+
+                // Merge spans with only one child
+                if (currentRichSpan?.text?.isEmpty() == true && currentRichSpan?.children?.size == 1) {
+                    currentRichSpan?.children?.firstOrNull()?.let { child ->
+                        currentRichSpan?.text = child.text
+                        currentRichSpan?.spanStyle = currentRichSpan?.spanStyle?.merge(child.spanStyle) ?: child.spanStyle
+                        currentRichSpan?.style = child.style
+                        currentRichSpan?.children?.clear()
+                    }
+                }
+
+                // Add new line if needed.
+                // Prevent adding two consecutive new lines
+                if (node.type == MarkdownTokenTypes.EOL) {
+                    val lastParagraph = richParagraphList.lastOrNull()
+                    val beforeLastParagraph = richParagraphList.getOrNull(richParagraphList.lastIndex - 1)
+                    if (lastParagraph?.isEmpty() != true || beforeLastParagraph?.isEmpty() != true)
+                        richParagraphList.add(RichParagraph())
+
+                    currentRichSpan = null
+                }
+
+                // Reset paragraph type
+                if (
+                    node.type == MarkdownElementTypes.ORDERED_LIST ||
+                    node.type == MarkdownElementTypes.UNORDERED_LIST
+                ) {
+                    currentRichParagraphType = RichParagraph.Type.Default
+                }
+
                 currentRichSpan = currentRichSpan?.parent
+            },
+            onHtml = { html ->
+                // Todo: support HTML in markdown
             }
         )
-
-        richParagraphList.fastForEachIndexed { index, richParagraph ->
-            println("Paragraph $index: ${richParagraph.children.size} children")
-            println(richParagraph)
-        }
 
         return RichTextState(
             initialRichParagraphList = richParagraphList,
@@ -153,98 +160,59 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     override fun decode(richTextState: RichTextState): String {
         val builder = StringBuilder()
 
-        var lastParagraphGroupTagName: String? = null
-
         richTextState.richParagraphList.fastForEachIndexed { index, richParagraph ->
-            val paragraphGroupTagName = decodeHtmlElementFromRichParagraphType(richParagraph.type)
+            // Append paragraph start text
+            builder.append(richParagraph.type.startRichSpan.text)
 
-            // Close last paragraph group tag if needed
-            if (
-                (lastParagraphGroupTagName == "ol" || lastParagraphGroupTagName == "ul") &&
-                (lastParagraphGroupTagName != paragraphGroupTagName)
-            ) builder.append("</$lastParagraphGroupTagName>")
-
-            // Open new paragraph group tag if needed
-            if (
-                (paragraphGroupTagName == "ol" || paragraphGroupTagName == "ul") &&
-                lastParagraphGroupTagName != paragraphGroupTagName
-            ) builder.append("<$paragraphGroupTagName>")
-
-            // Create paragraph tag name
-            val paragraphTagName =
-                if (paragraphGroupTagName == "ol" || paragraphGroupTagName == "ul") "li"
-                else "p"
-
-            // Create paragraph css
-            val paragraphCssMap = CssDecoder.decodeParagraphStyleToCssStyleMap(richParagraph.paragraphStyle)
-            val paragraphCss = CssDecoder.decodeCssStyleMap(paragraphCssMap)
-
-            // Append paragraph opening tag
-            builder.append("<$paragraphTagName style=\"$paragraphCss\">")
+            richParagraph.getFirstNonEmptyChild()?.let { firstNonEmptyChild ->
+                if (firstNonEmptyChild.text.isNotEmpty()) {
+                    // Append markdown line start text
+                    builder.append(getMarkdownLineStartTextFromFirstRichSpan(firstNonEmptyChild))
+                }
+            }
 
             // Append paragraph children
             richParagraph.children.fastForEach { richSpan ->
-                builder.append(decodeRichSpanToHtml(richSpan))
+                builder.append(decodeRichSpanToMarkdown(richSpan))
             }
 
-            // Append paragraph closing tag
-            builder.append("</$paragraphTagName>")
-
-            // Save last paragraph group tag name
-            lastParagraphGroupTagName = paragraphGroupTagName
-
-            // Close last paragraph group tag if needed
-            if (
-                (lastParagraphGroupTagName == "ol" || lastParagraphGroupTagName == "ul") &&
-                index == richTextState.richParagraphList.lastIndex
-            ) builder.append("</$lastParagraphGroupTagName>")
+            if (index < richTextState.richParagraphList.lastIndex) {
+                // Append new line
+                builder.append("\n")
+            }
         }
 
         return builder.toString()
     }
 
-    private fun decodeRichSpanToHtml(richSpan: RichSpan): String {
+    private fun decodeRichSpanToMarkdown(richSpan: RichSpan): String {
         val stringBuilder = StringBuilder()
 
         // Check if span is empty
         if (richSpan.isEmpty()) return ""
 
-        // Get HTML element and attributes
-        val spanHtml = decodeHtmlElementFromRichSpanStyle(richSpan.style)
-        val tagName = spanHtml.first
-        val tagAttributes = spanHtml.second
-
-        // Convert attributes map to HTML string
-        val tagAttributesStringBuilder = StringBuilder()
-        tagAttributes.forEach { (key, value) ->
-            tagAttributesStringBuilder.append(" $key=\"$value\"")
-        }
-
         // Convert span style to CSS string
-        val spanCssMap = CssDecoder.decodeSpanStyleToCssStyleMap(richSpan.spanStyle)
-        val spanCss = CssDecoder.decodeCssStyleMap(spanCssMap)
+        var markdownOpen = ""
+        if ((richSpan.spanStyle.fontWeight?.weight ?: 400) > 400) markdownOpen += "**"
+        if (richSpan.spanStyle.fontStyle == FontStyle.Italic) markdownOpen += "*"
+        if (richSpan.spanStyle.textDecoration == TextDecoration.LineThrough) markdownOpen += "~~"
 
-        val isRequireOpeningTag = tagName != "span" || tagAttributes.isNotEmpty() || spanCss.isNotEmpty()
+        // Append markdown open
+        stringBuilder.append(markdownOpen)
 
-        if (isRequireOpeningTag) {
-            // Append HTML element with attributes and style
-            stringBuilder.append("<$tagName$tagAttributesStringBuilder")
-            if (spanCss.isNotEmpty()) stringBuilder.append(" style=\"$spanCss\"")
-            stringBuilder.append(">")
-        }
+        // Apply rich span style to markdown
+        val spanMarkdown = decodeMarkdownElementFromRichSpan(richSpan.text, richSpan.style)
 
         // Append text
-        stringBuilder.append(richSpan.text)
+        stringBuilder.append(spanMarkdown)
 
         // Append children
         richSpan.children.fastForEach { child ->
-            stringBuilder.append(decodeRichSpanToHtml(child))
+            stringBuilder.append(decodeRichSpanToMarkdown(child))
         }
 
-        if (isRequireOpeningTag) {
-            // Append closing HTML element
-            stringBuilder.append("</$tagName>")
-        }
+        // Append markdown close
+        stringBuilder.append(markdownOpen.reversed())
 
         return stringBuilder.toString()
     }
@@ -274,42 +242,89 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         markdown: String,
     ): RichSpanStyle {
         return when (node.type) {
-            MarkdownElementTypes.LINK_DEFINITION -> {
+            MarkdownElementTypes.INLINE_LINK -> {
                 val destination = node.findChildOfType(MarkdownElementTypes.LINK_DESTINATION)?.getTextInNode(markdown)?.toString()
                 RichSpanStyle.Link(url = destination ?: "")
             }
+            MarkdownElementTypes.CODE_SPAN -> RichSpanStyle.Code()
             else -> RichSpanStyle.Default
         }
     }
 
     /**
-     * Decodes HTML elements from [RichSpanStyle].
+     * Encode [RichParagraph.Type] from Markdown [ASTNode].
      */
-    private fun decodeHtmlElementFromRichSpanStyle(
-        richSpanStyle: RichSpanStyle,
-    ): Pair<String, Map<String, String>> {
-        return when (richSpanStyle) {
-            is RichSpanStyle.Link -> {
-                return "a" to mapOf(
-                    "href" to richSpanStyle.url,
-                    "target" to "_blank"
-                )
-            }
-            else -> "span" to emptyMap()
+    private fun encodeRichParagraphTypeFromMarkdownElement(
+        node: ASTNode,
+    ): RichParagraph.Type {
+        return when (node.type) {
+            MarkdownElementTypes.UNORDERED_LIST -> RichParagraph.Type.UnorderedList()
+            MarkdownElementTypes.ORDERED_LIST -> RichParagraph.Type.OrderedList(0)
+            else -> RichParagraph.Type.Default
         }
     }
 
     /**
-     * Decodes HTML elements from [RichParagraph.Type].
+     * Decodes HTML elements from [RichSpan].
      */
-    private fun decodeHtmlElementFromRichParagraphType(
-        richParagraphType: RichParagraph.Type,
+    private fun decodeMarkdownElementFromRichSpan(
+        text: String,
+        richSpanStyle: RichSpanStyle,
     ): String {
-        return when (richParagraphType) {
-            is RichParagraph.Type.UnorderedList -> "ul"
-            is RichParagraph.Type.OrderedList -> "ol"
-            else -> "p"
+        return when (richSpanStyle) {
+            is RichSpanStyle.Link -> "[$text](${richSpanStyle.url})"
+            is RichSpanStyle.Code -> "`$text`"
+            else -> text
         }
     }
+
+    /**
+     * Returns the markdown line start text from the first [RichSpan].
+     * This is used to determine the markdown line start text from the first [RichSpan] spanStyle.
+     * For example, if the first [RichSpan] spanStyle is [H1SPanStyle], the markdown line start text will be "# ".
+     */
+    private fun getMarkdownLineStartTextFromFirstRichSpan(firstRichSpan: RichSpan): String {
+        if ((firstRichSpan.spanStyle.fontWeight?.weight ?: 400) <= 400) return ""
+        val fontSize = firstRichSpan.spanStyle.fontSize
+
+        return if (fontSize.isEm) {
+            when {
+                fontSize >= H1SPanStyle.fontSize -> "# "
+                fontSize >= H1SPanStyle.fontSize -> "## "
+                fontSize >= H1SPanStyle.fontSize -> "### "
+                fontSize >= H1SPanStyle.fontSize -> "#### "
+                fontSize >= H1SPanStyle.fontSize -> "##### "
+                fontSize >= H1SPanStyle.fontSize -> "###### "
+                else -> ""
+            }
+        } else {
+            when {
+                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "# "
+                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "## "
+                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "### "
+                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "#### "
+                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "##### "
+                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "###### "
+                else -> ""
+            }
+        }
+    }
+
+    /**
+     * Markdown block elements.
+     *
+     * @see <a href="https://www.w3schools.com/html/html_blocks.asp">HTML blocks</a>
+     */
+    private val markdownBlockElements = setOf(
+        MarkdownElementTypes.ATX_1,
+        MarkdownElementTypes.ATX_2,
+        MarkdownElementTypes.ATX_3,
+        MarkdownElementTypes.ATX_4,
+        MarkdownElementTypes.ATX_5,
+        MarkdownElementTypes.ATX_6,
+        MarkdownElementTypes.ORDERED_LIST,
+        MarkdownElementTypes.UNORDERED_LIST,
+        MarkdownElementTypes.LIST_ITEM,
+    )
 
 }

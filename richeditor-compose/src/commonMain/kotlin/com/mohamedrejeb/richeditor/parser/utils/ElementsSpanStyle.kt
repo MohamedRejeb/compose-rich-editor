@@ -1,4 +1,4 @@
-package com.mohamedrejeb.richeditor.parser.html
+package com.mohamedrejeb.richeditor.parser.utils
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle

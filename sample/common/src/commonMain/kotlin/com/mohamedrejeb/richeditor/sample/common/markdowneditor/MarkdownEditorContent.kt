@@ -11,7 +11,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
-import com.mohamedrejeb.richeditor.parser.markdown.toMarkdown
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
 import com.moriatsushi.insetsx.ExperimentalSoftwareKeyboardApi
 import com.moriatsushi.insetsx.safeDrawingPadding
@@ -21,7 +20,7 @@ import com.moriatsushi.insetsx.safeDrawingPadding
 fun MarkdownEditorContent() {
     val navigator = LocalNavigator.currentOrThrow
 
-    var isMarkdownToRichText by remember { mutableStateOf(true) }
+    var isMarkdownToRichText by remember { mutableStateOf(false) }
 
     var markdown by remember {
         mutableStateOf(TextFieldValue(""))
@@ -74,7 +73,7 @@ fun MarkdownEditorContent() {
                         markdown = markdown,
                         onMarkdownChange = {
                             markdown = it
-//                            richTextState.setHtml(it.text)
+                            richTextState.setMarkdown(it.text)
                         },
                         modifier = Modifier
                             .fillMaxWidth()

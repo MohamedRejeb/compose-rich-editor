@@ -370,15 +370,15 @@ internal class CssEncoderTest {
             CssEncoder.parseCssTextIndent(textIndent1),
         )
         assertEquals(
-            TextIndent(1.5.em),
+            TextIndent(1.5.em, 1.5.em),
             CssEncoder.parseCssTextIndent(textIndent2),
         )
         assertEquals(
-            TextIndent(3.em),
+            TextIndent(3.em, 3.em),
             CssEncoder.parseCssTextIndent(textIndent3),
         )
         assertEquals(
-            TextIndent(24.sp),
+            TextIndent(24.sp, 24.sp),
             CssEncoder.parseCssTextIndent(textIndent4),
         )
     }

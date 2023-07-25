@@ -17,6 +17,7 @@ internal fun encodeMarkdownToRichText(
     onOpenNode: (node: ASTNode) -> Unit,
     onCloseNode: (node: ASTNode) -> Unit,
     onText: (text: String) -> Unit,
+    onHtml: (html: String) -> Unit,
 ) {
     val parser = MarkdownParser(GFMFlavourDescriptor())
     val tree = parser.buildMarkdownTreeFromString(markdown)
@@ -27,6 +28,7 @@ internal fun encodeMarkdownToRichText(
             onOpenNode = onOpenNode,
             onCloseNode = onCloseNode,
             onText = onText,
+            onHtml = onHtml,
         )
     }
 }
@@ -37,6 +39,7 @@ private fun encodeMarkdownNodeToRichText(
     onOpenNode: (node: ASTNode) -> Unit,
     onCloseNode: (node: ASTNode) -> Unit,
     onText: (text: String) -> Unit,
+    onHtml: (html: String) -> Unit,
 ) {
     when (node.type) {
         MarkdownTokenTypes.TEXT -> onText(node.getTextInNode(markdown).toString())
@@ -67,6 +70,7 @@ private fun encodeMarkdownNodeToRichText(
                     onOpenNode = onOpenNode,
                     onCloseNode = onCloseNode,
                     onText = onText,
+                    onHtml = onHtml,
                 )
             }
             onCloseNode(node)
@@ -83,6 +87,7 @@ private fun encodeMarkdownNodeToRichText(
                     onOpenNode = onOpenNode,
                     onCloseNode = onCloseNode,
                     onText = onText,
+                    onHtml = onHtml,
                 )
             }
             onCloseNode(node)
@@ -103,6 +108,9 @@ private fun encodeMarkdownNodeToRichText(
             onText(text ?: "")
             onCloseNode(node)
         }
+        MarkdownElementTypes.HTML_BLOCK, MarkdownTokenTypes.HTML_TAG -> {
+            onHtml(node.getTextInNode(markdown).toString())
+        }
         else -> {
             onOpenNode(node)
             node.children.fastForEach { child ->
@@ -112,6 +120,7 @@ private fun encodeMarkdownNodeToRichText(
                     onOpenNode = onOpenNode,
                     onCloseNode = onCloseNode,
                     onText = onText,
+                    onHtml = onHtml,
                 )
             }
             onCloseNode(node)

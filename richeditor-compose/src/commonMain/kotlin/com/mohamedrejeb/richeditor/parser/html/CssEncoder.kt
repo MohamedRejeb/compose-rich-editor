@@ -424,7 +424,7 @@ internal object CssEncoder {
         if (cssTextIndent.isBlank()) return null
 
         val textUnit = parseCssTextSize(cssTextIndent)
-        return if (textUnit.isSpecified) TextIndent(textUnit)
+        return if (textUnit.isSpecified) TextIndent(textUnit, textUnit)
             else null
     }
 

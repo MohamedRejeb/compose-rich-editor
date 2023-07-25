@@ -29,7 +29,6 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         encodeMarkdownToRichText(
             markdown = input,
             onText = { text ->
-                println("onText: $text")
                 if (text.isEmpty()) return@encodeMarkdownToRichText
 
                 stringBuilder.append(text)
@@ -54,7 +53,6 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 }
             },
             onOpenNode = { node ->
-                println("onOpenNode: ${node.type}")
                 openedNodes.add(node)
 
                 val tagSpanStyle = markdownElementsSpanStyleEncodeMap[node.type]
@@ -106,7 +104,6 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 }
             },
             onCloseNode = { node ->
-                println("onCloseNode: ${node.type}")
                 openedNodes.removeLastOrNull()
                 currentStyles.removeLastOrNull()
 
@@ -149,13 +146,11 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 }
 
                 currentRichSpan = currentRichSpan?.parent
+            },
+            onHtml = { html ->
+                // Todo: support HTML in markdown
             }
         )
-
-        richParagraphList.fastForEachIndexed { index, richParagraph ->
-            println("Paragraph $index: ${richParagraph.children.size} children")
-            println(richParagraph)
-        }
 
         return RichTextState(
             initialRichParagraphList = richParagraphList,
@@ -165,7 +160,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     override fun decode(richTextState: RichTextState): String {
         val builder = StringBuilder()
 
-        richTextState.richParagraphList.fastForEach { richParagraph ->
+        richTextState.richParagraphList.fastForEachIndexed { index, richParagraph ->
             // Append paragraph start text
             builder.append(richParagraph.type.startRichSpan.text)
 
@@ -181,8 +176,10 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 builder.append(decodeRichSpanToMarkdown(richSpan))
             }
 
-            // Append new line
-            builder.append("\n")
+            if (index < richTextState.richParagraphList.lastIndex) {
+                // Append new line
+                builder.append("\n")
+            }
         }
 
         return builder.toString()
@@ -202,12 +199,9 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
         // Append markdown open
         stringBuilder.append(markdownOpen)
-        println("open $markdownOpen")
 
         // Apply rich span style to markdown
         val spanMarkdown = decodeMarkdownElementFromRichSpan(richSpan.text, richSpan.style)
-
-        println("spanMarkdown $spanMarkdown")
 
         // Append text
         stringBuilder.append(spanMarkdown)
@@ -218,7 +212,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         }
 
         // Append markdown close
-        stringBuilder.append(markdownOpen.reversed().also { println("close $it") })
+        stringBuilder.append(markdownOpen.reversed())
 
         return stringBuilder.toString()
     }
@@ -250,7 +244,6 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         return when (node.type) {
             MarkdownElementTypes.INLINE_LINK -> {
                 val destination = node.findChildOfType(MarkdownElementTypes.LINK_DESTINATION)?.getTextInNode(markdown)?.toString()
-                println("LINK_DESTINATION->$destination")
                 RichSpanStyle.Link(url = destination ?: "")
             }
             MarkdownElementTypes.CODE_SPAN -> RichSpanStyle.Code()

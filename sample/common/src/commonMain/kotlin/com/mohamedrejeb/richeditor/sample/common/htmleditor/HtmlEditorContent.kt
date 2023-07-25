@@ -15,7 +15,7 @@ import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
 import com.moriatsushi.insetsx.ExperimentalSoftwareKeyboardApi
 import com.moriatsushi.insetsx.safeDrawingPadding
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, ExperimentalSoftwareKeyboardApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSoftwareKeyboardApi::class)
 @Composable
 fun HtmlEditorContent() {
     val navigator = LocalNavigator.currentOrThrow

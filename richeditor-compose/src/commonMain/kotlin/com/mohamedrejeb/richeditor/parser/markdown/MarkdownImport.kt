@@ -18,7 +18,7 @@ import org.intellij.markdown.flavours.gfm.GFMTokenTypes
 import org.intellij.markdown.parser.MarkdownParser
 
 fun RichTextState.setMarkdown(markdown: String) {
-    val paragraphs = RichTextStateMarkdownParser.encode(markdown).richParagraphList
+    val paragraphs = RichTextStateMarkdownParser.encode(markdown).richParagraphList.toList()
     updateRichParagraphList(paragraphs)
 }
 
@@ -87,6 +87,24 @@ private fun encodeMarkdownNodeToRichText(
 ) {
     when (node.type) {
         MarkdownTokenTypes.TEXT -> onText(node.getTextInNode(markdown).toString())
+        MarkdownTokenTypes.WHITE_SPACE -> onText(" ")
+        MarkdownElementTypes.CODE_SPAN -> {
+            onOpenNode(node)
+            onText(node.getTextInNode(markdown).removeSurrounding("`").toString())
+            onCloseNode(node)
+        }
+        MarkdownElementTypes.INLINE_LINK -> {
+            onOpenNode(node)
+            val text = node
+                .findChildOfType(MarkdownElementTypes.LINK_TEXT)
+                ?.getTextInNode(markdown)
+                ?.drop(1)
+                ?.dropLast(1)
+                ?.toString()
+            println("LINK_TEXT->$text")
+            onText(text ?: "")
+            onCloseNode(node)
+        }
         else -> {
             onOpenNode(node)
             node.children.fastForEach { child ->

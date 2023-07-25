@@ -14,7 +14,6 @@ internal val markdownBlockElements = setOf(
     MarkdownElementTypes.ATX_4,
     MarkdownElementTypes.ATX_5,
     MarkdownElementTypes.ATX_6,
-    MarkdownElementTypes.PARAGRAPH,
     MarkdownElementTypes.ORDERED_LIST,
     MarkdownElementTypes.UNORDERED_LIST,
 )

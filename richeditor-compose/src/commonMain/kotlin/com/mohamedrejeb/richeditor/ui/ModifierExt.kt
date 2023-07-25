@@ -34,15 +34,20 @@ fun Modifier.drawRichSpanStyle(
             }
 
             styledRichSpanList.fastForEach { (style, textRange) ->
+                println("drawRichSpanStyle: $style, $textRange")
                 richTextState.textLayoutResult?.let { textLayoutResult ->
                     with(style) {
-                        drawCustomStyle(
-                            layoutResult = textLayoutResult,
-                            textRange = textRange,
-                            topPadding = topPadding,
-                            startPadding = startPadding,
-                            richTextConfig = richTextState.richTextConfig,
-                        )
+                        val textLength = richTextState.annotatedString.length
+                        val measuredTextLength = textLayoutResult.multiParagraph.intrinsics.annotatedString.length
+                        if (textLength == measuredTextLength) {
+                            drawCustomStyle(
+                                layoutResult = textLayoutResult,
+                                textRange = textRange,
+                                topPadding = topPadding,
+                                startPadding = startPadding,
+                                richTextConfig = richTextState.richTextConfig,
+                            )
+                        }
                     }
                 }
             }

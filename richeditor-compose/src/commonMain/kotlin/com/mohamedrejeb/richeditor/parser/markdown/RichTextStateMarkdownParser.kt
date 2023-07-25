@@ -22,7 +22,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         val openedNodes = mutableListOf<ASTNode>()
         val stringBuilder = StringBuilder()
         val currentStyles: MutableList<RichTextStyle> = mutableListOf()
-        val richParagraphList = mutableListOf<RichParagraph>()
+        val richParagraphList = mutableListOf(RichParagraph())
         var currentRichSpan: RichSpan? = null
         var lastClosedNode: ASTNode? = null
 
@@ -36,7 +36,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     if (text.isBlank()) return@encodeMarkdownToRichText
                     lastClosedNode = null
                     currentRichSpan = null
-                    richParagraphList.add(RichParagraph())
+//                    richParagraphList.add(RichParagraph())
                 }
 
                 stringBuilder.append(text)
@@ -69,7 +69,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 if (node.type in markdownBlockElements) {
                     stringBuilder.append(' ')
 
-                    val newRichParagraph = RichParagraph()
+                    val currentRichParagraph = richParagraphList.last()
                     var paragraphType: RichParagraph.Type = RichParagraph.Type.Default
                     /*if (name == "li") {
                         skipText = false
@@ -77,15 +77,14 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                             paragraphType = RichTextStateHtmlParser.encodeHtmlElementToRichParagraphType(lastOpenedTag)
                         }
                     }*/
-                    newRichParagraph.type = paragraphType
-                    richParagraphList.add(newRichParagraph)
+                    currentRichParagraph.type = paragraphType
 
-                    val newRichSpan = RichSpan(paragraph = newRichParagraph)
+                    val newRichSpan = RichSpan(paragraph = currentRichParagraph)
                     newRichSpan.spanStyle = tagSpanStyle ?: SpanStyle()
 
                     if (newRichSpan.spanStyle != SpanStyle()) {
                         currentRichSpan = newRichSpan
-                        newRichParagraph.children.add(newRichSpan)
+                        currentRichParagraph.children.add(newRichSpan)
                     } else {
                         currentRichSpan = null
                     }
@@ -106,15 +105,12 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     newRichSpan.spanStyle = tagSpanStyle ?: SpanStyle()
                     newRichSpan.style = richSpanStyle
 
+                    println("richSpanStyle: $richSpanStyle")
+
                     if (currentRichSpan != null) {
-                        if (currentRichSpan?.isEmpty() == true) {
-                            currentRichSpan?.spanStyle = currentRichSpan?.spanStyle?.merge(newRichSpan.spanStyle) ?: newRichSpan.spanStyle
-                            currentRichSpan?.style = newRichSpan.style
-                        } else {
-                            newRichSpan.parent = currentRichSpan
-                            currentRichSpan?.children?.add(newRichSpan)
-                            currentRichSpan = newRichSpan
-                        }
+                        newRichSpan.parent = currentRichSpan
+                        currentRichSpan?.children?.add(newRichSpan)
+                        currentRichSpan = newRichSpan
                     } else {
                         currentRichParagraph.children.add(newRichSpan)
                         currentRichSpan = newRichSpan
@@ -129,6 +125,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 currentStyles.removeLastOrNull()
                 lastClosedNode = node
 
+                // Remove empty spans
                 if (currentRichSpan?.isEmpty() == true) {
                     val parent = currentRichSpan?.parent
                     if (parent != null)
@@ -136,6 +133,27 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     else
                         currentRichSpan?.paragraph?.children?.remove(currentRichSpan)
                 }
+
+                // Merge spans with only one child
+                if (currentRichSpan?.text?.isEmpty() == true && currentRichSpan?.children?.size == 1) {
+                    currentRichSpan?.children?.firstOrNull()?.let { child ->
+                        currentRichSpan?.text = child.text
+                        currentRichSpan?.spanStyle = currentRichSpan?.spanStyle?.merge(child.spanStyle) ?: child.spanStyle
+                        currentRichSpan?.style = child.style
+                        currentRichSpan?.children?.clear()
+                    }
+                }
+
+                // Add new line if needed
+                if (node.type == MarkdownTokenTypes.EOL) {
+                    val lastParagraph = richParagraphList.lastOrNull()
+                    val beforeLastParagraph = richParagraphList.getOrNull(richParagraphList.lastIndex - 1)
+                    println("lastParagraph: $lastParagraph")
+                    println("lastParagraph?.isEmpty(): ${lastParagraph?.isEmpty()}")
+                    if (lastParagraph?.isEmpty() != true || beforeLastParagraph?.isEmpty() != true)
+                        richParagraphList.add(RichParagraph())
+                }
+
                 currentRichSpan = currentRichSpan?.parent
             }
         )
@@ -274,10 +292,12 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         markdown: String,
     ): RichSpanStyle {
         return when (node.type) {
-            MarkdownElementTypes.LINK_DEFINITION -> {
+            MarkdownElementTypes.INLINE_LINK -> {
                 val destination = node.findChildOfType(MarkdownElementTypes.LINK_DESTINATION)?.getTextInNode(markdown)?.toString()
+                println("LINK_DESTINATION->$destination")
                 RichSpanStyle.Link(url = destination ?: "")
             }
+            MarkdownElementTypes.CODE_SPAN -> RichSpanStyle.Code()
             else -> RichSpanStyle.Default
         }
     }

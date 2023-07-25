@@ -54,6 +54,7 @@ internal fun AnnotatedString.Builder.append(
 internal fun AnnotatedString.Builder.append(
     richSpanList: List<RichSpan>,
     startIndex: Int,
+    onStyledRichSpan: (RichSpan) -> Unit,
     richTextConfig: RichTextConfig,
 ): Int {
     var index = startIndex
@@ -61,6 +62,7 @@ internal fun AnnotatedString.Builder.append(
         index = append(
             richSpan = richSpan,
             startIndex = index,
+            onStyledRichSpan = onStyledRichSpan,
             richTextConfig = richTextConfig,
         )
     }
@@ -160,6 +162,7 @@ internal fun AnnotatedString.Builder.append(
 internal fun AnnotatedString.Builder.append(
     richSpan: RichSpan,
     startIndex: Int,
+    onStyledRichSpan: (RichSpan) -> Unit,
     richTextConfig: RichTextConfig,
 ): Int {
     var index = startIndex
@@ -167,11 +170,17 @@ internal fun AnnotatedString.Builder.append(
     withStyle(richSpan.spanStyle.merge(richSpan.style.spanStyle(richTextConfig))) {
         richSpan.textRange = TextRange(index, index + richSpan.text.length)
         append(richSpan.text)
+
+        if (richSpan.style !is RichSpanStyle.Default) {
+            onStyledRichSpan(richSpan)
+        }
+
         index += richSpan.text.length
         richSpan.children.fastForEach { richSpan ->
             index = append(
                 richSpan = richSpan,
                 startIndex = index,
+                onStyledRichSpan = onStyledRichSpan,
                 richTextConfig = richTextConfig,
             )
         }

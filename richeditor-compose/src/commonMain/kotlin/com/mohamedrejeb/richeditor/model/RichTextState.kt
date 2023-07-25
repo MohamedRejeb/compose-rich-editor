@@ -48,7 +48,18 @@ class RichTextState internal constructor(
     var annotatedString by mutableStateOf(AnnotatedString(text = ""))
         private set
 
-    val selection get() = textFieldValue.selection
+    /**
+     * The selection of the rich text.
+     */
+    var selection
+        get() = textFieldValue.selection
+        set(value) {
+            if (value.min >= 0 && value.max <= textFieldValue.text.length) {
+                val newTextFieldValue = textFieldValue.copy(selection = value)
+                updateTextFieldValue(newTextFieldValue)
+            }
+        }
+
     val composition get() = textFieldValue.composition
 
     internal var singleParagraphMode by mutableStateOf(false)

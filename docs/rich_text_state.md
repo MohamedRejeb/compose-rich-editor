@@ -27,3 +27,11 @@ richTextState.setConfig(
     codeStrokeColor = Color.LightGray,
 )
 ```
+
+### Changing the editor's selection
+
+The editor's selection can be changed using the `RichTextState.selection` property.
+
+```kotlin
+richTextState.selection = TextRange(0, 5)
+```

@@ -18,10 +18,8 @@ import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
-import com.moriatsushi.insetsx.ExperimentalSoftwareKeyboardApi
-import com.moriatsushi.insetsx.safeDrawingPadding
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalSoftwareKeyboardApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RichEditorContent() {
     val navigator = LocalNavigator.currentOrThrow
@@ -54,7 +52,6 @@ fun RichEditorContent() {
             },
             modifier = Modifier
                 .fillMaxSize()
-                .safeDrawingPadding()
         ) { paddingValue ->
             Column(
                 modifier = Modifier

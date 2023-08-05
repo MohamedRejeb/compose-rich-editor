@@ -12,10 +12,8 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
-import com.moriatsushi.insetsx.ExperimentalSoftwareKeyboardApi
-import com.moriatsushi.insetsx.safeDrawingPadding
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalSoftwareKeyboardApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MarkdownEditorContent() {
     val navigator = LocalNavigator.currentOrThrow
@@ -61,7 +59,6 @@ fun MarkdownEditorContent() {
             },
             modifier = Modifier
                 .fillMaxSize()
-                .safeDrawingPadding()
         ) { paddingValue ->
             Column(
                 modifier = Modifier

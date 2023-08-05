@@ -18,10 +18,8 @@ import com.mohamedrejeb.richeditor.sample.common.markdowneditor.MarkdownEditorSc
 import com.mohamedrejeb.richeditor.sample.common.richeditor.RichEditorScreen
 import com.mohamedrejeb.richeditor.sample.common.slack.SlackDemoScreen
 import com.mohamedrejeb.richeditor.ui.material3.RichText
-import com.moriatsushi.insetsx.ExperimentalSoftwareKeyboardApi
-import com.moriatsushi.insetsx.safeDrawingPadding
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalSoftwareKeyboardApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeContent() {
     val navigator = LocalNavigator.currentOrThrow
@@ -34,7 +32,7 @@ fun HomeContent() {
         },
         modifier = Modifier
             .fillMaxSize()
-            .safeDrawingPadding()
+//            .safeDrawingPadding()
     ) { paddingValue ->
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,

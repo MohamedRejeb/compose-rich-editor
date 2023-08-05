@@ -1922,8 +1922,13 @@ class RichTextState internal constructor(
         ignoreCustomFiltering: Boolean = false,
     ): RichSpan? {
         // If the text index is equal or less than 0, we can return the first non-empty child of the first paragraph.
-        if (textIndex <= 0) {
+        if (textIndex < 0) {
             val firstParagraph = richParagraphList.firstOrNull() ?: return null
+
+//            if (textIndex == 0 && firstParagraph.isEmpty() && richParagraphList.size > 1) {
+//                val secondParagraph = richParagraphList[1]
+//                return secondParagraph.getFirstNonEmptyChild(secondParagraph.type.startText.length)
+//            }
 
             return firstParagraph.getFirstNonEmptyChild(firstParagraph.type.startText.length)
         }

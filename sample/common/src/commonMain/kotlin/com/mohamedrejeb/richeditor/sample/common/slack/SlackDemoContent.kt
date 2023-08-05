@@ -34,12 +34,9 @@ import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditorDefaults
-import com.moriatsushi.insetsx.ExperimentalSoftwareKeyboardApi
-import com.moriatsushi.insetsx.safeDrawingPadding
 import org.jetbrains.compose.resources.painterResource
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalRichTextApi::class,
-    ExperimentalSoftwareKeyboardApi::class
 )
 @Composable
 fun SlackDemoContent() {
@@ -69,7 +66,6 @@ fun SlackDemoContent() {
         Box(
             modifier = Modifier
                 .background(Color(0xFF1a1d21))
-                .safeDrawingPadding()
         ) {
             Scaffold(
                 topBar = {

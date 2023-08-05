@@ -16,7 +16,6 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
     override fun encode(input: String): RichTextState {
         val openedTags = mutableListOf<Pair<String, Map<String, String>>>()
         val stringBuilder = StringBuilder()
-        val currentStyles: MutableList<RichTextStyle> = mutableListOf()
         val richParagraphList = mutableListOf<RichParagraph>()
         var currentRichSpan: RichSpan? = null
         var lastClosedTag: String? = null
@@ -147,7 +146,6 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
             }
             .onCloseTag { name, _ ->
                 openedTags.removeLastOrNull()
-                currentStyles.removeLastOrNull()
                 lastClosedTag = name
 
                 if (name == "ul" || name == "ol") {

@@ -1,0 +1,1 @@
+-keep class com.mohamedrejeb.ksoup.html.** { *; }

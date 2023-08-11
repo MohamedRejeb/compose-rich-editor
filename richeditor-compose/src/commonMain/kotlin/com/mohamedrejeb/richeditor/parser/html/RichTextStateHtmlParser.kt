@@ -304,7 +304,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         BoldSpanStyle to "b",
         ItalicSpanStyle to "i",
         UnderlineSpanStyle to "u",
-        StrikethroughSpanStyle to "strike",
+        StrikethroughSpanStyle to "s",
         SubscriptSpanStyle to "sub",
         SuperscriptSpanStyle to "sup",
         MarkSpanStyle to "mark",

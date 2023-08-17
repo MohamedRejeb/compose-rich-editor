@@ -78,9 +78,16 @@ internal fun AnnotatedString.Builder.append(
     richTextConfig: RichTextConfig,
 ): Int {
     var index = startIndex
+    if (index > text.length) {
+        index = text.length
+    }
+    var endIndex = index + richSpan.text.length
+    if (endIndex > text.length) {
+        endIndex = text.length
+    }
 
     withStyle(richSpan.spanStyle.merge(richSpan.style.spanStyle(richTextConfig))) {
-        val newText = text.substring(index, index + richSpan.text.length)
+        val newText = text.substring(index, endIndex)
         richSpan.text = newText
         richSpan.textRange = TextRange(index, index + richSpan.text.length)
         if (

@@ -416,15 +416,19 @@ class RichTextState internal constructor(
                 previousParagraphType.number + 1
             else 1
 
-        adjustOrderedListsNumbers(
+        val newTextFieldValue = adjustOrderedListsNumbers(
             startParagraphIndex = index + 1,
             startNumber = orderedListNumber + 1,
+            textFieldValue = textFieldValue,
         )
 
         val newType = RichParagraph.Type.OrderedList(number = orderedListNumber)
-        updateParagraphType(
-            paragraph = paragraph,
-            newType = newType
+        updateTextFieldValue(
+            newTextFieldValue = updateParagraphType(
+                paragraph = paragraph,
+                newType = newType,
+                textFieldValue = newTextFieldValue,
+            ),
         )
     }
 
@@ -443,54 +447,61 @@ class RichTextState internal constructor(
         resetParagraphType(paragraph = paragraph)
     }
 
-    private fun updateParagraphType(paragraph: RichParagraph, newType: RichParagraph.Type) {
-        val paragraphOldStartTextLength = paragraph.type.startText.length
-        val paragraphFirstChildStartIndex = paragraph.getFirstNonEmptyChild()?.textRange?.min ?: selection.min
-
-        paragraph.type = newType
-
-        val beforeText = textFieldValue.text.substring(0, paragraphFirstChildStartIndex - paragraphOldStartTextLength)
-        val afterText = textFieldValue.text.substring(paragraphFirstChildStartIndex)
-        val newSelectionMin =
-            if (selection.min > paragraphFirstChildStartIndex) selection.min + newType.startText.length - paragraphOldStartTextLength
-            else paragraphFirstChildStartIndex + newType.startText.length - paragraphOldStartTextLength
-        val newSelectionMax =
-            if (selection.max > paragraphFirstChildStartIndex) selection.max + newType.startText.length - paragraphOldStartTextLength
-            else paragraphFirstChildStartIndex + newType.startText.length - paragraphOldStartTextLength
+    private fun updateParagraphType(
+        paragraph: RichParagraph,
+        newType: RichParagraph.Type,
+    ) {
         updateTextFieldValue(
-            newTextFieldValue = textFieldValue.copy(
-                text = beforeText + newType.startText + afterText,
-                selection = TextRange(
-                    newSelectionMin,
-                    newSelectionMax,
-                ),
+            newTextFieldValue = updateParagraphType(
+                paragraph = paragraph,
+                newType = newType,
+                textFieldValue = this.textFieldValue,
             )
         )
     }
 
-    private fun resetParagraphType(paragraph: RichParagraph) {
-        val paragraphStartIndex = paragraph.getFirstNonEmptyChild()?.textRange?.min ?: selection.min
+    private fun updateParagraphType(
+        paragraph: RichParagraph,
+        newType: RichParagraph.Type,
+        textFieldValue: TextFieldValue,
+    ): TextFieldValue {
+        val selection = textFieldValue.selection
+        val paragraphOldStartTextLength = paragraph.type.startText.length
+        val textFieldValueDiff = this.textFieldValue.text.length - textFieldValue.text.length
+        val firstNonEmptyChildIndex = paragraph.getFirstNonEmptyChild()?.textRange?.min?.let {
+            if (it >= selection.min) it - textFieldValueDiff
+            else it
+        }
+        val paragraphFirstChildStartIndex = firstNonEmptyChildIndex ?: selection.min
 
-        val oldType = paragraph.type
-        paragraph.type = RichParagraph.Type.Default
+        paragraph.type = newType
 
-        val beforeText = textFieldValue.text.substring(0, paragraphStartIndex - oldType.startText.length)
-        val afterText = textFieldValue.text.substring(paragraphStartIndex)
+        // If the paragraph type start text length didn't change, we don't need to update the text field value
+        if (paragraphOldStartTextLength == newType.startText.length) return textFieldValue
+
+        val beforeText = textFieldValue.text.substring(0, paragraphFirstChildStartIndex - paragraphOldStartTextLength)
+        val afterText = textFieldValue.text.substring(paragraphFirstChildStartIndex)
+
         val newSelectionMin =
-            if (selection.min > paragraphStartIndex) selection.min - oldType.startText.length
-            else paragraphStartIndex - oldType.startText.length
+            if (selection.min > paragraphFirstChildStartIndex) selection.min + newType.startText.length - paragraphOldStartTextLength
+            else if (selection.min == paragraphFirstChildStartIndex) paragraphFirstChildStartIndex + newType.startText.length - paragraphOldStartTextLength
+            else selection.min
         val newSelectionMax =
-            if (selection.max > paragraphStartIndex) selection.max - oldType.startText.length
-            else paragraphStartIndex - oldType.startText.length
-        updateTextFieldValue(
-            newTextFieldValue = textFieldValue.copy(
-                text = beforeText + afterText,
-                selection = TextRange(
-                    newSelectionMin,
-                    newSelectionMax
-                ),
-            )
+            if (selection.max > paragraphFirstChildStartIndex) selection.max + newType.startText.length - paragraphOldStartTextLength
+            else if (selection.max == paragraphFirstChildStartIndex) paragraphFirstChildStartIndex + newType.startText.length - paragraphOldStartTextLength
+            else selection.max
+
+        return textFieldValue.copy(
+            text = beforeText + newType.startText + afterText,
+            selection = TextRange(
+                newSelectionMin,
+                newSelectionMax,
+            ),
         )
+    }
+
+    private fun resetParagraphType(paragraph: RichParagraph) {
+        updateParagraphType(paragraph, RichParagraph.Type.Default)
     }
 
     /**
@@ -727,8 +738,11 @@ class RichTextState internal constructor(
         // Check deleted paragraphs
         val minParagraphIndex = richParagraphList.indexOf(minRichSpan.paragraph)
         val maxParagraphIndex = richParagraphList.indexOf(maxRichSpan.paragraph)
-        if (minParagraphIndex < maxParagraphIndex - 1 && !singleParagraphMode)
+
+        // Remove paragraphs between the min and max paragraphs
+        if (minParagraphIndex < maxParagraphIndex - 1 && !singleParagraphMode) {
             richParagraphList.removeRange(minParagraphIndex + 1, maxParagraphIndex)
+        }
 
         // Get the first non-empty child of the min paragraph
         val minFirstNonEmptyChild = minRichSpan.paragraph.getFirstNonEmptyChild()
@@ -758,6 +772,12 @@ class RichTextState internal constructor(
             )
 
             minRichSpan.paragraph.type = RichParagraph.Type.Default
+
+            tempTextFieldValue = adjustOrderedListsNumbers(
+                startParagraphIndex = minParagraphIndex + 1,
+                startNumber = 1,
+                textFieldValue = tempTextFieldValue,
+            )
         }
 
         // Handle Remove the max paragraph custom text
@@ -770,6 +790,12 @@ class RichTextState internal constructor(
             )
 
             maxRichSpan.paragraph.type = RichParagraph.Type.Default
+
+            tempTextFieldValue = adjustOrderedListsNumbers(
+                startParagraphIndex = maxParagraphIndex + 1,
+                startNumber = 1,
+                textFieldValue = tempTextFieldValue,
+            )
         }
 
         // Remove spans from the max paragraph
@@ -910,17 +936,24 @@ class RichTextState internal constructor(
     private fun adjustOrderedListsNumbers(
         startParagraphIndex: Int,
         startNumber: Int,
-    ) {
+        textFieldValue: TextFieldValue,
+    ): TextFieldValue {
+        var newTextFieldValue = textFieldValue
         var number = startNumber
         // Update the paragraph type of the paragraphs after the new paragraph
-        for (i in (startParagraphIndex)..richParagraphList.lastIndex) {
+        for (i in (startParagraphIndex)..(richParagraphList.lastIndex)) {
             val currentParagraph = richParagraphList[i]
             val currentParagraphType = currentParagraph.type
             if (currentParagraphType is RichParagraph.Type.OrderedList) {
-                currentParagraph.type = RichParagraph.Type.OrderedList(number = number)
+                newTextFieldValue = updateParagraphType(
+                    paragraph = currentParagraph,
+                    newType = RichParagraph.Type.OrderedList(number = number),
+                    textFieldValue = newTextFieldValue,
+                )
             } else break
             number++
         }
+        return newTextFieldValue
     }
 
     private fun checkOrderedListsNumbers(
@@ -938,7 +971,11 @@ class RichTextState internal constructor(
             val currentParagraph = richParagraphList[i]
             val currentParagraphType = currentParagraph.type
             if (currentParagraphType is RichParagraph.Type.OrderedList) {
-                currentParagraph.type = RichParagraph.Type.OrderedList(number = number)
+                tempTextFieldValue = updateParagraphType(
+                    paragraph = currentParagraph,
+                    newType = RichParagraph.Type.OrderedList(number = number),
+                    textFieldValue = tempTextFieldValue,
+                )
                 number++
             }
             else if (i >= endParagraphIndex) break
@@ -1002,9 +1039,10 @@ class RichTextState internal constructor(
             // Update the paragraph type of the paragraphs after the new paragraph
             val newParagraphType = newParagraph.type
             if (newParagraphType is RichParagraph.Type.OrderedList) {
-                adjustOrderedListsNumbers(
+                tempTextFieldValue = adjustOrderedListsNumbers(
                     startParagraphIndex = paragraphIndex + 2,
                     startNumber = newParagraphType.number + 1,
+                    textFieldValue = tempTextFieldValue,
                 )
             }
 

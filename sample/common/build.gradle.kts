@@ -60,7 +60,7 @@ kotlin {
                 implementation(libs.voyager.navigator)
 
                 // WindowInsets
-//                implementation("com.moriatsushi.insetsx:insetsx:0.1.0-alpha10")
+                implementation("com.moriatsushi.insetsx:insetsx:0.1.0-alpha10")
             }
         }
 

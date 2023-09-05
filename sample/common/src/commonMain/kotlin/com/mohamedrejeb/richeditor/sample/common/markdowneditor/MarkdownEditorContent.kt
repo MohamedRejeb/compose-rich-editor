@@ -31,59 +31,57 @@ fun MarkdownEditorContent() {
         }
     }
 
-    ComposeRichEditorTheme(false) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Markdown Editor") },
-                    navigationIcon = {
-                        IconButton(
-                            onClick = { navigator.pop() }
-                        ) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                        }
-                    },
-                    actions = {
-                        IconButton(
-                            onClick = {
-                                isMarkdownToRichText = !isMarkdownToRichText
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.SwapHoriz,
-                                contentDescription = "Swap",
-                            )
-                        }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Markdown Editor") },
+                navigationIcon = {
+                    IconButton(
+                        onClick = { navigator.pop() }
+                    ) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
-                )
-            },
-            modifier = Modifier
-                .fillMaxSize()
-        ) { paddingValue ->
-            Column(
-                modifier = Modifier
-                    .padding(paddingValue)
-                    .fillMaxSize()
-            ) {
-                if (isMarkdownToRichText) {
-                    MarkdownToRichText(
-                        markdown = markdown,
-                        onMarkdownChange = {
-                            markdown = it
-                            richTextState.setMarkdown(it.text)
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                    )
-                } else {
-                    RichTextToMarkdown(
-                        richTextState = richTextState,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                    )
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            isMarkdownToRichText = !isMarkdownToRichText
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.SwapHoriz,
+                            contentDescription = "Swap",
+                        )
+                    }
                 }
+            )
+        },
+        modifier = Modifier
+            .fillMaxSize()
+    ) { paddingValue ->
+        Column(
+            modifier = Modifier
+                .padding(paddingValue)
+                .fillMaxSize()
+        ) {
+            if (isMarkdownToRichText) {
+                MarkdownToRichText(
+                    markdown = markdown,
+                    onMarkdownChange = {
+                        markdown = it
+                        richTextState.setMarkdown(it.text)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                )
+            } else {
+                RichTextToMarkdown(
+                    richTextState = richTextState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                )
             }
         }
     }

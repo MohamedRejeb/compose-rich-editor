@@ -1,16 +1,16 @@
 [versions]
 agp = "7.4.2"
-kotlin = "1.8.22"
-compose = "1.4.3"
+kotlin = "1.9.0"
+compose = "1.5.0"
 dokka = "1.8.20"
 
-ksoup = "0.1.4"
+ksoup = "0.2.1"
 jetbrainsMarkdown = "0.3.1"
 
 # For sample
 compose-compiler = "1.4.6"
-activity-compose = "1.7.0"
-voyager = "1.0.0-rc05"
+activity-compose = "1.7.2"
+voyager = "1.0.0-rc06"
 richeditor = "1.0.0-beta02"
 android-minSdk = "21"
 android-compileSdk = "33"

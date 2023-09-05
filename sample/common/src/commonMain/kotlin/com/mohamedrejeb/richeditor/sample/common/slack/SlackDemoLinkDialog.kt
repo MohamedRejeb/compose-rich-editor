@@ -79,8 +79,9 @@ fun SlackDemoLinkDialog(
                         color = Color.White
                     )
                 },
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    textColor = Color.White,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
                     focusedBorderColor = Color.White,
                     unfocusedBorderColor = Color.White
                 ),
@@ -100,8 +101,9 @@ fun SlackDemoLinkDialog(
                         color = Color.White
                     )
                 },
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    textColor = Color.White,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
                     focusedBorderColor = Color.White,
                     unfocusedBorderColor = Color.White
                 ),

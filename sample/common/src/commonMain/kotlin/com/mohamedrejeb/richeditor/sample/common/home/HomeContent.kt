@@ -32,7 +32,6 @@ fun HomeContent() {
         },
         modifier = Modifier
             .fillMaxSize()
-//            .safeDrawingPadding()
     ) { paddingValue ->
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,

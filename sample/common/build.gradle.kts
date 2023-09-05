@@ -6,7 +6,7 @@ plugins {
 }
 
 kotlin {
-    android {
+    androidTarget {
         compilations.all {
             kotlinOptions {
                 jvmTarget = "1.8"
@@ -33,7 +33,6 @@ kotlin {
             baseName = "common"
             isStatic = true
         }
-        extraSpecAttributes["resources"] = "['src/commonMain/resources/**']"
     }
 
     sourceSets {
@@ -58,9 +57,6 @@ kotlin {
 
                 // Voyager Navigator
                 implementation(libs.voyager.navigator)
-
-                // WindowInsets
-                implementation("com.moriatsushi.insetsx:insetsx:0.1.0-alpha10")
             }
         }
 
@@ -70,18 +66,9 @@ kotlin {
             }
         }
 
-        val desktopMain by getting {
-            dependencies {
-                api(compose.preview)
-            }
-        }
+        val desktopMain by getting {}
 
-        val jsMain by getting {
-            dependsOn(commonMain)
-            dependencies {
-
-            }
-        }
+        val jsMain by getting {}
 
         val iosX64Main by getting
         val iosArm64Main by getting
@@ -91,7 +78,6 @@ kotlin {
             iosX64Main.dependsOn(this)
             iosArm64Main.dependsOn(this)
             iosSimulatorArm64Main.dependsOn(this)
-            dependencies {}
         }
     }
 }
@@ -103,5 +89,12 @@ android {
 
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+    kotlin {
+        jvmToolchain(8)
     }
 }

@@ -16,7 +16,7 @@ import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HtmlEditorContent() {
-    val navigator = LocalNavigator.currentOrThrow
+    val navigator = LocalNavigator.current
 
     var isHtmlToRichText by remember { mutableStateOf(false) }
 
@@ -31,59 +31,59 @@ fun HtmlEditorContent() {
         }
     }
 
-    ComposeRichEditorTheme(false) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Html Editor") },
-                    navigationIcon = {
-                        IconButton(
-                            onClick = { navigator.pop() }
-                        ) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                        }
-                    },
-                    actions = {
-                        IconButton(
-                            onClick = {
-                                isHtmlToRichText = !isHtmlToRichText
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.SwapHoriz,
-                                contentDescription = "Swap",
-                            )
-                        }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Html Editor") },
+                navigationIcon = {
+                    IconButton(
+                        onClick = { navigator?.pop() }
+                    ) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
-                )
-            },
-            modifier = Modifier
-                .fillMaxSize()
-        ) { paddingValue ->
-            Column(
-                modifier = Modifier
-                    .padding(paddingValue)
-                    .fillMaxSize()
-            ) {
-                if (isHtmlToRichText) {
-                    HtmlToRichText(
-                        html = html,
-                        onHtmlChange = {
-                            html = it
-                            richTextState.setHtml(it.text)
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                    )
-                } else {
-                    RichTextToHtml(
-                        richTextState = richTextState,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                    )
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            isHtmlToRichText = !isHtmlToRichText
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.SwapHoriz,
+                            contentDescription = "Swap",
+                        )
+                    }
                 }
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.background,
+        contentColor = MaterialTheme.colorScheme.onBackground,
+        modifier = Modifier
+            .fillMaxSize()
+    ) { paddingValue ->
+        Column(
+            modifier = Modifier
+                .padding(paddingValue)
+                .fillMaxSize()
+        ) {
+            if (isHtmlToRichText) {
+                HtmlToRichText(
+                    html = html,
+                    onHtmlChange = {
+                        html = it
+                        richTextState.setHtml(it.text)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                )
+            } else {
+                RichTextToHtml(
+                    richTextState = richTextState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                )
             }
         }
     }

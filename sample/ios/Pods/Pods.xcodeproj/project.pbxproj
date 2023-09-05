@@ -37,22 +37,22 @@
 
 /* Begin PBXFileReference section */
 		1B87F738F5AC08CA5F4352EC03046B42 /* Pods-Compose Rich Editor-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-Compose Rich Editor-dummy.m"; sourceTree = "<group>"; };
-		29F403BF5AE8BA3E7559D4312E502DA0 /* common.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; lastKnownFileType = text; path = common.podspec; sourceTree = "<group>"; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		200BBD98ED2CAAE7A8578526D8733F6C /* common.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; lastKnownFileType = text; path = common.podspec; sourceTree = "<group>"; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		23BDEE114D9D434F8DE6C18962A6A821 /* compose-resources */ = {isa = PBXFileReference; includeInIndex = 1; name = "compose-resources"; path = "build/compose/ios/common/compose-resources"; sourceTree = "<group>"; };
 		3194F788D656BBA7D5C42C21537ED2F7 /* Pods-Compose Rich Editor-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-Compose Rich Editor-acknowledgements.markdown"; sourceTree = "<group>"; };
 		540F89475C93680796178A2D9A26E3F7 /* Pods-Compose Rich Editor */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = "Pods-Compose Rich Editor"; path = Pods_Compose_Rich_Editor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6AB48A91104892CFDEC9992C46AC42F0 /* Pods-Compose Rich Editor-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-Compose Rich Editor-acknowledgements.plist"; sourceTree = "<group>"; };
 		73010CC983E3809BECEE5348DA1BB8C6 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS14.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
-		7DF91F750E13FE39381AD97E2A8167DA /* common.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = common.framework; path = build/cocoapods/framework/common.framework; sourceTree = "<group>"; };
+		7B4A28D2D200844AE9E5639C523EACE7 /* common.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = common.framework; path = build/cocoapods/framework/common.framework; sourceTree = "<group>"; };
+		7C31514E98734E6D2972691896BB3E2B /* common.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = common.release.xcconfig; sourceTree = "<group>"; };
 		8A4BD76D65D5D05BF4ACBBEDB8EB88FD /* Pods-Compose Rich Editor.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-Compose Rich Editor.debug.xcconfig"; sourceTree = "<group>"; };
 		8EDB0CEB3FFEC898AB81CE19802A848F /* Pods-Compose Rich Editor-resources.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-Compose Rich Editor-resources.sh"; sourceTree = "<group>"; };
 		9D940727FF8FB9C785EB98E56350EF41 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; lastKnownFileType = text; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		B00F71B19946C7F2514E4E533B2752D2 /* Pods-Compose Rich Editor-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-Compose Rich Editor-Info.plist"; sourceTree = "<group>"; };
 		C0C6E92DB18A2C17DC1EBDFC8B7D1025 /* Pods-Compose Rich Editor-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-Compose Rich Editor-umbrella.h"; sourceTree = "<group>"; };
-		E516FD1C40ECA0B9395D87D53AD16876 /* common.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = common.release.xcconfig; sourceTree = "<group>"; };
+		C1C090EBAF84CD392D76ABEA0CAE77E8 /* common.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = common.debug.xcconfig; sourceTree = "<group>"; };
 		E6B7FF84535131748EEF5F62FF4C2108 /* Pods-Compose Rich Editor.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-Compose Rich Editor.release.xcconfig"; sourceTree = "<group>"; };
 		FCBD0131BB857E7FABAF1E8B985DB578 /* Pods-Compose Rich Editor.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = "Pods-Compose Rich Editor.modulemap"; sourceTree = "<group>"; };
-		FDB7AFC6EF0D1B6F90119ED7387B00BF /* slack-logo.png */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = image.png; name = "slack-logo.png"; path = "src/commonMain/resources/slack-logo.png"; sourceTree = "<group>"; };
-		FF559ACF91B82A94276219D2C7E44BD1 /* common.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = common.debug.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -84,16 +84,24 @@
 			path = "Target Support Files/Pods-Compose Rich Editor";
 			sourceTree = "<group>";
 		};
-		27940FB075CBB3B031A1845F241F243E /* common */ = {
+		2016CD6563A9C7780E3024C3B2D3B138 /* common */ = {
 			isa = PBXGroup;
 			children = (
-				FDB7AFC6EF0D1B6F90119ED7387B00BF /* slack-logo.png */,
-				B3824696C85CD4CDA362D27752E1FD37 /* Frameworks */,
-				A2575253D338B67FD59FCA5184A380EE /* Pod */,
-				DFFE1C78C24A6D38B0AE49A14B903EBF /* Support Files */,
+				23BDEE114D9D434F8DE6C18962A6A821 /* compose-resources */,
+				A7AAC150A302B93B82DEEFAE73A1EB37 /* Frameworks */,
+				29D366DABB64F7DD28AB034E2F5B88DF /* Pod */,
+				B458B93BA19EC5BFC2CDB33656A8A8A9 /* Support Files */,
 			);
 			name = common;
 			path = ../../common;
+			sourceTree = "<group>";
+		};
+		29D366DABB64F7DD28AB034E2F5B88DF /* Pod */ = {
+			isa = PBXGroup;
+			children = (
+				200BBD98ED2CAAE7A8578526D8733F6C /* common.podspec */,
+			);
+			name = Pod;
 			sourceTree = "<group>";
 		};
 		578452D2E740E91742655AC8F1636D1F /* iOS */ = {
@@ -104,28 +112,30 @@
 			name = iOS;
 			sourceTree = "<group>";
 		};
-		A2575253D338B67FD59FCA5184A380EE /* Pod */ = {
-			isa = PBXGroup;
-			children = (
-				29F403BF5AE8BA3E7559D4312E502DA0 /* common.podspec */,
-			);
-			name = Pod;
-			sourceTree = "<group>";
-		};
 		A5411B3B0BA859D263AEC8568CE9DC19 /* Development Pods */ = {
 			isa = PBXGroup;
 			children = (
-				27940FB075CBB3B031A1845F241F243E /* common */,
+				2016CD6563A9C7780E3024C3B2D3B138 /* common */,
 			);
 			name = "Development Pods";
 			sourceTree = "<group>";
 		};
-		B3824696C85CD4CDA362D27752E1FD37 /* Frameworks */ = {
+		A7AAC150A302B93B82DEEFAE73A1EB37 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				7DF91F750E13FE39381AD97E2A8167DA /* common.framework */,
+				7B4A28D2D200844AE9E5639C523EACE7 /* common.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		B458B93BA19EC5BFC2CDB33656A8A8A9 /* Support Files */ = {
+			isa = PBXGroup;
+			children = (
+				C1C090EBAF84CD392D76ABEA0CAE77E8 /* common.debug.xcconfig */,
+				7C31514E98734E6D2972691896BB3E2B /* common.release.xcconfig */,
+			);
+			name = "Support Files";
+			path = "../ios/Pods/Target Support Files/common";
 			sourceTree = "<group>";
 		};
 		CF1408CF629C7361332E53B88F7BD30C = {
@@ -145,16 +155,6 @@
 				578452D2E740E91742655AC8F1636D1F /* iOS */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		DFFE1C78C24A6D38B0AE49A14B903EBF /* Support Files */ = {
-			isa = PBXGroup;
-			children = (
-				FF559ACF91B82A94276219D2C7E44BD1 /* common.debug.xcconfig */,
-				E516FD1C40ECA0B9395D87D53AD16876 /* common.release.xcconfig */,
-			);
-			name = "Support Files";
-			path = "../ios/Pods/Target Support Files/common";
 			sourceTree = "<group>";
 		};
 		E7BBCE5D455D81DC9D6B68785176BBED /* Products */ = {
@@ -280,7 +280,7 @@
 /* Begin XCBuildConfiguration section */
 		285E22E2D240736C83FBD2A098D5F9FF /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E516FD1C40ECA0B9395D87D53AD16876 /* common.release.xcconfig */;
+			baseConfigurationReference = 7C31514E98734E6D2972691896BB3E2B /* common.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -501,7 +501,7 @@
 		};
 		FFFDE4601A89FD3FBAF8ED1991835A52 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = FF559ACF91B82A94276219D2C7E44BD1 /* common.debug.xcconfig */;
+			baseConfigurationReference = C1C090EBAF84CD392D76ABEA0CAE77E8 /* common.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;

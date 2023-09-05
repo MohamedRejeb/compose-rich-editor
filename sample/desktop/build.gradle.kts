@@ -28,6 +28,12 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "compose-richeditor"
             packageVersion = "1.0.0"
+
+            macOS {
+                jvmArgs(
+                    "-Dapple.awt.application.appearance=system"
+                )
+            }
         }
     }
 }

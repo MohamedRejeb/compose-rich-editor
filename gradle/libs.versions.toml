@@ -13,7 +13,7 @@ activity-compose = "1.7.2"
 voyager = "1.0.0-rc06"
 richeditor = "1.0.0-beta02"
 android-minSdk = "21"
-android-compileSdk = "33"
+android-compileSdk = "34"
 
 [libraries]
 ksoup = { module = "com.mohamedrejeb.ksoup:ksoup-html", version.ref = "ksoup" }

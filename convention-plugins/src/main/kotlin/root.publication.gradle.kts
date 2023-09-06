@@ -3,8 +3,8 @@ plugins {
 }
 
 allprojects {
-    group = "com.mohamedrejeb.calf"
-    version = "0.1.1"
+    group = "com.mohamedrejeb.richeditor"
+    version = "1.0.0-beta03"
 }
 
 nexusPublishing {

@@ -1,6 +1,7 @@
 package com.mohamedrejeb.richeditor.sample.common.home
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -19,10 +20,16 @@ import com.mohamedrejeb.richeditor.sample.common.richeditor.RichEditorScreen
 import com.mohamedrejeb.richeditor.sample.common.slack.SlackDemoScreen
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun HomeContent() {
     val navigator = LocalNavigator.currentOrThrow
+
+    val richTextState = rememberRichTextState()
+
+    LaunchedEffect(Unit) {
+        richTextState.setHtml("<u>Welcome</u> to <b>Compose Rich Editor Demo</b>")
+    }
 
     Scaffold(
         topBar = {
@@ -32,66 +39,73 @@ fun HomeContent() {
         },
         modifier = Modifier
             .fillMaxSize()
-    ) { paddingValue ->
-        Column(
+    ) { paddingValues ->
+        LazyColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
+            contentPadding = paddingValues,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValue)
+                .consumeWindowInsets(paddingValues)
+                .windowInsetsPadding(WindowInsets.ime)
                 .padding(20.dp)
-                .verticalScroll(rememberScrollState())
         ) {
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            val richTextState = rememberRichTextState()
-
-            LaunchedEffect(Unit) {
-                richTextState.setHtml("<u>Welcome</u> to <b>Compose Rich Editor Demo</b>")
+            item {
+                Spacer(modifier = Modifier.height(20.dp))
             }
 
-            RichText(
-                state = richTextState,
-                style = MaterialTheme.typography.displaySmall,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .padding(20.dp)
-            )
+            item {
+                RichText(
+                    state = richTextState,
+                    style = MaterialTheme.typography.displaySmall,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .padding(20.dp)
+                )
+            }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            item {
+                Spacer(modifier = Modifier.height(20.dp))
+            }
 
-            Button(
-                onClick = {
-                    navigator.push(RichEditorScreen)
+            item {
+                Button(
+                    onClick = {
+                        navigator.push(RichEditorScreen)
+                    }
+                ) {
+                    Text("Rich Text Editor Demo")
                 }
-            ) {
-                Text("Rich Text Editor Demo")
             }
 
-            Button(
-                onClick = {
-                    navigator.push(HtmlEditorScreen)
-                },
-            ) {
-                Text("HTML Editor Demo")
+            item {
+                Button(
+                    onClick = {
+                        navigator.push(HtmlEditorScreen)
+                    },
+                ) {
+                    Text("HTML Editor Demo")
+                }
             }
 
-            Button(
-                onClick = {
-                    navigator.push(MarkdownEditorScreen)
-                },
-            ) {
-                Text("Markdown Editor Demo")
+            item {
+                Button(
+                    onClick = {
+                        navigator.push(MarkdownEditorScreen)
+                    },
+                ) {
+                    Text("Markdown Editor Demo")
+                }
             }
 
-            Button(
-                onClick = {
-                    navigator.push(SlackDemoScreen)
-                },
-            ) {
-                Text("Slack Clone Demo")
+            item {
+                Button(
+                    onClick = {
+                        navigator.push(SlackDemoScreen)
+                    },
+                ) {
+                    Text("Slack Clone Demo")
+                }
             }
-
         }
     }
 }

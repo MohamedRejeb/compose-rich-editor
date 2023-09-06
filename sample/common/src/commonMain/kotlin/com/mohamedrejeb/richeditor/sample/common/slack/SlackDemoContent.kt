@@ -36,7 +36,7 @@ import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditorDefaults
 import org.jetbrains.compose.resources.painterResource
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalRichTextApi::class,
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalRichTextApi::class, ExperimentalLayoutApi::class,
 )
 @Composable
 fun SlackDemoContent() {
@@ -62,170 +62,170 @@ fun SlackDemoContent() {
         )
     }
 
-    ComposeRichEditorTheme {
-        Box(
-            modifier = Modifier
-                .background(Color(0xFF1a1d21))
-        ) {
-            Scaffold(
-                topBar = {
-                    Column(
-                        modifier = Modifier
-
-                    ) {
-                        TopAppBar(
-                            title = { Text("Slack Demo") },
-                            navigationIcon = {
-                                IconButton(
-                                    onClick = { navigator.pop() }
-                                ) {
-                                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                                }
-                            },
-                            colors = TopAppBarDefaults.mediumTopAppBarColors(
-                                containerColor = Color(0xFF1a1d21),
-                                titleContentColor = Color.White,
-                                navigationIconContentColor = Color.White,
-                            )
-                        )
-                        Divider(color = Color(0xFFCBCCCD), thickness = 1.dp)
-                    }
-                },
-                containerColor = Color(0xFF1a1d21),
-                modifier = Modifier
-                    .fillMaxSize()
-            ) { paddingValues ->
-                Box(
+    Box(
+        modifier = Modifier
+            .background(Color(0xFF1a1d21))
+    ) {
+        Scaffold(
+            topBar = {
+                Column(
                     modifier = Modifier
-                        .padding(paddingValues)
-                        .fillMaxSize()
+
                 ) {
-                    Column(
+                    TopAppBar(
+                        title = { Text("Slack Demo") },
+                        navigationIcon = {
+                            IconButton(
+                                onClick = { navigator.pop() }
+                            ) {
+                                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                            }
+                        },
+                        colors = TopAppBarDefaults.mediumTopAppBarColors(
+                            containerColor = Color(0xFF1a1d21),
+                            titleContentColor = Color.White,
+                            navigationIconContentColor = Color.White,
+                        )
+                    )
+                    Divider(color = Color(0xFFCBCCCD), thickness = 1.dp)
+                }
+            },
+            containerColor = Color(0xFF1a1d21),
+            modifier = Modifier
+                .fillMaxSize()
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .consumeWindowInsets(paddingValues)
+                    .windowInsetsPadding(WindowInsets.ime)
+                    .fillMaxSize()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(20.dp)
+                ) {
+                    LazyColumn(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(20.dp)
+                            .weight(1f)
                     ) {
-                        LazyColumn(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            items(messages) { message ->
-                                Row(
+                        items(messages) { message ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 20.dp)
+                            ) {
+                                Box(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 20.dp)
+                                        .size(40.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(Color.White)
                                 ) {
-                                    Box(
+                                    Image(
+                                        painterResource("slack-logo.png"),
+                                        contentDescription = "Slack Logo",
                                         modifier = Modifier
-                                            .size(40.dp)
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .background(Color.White)
-                                    ) {
-                                        Image(
-                                            painterResource("slack-logo.png"),
-                                            contentDescription = "Slack Logo",
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .padding(6.dp)
-                                        )
-                                    }
-                                    Column(
+                                            .fillMaxSize()
+                                            .padding(6.dp)
+                                    )
+                                }
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(start = 12.dp)
+                                ) {
+                                    Text(
+                                        text = "Mohamed Rejeb",
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    RichText(
+                                        state = message,
+                                        color = Color.White,
                                         modifier = Modifier
-                                            .weight(1f)
-                                            .padding(start = 12.dp)
-                                    ) {
-                                        Text(
-                                            text = "Mohamed Rejeb",
-                                            color = Color.White,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                        Spacer(Modifier.height(4.dp))
-                                        RichText(
-                                            state = message,
-                                            color = Color.White,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                        )
-                                    }
+                                            .fillMaxWidth()
+                                    )
                                 }
                             }
                         }
+                    }
 
-                        Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(8.dp))
 
-                        Column(
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xFF222528))
+                            .border(1.dp, Color(0xFFCBCCCD), RoundedCornerShape(10.dp))
+                    ) {
+                        SlackDemoPanel(
+                            state = richTextState,
+                            openLinkDialog = openLinkDialog,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(Color(0xFF222528))
-                                .border(1.dp, Color(0xFFCBCCCD), RoundedCornerShape(10.dp))
-                        ) {
-                            SlackDemoPanel(
-                                state = richTextState,
-                                openLinkDialog = openLinkDialog,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 20.dp)
-                                    .padding(horizontal = 20.dp)
-                            )
+                                .padding(top = 20.dp)
+                                .padding(horizontal = 20.dp)
+                        )
 
-                            RichTextEditor(
-                                state = richTextState,
-                                placeholder = {
-                                    Text(
-                                        text = "Message #compose-rich-text-editor",
-                                    )
-                                },
-                                colors = RichTextEditorDefaults.richTextEditorColors(
-                                    textColor = Color(0xFFCBCCCD),
-                                    containerColor = Color.Transparent,
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent,
-                                    placeholderColor = Color.White.copy(alpha = .6f),
-                                ),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(8.dp)
-                            )
-
-                            // 1d99ce
-                            Box(
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .align(Alignment.End)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .clickable(
-                                        onClick = {
-                                            messages.add(richTextState.copy())
-                                            richTextState.clear()
-                                        },
-                                        enabled = true,
-                                        role = Role.Button,
-                                        interactionSource = remember { MutableInteractionSource() },
-                                        indication = rememberRipple()
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Send,
-                                    contentDescription = "Send",
-                                    tint = Color.White,
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(Color(0xFF007a5a))
-                                        .padding(6.dp)
+                        RichTextEditor(
+                            state = richTextState,
+                            placeholder = {
+                                Text(
+                                    text = "Message #compose-rich-text-editor",
                                 )
-                            }
+                            },
+                            colors = RichTextEditorDefaults.richTextEditorColors(
+                                textColor = Color(0xFFCBCCCD),
+                                containerColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                placeholderColor = Color.White.copy(alpha = .6f),
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp)
+                        )
+
+                        // 1d99ce
+                        Box(
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .align(Alignment.End)
+                                .clip(RoundedCornerShape(10.dp))
+                                .clickable(
+                                    onClick = {
+                                        messages.add(richTextState.copy())
+                                        richTextState.clear()
+                                    },
+                                    enabled = true,
+                                    role = Role.Button,
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = rememberRipple()
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Send,
+                                contentDescription = "Send",
+                                tint = Color.White,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color(0xFF007a5a))
+                                    .padding(6.dp)
+                            )
                         }
                     }
+                }
 
-                    if (openLinkDialog.value) {
-                        SlackDemoLinkDialog(
-                            state = richTextState,
-                            text = text,
-                            link = link,
-                            openLinkDialog = openLinkDialog
-                        )
-                    }
+                if (openLinkDialog.value) {
+                    SlackDemoLinkDialog(
+                        state = richTextState,
+                        text = text,
+                        link = link,
+                        openLinkDialog = openLinkDialog
+                    )
                 }
             }
         }

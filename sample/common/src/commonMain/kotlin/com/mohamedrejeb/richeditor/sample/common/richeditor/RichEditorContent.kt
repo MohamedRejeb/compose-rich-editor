@@ -1,6 +1,7 @@
 package com.mohamedrejeb.richeditor.sample.common.richeditor
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -8,6 +9,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -19,7 +21,7 @@ import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun RichEditorContent() {
     val navigator = LocalNavigator.currentOrThrow
@@ -53,86 +55,123 @@ fun RichEditorContent() {
             modifier = Modifier
                 .fillMaxSize()
         ) { paddingValue ->
-            Column(
+            LazyColumn(
+                contentPadding = paddingValue,
                 modifier = Modifier
+                    .consumeWindowInsets(paddingValue)
+                    .windowInsetsPadding(WindowInsets.ime)
                     .fillMaxSize()
-                    .padding(paddingValue)
                     .padding(20.dp)
-                    .verticalScroll(rememberScrollState())
             ) {
                 // BasicRichTextEditor
-                Text(
-                    text = "BasicRichTextEditor:",
-                    style = MaterialTheme.typography.titleMedium
-                )
+                item {
+                    Text(
+                        text = "BasicRichTextEditor:",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
 
-                Spacer(Modifier.height(8.dp))
+                item {
+                    Spacer(Modifier.height(8.dp))
+                }
 
-                RichTextStyleRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    state = basicRichTextState,
-                )
+                item {
+                    RichTextStyleRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        state = basicRichTextState,
+                    )
+                }
 
-                BasicRichTextEditor(
-                    modifier = Modifier.fillMaxWidth(),
-                    state = basicRichTextState,
-                )
+                item {
+                    BasicRichTextEditor(
+                        modifier = Modifier.fillMaxWidth(),
+                        state = basicRichTextState,
+                    )
+                }
 
-                Divider(modifier = Modifier.padding(vertical = 20.dp))
+                item {
+                    Divider(modifier = Modifier.padding(vertical = 20.dp))
+                }
 
                 // RichTextEditor
-                Text(
-                    text = "RichTextEditor:",
-                    style = MaterialTheme.typography.titleMedium
-                )
+                item {
+                    Text(
+                        text = "RichTextEditor:",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
 
-                Spacer(Modifier.height(8.dp))
+                item {
+                    Spacer(Modifier.height(8.dp))
+                }
 
-                RichTextStyleRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    state = richTextState,
-                )
+                item {
+                    RichTextStyleRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        state = richTextState,
+                    )
+                }
 
-                RichTextEditor(
-                    modifier = Modifier.fillMaxWidth(),
-                    state = richTextState,
-                    readOnly = true,
-                )
+                item {
+                    RichTextEditor(
+                        modifier = Modifier.fillMaxWidth(),
+                        state = richTextState,
+                        readOnly = true,
+                    )
+                }
 
-                Divider(modifier = Modifier.padding(vertical = 20.dp))
+                item {
+                    Divider(modifier = Modifier.padding(vertical = 20.dp))
+                }
 
                 // OutlinedRichTextEditor
-                Text(
-                    text = "OutlinedRichTextEditor:",
-                    style = MaterialTheme.typography.titleMedium
-                )
+                item {
+                    Text(
+                        text = "OutlinedRichTextEditor:",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
 
-                Spacer(Modifier.height(8.dp))
+                item {
+                    Spacer(Modifier.height(8.dp))
+                }
 
-                RichTextStyleRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    state = outlinedRichTextState,
-                )
+                item {
+                    RichTextStyleRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        state = outlinedRichTextState,
+                    )
+                }
 
-                OutlinedRichTextEditor(
-                    modifier = Modifier.fillMaxWidth(),
-                    state = outlinedRichTextState,
-                )
+                item {
+                    OutlinedRichTextEditor(
+                        modifier = Modifier.fillMaxWidth(),
+                        state = outlinedRichTextState,
+                    )
+                }
 
-                Divider(modifier = Modifier.padding(vertical = 20.dp))
+                item {
+                    Divider(modifier = Modifier.padding(vertical = 20.dp))
+                }
 
                 // RichText
-                Text(
-                    text = "RichText:",
-                    style = MaterialTheme.typography.titleMedium
-                )
+                item {
+                    Text(
+                        text = "RichText:",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
 
-                Spacer(Modifier.height(8.dp))
+                item {
+                    Spacer(Modifier.height(8.dp))
+                }
 
-                RichText(
-                    modifier = Modifier.fillMaxWidth(),
-                    state = richTextState,
-                )
+                item {
+                    RichText(
+                        modifier = Modifier.fillMaxWidth(),
+                        state = richTextState,
+                    )
+                }
             }
         }
     }

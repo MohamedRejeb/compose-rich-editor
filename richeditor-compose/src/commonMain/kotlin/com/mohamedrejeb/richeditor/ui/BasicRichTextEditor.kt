@@ -13,6 +13,7 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -310,6 +311,10 @@ internal fun BasicRichTextEditor(
         state.singleParagraphMode = singleParagraph
     }
 
+    LaunchedEffect(readOnly) {
+        state.readOnly = readOnly
+    }
+
     if (!singleParagraph) {
         // Workaround for Android to fix a bug in BasicTextField where it doesn't select the correct text
         // when the text contains multiple paragraphs.
@@ -342,6 +347,10 @@ internal fun BasicRichTextEditor(
                     richTextState = state,
                     topPadding = with(density) { contentPadding.calculateTopPadding().toPx() },
                     startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() },
+                )
+                .then(
+                    if (!readOnly) Modifier
+                    else Modifier.focusProperties { canFocus = false }
                 )
                 .then(
                     if (singleParagraph) {

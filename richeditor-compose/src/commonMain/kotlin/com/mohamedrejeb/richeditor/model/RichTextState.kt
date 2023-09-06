@@ -64,6 +64,8 @@ class RichTextState internal constructor(
 
     internal var singleParagraphMode by mutableStateOf(false)
 
+    internal var readOnly by mutableStateOf(false)
+
     internal var textLayoutResult: TextLayoutResult? by mutableStateOf(null)
         private set
 
@@ -515,6 +517,8 @@ class RichTextState internal constructor(
      * @param newTextFieldValue the new text field value.
      */
     internal fun onTextFieldValueChange(newTextFieldValue: TextFieldValue) {
+        if (readOnly) return
+
         tempTextFieldValue = newTextFieldValue
 
         if (tempTextFieldValue.text.length > textFieldValue.text.length)

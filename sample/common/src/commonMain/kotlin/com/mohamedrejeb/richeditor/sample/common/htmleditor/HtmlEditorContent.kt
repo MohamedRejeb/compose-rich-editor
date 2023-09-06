@@ -13,7 +13,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun HtmlEditorContent() {
     val navigator = LocalNavigator.current
@@ -60,10 +60,11 @@ fun HtmlEditorContent() {
         contentColor = MaterialTheme.colorScheme.onBackground,
         modifier = Modifier
             .fillMaxSize()
-    ) { paddingValue ->
+    ) { paddingValues ->
         Column(
             modifier = Modifier
-                .padding(paddingValue)
+                .consumeWindowInsets(paddingValues)
+                .windowInsetsPadding(WindowInsets.ime)
                 .fillMaxSize()
         ) {
             if (isHtmlToRichText) {

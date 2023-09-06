@@ -1,6 +1,5 @@
 plugins {
     kotlin("multiplatform")
-    kotlin("native.cocoapods")
     id("org.jetbrains.compose")
     id("com.android.library")
 }
@@ -19,18 +18,14 @@ kotlin {
     js(IR) {
         browser()
     }
-    iosX64()
-    iosArm64()
-    iosSimulatorArm64()
 
-    cocoapods {
-        summary = "Compose Rich Editor"
-        homepage = "https://github.com/MohamedRejeb/Compose-Rich-Editor"
-        version = "1.0"
-        ios.deploymentTarget = "14.1"
-        podfile = project.file("../ios/Podfile")
-        framework {
-            baseName = "common"
+    listOf(
+        iosX64(),
+        iosArm64(),
+        iosSimulatorArm64()
+    ).forEach { iosTarget ->
+        iosTarget.binaries.framework {
+            baseName = "Common"
             isStatic = true
         }
     }

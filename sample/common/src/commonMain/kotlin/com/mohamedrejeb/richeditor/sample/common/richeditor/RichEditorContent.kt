@@ -96,6 +96,7 @@ fun RichEditorContent() {
                 RichTextEditor(
                     modifier = Modifier.fillMaxWidth(),
                     state = richTextState,
+                    readOnly = true,
                 )
 
                 Divider(modifier = Modifier.padding(vertical = 20.dp))

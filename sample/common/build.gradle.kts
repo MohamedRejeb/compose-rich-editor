@@ -46,6 +46,7 @@ kotlin {
             dependencies {
                 api(compose.runtime)
                 api(compose.foundation)
+                api(compose.ui)
                 api(compose.material)
                 api(compose.material3)
                 api(compose.materialIconsExtended)

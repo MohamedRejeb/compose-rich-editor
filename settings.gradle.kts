@@ -1,10 +1,6 @@
 pluginManagement {
     repositories {
-        google {
-            mavenContent {
-                releasesOnly()
-            }
-        }
+        google()
         mavenCentral()
         mavenLocal()
         gradlePluginPortal()

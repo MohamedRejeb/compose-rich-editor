@@ -1,14 +1,14 @@
 [versions]
-agp = "7.4.2"
-kotlin = "1.9.0"
-compose = "1.5.0"
-dokka = "1.8.20"
+agp = "8.0.2"
+kotlin = "1.9.10"
+compose = "1.5.1"
+dokka = "1.9.0"
 
 ksoup = "0.2.1"
 jetbrainsMarkdown = "0.3.1"
 
 # For sample
-compose-compiler = "1.4.6"
+compose-compiler = "1.5.2"
 activity-compose = "1.7.2"
 voyager = "1.0.0-rc06"
 richeditor = "1.0.0-beta02"

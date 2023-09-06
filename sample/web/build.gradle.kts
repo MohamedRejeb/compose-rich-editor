@@ -11,7 +11,6 @@ kotlin {
     sourceSets {
         val jsMain by getting {
             dependencies {
-                implementation(compose.ui)
                 implementation(project(":sample:common"))
             }
         }

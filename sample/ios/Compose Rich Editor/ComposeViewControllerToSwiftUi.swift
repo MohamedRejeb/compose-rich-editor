@@ -18,10 +18,7 @@ struct ComposeViewControllerToSwiftUI: UIViewControllerRepresentable {
     }
     
     func makeUIViewController(context: Context) -> UIViewController {
-        return Main_iosKt.MainViewController(
-            topSafeArea: topSafeArea,
-            bottomSafeArea: bottomSafeArea
-        )
+        return Main_iosKt.MainViewController()
     }
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {

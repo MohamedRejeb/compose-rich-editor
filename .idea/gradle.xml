@@ -4,10 +4,22 @@
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
+        <compositeConfiguration>
+          <compositeBuild compositeDefinitionSource="SCRIPT">
+            <builds>
+              <build path="$PROJECT_DIR$/convention-plugins" name="convention-plugins">
+                <projects>
+                  <project path="$PROJECT_DIR$/convention-plugins" />
+                </projects>
+              </build>
+            </builds>
+          </compositeBuild>
+        </compositeConfiguration>
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/convention-plugins" />
             <option value="$PROJECT_DIR$/richeditor-compose" />
             <option value="$PROJECT_DIR$/sample" />
             <option value="$PROJECT_DIR$/sample/android" />

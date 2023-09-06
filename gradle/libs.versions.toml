@@ -7,6 +7,8 @@ dokka = "1.9.0"
 ksoup = "0.2.1"
 jetbrainsMarkdown = "0.3.1"
 
+nexus-publish = "2.0.0-rc-1"
+
 # For sample
 compose-compiler = "1.5.2"
 activity-compose = "1.7.2"
@@ -19,6 +21,8 @@ android-compileSdk = "34"
 ksoup = { module = "com.mohamedrejeb.ksoup:ksoup-html", version.ref = "ksoup" }
 jetbrains-markdown = { module = "org.jetbrains:markdown", version.ref = "jetbrainsMarkdown" }
 
+nexus-publish = { module = "io.github.gradle-nexus.publish-plugin:io.github.gradle-nexus.publish-plugin.gradle.plugin", version.ref = "nexus-publish" }
+
 # For sample
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity-compose" }
 voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
@@ -26,6 +30,8 @@ richeditor-compose = { module = "com.mohamedrejeb.richeditor:richeditor-compose"
 
 [plugins]
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
+androidApplication = { id = "com.android.application", version.ref = "agp" }
+kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }

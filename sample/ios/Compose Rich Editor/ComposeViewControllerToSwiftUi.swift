@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import common
+import Common
 
 struct ComposeViewControllerToSwiftUI: UIViewControllerRepresentable {
     private let topSafeArea: Float

@@ -8,6 +8,6 @@ plugins {
 //    alias(libs.plugins.dokka).apply(false)
 }
 
-allprojects {
+//allprojects {
 //    apply(plugin = "org.jetbrains.dokka")
-}
+//}

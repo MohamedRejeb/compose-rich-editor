@@ -16,9 +16,9 @@ nexusPublishing {
             snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
             stagingProfileId.set(System.getenv("OSSRH_STAGING_PROFILE_ID"))
             println("OSSRH_USERNAME")
-            println(project.property("sonatypeUsername")?.toString())
-            username.set(project.property("sonatypeUsername")?.toString())
-            password.set(project.property("sonatypePassword")?.toString())
+            println(project.findProperty("sonatypeUsername")?.toString())
+            username.set(project.findProperty("sonatypeUsername")?.toString())
+            password.set(project.findProperty("sonatypePassword")?.toString())
         }
     }
 }

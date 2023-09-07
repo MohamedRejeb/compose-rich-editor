@@ -6,7 +6,7 @@ plugins {
 }
 
 kotlin {
-    android {
+    androidTarget {
         publishLibraryVariants("release")
         compilations.all {
             kotlinOptions {

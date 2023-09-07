@@ -18,15 +18,22 @@ publishing {
 
         // Provide artifacts information required by Maven Central
         pom {
-            name.set("Calf - Compose Adaptive Look & Feel")
-            description.set("Calf is a library that allows you to easily create adaptive UIs for your Compose Multiplatform apps.")
-            url.set("https://github.com/MohamedRejeb/Calf")
-
+            name.set("Compose Rich Editor")
+            description.set("A Compose multiplatform library that provides a rich text editor.")
+            url.set("https://github.com/MohamedRejeb/Compose-Rich-Editor")
             licenses {
                 license {
                     name.set("Apache-2.0")
                     url.set("https://opensource.org/licenses/Apache-2.0")
                 }
+            }
+            issueManagement {
+                system.set("Github")
+                url.set("https://github.com/MohamedRejeb/Compose-Rich-Editor/issues")
+            }
+            scm {
+                connection.set("https://github.com/MohamedRejeb/Compose-Rich-Editor.git")
+                url.set("https://github.com/MohamedRejeb/Compose-Rich-Editor")
             }
             developers {
                 developer {
@@ -35,22 +42,11 @@ publishing {
                     email.set("mohamedrejeb445@gmail.com")
                 }
             }
-            issueManagement {
-                system.set("Github")
-                url.set("https://github.com/MohamedRejeb/Calf/issues")
-            }
-            scm {
-                connection.set("https://github.com/MohamedRejeb/Calf.git")
-                url.set("https://github.com/MohamedRejeb/Calf")
-            }
         }
     }
 }
 
 signing {
-//    if (project.hasProperty("signing.gnupg.keyName")) {
-//        useGpgCmd()
-//    }
     useInMemoryPgpKeys(
         System.getenv("OSSRH_GPG_SECRET_KEY_ID"),
         System.getenv("OSSRH_GPG_SECRET_KEY"),

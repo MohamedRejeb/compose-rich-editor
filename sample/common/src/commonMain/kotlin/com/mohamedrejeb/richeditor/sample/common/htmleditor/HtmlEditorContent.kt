@@ -63,7 +63,7 @@ fun HtmlEditorContent() {
     ) { paddingValues ->
         Column(
             modifier = Modifier
-                .consumeWindowInsets(paddingValues)
+                .padding(paddingValues)
                 .windowInsetsPadding(WindowInsets.ime)
                 .fillMaxSize()
         ) {

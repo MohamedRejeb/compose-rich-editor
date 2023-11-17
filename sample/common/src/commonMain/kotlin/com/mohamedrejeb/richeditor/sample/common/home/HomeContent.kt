@@ -45,7 +45,7 @@ fun HomeContent() {
             contentPadding = paddingValues,
             modifier = Modifier
                 .fillMaxSize()
-                .consumeWindowInsets(paddingValues)
+                .padding(paddingValues)
                 .windowInsetsPadding(WindowInsets.ime)
                 .padding(20.dp)
         ) {

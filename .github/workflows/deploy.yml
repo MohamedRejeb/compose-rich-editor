@@ -27,13 +27,13 @@ jobs:
           - target: publishIosX64PublicationToSonatypeRepository
             os: macos-latest
           - target: publishAndroidReleasePublicationToSonatypeRepository
-            os: ubuntu-latest
+            os: macos-latest
           - target: publishDesktopPublicationToSonatypeRepository
-            os: ubuntu-latest
+            os: macos-latest
           - target: publishJsPublicationToSonatypeRepository
-            os: ubuntu-latest
+            os: macos-latest
           - target: publishKotlinMultiplatformPublicationToSonatypeRepository
-            os: ubuntu-latest
+            os: macos-latest
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3

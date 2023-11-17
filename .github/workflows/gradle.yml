@@ -25,11 +25,11 @@ jobs:
           - target: iosSimulatorArm64Test
             os: macos-latest
           - target: desktopTest
-            os: ubuntu-latest
+            os: macos-latest
           - target: testDebugUnitTest
-            os: ubuntu-latest
+            os: macos-latest
           - target: testReleaseUnitTest
-            os: ubuntu-latest
+            os: macos-latest
     runs-on: ${{ matrix.os }}
 
     steps:

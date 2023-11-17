@@ -11,8 +11,8 @@ nexus-publish = "2.0.0-rc-1"
 
 # For sample
 compose-compiler = "1.5.2"
-activity-compose = "1.7.2"
-voyager = "1.0.0-rc06"
+activity-compose = "1.8.1"
+voyager = "1.0.0-rc10"
 richeditor = "1.0.0-beta03"
 android-minSdk = "21"
 android-compileSdk = "34"

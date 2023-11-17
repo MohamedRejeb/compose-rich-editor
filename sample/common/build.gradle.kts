@@ -5,6 +5,7 @@ plugins {
 }
 
 kotlin {
+    applyDefaultHierarchyTemplate()
     androidTarget {
         compilations.all {
             kotlinOptions {
@@ -31,12 +32,6 @@ kotlin {
     }
 
     sourceSets {
-        all {
-            languageSettings {
-                optIn("org.jetbrains.compose.resources.ExperimentalResourceApi")
-            }
-        }
-
         val commonMain by getting {
             dependencies {
                 api(compose.runtime)
@@ -60,20 +55,6 @@ kotlin {
             dependencies {
                 api("androidx.appcompat:appcompat:1.6.1")
             }
-        }
-
-        val desktopMain by getting {}
-
-        val jsMain by getting {}
-
-        val iosX64Main by getting
-        val iosArm64Main by getting
-        val iosSimulatorArm64Main by getting
-        val iosMain by creating {
-            dependsOn(commonMain)
-            iosX64Main.dependsOn(this)
-            iosArm64Main.dependsOn(this)
-            iosSimulatorArm64Main.dependsOn(this)
         }
     }
 }

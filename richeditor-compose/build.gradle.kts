@@ -6,6 +6,7 @@ plugins {
 }
 
 kotlin {
+    applyDefaultHierarchyTemplate()
     androidTarget {
         publishLibraryVariants("release")
         compilations.all {
@@ -40,34 +41,10 @@ kotlin {
             }
         }
 
-        val androidMain by getting {
-            dependencies {}
-        }
-
-        val androidUnitTest by getting {
+        val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
             }
-        }
-
-        val desktopMain by getting {
-            dependencies {}
-        }
-
-        val jsMain by getting {
-            dependsOn(commonMain)
-            dependencies {}
-        }
-
-        val iosX64Main by getting
-        val iosArm64Main by getting
-        val iosSimulatorArm64Main by getting
-        val iosMain by creating {
-            dependsOn(commonMain)
-            iosX64Main.dependsOn(this)
-            iosArm64Main.dependsOn(this)
-            iosSimulatorArm64Main.dependsOn(this)
-            dependencies {}
         }
     }
 }

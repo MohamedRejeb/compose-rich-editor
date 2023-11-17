@@ -96,7 +96,7 @@ fun SlackDemoContent() {
         ) { paddingValues ->
             Box(
                 modifier = Modifier
-                    .consumeWindowInsets(paddingValues)
+                    .padding(paddingValues)
                     .windowInsetsPadding(WindowInsets.ime)
                     .fillMaxSize()
             ) {

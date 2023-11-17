@@ -58,7 +58,7 @@ fun RichEditorContent() {
             LazyColumn(
                 contentPadding = paddingValue,
                 modifier = Modifier
-                    .consumeWindowInsets(paddingValue)
+                    .padding(paddingValue)
                     .windowInsetsPadding(WindowInsets.ime)
                     .fillMaxSize()
                     .padding(20.dp)

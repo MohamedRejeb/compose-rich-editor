@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextDecoration
 
 internal data class RichTextConfig(
+    val maxLength: Int? = null,
     val linkColor: Color = Color.Blue,
     val linkTextDecoration: TextDecoration = TextDecoration.Underline,
     val codeColor: Color = Color.Unspecified,

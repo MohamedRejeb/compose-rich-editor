@@ -1,20 +1,26 @@
 package com.mohamedrejeb.richeditor.ui.material
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
+import androidx.compose.material.TextFieldDefaults.indicatorLine
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
-import com.mohamedrejeb.richeditor.model.RichTextValue
+import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
+import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 
 /**
  * Material Design filled rich text field.
@@ -24,9 +30,7 @@ import com.mohamedrejeb.richeditor.model.RichTextValue
  *
  * If you are looking for an outlined version, see [OutlinedRichTextEditor].
  *
- * @param value the input [RichTextValue] to be shown in the rich text field
- * @param onValueChange the callback that is triggered when the input service updates values in
- * [RichTextValue]. An updated [RichTextValue] comes as a parameter of the callback
+ * @param state [RichTextState] that holds the state of the [RichTextEditor].
  * @param modifier a [Modifier] for this text field
  * @param enabled controls the enabled state of the [RichTextEditor]. When `false`, the text field will
  * be neither editable nor focusable, the input of the text field will not be selectable,
@@ -47,10 +51,6 @@ import com.mohamedrejeb.richeditor.model.RichTextValue
  * container
  * @param isError indicates if the text field's current value is in error state. If set to
  * true, the label, bottom indicator and trailing icon by default will be displayed in error color
- * @param visualTransformation transforms the visual representation of the input [value].
- * For example, you can use
- * [PasswordVisualTransformation][androidx.compose.ui.text.input.PasswordVisualTransformation] to
- * create a password text field. By default no visual transformation is applied
  * @param keyboardOptions software keyboard options that contains configuration such as
  * [KeyboardType] and [ImeAction].
  * @param keyboardActions when the input service emits an IME action, the corresponding callback
@@ -82,8 +82,7 @@ import com.mohamedrejeb.richeditor.model.RichTextValue
     level = DeprecationLevel.ERROR
 )
 fun RichTextEditor(
-    value: RichTextValue,
-    onValueChange: (RichTextValue) -> Unit,
+    state: RichTextState,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     readOnly: Boolean = false,
@@ -103,30 +102,48 @@ fun RichTextEditor(
         MaterialTheme.shapes.small.copy(bottomEnd = ZeroCornerSize, bottomStart = ZeroCornerSize),
     colors: TextFieldColors = TextFieldDefaults.textFieldColors()
 ) {
-    TextField(
-        value = value.textFieldValue,
-        onValueChange = {
-            onValueChange(
-                value.updateTextFieldValue(it)
-            )
-        },
-        modifier = modifier,
+    // If color is not provided via the text style, use content color as a default
+    val textColor = textStyle.color.takeOrElse {
+        colors.textColor(enabled).value
+    }
+    val mergedTextStyle = textStyle.merge(TextStyle(color = textColor))
+
+    @OptIn(ExperimentalMaterialApi::class)
+    BasicRichTextEditor(
+        state = state,
+        modifier = modifier
+            .background(colors.backgroundColor(enabled).value, shape)
+            .indicatorLine(enabled, isError, interactionSource, colors)
+            .defaultMinSize(
+                minWidth = TextFieldDefaults.MinWidth,
+                minHeight = TextFieldDefaults.MinHeight
+            ),
         enabled = enabled,
         readOnly = readOnly,
-        textStyle = textStyle,
-        label = label,
-        placeholder = placeholder,
-        leadingIcon = leadingIcon,
-        trailingIcon = trailingIcon,
-        isError = isError,
-        visualTransformation = value.visualTransformation,
+        textStyle = mergedTextStyle,
+        cursorBrush = SolidColor(colors.cursorColor(isError).value),
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
+        interactionSource = interactionSource,
         singleLine = singleLine,
         maxLines = maxLines,
         minLines = minLines,
-        interactionSource = interactionSource,
-        shape = shape,
-        colors = colors,
+        decorationBox = @Composable { innerTextField ->
+            // places leading icon, text field with label and placeholder, trailing icon
+            TextFieldDefaults.TextFieldDecorationBox(
+                value = state.textFieldValue.text,
+                visualTransformation = state.visualTransformation,
+                innerTextField = innerTextField,
+                placeholder = placeholder,
+                label = label,
+                leadingIcon = leadingIcon,
+                trailingIcon = trailingIcon,
+                singleLine = singleLine,
+                enabled = enabled,
+                isError = isError,
+                interactionSource = interactionSource,
+                colors = colors
+            )
+        }
     )
 }

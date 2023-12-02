@@ -1,8 +1,10 @@
 package com.mohamedrejeb.richeditor.ui.material
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -10,11 +12,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.takeOrElse
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
-import com.mohamedrejeb.richeditor.model.RichTextValue
+import androidx.compose.ui.unit.dp
+import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
 
 /**
  * Material Design outlined rich text field
@@ -25,9 +31,7 @@ import com.mohamedrejeb.richeditor.model.RichTextValue
  *
  * [OutlinedRichTextEditor] is a wrapper around [OutlinedTextField] and it accepts all the parameters that [OutlinedTextField] accepts.
  *
- * @param value the input [RichTextValue] to be shown in the text field
- * @param onValueChange the callback that is triggered when the input service updates values in
- * [RichTextValue]. An updated [RichTextValue] comes as a parameter of the callback
+ * @param state [RichTextState] that holds the state of the [OutlinedRichTextEditor].
  * @param modifier a [Modifier] for this text field
  * @param enabled controls the enabled state of the [OutlinedRichTextEditor]. When `false`, the text field will
  * be neither editable nor focusable, the input of the text field will not be selectable,
@@ -71,16 +75,8 @@ import com.mohamedrejeb.richeditor.model.RichTextValue
  * different states. See [TextFieldDefaults.outlinedTextFieldColors]
  */
 @Composable
-@Deprecated(
-    message = "Use state instead of value",
-    replaceWith = ReplaceWith(
-        expression = "OutlinedRichTextEditor(state =, )",
-    ),
-    level = DeprecationLevel.ERROR
-)
 fun OutlinedRichTextEditor(
-    value: RichTextValue,
-    onValueChange: (RichTextValue) -> Unit,
+    state: RichTextState,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     readOnly: Boolean = false,
@@ -99,30 +95,65 @@ fun OutlinedRichTextEditor(
     shape: Shape = MaterialTheme.shapes.small,
     colors: TextFieldColors = TextFieldDefaults.outlinedTextFieldColors()
 ) {
-    OutlinedTextField(
-        value = value.textFieldValue,
-        onValueChange = {
-            onValueChange(
-                value.updateTextFieldValue(it)
-            )
-        },
-        modifier = modifier,
+    // If color is not provided via the text style, use content color as a default
+    val textColor = textStyle.color.takeOrElse {
+        colors.textColor(enabled).value
+    }
+    val mergedTextStyle = textStyle.merge(TextStyle(color = textColor))
+
+    @OptIn(ExperimentalMaterialApi::class)
+    BasicRichTextEditor(
+        state = state,
+        modifier = if (label != null) {
+            modifier
+                // Merge semantics at the beginning of the modifier chain to ensure padding is
+                // considered part of the text field.
+                .semantics(mergeDescendants = true) {}
+                .padding(top = OutlinedTextFieldTopPadding)
+        } else {
+            modifier
+        }
+            .background(colors.backgroundColor(enabled).value, shape)
+            .defaultMinSize(
+                minWidth = TextFieldDefaults.MinWidth,
+                minHeight = TextFieldDefaults.MinHeight
+            ),
         enabled = enabled,
         readOnly = readOnly,
-        textStyle = textStyle,
-        label = label,
-        placeholder = placeholder,
-        leadingIcon = leadingIcon,
-        trailingIcon = trailingIcon,
-        isError = isError,
-        visualTransformation = value.visualTransformation,
+        textStyle = mergedTextStyle,
+        cursorBrush = SolidColor(colors.cursorColor(isError).value),
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
+        interactionSource = interactionSource,
         singleLine = singleLine,
         maxLines = maxLines,
         minLines = minLines,
-        interactionSource = interactionSource,
-        shape = shape,
-        colors = colors,
+        decorationBox = @Composable { innerTextField ->
+            TextFieldDefaults.OutlinedTextFieldDecorationBox(
+                value = state.textFieldValue.text,
+                visualTransformation = state.visualTransformation,
+                innerTextField = innerTextField,
+                placeholder = placeholder,
+                label = label,
+                leadingIcon = leadingIcon,
+                trailingIcon = trailingIcon,
+                singleLine = singleLine,
+                enabled = enabled,
+                isError = isError,
+                interactionSource = interactionSource,
+                colors = colors,
+                border = {
+                    TextFieldDefaults.BorderBox(
+                        enabled,
+                        isError,
+                        interactionSource,
+                        colors,
+                        shape
+                    )
+                }
+            )
+        }
     )
 }
+
+private val OutlinedTextFieldTopPadding = 8.dp

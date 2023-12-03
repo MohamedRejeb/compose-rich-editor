@@ -1,7 +1,5 @@
 package com.mohamedrejeb.richeditor.parser.html
 
-import com.mohamedrejeb.richeditor.model.RichTextStyle
-
 /**
  * Removes extra spaces from the given input. Because in HTML, extra spaces are ignored as well as new lines.
  *

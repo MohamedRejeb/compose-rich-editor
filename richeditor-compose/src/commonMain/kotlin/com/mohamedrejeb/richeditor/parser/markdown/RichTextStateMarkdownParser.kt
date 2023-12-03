@@ -21,7 +21,6 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     override fun encode(input: String): RichTextState {
         val openedNodes = mutableListOf<ASTNode>()
         val stringBuilder = StringBuilder()
-        val currentStyles: MutableList<RichTextStyle> = mutableListOf()
         val richParagraphList = mutableListOf(RichParagraph())
         var currentRichSpan: RichSpan? = null
         var currentRichParagraphType: RichParagraph.Type = RichParagraph.Type.Default
@@ -105,7 +104,6 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
             },
             onCloseNode = { node ->
                 openedNodes.removeLastOrNull()
-                currentStyles.removeLastOrNull()
 
                 // Remove empty spans
                 if (currentRichSpan?.isEmpty() == true) {

@@ -4,7 +4,7 @@ kotlin = "1.9.21"
 compose = "1.5.11"
 dokka = "1.9.0"
 
-ksoup = "0.2.1"
+ksoup = "0.3.0"
 jetbrainsMarkdown = "0.6.0"
 
 nexus-publish = "2.0.0-rc-1"

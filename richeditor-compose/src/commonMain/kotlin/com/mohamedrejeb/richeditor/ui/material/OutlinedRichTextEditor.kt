@@ -91,6 +91,7 @@ fun OutlinedRichTextEditor(
     singleLine: Boolean = false,
     maxLines: Int = Int.MAX_VALUE,
     minLines: Int = 1,
+    maxLength: Int = Int.MAX_VALUE,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape = MaterialTheme.shapes.small,
     colors: TextFieldColors = TextFieldDefaults.outlinedTextFieldColors()
@@ -128,6 +129,7 @@ fun OutlinedRichTextEditor(
         singleLine = singleLine,
         maxLines = maxLines,
         minLines = minLines,
+        maxLength = maxLength,
         decorationBox = @Composable { innerTextField ->
             TextFieldDefaults.OutlinedTextFieldDecorationBox(
                 value = state.textFieldValue.text,

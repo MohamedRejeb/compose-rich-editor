@@ -70,9 +70,12 @@ import kotlin.math.roundToInt
  * instead of wrapping onto multiple lines. The keyboard will be informed to not show the return key
  * as the [ImeAction]. Note that [maxLines] parameter will be ignored as the maxLines attribute will
  * be automatically set to 1.
- * @param maxLines the maximum height in terms of maximum number of visible lines. Should be
- * equal or greater than 1. Note that this parameter will be ignored and instead maxLines will be
- * set to 1 if [singleLine] is set to true.
+ * @param maxLines the maximum height in terms of maximum number of visible lines. It is required
+ * that 1 <= [minLines] <= [maxLines]. This parameter is ignored when [singleLine] is true.
+ * @param minLines the minimum height in terms of minimum number of visible lines. It is required
+ * that 1 <= [minLines] <= [maxLines]. This parameter is ignored when [singleLine] is true.
+ * @param maxLength the maximum length of the text field. If the text is longer than this value,
+ * it will be ignored. The default value of this parameter is [Int.MAX_VALUE].
  * @param interactionSource the [MutableInteractionSource] representing the stream of [Interaction]s
  * for this text field. You can create and pass in your own `remember`ed instance to observe
  * [Interaction]s and customize the appearance / behavior of this text field in different states.
@@ -99,6 +102,8 @@ fun RichTextEditor(
     keyboardActions: KeyboardActions = KeyboardActions(),
     singleLine: Boolean = false,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
+    minLines: Int = 1,
+    maxLength: Int = Int.MAX_VALUE,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape = RichTextEditorDefaults.filledShape,
     colors: RichTextEditorColors = RichTextEditorDefaults.richTextEditorColors(),
@@ -130,6 +135,8 @@ fun RichTextEditor(
             keyboardActions = keyboardActions,
             singleLine = singleLine,
             maxLines = maxLines,
+            minLines = minLines,
+            maxLength = maxLength,
             interactionSource = interactionSource,
             cursorBrush = SolidColor(colors.cursorColor(isError).value),
             decorationBox = @Composable { innerTextField ->

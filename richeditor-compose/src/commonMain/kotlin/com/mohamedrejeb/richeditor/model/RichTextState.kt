@@ -139,7 +139,6 @@ class RichTextState internal constructor(
 
     @ExperimentalRichTextApi
     fun setConfig(
-        maxLength: Int? = null,
         linkColor: Color = Color.Unspecified,
         linkTextDecoration: TextDecoration? = null,
         codeColor: Color = Color.Unspecified,
@@ -147,7 +146,6 @@ class RichTextState internal constructor(
         codeStrokeColor: Color = Color.Unspecified,
     ) {
         richTextConfig = RichTextConfig(
-            maxLength = maxLength,
             linkColor = if (linkColor.isSpecified) linkColor else richTextConfig.linkColor,
             linkTextDecoration = if (linkTextDecoration != null) linkTextDecoration else richTextConfig.linkTextDecoration,
             codeColor = if (codeColor.isSpecified) codeColor else richTextConfig.codeColor,
@@ -521,8 +519,6 @@ class RichTextState internal constructor(
     internal fun onTextFieldValueChange(newTextFieldValue: TextFieldValue) {
         if (readOnly) return
 
-        if(isExceedingMaxLength(newTextFieldValue)) return
-
         tempTextFieldValue = newTextFieldValue
 
         if (tempTextFieldValue.text.length > textFieldValue.text.length)
@@ -551,8 +547,6 @@ class RichTextState internal constructor(
      */
     private fun updateTextFieldValue(newTextFieldValue: TextFieldValue = tempTextFieldValue) {
         tempTextFieldValue = newTextFieldValue
-
-        if(isExceedingMaxLength(newTextFieldValue)) return
 
         if (!singleParagraphMode) {
             // Check for paragraphs
@@ -2177,10 +2171,6 @@ class RichTextState internal constructor(
         richParagraphList.add(RichParagraph())
         updateTextFieldValue(TextFieldValue())
     }
-
-    fun isExceedingMaxLength(value: TextFieldValue) = richTextConfig.maxLength?.let {
-        value.text.length > it
-    } ?: false
 
     companion object {
         val Saver: Saver<RichTextState, *> = listSaver(

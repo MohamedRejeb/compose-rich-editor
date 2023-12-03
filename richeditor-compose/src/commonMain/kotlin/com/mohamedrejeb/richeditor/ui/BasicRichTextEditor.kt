@@ -30,7 +30,6 @@ import androidx.compose.ui.unit.LayoutDirection
 import com.mohamedrejeb.richeditor.model.RichTextState
 import kotlinx.coroutines.CoroutineScope
 import kotlin.time.ExperimentalTime
-import kotlin.time.measureTime
 
 
 /**
@@ -66,6 +65,8 @@ import kotlin.time.measureTime
  * that 1 <= [minLines] <= [maxLines]. This parameter is ignored when [singleLine] is true.
  * @param minLines the minimum height in terms of minimum number of visible lines. It is required
  * that 1 <= [minLines] <= [maxLines]. This parameter is ignored when [singleLine] is true.
+ * @param maxLength the maximum length of the text field. If the text is longer than this value,
+ * it will be ignored. The default value of this parameter is [Int.MAX_VALUE].
  * @param onTextLayout Callback that is executed when a new text layout is calculated. A
  * [TextLayoutResult] object that callback provides contains paragraph information, size of the
  * text, baselines and other details. The callback can be used to add additional decoration or
@@ -96,6 +97,7 @@ fun BasicRichTextEditor(
     singleLine: Boolean = false,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
+    maxLength: Int = Int.MAX_VALUE,
     onTextLayout: (TextLayoutResult) -> Unit = {},
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     cursorBrush: Brush = SolidColor(Color.Black),
@@ -113,6 +115,7 @@ fun BasicRichTextEditor(
         singleLine = singleLine,
         maxLines = maxLines,
         minLines = minLines,
+        maxLength = maxLength,
         onTextLayout = onTextLayout,
         interactionSource = interactionSource,
         cursorBrush = cursorBrush,
@@ -154,6 +157,8 @@ fun BasicRichTextEditor(
  * that 1 <= [minLines] <= [maxLines]. This parameter is ignored when [singleLine] is true.
  * @param minLines the minimum height in terms of minimum number of visible lines. It is required
  * that 1 <= [minLines] <= [maxLines]. This parameter is ignored when [singleLine] is true.
+ * @param maxLength the maximum length of the text field. If the text is longer than this value,
+ * it will be ignored. The default value of this parameter is [Int.MAX_VALUE].
  * @param onTextLayout Callback that is executed when a new text layout is calculated. A
  * [TextLayoutResult] object that callback provides contains paragraph information, size of the
  * text, baselines and other details. The callback can be used to add additional decoration or
@@ -172,7 +177,6 @@ fun BasicRichTextEditor(
  * innerTextField exactly once.
  *
  */
-@OptIn(ExperimentalTime::class)
 @Composable
 internal fun BasicRichTextEditor(
     state: RichTextState,
@@ -186,6 +190,7 @@ internal fun BasicRichTextEditor(
     singleParagraph: Boolean = false,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
+    maxLength: Int = Int.MAX_VALUE,
     onTextLayout: (TextLayoutResult) -> Unit = {},
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     cursorBrush: Brush = SolidColor(Color.Black),
@@ -237,6 +242,7 @@ internal fun BasicRichTextEditor(
         BasicTextField(
             value = state.textFieldValue,
             onValueChange = {
+                if (it.text.length > maxLength) return@BasicTextField
                 state.onTextFieldValueChange(it)
             },
             modifier = modifier

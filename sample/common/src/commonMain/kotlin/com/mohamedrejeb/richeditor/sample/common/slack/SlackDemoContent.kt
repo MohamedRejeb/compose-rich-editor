@@ -185,7 +185,6 @@ fun SlackDemoContent() {
                                 unfocusedIndicatorColor = Color.Transparent,
                                 placeholderColor = Color.White.copy(alpha = .6f),
                             ),
-                            maxLength = 10,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(8.dp)

@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
@@ -29,6 +30,7 @@ fun BasicRichText(
     minLines: Int = 1,
     inlineContent: Map<String, InlineTextContent> = mapOf()
 ) {
+    val density = LocalDensity.current
     val uriHandler = LocalUriHandler.current
     val pointerIcon = remember {
         mutableStateOf(PointerIcon.Default)
@@ -66,7 +68,10 @@ fun BasicRichText(
             },
         style = style,
         onTextLayout = {
-            state.onTextLayout(it)
+            state.onTextLayout(
+                textLayoutResult = it,
+                density = density,
+            )
             onTextLayout(it)
         },
         overflow = overflow,

@@ -1,6 +1,5 @@
 package com.mohamedrejeb.richeditor.ui
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -12,24 +11,24 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.sp
+import com.mohamedrejeb.richeditor.model.RichParagraph
 import com.mohamedrejeb.richeditor.model.RichTextState
 import kotlinx.coroutines.CoroutineScope
-import kotlin.time.ExperimentalTime
 
 
 /**
@@ -213,10 +212,6 @@ internal fun BasicRichTextEditor(
         state.singleParagraphMode = singleParagraph
     }
 
-    LaunchedEffect(readOnly) {
-        state.readOnly = readOnly
-    }
-
     if (!singleParagraph) {
         // Workaround for Android to fix a bug in BasicTextField where it doesn't select the correct text
         // when the text contains multiple paragraphs.
@@ -242,6 +237,7 @@ internal fun BasicRichTextEditor(
         BasicTextField(
             value = state.textFieldValue,
             onValueChange = {
+                if (readOnly) return@BasicTextField
                 if (it.text.length > maxLength) return@BasicTextField
                 state.onTextFieldValueChange(it)
             },
@@ -282,7 +278,10 @@ internal fun BasicRichTextEditor(
             minLines = minLines,
             visualTransformation = state.visualTransformation,
             onTextLayout = {
-                state.onTextLayout(it)
+                state.onTextLayout(
+                    textLayoutResult = it,
+                    density = density,
+                )
                 onTextLayout(it)
             },
             interactionSource = interactionSource,

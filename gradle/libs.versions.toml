@@ -13,7 +13,7 @@ nexus-publish = "2.0.0-rc-1"
 compose-compiler = "1.5.4"
 activity-compose = "1.8.1"
 voyager = "1.0.0-rc10"
-richeditor = "1.0.0-beta04"
+richeditor = "1.0.0-beta05"
 android-minSdk = "21"
 android-compileSdk = "34"
 

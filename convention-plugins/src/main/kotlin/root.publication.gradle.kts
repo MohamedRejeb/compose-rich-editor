@@ -4,7 +4,7 @@ plugins {
 
 allprojects {
     group = "com.mohamedrejeb.richeditor"
-    version = "1.0.0-beta04"
+    version = "1.0.0-beta05"
 }
 
 nexusPublishing {

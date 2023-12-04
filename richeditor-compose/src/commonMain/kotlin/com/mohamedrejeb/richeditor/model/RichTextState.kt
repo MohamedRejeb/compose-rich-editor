@@ -13,6 +13,9 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextIndent
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichParagraph.Type.Companion.startText
 import com.mohamedrejeb.richeditor.parser.html.RichTextStateHtmlParser
@@ -63,8 +66,6 @@ class RichTextState internal constructor(
     val composition get() = textFieldValue.composition
 
     internal var singleParagraphMode by mutableStateOf(false)
-
-    internal var readOnly by mutableStateOf(false)
 
     internal var textLayoutResult: TextLayoutResult? by mutableStateOf(null)
         private set
@@ -147,7 +148,7 @@ class RichTextState internal constructor(
     ) {
         richTextConfig = RichTextConfig(
             linkColor = if (linkColor.isSpecified) linkColor else richTextConfig.linkColor,
-            linkTextDecoration = if (linkTextDecoration != null) linkTextDecoration else richTextConfig.linkTextDecoration,
+            linkTextDecoration = linkTextDecoration ?: richTextConfig.linkTextDecoration,
             codeColor = if (codeColor.isSpecified) codeColor else richTextConfig.codeColor,
             codeBackgroundColor = if (codeBackgroundColor.isSpecified) codeBackgroundColor else richTextConfig.codeBackgroundColor,
             codeStrokeColor = if (codeStrokeColor.isSpecified) codeStrokeColor else richTextConfig.codeStrokeColor,
@@ -517,8 +518,6 @@ class RichTextState internal constructor(
      * @param newTextFieldValue the new text field value.
      */
     internal fun onTextFieldValueChange(newTextFieldValue: TextFieldValue) {
-        if (readOnly) return
-
         tempTextFieldValue = newTextFieldValue
 
         if (tempTextFieldValue.text.length > textFieldValue.text.length)
@@ -1795,8 +1794,41 @@ class RichTextState internal constructor(
         }
     }
 
-    internal fun onTextLayout(textLayoutResult: TextLayoutResult) {
+    internal fun onTextLayout(
+        textLayoutResult: TextLayoutResult,
+        density: Density,
+    ) {
         this.textLayoutResult = textLayoutResult
+        adjustRichParagraphLayout(
+            density = density,
+        )
+    }
+    
+    private fun adjustRichParagraphLayout(
+        density: Density,
+    ) {
+        var isParagraphUpdated = false
+
+        richParagraphList.toList().forEach { richParagraph ->
+            val type = richParagraph.type
+            if (!type.startRichSpan.textRange.collapsed) {
+                textLayoutResult?.let { textLayoutResult ->
+                    val start = textLayoutResult.getHorizontalPosition(type.startRichSpan.textRange.min, true)
+                    val end = textLayoutResult.getHorizontalPosition(type.startRichSpan.textRange.max, true)
+                    val distanceSp = with(density) {
+                        (end - start).toSp()
+                    }
+
+                    if (type.startTextWidth != distanceSp) {
+                        type.startTextWidth = distanceSp
+                        isParagraphUpdated = true
+                    }
+                }
+            }
+        }
+
+        if (isParagraphUpdated)
+            updateTextFieldValue(textFieldValue)
     }
 
     internal fun getLinkByOffset(offset: Offset): String? {
@@ -2019,6 +2051,7 @@ class RichTextState internal constructor(
      *
      * @return A copy of this [RichTextState].
      */
+    @OptIn(ExperimentalRichTextApi::class)
     fun copy(): RichTextState {
         val richParagraphList = richParagraphList.map { it.copy() }
         val richTextState = RichTextState(richParagraphList)

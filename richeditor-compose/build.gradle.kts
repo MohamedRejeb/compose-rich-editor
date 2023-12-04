@@ -50,11 +50,19 @@ kotlin {
 }
 
 android {
-    namespace = "com.mohamedrejeb.richeditor"
+    namespace = "com.mohamedrejeb.richeditor.compose"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
         consumerProguardFile("proguard-rules.pro")
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+    kotlin {
+        jvmToolchain(8)
     }
 }

@@ -3,6 +3,7 @@ package com.mohamedrejeb.richeditor.model
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.*
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.model.RichParagraph.Type.Companion.startText
 import com.mohamedrejeb.richeditor.ui.test.getRichTextStyleTreeRepresentation
@@ -16,6 +17,9 @@ internal class RichParagraph(
     var type: Type = Type.Default,
 ) {
     interface Type {
+        var startTextWidth: TextUnit
+            get() = 0.sp
+            set(_) {}
         val style: ParagraphStyle get() = ParagraphStyle()
         val startRichSpan: RichSpan get() = RichSpan(paragraph = RichParagraph(type = this))
 
@@ -26,26 +30,47 @@ internal class RichParagraph(
         object Default : Type
 
         class UnorderedList : Type {
-            override val style: ParagraphStyle = ParagraphStyle(
-                textIndent = TextIndent(firstLine = 20.sp, restLine = 38.sp),
+
+            override var startTextWidth: TextUnit = 0.sp
+                set(value) {
+                    field = value
+                    style = getParagraphStyle()
+                }
+
+            override var style: ParagraphStyle = getParagraphStyle()
+
+            private fun getParagraphStyle() = ParagraphStyle(
+                textIndent = TextIndent(firstLine = (38 - startTextWidth.value).sp, restLine = 38.sp),
                 lineHeight = 20.sp,
             )
-            override val startRichSpan: RichSpan = RichSpan(
+
+            override var startRichSpan: RichSpan = RichSpan(
                 paragraph = RichParagraph(type = this),
                 text = "• ",
             )
             override val nextParagraphType: Type get() = UnorderedList()
 
             override fun copy(): Type = UnorderedList()
+
+
         }
 
-        data class OrderedList(
+        class OrderedList(
             val number: Int,
         ) : Type {
-            override val style: ParagraphStyle = ParagraphStyle(
-                textIndent = TextIndent(firstLine = 20.sp, restLine = 42.sp),
+            override var startTextWidth: TextUnit = 0.sp
+                set(value) {
+                    field = value
+                    style = getParagraphStyle()
+                }
+
+            override var style: ParagraphStyle = getParagraphStyle()
+
+            private fun getParagraphStyle() = ParagraphStyle(
+                textIndent = TextIndent(firstLine = (38 - startTextWidth.value).sp, restLine = 38.sp),
                 lineHeight = 20.sp,
             )
+
             override val startRichSpan: RichSpan = RichSpan(
                 paragraph = RichParagraph(type = this),
                 text = "$number. ",

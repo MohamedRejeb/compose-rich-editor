@@ -1,6 +1,7 @@
 package com.mohamedrejeb.richeditor.parser.html
 
 import androidx.compose.ui.text.SpanStyle
+import com.mohamedrejeb.ksoup.entities.KsoupEntities
 import com.mohamedrejeb.ksoup.html.parser.KsoupHtmlHandler
 import com.mohamedrejeb.ksoup.html.parser.KsoupHtmlParser
 import com.mohamedrejeb.richeditor.model.*
@@ -30,9 +31,11 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 val lastOpenedTag = openedTags.lastOrNull()?.first
                 if (lastOpenedTag in skippedHtmlElements) return@onText
 
-                val addedText = removeHtmlTextExtraSpaces(
-                    input = it,
-                    trimStart = stringBuilder.lastOrNull() == ' ' || stringBuilder.lastOrNull() == '\n',
+                val addedText = KsoupEntities.decodeHtml(
+                    removeHtmlTextExtraSpaces(
+                        input = it,
+                        trimStart = stringBuilder.lastOrNull() == ' ' || stringBuilder.lastOrNull() == '\n',
+                    )
                 )
                 if (addedText.isEmpty()) return@onText
 
@@ -253,7 +256,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         }
 
         // Append text
-        stringBuilder.append(richSpan.text)
+        stringBuilder.append(KsoupEntities.encodeHtml(richSpan.text))
 
         // Append children
         richSpan.children.fastForEach { child ->

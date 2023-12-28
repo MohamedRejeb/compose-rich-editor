@@ -34,7 +34,8 @@ kotlin {
                 implementation(compose.material3)
 
                 // HTML parsing library
-                implementation(libs.ksoup)
+                implementation(libs.ksoup.html)
+                implementation(libs.ksoup.entities)
 
                 // Markdown parsing library
                 implementation(libs.jetbrains.markdown)

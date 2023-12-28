@@ -81,7 +81,6 @@ class RichTextState internal constructor(
         getRichSpanByTextIndex(textIndex = selection.min - 1)?.style
             ?: RichSpanStyle.Default
     )
-        private set
 
     val isLink get() = currentRichSpanStyle is RichSpanStyle.Link
     val isCode get() = (
@@ -589,7 +588,7 @@ class RichTextState internal constructor(
      * @see [annotatedString]
      */
     private fun updateAnnotatedString(newTextFieldValue: TextFieldValue = textFieldValue) {
-        val newText =
+        var newText =
             if (singleParagraphMode) newTextFieldValue.text
             else newTextFieldValue.text.replace("\n", " ")
 
@@ -618,12 +617,22 @@ class RichTextState internal constructor(
                             },
                             richTextConfig = richTextConfig,
                         )
+
                         if (!singleParagraphMode) {
-                            if (i != richParagraphList.lastIndex) {
-                                if (index < newText.length) {
-                                    append(" ")
-                                    index++
-                                }
+                            // Add empty space in the end of each paragraph to fix an issue with Compose TextField
+                            // that makes that last char non-selectable when having multiple paragraphs
+                            if (i != richParagraphList.lastIndex && index < newText.length) {
+                                append(" ")
+                                index++
+                            }
+
+                            // Add empty space to the last paragraph if it's empty.
+                            // Workaround to fix an issue with Compose TextField that causes a crash on long click
+                            if (i > 0 && i == richParagraphList.lastIndex && richParagraph.isEmpty()) {
+                                richParagraph.getFirstNonEmptyChild()?.text = " "
+                                append(" ")
+                                index++
+                                newText += ' '
                             }
                         }
                     }

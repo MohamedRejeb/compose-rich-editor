@@ -122,8 +122,6 @@ internal interface RichSpanStyle {
     }
 
     companion object {
-        internal val DefaultSpanStyle = SpanStyle(
-            fontSize = 16.sp,
-        )
+        internal val DefaultSpanStyle = SpanStyle()
     }
 }

@@ -12,13 +12,14 @@ nexus-publish = "2.0.0-rc-1"
 # For sample
 compose-compiler = "1.5.4"
 activity-compose = "1.8.1"
-voyager = "1.0.0-rc10"
+voyager = "1.0.0"
 richeditor = "1.0.0-beta05"
 android-minSdk = "21"
 android-compileSdk = "34"
 
 [libraries]
-ksoup = { module = "com.mohamedrejeb.ksoup:ksoup-html", version.ref = "ksoup" }
+ksoup-html = { module = "com.mohamedrejeb.ksoup:ksoup-html", version.ref = "ksoup" }
+ksoup-entities = { module = "com.mohamedrejeb.ksoup:ksoup-entities", version.ref = "ksoup" }
 jetbrains-markdown = { module = "org.jetbrains:markdown", version.ref = "jetbrainsMarkdown" }
 
 nexus-publish = { module = "io.github.gradle-nexus.publish-plugin:io.github.gradle-nexus.publish-plugin.gradle.plugin", version.ref = "nexus-publish" }

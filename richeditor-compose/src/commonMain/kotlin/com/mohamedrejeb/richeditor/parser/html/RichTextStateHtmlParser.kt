@@ -320,38 +320,41 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         H6SPanStyle to "h6",
     )
 
+    private const val CodeSpanTagName = "code-span"
+
     /**
      * Encodes HTML elements to [RichSpanStyle].
      */
     private fun encodeHtmlElementToRichSpanStyle(
         tagName: String,
         attributes: Map<String, String>,
-    ): RichSpanStyle {
-        return when (tagName) {
-            "a" -> {
-                val href = attributes["href"] ?: ""
-                return RichSpanStyle.Link(url = href)
-            }
-            else -> RichSpanStyle.Default
+    ): RichSpanStyle =
+        when (tagName) {
+            "a" ->
+                RichSpanStyle.Link(url = attributes["href"].orEmpty())
+            CodeSpanTagName ->
+                RichSpanStyle.Code()
+            else ->
+                RichSpanStyle.Default
         }
-    }
 
     /**
      * Decodes HTML elements from [RichSpanStyle].
      */
     private fun decodeHtmlElementFromRichSpanStyle(
         richSpanStyle: RichSpanStyle,
-    ): Pair<String, Map<String, String>> {
-        return when (richSpanStyle) {
-            is RichSpanStyle.Link -> {
-                return "a" to mapOf(
+    ): Pair<String, Map<String, String>> =
+        when (richSpanStyle) {
+            is RichSpanStyle.Link ->
+                "a" to mapOf(
                     "href" to richSpanStyle.url,
                     "target" to "_blank"
                 )
-            }
-            else -> "span" to emptyMap()
+            is RichSpanStyle.Code ->
+                CodeSpanTagName to emptyMap()
+            else ->
+                "span" to emptyMap()
         }
-    }
 
     /**
      * Encodes HTML elements to [RichParagraph.Type].

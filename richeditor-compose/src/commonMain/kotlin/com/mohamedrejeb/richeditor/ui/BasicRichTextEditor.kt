@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.model.RichParagraph
 import com.mohamedrejeb.richeditor.model.RichTextState
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 
 /**
@@ -197,6 +198,7 @@ internal fun BasicRichTextEditor(
         @Composable { innerTextField -> innerTextField() },
     contentPadding: PaddingValues
 ) {
+    val scope = rememberCoroutineScope()
     val density = LocalDensity.current
     val localTextStyle = LocalTextStyle.current
     val layoutDirection = LocalLayoutDirection.current
@@ -233,12 +235,25 @@ internal fun BasicRichTextEditor(
         }
     }
 
+    DisposableEffect(state) {
+        scope.launch {
+            state.collectTextFieldValueSharedFlow()
+        }
+
+        onDispose {
+            state.collectTextFieldValueSharedFlowJob?.cancel()
+        }
+    }
+
     CompositionLocalProvider(LocalClipboardManager provides richClipboardManager) {
         BasicTextField(
             value = state.textFieldValue,
             onValueChange = {
                 if (readOnly) return@BasicTextField
                 if (it.text.length > maxLength) return@BasicTextField
+//                scope.launch {
+//                    state.emitTextFieldValue(it)
+//                }
                 state.onTextFieldValueChange(it)
             },
             modifier = modifier

@@ -20,12 +20,17 @@ import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichParagraph.Type.Companion.startText
 import com.mohamedrejeb.richeditor.parser.html.RichTextStateHtmlParser
 import com.mohamedrejeb.richeditor.parser.markdown.RichTextStateMarkdownParser
+import com.mohamedrejeb.richeditor.platform.currentPlatform
 import com.mohamedrejeb.richeditor.utils.*
 import com.mohamedrejeb.richeditor.utils.append
 import com.mohamedrejeb.richeditor.utils.customMerge
 import com.mohamedrejeb.richeditor.utils.isSpecifiedFieldsEquals
 import com.mohamedrejeb.richeditor.utils.unmerge
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import kotlin.math.max
 
 @Composable
@@ -506,6 +511,21 @@ class RichTextState internal constructor(
         updateParagraphType(paragraph, RichParagraph.Type.Default)
     }
 
+    private val textFieldValueSharedFlow = MutableSharedFlow<TextFieldValue>()
+
+    internal suspend fun emitTextFieldValue(textFieldValue: TextFieldValue) {
+        textFieldValueSharedFlow.emit(textFieldValue)
+    }
+
+    internal var collectTextFieldValueSharedFlowJob: Job? = null
+    internal suspend fun collectTextFieldValueSharedFlow() = coroutineScope {
+        collectTextFieldValueSharedFlowJob = launch {
+            textFieldValueSharedFlow.collect { newTextFieldValue ->
+                onTextFieldValueChange(newTextFieldValue)
+            }
+        }
+    }
+
     /**
      * Temporarily stores the new text field value, before it is validated.
      */
@@ -517,6 +537,11 @@ class RichTextState internal constructor(
      * @param newTextFieldValue the new text field value.
      */
     internal fun onTextFieldValueChange(newTextFieldValue: TextFieldValue) {
+        println("onTextFieldValueChange: ${newTextFieldValue.text.replace("\n", "<br/>")}")
+        println("same text field value: ${newTextFieldValue == tempTextFieldValue}")
+        println("same text: ${newTextFieldValue.text == tempTextFieldValue.text}")
+        println("same selection: ${newTextFieldValue.selection == tempTextFieldValue.selection}")
+        if (newTextFieldValue == tempTextFieldValue) return
         tempTextFieldValue = newTextFieldValue
 
         if (tempTextFieldValue.text.length > textFieldValue.text.length)
@@ -576,6 +601,12 @@ class RichTextState internal constructor(
 
         // Clear [tempTextFieldValue]
         tempTextFieldValue = TextFieldValue()
+
+        println("end edit")
+        richParagraphList.forEachIndexed { index, paragraph ->
+            println("Paragraph: $index")
+            println(paragraph.toString())
+        }
     }
 
     /**
@@ -628,7 +659,12 @@ class RichTextState internal constructor(
 
                             // Add empty space to the last paragraph if it's empty.
                             // Workaround to fix an issue with Compose TextField that causes a crash on long click
-                            if (i > 0 && i == richParagraphList.lastIndex && richParagraph.isEmpty()) {
+                            if (
+                                (currentPlatform.isAndroid ||
+                                currentPlatform.isIOS) &&
+                                i > 0 && i == richParagraphList.lastIndex &&
+                                richParagraph.isEmpty()
+                            ) {
                                 richParagraph.getFirstNonEmptyChild()?.text = " "
                                 append(" ")
                                 index++
@@ -1027,6 +1063,10 @@ class RichTextState internal constructor(
             val sliceIndex = max(index, richSpan.textRange.min)
 
             // Create a new paragraph style
+
+            println("oldParagraphType: ${richSpan.paragraph.type}")
+            println("oldParagraphStartText: ${richSpan.paragraph.type.startText}")
+
             val newParagraph = richSpan.paragraph.slice(
                 startIndex = sliceIndex,
                 richSpan = richSpan,
@@ -1050,6 +1090,10 @@ class RichTextState internal constructor(
 
             // Update the paragraph type of the paragraphs after the new paragraph
             val newParagraphType = newParagraph.type
+
+            println("newParagraphType: $newParagraphType")
+            println("newParagraphStartText: ${newParagraphType.startText}")
+
             if (newParagraphType is RichParagraph.Type.OrderedList) {
                 tempTextFieldValue = adjustOrderedListsNumbers(
                     startParagraphIndex = paragraphIndex + 2,

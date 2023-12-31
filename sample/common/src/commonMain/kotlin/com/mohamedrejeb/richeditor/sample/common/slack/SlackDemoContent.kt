@@ -72,7 +72,6 @@ fun SlackDemoContent() {
             topBar = {
                 Column(
                     modifier = Modifier
-
                 ) {
                     TopAppBar(
                         title = { Text("Slack Demo") },

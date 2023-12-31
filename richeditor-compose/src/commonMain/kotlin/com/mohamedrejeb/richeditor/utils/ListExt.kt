@@ -52,17 +52,18 @@ internal inline fun <T, R> List<T>.fastMap(
 }
 
 /**
- * Copied from [androidx](https://cs.android.com/androidx/platform/frameworks/support/+/androidx-main:compose/ui/ui-text/src/commonMain/kotlin/androidx/compose/ui/text/TempListUtils.kt;l=107;drc=ceaa7640c065146360515e598a3d09f6f66553dd).
+ * Returns `true` if at least one element matches the given [predicate].
+ *
+ * **Do not use for collections that come from public APIs**, since they may not support random
+ * access in an efficient way, and this method may actually be a lot slower. Only use for
+ * collections that are created by code we control and are known to support random access.
  */
-@Suppress("BanInlineOptIn") // Treat Kotlin Contracts as non-experimental.
+@Suppress("BanInlineOptIn")
 @OptIn(ExperimentalContracts::class)
-internal inline fun <T, R> List<T>.fastFold(initial: R, operation: (acc: R, T) -> R): R {
-  contract { callsInPlace(operation) }
-  var accumulator = initial
-  fastForEach { e ->
-    accumulator = operation(accumulator, e)
-  }
-  return accumulator
+internal inline fun <T> List<T>.fastAny(predicate: (T) -> Boolean): Boolean {
+  contract { callsInPlace(predicate) }
+  fastForEach { if (predicate(it)) return true }
+  return false
 }
 
 @OptIn(ExperimentalContracts::class)

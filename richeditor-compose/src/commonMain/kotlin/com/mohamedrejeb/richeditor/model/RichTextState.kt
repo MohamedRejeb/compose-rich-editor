@@ -537,11 +537,6 @@ class RichTextState internal constructor(
      * @param newTextFieldValue the new text field value.
      */
     internal fun onTextFieldValueChange(newTextFieldValue: TextFieldValue) {
-        println("onTextFieldValueChange: ${newTextFieldValue.text.replace("\n", "<br/>")}")
-        println("same text field value: ${newTextFieldValue == tempTextFieldValue}")
-        println("same text: ${newTextFieldValue.text == tempTextFieldValue.text}")
-        println("same selection: ${newTextFieldValue.selection == tempTextFieldValue.selection}")
-        if (newTextFieldValue == tempTextFieldValue) return
         tempTextFieldValue = newTextFieldValue
 
         if (tempTextFieldValue.text.length > textFieldValue.text.length)
@@ -601,12 +596,6 @@ class RichTextState internal constructor(
 
         // Clear [tempTextFieldValue]
         tempTextFieldValue = TextFieldValue()
-
-        println("end edit")
-        richParagraphList.forEachIndexed { index, paragraph ->
-            println("Paragraph: $index")
-            println(paragraph.toString())
-        }
     }
 
     /**
@@ -1063,10 +1052,6 @@ class RichTextState internal constructor(
             val sliceIndex = max(index, richSpan.textRange.min)
 
             // Create a new paragraph style
-
-            println("oldParagraphType: ${richSpan.paragraph.type}")
-            println("oldParagraphStartText: ${richSpan.paragraph.type.startText}")
-
             val newParagraph = richSpan.paragraph.slice(
                 startIndex = sliceIndex,
                 richSpan = richSpan,
@@ -1090,9 +1075,6 @@ class RichTextState internal constructor(
 
             // Update the paragraph type of the paragraphs after the new paragraph
             val newParagraphType = newParagraph.type
-
-            println("newParagraphType: $newParagraphType")
-            println("newParagraphStartText: ${newParagraphType.startText}")
 
             if (newParagraphType is RichParagraph.Type.OrderedList) {
                 tempTextFieldValue = adjustOrderedListsNumbers(
@@ -1850,19 +1832,24 @@ class RichTextState internal constructor(
     internal fun onTextLayout(
         textLayoutResult: TextLayoutResult,
         density: Density,
+        maxLines: Int = Int.MAX_VALUE,
     ) {
         this.textLayoutResult = textLayoutResult
         adjustRichParagraphLayout(
             density = density,
+            maxLines = maxLines,
         )
     }
     
     private fun adjustRichParagraphLayout(
         density: Density,
+        maxLines: Int,
     ) {
         var isParagraphUpdated = false
 
-        richParagraphList.toList().forEach { richParagraph ->
+        richParagraphList.toList().forEachIndexed { index, richParagraph ->
+            if (index + 1 > maxLines) return@forEachIndexed
+
             val type = richParagraph.type
             if (!type.startRichSpan.textRange.collapsed) {
                 textLayoutResult?.let { textLayoutResult ->

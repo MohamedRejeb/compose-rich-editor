@@ -255,9 +255,9 @@ fun SlackDemoPanel(
         item {
             SlackDemoPanelButton(
                 onClick = {
-                    state.toggleCode()
+                    state.toggleCodeSpan()
                 },
-                isSelected = state.isCode,
+                isSelected = state.isCodeSpan,
                 icon = Icons.Outlined.Code,
             )
         }

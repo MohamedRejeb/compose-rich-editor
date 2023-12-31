@@ -88,7 +88,15 @@ class RichTextState internal constructor(
     )
 
     val isLink get() = currentRichSpanStyle is RichSpanStyle.Link
-    val isCode get() = (
+
+    @Deprecated(
+        message = "Use isCodeSpan instead",
+        replaceWith = ReplaceWith("isCodeSpan"),
+        level = DeprecationLevel.ERROR,
+    )
+    val isCode get() = isCodeSpan
+
+    val isCodeSpan get() = (
             currentRichSpanStyle is RichSpanStyle.Code ||
             toAddRichSpanStyle is RichSpanStyle.Code) &&
             toRemoveRichSpanStyle !is RichSpanStyle.Code
@@ -131,7 +139,6 @@ class RichTextState internal constructor(
         getRichParagraphByTextIndex(textIndex = selection.min - 1)?.type
             ?: RichParagraph.Type.Default
     )
-        private set
 
     val isUnorderedList get() = currentRichParagraphType is RichParagraph.Type.UnorderedList
     val isOrderedList get() = currentRichParagraphType is RichParagraph.Type.OrderedList
@@ -264,14 +271,28 @@ class RichTextState internal constructor(
         )
     }
 
-    fun toggleCode() {
-        if (isCode)
-            removeCode()
+    @Deprecated(
+        message = "Use toggleCodeSpan instead",
+        replaceWith = ReplaceWith("toggleCodeSpan()"),
+        level = DeprecationLevel.ERROR,
+    )
+    fun toggleCode() = toggleCodeSpan()
+
+    fun toggleCodeSpan() {
+        if (isCodeSpan)
+            removeCodeSpan()
         else
-            addCode()
+            addCodeSpan()
     }
 
-    fun addCode() {
+    @Deprecated(
+        message = "Use addCodeSpan instead",
+        replaceWith = ReplaceWith("addCodeSpan()"),
+        level = DeprecationLevel.ERROR,
+    )
+    fun addCode() = addCodeSpan()
+
+    fun addCodeSpan() {
         if (toRemoveRichSpanStyle is RichSpanStyle.Code)
             toRemoveRichSpanStyle = RichSpanStyle.Default
         toAddRichSpanStyle = RichSpanStyle.Code()
@@ -280,7 +301,14 @@ class RichTextState internal constructor(
             handleAddingStyleToSelectedText()
     }
 
-    fun removeCode() {
+    @Deprecated(
+        message = "Use removeCodeSpan instead",
+        replaceWith = ReplaceWith("removeCodeSpan()"),
+        level = DeprecationLevel.ERROR,
+    )
+    fun removeCode() = removeCodeSpan()
+
+    fun removeCodeSpan() {
         if (toAddRichSpanStyle is RichSpanStyle.Code)
             toAddRichSpanStyle = RichSpanStyle.Default
         toRemoveRichSpanStyle = RichSpanStyle.Code()

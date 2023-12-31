@@ -3,22 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <title>Compose Rich Editor</title>
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-        }
-    </style>
+    <script src="skiko.js"></script>
 </head>
 <body>
-<canvas id="ComposeTarget"></canvas>
-<script>
-    var canvas = document.getElementById("ComposeTarget");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-</script>
-<script src="skiko.js"></script>
+<noscript>
+    This page requires JavaScript.
+</noscript>
+<div id="root" class="d-flex flex-column h-100">
+</div>
+<div>
+    <canvas id="ComposeTarget" width="800" height="600"></canvas>
+</div>
 <script src="web.js"></script>
 </body>
 </html>

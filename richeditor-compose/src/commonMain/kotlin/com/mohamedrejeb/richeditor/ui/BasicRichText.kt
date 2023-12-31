@@ -1,7 +1,6 @@
 package com.mohamedrejeb.richeditor.ui
 
 import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.runtime.Composable
@@ -16,6 +15,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
+import com.mohamedrejeb.richeditor.gesture.detectTapGestures
 import com.mohamedrejeb.richeditor.model.RichTextState
 
 @Composable
@@ -63,7 +63,10 @@ fun BasicRichText(
                                 e.printStackTrace()
                             }
                         }
-                    }
+                    },
+                    consumeDown = { offset ->
+                        state.isLink(offset)
+                    },
                 )
             },
         style = style,

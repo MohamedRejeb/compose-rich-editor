@@ -4,7 +4,11 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextDecoration
 import com.mohamedrejeb.richeditor.model.*
-import com.mohamedrejeb.richeditor.model.RichParagraph
+import com.mohamedrejeb.richeditor.paragraph.RichParagraph
+import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
+import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
+import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
+import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import com.mohamedrejeb.richeditor.parser.RichTextStateParser
 import com.mohamedrejeb.richeditor.parser.utils.*
 import com.mohamedrejeb.richeditor.utils.fastForEach
@@ -23,7 +27,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         val stringBuilder = StringBuilder()
         val richParagraphList = mutableListOf(RichParagraph())
         var currentRichSpan: RichSpan? = null
-        var currentRichParagraphType: RichParagraph.Type = RichParagraph.Type.Default
+        var currentRichParagraphType: ParagraphType = DefaultParagraph()
 
         encodeMarkdownToRichText(
             markdown = input,
@@ -62,14 +66,14 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     val currentRichParagraph = richParagraphList.last()
 
                     // Get paragraph type from markdown element
-                    if (currentRichParagraphType == RichParagraph.Type.Default) {
+                    if (currentRichParagraphType is DefaultParagraph) {
                         val paragraphType = encodeRichParagraphTypeFromMarkdownElement(node)
                         currentRichParagraphType = paragraphType
                     }
 
                     // Set paragraph type if an element is a list item
                     if (node.type == MarkdownElementTypes.LIST_ITEM) {
-                        currentRichParagraph.type = currentRichParagraphType.nextParagraphType
+                        currentRichParagraph.type = currentRichParagraphType.getNextParagraphType()
                     }
 
                     val newRichSpan = RichSpan(paragraph = currentRichParagraph)
@@ -140,7 +144,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     node.type == MarkdownElementTypes.ORDERED_LIST ||
                     node.type == MarkdownElementTypes.UNORDERED_LIST
                 ) {
-                    currentRichParagraphType = RichParagraph.Type.Default
+                    currentRichParagraphType = DefaultParagraph()
                 }
 
                 currentRichSpan = currentRichSpan?.parent
@@ -250,15 +254,15 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     }
 
     /**
-     * Encode [RichParagraph.Type] from Markdown [ASTNode].
+     * Encode [ParagraphType] from Markdown [ASTNode].
      */
     private fun encodeRichParagraphTypeFromMarkdownElement(
         node: ASTNode,
-    ): RichParagraph.Type {
+    ): ParagraphType {
         return when (node.type) {
-            MarkdownElementTypes.UNORDERED_LIST -> RichParagraph.Type.UnorderedList()
-            MarkdownElementTypes.ORDERED_LIST -> RichParagraph.Type.OrderedList(0)
-            else -> RichParagraph.Type.Default
+            MarkdownElementTypes.UNORDERED_LIST -> UnorderedList()
+            MarkdownElementTypes.ORDERED_LIST -> OrderedList(0)
+            else -> DefaultParagraph()
         }
     }
 

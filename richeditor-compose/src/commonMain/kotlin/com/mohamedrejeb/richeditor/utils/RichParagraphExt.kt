@@ -4,7 +4,8 @@ import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.PlatformParagraphStyle
 import androidx.compose.ui.text.style.*
 import androidx.compose.ui.unit.TextUnit
-import com.mohamedrejeb.richeditor.model.RichParagraph
+import com.mohamedrejeb.richeditor.paragraph.RichParagraph
+import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
 
 internal fun List<RichParagraph>.getCommonStyle(): ParagraphStyle? {
     if (this.isEmpty()) return null
@@ -45,8 +46,8 @@ internal fun List<RichParagraph>.getCommonStyle(): ParagraphStyle? {
     )
 }
 
-internal fun List<RichParagraph>.getCommonType(): RichParagraph.Type? {
-    var type: RichParagraph.Type? = null
+internal fun List<RichParagraph>.getCommonType(): ParagraphType? {
+    var type: ParagraphType? = null
 
     for (paragraph in this) {
         if (type == null) type = paragraph.type

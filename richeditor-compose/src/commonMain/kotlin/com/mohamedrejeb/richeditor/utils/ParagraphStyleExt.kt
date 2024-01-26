@@ -1,10 +1,9 @@
 package com.mohamedrejeb.richeditor.utils
 
 import androidx.compose.ui.text.ParagraphStyle
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.isUnspecified
-import com.mohamedrejeb.richeditor.model.RichParagraph
+import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 
 internal fun ParagraphStyle.unmerge(
     other: ParagraphStyle?,

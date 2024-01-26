@@ -2,6 +2,7 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.text.TextRange
+import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

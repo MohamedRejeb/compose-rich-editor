@@ -19,18 +19,13 @@ import com.mohamedrejeb.richeditor.utils.getBoundingBoxes
 internal interface RichSpanStyle {
     val spanStyle: (RichTextConfig) -> SpanStyle
 
-    val data: MutableMap<String, String>
-
     /**
      * If true, the user can add new text in the edges of the span,
      * For example, if the span is "Hello" and the user adds "World" in the end, the span will be "Hello World"
      * If false, the user can't add new text in the edges of the span,
      * For example, if the span is a "Hello" link and the user adds "World" in the end, the "World" will be added in a separate a span,
-     *
-     * Default value is true
      */
     val acceptNewTextInTheEdges: Boolean
-        get() = true
 
     fun DrawScope.drawCustomStyle(
         layoutResult: TextLayoutResult,
@@ -38,7 +33,7 @@ internal interface RichSpanStyle {
         richTextConfig: RichTextConfig,
         topPadding: Float = 0f,
         startPadding: Float = 0f,
-    ) {}
+    )
 
     class Link(
         val url: String,
@@ -50,10 +45,16 @@ internal interface RichSpanStyle {
             )
         }
 
-        override val data: MutableMap<String, String> = mutableMapOf(
-            "url" to url,
-        )
-        override val acceptNewTextInTheEdges: Boolean = false
+        override fun DrawScope.drawCustomStyle(
+            layoutResult: TextLayoutResult,
+            textRange: TextRange,
+            richTextConfig: RichTextConfig,
+            topPadding: Float,
+            startPadding: Float
+        ) = Unit
+
+        override val acceptNewTextInTheEdges: Boolean =
+            false
     }
 
     class Code(
@@ -66,7 +67,6 @@ internal interface RichSpanStyle {
                 color = it.codeColor,
             )
         }
-        override val data: MutableMap<String, String> = mutableMapOf()
 
         override fun DrawScope.drawCustomStyle(
             layoutResult: TextLayoutResult,
@@ -114,11 +114,25 @@ internal interface RichSpanStyle {
                 )
             }
         }
+
+        override val acceptNewTextInTheEdges: Boolean =
+            true
     }
 
     object Default : RichSpanStyle {
-        override val spanStyle: (RichTextConfig) -> SpanStyle = { SpanStyle() }
-        override val data: MutableMap<String, String> = mutableMapOf()
+        override val spanStyle: (RichTextConfig) -> SpanStyle =
+            { SpanStyle() }
+
+        override fun DrawScope.drawCustomStyle(
+            layoutResult: TextLayoutResult,
+            textRange: TextRange,
+            richTextConfig: RichTextConfig,
+            topPadding: Float,
+            startPadding: Float
+        ) = Unit
+
+        override val acceptNewTextInTheEdges: Boolean =
+            true
     }
 
     companion object {

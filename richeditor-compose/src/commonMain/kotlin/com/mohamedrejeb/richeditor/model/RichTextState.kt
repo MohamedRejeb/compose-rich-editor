@@ -13,11 +13,17 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
-import com.mohamedrejeb.richeditor.model.RichParagraph.Type.Companion.startText
+import com.mohamedrejeb.richeditor.paragraph.RichParagraph
+import com.mohamedrejeb.richeditor.paragraph.type.*
+import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
+import com.mohamedrejeb.richeditor.paragraph.type.OneSpaceParagraph
+import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
+import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
+import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startText
+import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import com.mohamedrejeb.richeditor.parser.html.RichTextStateHtmlParser
 import com.mohamedrejeb.richeditor.parser.markdown.RichTextStateMarkdownParser
 import com.mohamedrejeb.richeditor.platform.currentPlatform
@@ -26,11 +32,8 @@ import com.mohamedrejeb.richeditor.utils.append
 import com.mohamedrejeb.richeditor.utils.customMerge
 import com.mohamedrejeb.richeditor.utils.isSpecifiedFieldsEquals
 import com.mohamedrejeb.richeditor.utils.unmerge
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import kotlin.math.max
 
 @Composable
@@ -135,13 +138,13 @@ class RichTextState internal constructor(
     val currentParagraphStyle: ParagraphStyle
         get() = currentAppliedParagraphStyle.merge(toAddParagraphStyle).unmerge(toRemoveParagraphStyle)
 
-    private var currentRichParagraphType: RichParagraph.Type by mutableStateOf(
+    private var currentRichParagraphType: ParagraphType by mutableStateOf(
         getRichParagraphByTextIndex(textIndex = selection.min - 1)?.type
-            ?: RichParagraph.Type.Default
+            ?: DefaultParagraph()
     )
 
-    val isUnorderedList get() = currentRichParagraphType is RichParagraph.Type.UnorderedList
-    val isOrderedList get() = currentRichParagraphType is RichParagraph.Type.OrderedList
+    val isUnorderedList get() = currentRichParagraphType is UnorderedList
+    val isOrderedList get() = currentRichParagraphType is OrderedList
 
     internal var richTextConfig by mutableStateOf(RichTextConfig())
 
@@ -410,16 +413,16 @@ class RichTextState internal constructor(
 
     fun toggleUnorderedList() {
         val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
-        if (paragraph.type is RichParagraph.Type.UnorderedList) removeUnorderedList()
+        if (paragraph.type is UnorderedList) removeUnorderedList()
         else addUnorderedList()
     }
 
     fun addUnorderedList() {
         val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
 
-        if (paragraph.type is RichParagraph.Type.UnorderedList) return
+        if (paragraph.type is UnorderedList) return
 
-        val newType = RichParagraph.Type.UnorderedList()
+        val newType = UnorderedList()
 
         updateParagraphType(
             paragraph = paragraph,
@@ -429,25 +432,25 @@ class RichTextState internal constructor(
 
     fun removeUnorderedList() {
         val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
-        if (paragraph.type !is RichParagraph.Type.UnorderedList) return
+        if (paragraph.type !is UnorderedList) return
 
         resetParagraphType(paragraph = paragraph)
     }
 
     fun toggleOrderedList() {
         val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
-        if (paragraph.type is RichParagraph.Type.OrderedList) removeOrderedList()
+        if (paragraph.type is OrderedList) removeOrderedList()
         else addOrderedList()
     }
 
     fun addOrderedList() {
         val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
-        if (paragraph.type is RichParagraph.Type.OrderedList) return
+        if (paragraph.type is OrderedList) return
         val index = richParagraphList.indexOf(paragraph)
         if (index == -1) return
         val previousParagraphType = richParagraphList.getOrNull(index - 1)?.type
         val orderedListNumber =
-            if (previousParagraphType is RichParagraph.Type.OrderedList)
+            if (previousParagraphType is OrderedList)
                 previousParagraphType.number + 1
             else 1
 
@@ -457,7 +460,13 @@ class RichTextState internal constructor(
             textFieldValue = textFieldValue,
         )
 
-        val newType = RichParagraph.Type.OrderedList(number = orderedListNumber)
+        val firstRichSpan = paragraph.getFirstNonEmptyChild()
+
+        val newType = OrderedList(
+            number = orderedListNumber,
+            startTextSpanStyle = firstRichSpan?.spanStyle ?: SpanStyle(),
+            startTextWidth = 0.sp
+        )
         updateTextFieldValue(
             newTextFieldValue = updateParagraphType(
                 paragraph = paragraph,
@@ -469,14 +478,14 @@ class RichTextState internal constructor(
 
     fun removeOrderedList() {
         val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
-        if (paragraph.type !is RichParagraph.Type.OrderedList) return
+        if (paragraph.type !is OrderedList) return
         val index = richParagraphList.indexOf(paragraph)
         if (index == -1) return
 
         for (i in (index + 1) .. richParagraphList.lastIndex) {
             val currentParagraphType = richParagraphList[i].type
-            if (currentParagraphType !is RichParagraph.Type.OrderedList) break
-            richParagraphList[i].type = RichParagraph.Type.OrderedList(number = i - index)
+            if (currentParagraphType !is OrderedList) break
+            currentParagraphType.number = i - index
         }
 
         resetParagraphType(paragraph = paragraph)
@@ -484,7 +493,7 @@ class RichTextState internal constructor(
 
     private fun updateParagraphType(
         paragraph: RichParagraph,
-        newType: RichParagraph.Type,
+        newType: ParagraphType,
     ) {
         updateTextFieldValue(
             newTextFieldValue = updateParagraphType(
@@ -497,7 +506,7 @@ class RichTextState internal constructor(
 
     private fun updateParagraphType(
         paragraph: RichParagraph,
-        newType: RichParagraph.Type,
+        newType: ParagraphType,
         textFieldValue: TextFieldValue,
     ): TextFieldValue {
         val selection = textFieldValue.selection
@@ -536,22 +545,7 @@ class RichTextState internal constructor(
     }
 
     private fun resetParagraphType(paragraph: RichParagraph) {
-        updateParagraphType(paragraph, RichParagraph.Type.Default)
-    }
-
-    private val textFieldValueSharedFlow = MutableSharedFlow<TextFieldValue>()
-
-    internal suspend fun emitTextFieldValue(textFieldValue: TextFieldValue) {
-        textFieldValueSharedFlow.emit(textFieldValue)
-    }
-
-    internal var collectTextFieldValueSharedFlowJob: Job? = null
-    internal suspend fun collectTextFieldValueSharedFlow() = coroutineScope {
-        collectTextFieldValueSharedFlowJob = launch {
-            textFieldValueSharedFlow.collect { newTextFieldValue ->
-                onTextFieldValueChange(newTextFieldValue)
-            }
-        }
+        updateParagraphType(paragraph, DefaultParagraph())
     }
 
     /**
@@ -650,6 +644,31 @@ class RichTextState internal constructor(
                 }
 
                 withStyle(richParagraph.paragraphStyle.merge(richParagraph.type.style)) {
+                    // Add empty space to the last paragraph if it's empty.
+                    // Workaround to fix an issue with Compose TextField that causes a crash on long click
+                    if (
+                        !singleParagraphMode &&
+                        (currentPlatform.isAndroid ||
+                        currentPlatform.isIOS) &&
+                        i > 0 && i == richParagraphList.lastIndex &&
+                        richParagraph.isEmpty(ignoreStartRichSpan = false)
+                    ) {
+                        richParagraph.type = OneSpaceParagraph()
+                        newText += ' '
+                    } else if (
+                        !singleParagraphMode &&
+                        i != richParagraphList.lastIndex &&
+                        richParagraph.type is OneSpaceParagraph
+                    ) {
+                        // If the paragraph no longer the last return its type to default
+                        newText =
+                            updateParagraphType(
+                                paragraph = richParagraph,
+                                newType = DefaultParagraph(),
+                                textFieldValue = newTextFieldValue,
+                            ).text
+                    }
+
                     append(richParagraph.type.startText)
                     val richParagraphStartTextLength = richParagraph.type.startText.length
                     richParagraph.type.startRichSpan.textRange = TextRange(index, index + richParagraphStartTextLength)
@@ -676,17 +695,17 @@ class RichTextState internal constructor(
 
                             // Add empty space to the last paragraph if it's empty.
                             // Workaround to fix an issue with Compose TextField that causes a crash on long click
-                            if (
-                                (currentPlatform.isAndroid ||
-                                currentPlatform.isIOS) &&
-                                i > 0 && i == richParagraphList.lastIndex &&
-                                richParagraph.isEmpty()
-                            ) {
-                                richParagraph.getFirstNonEmptyChild()?.text = " "
-                                append(" ")
-                                index++
-                                newText += ' '
-                            }
+//                            if (
+//                                (currentPlatform.isAndroid ||
+//                                currentPlatform.isIOS) &&
+//                                i > 0 && i == richParagraphList.lastIndex &&
+//                                richParagraph.isEmpty()
+//                            ) {
+//                                richParagraph.getFirstNonEmptyChild()?.text = " "
+//                                append(" ")
+//                                index++
+//                                newText += ' '
+//                            }
                         }
                     }
                 }
@@ -836,7 +855,7 @@ class RichTextState internal constructor(
                 paragraphFirstChildMinIndex = minParagraphFirstChildMinIndex,
             )
 
-            minRichSpan.paragraph.type = RichParagraph.Type.Default
+            minRichSpan.paragraph.type = DefaultParagraph()
 
             tempTextFieldValue = adjustOrderedListsNumbers(
                 startParagraphIndex = minParagraphIndex + 1,
@@ -854,7 +873,7 @@ class RichTextState internal constructor(
                 paragraphFirstChildMinIndex = maxParagraphFirstChildMinIndex,
             )
 
-            maxRichSpan.paragraph.type = RichParagraph.Type.Default
+            maxRichSpan.paragraph.type = DefaultParagraph()
 
             tempTextFieldValue = adjustOrderedListsNumbers(
                 startParagraphIndex = maxParagraphIndex + 1,
@@ -1009,10 +1028,14 @@ class RichTextState internal constructor(
         for (i in (startParagraphIndex)..(richParagraphList.lastIndex)) {
             val currentParagraph = richParagraphList[i]
             val currentParagraphType = currentParagraph.type
-            if (currentParagraphType is RichParagraph.Type.OrderedList) {
+            if (currentParagraphType is OrderedList) {
                 newTextFieldValue = updateParagraphType(
                     paragraph = currentParagraph,
-                    newType = RichParagraph.Type.OrderedList(number = number),
+                    newType = OrderedList(
+                        number = number,
+                        startTextSpanStyle = currentParagraphType.startTextSpanStyle,
+                        startTextWidth = currentParagraphType.startTextWidth
+                    ),
                     textFieldValue = newTextFieldValue,
                 )
             } else break
@@ -1028,17 +1051,21 @@ class RichTextState internal constructor(
         var number = 1
         val startParagraph = richParagraphList.getOrNull(startParagraphIndex)
         val startParagraphType = startParagraph?.type
-        if (startParagraphType is RichParagraph.Type.OrderedList) {
+        if (startParagraphType is OrderedList) {
             number = startParagraphType.number + 1
         }
         // Update the paragraph type of the paragraphs after the new paragraph
         for (i in (startParagraphIndex + 1)..richParagraphList.lastIndex) {
             val currentParagraph = richParagraphList[i]
             val currentParagraphType = currentParagraph.type
-            if (currentParagraphType is RichParagraph.Type.OrderedList) {
+            if (currentParagraphType is OrderedList) {
                 tempTextFieldValue = updateParagraphType(
                     paragraph = currentParagraph,
-                    newType = RichParagraph.Type.OrderedList(number = number),
+                    newType = OrderedList(
+                        number = number,
+                        startTextSpanStyle = currentParagraphType.startTextSpanStyle,
+                        startTextWidth = currentParagraphType.startTextWidth
+                    ),
                     textFieldValue = tempTextFieldValue,
                 )
                 number++
@@ -1104,7 +1131,7 @@ class RichTextState internal constructor(
             // Update the paragraph type of the paragraphs after the new paragraph
             val newParagraphType = newParagraph.type
 
-            if (newParagraphType is RichParagraph.Type.OrderedList) {
+            if (newParagraphType is OrderedList) {
                 tempTextFieldValue = adjustOrderedListsNumbers(
                     startParagraphIndex = paragraphIndex + 2,
                     startNumber = newParagraphType.number + 1,
@@ -1622,7 +1649,7 @@ class RichTextState internal constructor(
     ): RichParagraph {
         val newRichParagraph = RichParagraph(
             paragraphStyle = paragraphStyle,
-            type = type.nextParagraphType,
+            type = type.getNextParagraphType(),
         )
 
         var previousRichSpan: RichSpan
@@ -1840,7 +1867,7 @@ class RichTextState internal constructor(
 
             currentRichParagraphType = richParagraph?.type
                 ?: richParagraphList.firstOrNull()?.type
-                ?: RichParagraph.Type.Default
+                ?: DefaultParagraph()
             currentAppliedParagraphStyle = richParagraph?.paragraphStyle
                 ?: richParagraphList.firstOrNull()?.paragraphStyle
                 ?: RichParagraph.DefaultParagraphStyle
@@ -1850,7 +1877,7 @@ class RichTextState internal constructor(
 
             currentRichParagraphType = richParagraphList
                 .getCommonType()
-                ?: RichParagraph.Type.Default
+                ?: DefaultParagraph()
             currentAppliedParagraphStyle = richParagraphList
                 .getCommonStyle()
                 ?: ParagraphStyle()
@@ -1875,20 +1902,29 @@ class RichTextState internal constructor(
     ) {
         var isParagraphUpdated = false
 
-        richParagraphList.toList().forEachIndexed { index, richParagraph ->
-            if (index + 1 > maxLines) return@forEachIndexed
+        richParagraphList.forEachIndexed { index, richParagraph ->
+            val paragraphType = richParagraph.type
+            if (index + 1 > maxLines || paragraphType !is OrderedList) return@forEachIndexed
 
-            val type = richParagraph.type
-            if (!type.startRichSpan.textRange.collapsed) {
+            if (!paragraphType.startRichSpan.textRange.collapsed) {
                 textLayoutResult?.let { textLayoutResult ->
-                    val start = textLayoutResult.getHorizontalPosition(type.startRichSpan.textRange.min, true)
-                    val end = textLayoutResult.getHorizontalPosition(type.startRichSpan.textRange.max, true)
-                    val distanceSp = with(density) {
-                        (end - start).toSp()
-                    }
+                    val start =
+                        textLayoutResult.getHorizontalPosition(
+                            offset = paragraphType.startRichSpan.textRange.min,
+                            usePrimaryDirection = true
+                        )
+                    val end =
+                        textLayoutResult.getHorizontalPosition(
+                            offset = paragraphType.startRichSpan.textRange.max,
+                            usePrimaryDirection = true
+                        )
+                    val distanceSp =
+                        with(density) {
+                            (end - start).toSp()
+                        }
 
-                    if (type.startTextWidth != distanceSp) {
-                        type.startTextWidth = distanceSp
+                    if (paragraphType.startTextWidth != distanceSp) {
+                        paragraphType.startTextWidth = distanceSp
                         isParagraphUpdated = true
                     }
                 }
@@ -2236,12 +2272,22 @@ class RichTextState internal constructor(
 
     private fun checkParagraphsType() {
         var orderedListNumber = 0
+        var orderedListStartTextSpanStyle = SpanStyle()
         richParagraphList.fastForEachIndexed { _, richParagraph ->
-            if (richParagraph.type is RichParagraph.Type.OrderedList) {
+            val type = richParagraph.type
+            if (type is OrderedList) {
                 orderedListNumber++
-                richParagraph.type = RichParagraph.Type.OrderedList(orderedListNumber)
+
+                if (orderedListNumber == 1)
+                    orderedListStartTextSpanStyle = richParagraph.getFirstNonEmptyChild()?.spanStyle ?: SpanStyle()
+
+                if (orderedListNumber == type.number)
+
+                type.number = orderedListNumber
+                type.startTextSpanStyle = orderedListStartTextSpanStyle
             } else {
                 orderedListNumber = 0
+                orderedListStartTextSpanStyle = SpanStyle()
             }
         }
     }

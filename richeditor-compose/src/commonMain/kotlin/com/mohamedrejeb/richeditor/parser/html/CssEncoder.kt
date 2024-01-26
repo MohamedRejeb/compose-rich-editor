@@ -12,7 +12,6 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.sp
-import com.mohamedrejeb.richeditor.model.RichParagraph
 
 internal object CssEncoder {
 

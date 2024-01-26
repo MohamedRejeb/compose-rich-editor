@@ -22,14 +22,10 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.sp
-import com.mohamedrejeb.richeditor.model.RichParagraph
 import com.mohamedrejeb.richeditor.model.RichTextState
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 
 /**
@@ -232,16 +228,6 @@ internal fun BasicRichTextEditor(
                     )
                 }
             }
-        }
-    }
-
-    DisposableEffect(state) {
-        scope.launch {
-            state.collectTextFieldValueSharedFlow()
-        }
-
-        onDispose {
-            state.collectTextFieldValueSharedFlowJob?.cancel()
         }
     }
 

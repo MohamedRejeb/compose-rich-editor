@@ -2,7 +2,6 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.RoundRect
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Fill
@@ -10,13 +9,12 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
 import com.mohamedrejeb.richeditor.utils.getBoundingBoxes
 
-internal interface RichSpanStyle {
+interface RichSpanStyle {
     val spanStyle: (RichTextConfig) -> SpanStyle
 
     /**

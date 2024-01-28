@@ -211,6 +211,19 @@ public fun BasicRichTextEditor(
         state.singleParagraphMode = singleParagraph
     }
 
+    LaunchedEffect(interactionSource) {
+        scope.launch {
+            interactionSource.interactions.collect { interaction ->
+                if (interaction is PressInteraction.Press) {
+                    val clickedLink = state.getLinkByOffset(interaction.pressPosition)
+                    if (clickedLink != null) {
+                        uriHandler.openUri(clickedLink)
+                    }
+                }
+            }
+        }
+    }
+
     if (!singleParagraph) {
         // Workaround for Android to fix a bug in BasicTextField where it doesn't select the correct text
         // when the text contains multiple paragraphs.

@@ -1,11 +1,11 @@
-package com.mohamedrejeb.richeditor.model
+package com.mohamedrejeb.richeditor.paragraph
 
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.style.*
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.sp
-import com.mohamedrejeb.richeditor.model.RichParagraph.Type.Companion.startText
+import com.mohamedrejeb.richeditor.model.RichSpan
+import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
+import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
+import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startText
 import com.mohamedrejeb.richeditor.ui.test.getRichTextStyleTreeRepresentation
 import com.mohamedrejeb.richeditor.utils.fastForEach
 import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
@@ -14,76 +14,8 @@ internal class RichParagraph(
     val key: Int = 0,
     val children: MutableList<RichSpan> = mutableListOf(),
     var paragraphStyle: ParagraphStyle = DefaultParagraphStyle,
-    var type: Type = Type.Default,
+    var type: ParagraphType = DefaultParagraph(),
 ) {
-    interface Type {
-        var startTextWidth: TextUnit
-            get() = 0.sp
-            set(_) {}
-        val style: ParagraphStyle get() = ParagraphStyle()
-        val startRichSpan: RichSpan get() = RichSpan(paragraph = RichParagraph(type = this))
-
-        val nextParagraphType: Type get() = Default
-
-        fun copy(): Type = this
-
-        object Default : Type
-
-        class UnorderedList : Type {
-
-            override var startTextWidth: TextUnit = 0.sp
-                set(value) {
-                    field = value
-                    style = getParagraphStyle()
-                }
-
-            override var style: ParagraphStyle = getParagraphStyle()
-
-            private fun getParagraphStyle() = ParagraphStyle(
-                textIndent = TextIndent(firstLine = (38 - startTextWidth.value).sp, restLine = 38.sp),
-                lineHeight = 20.sp,
-            )
-
-            override var startRichSpan: RichSpan = RichSpan(
-                paragraph = RichParagraph(type = this),
-                text = "• ",
-            )
-            override val nextParagraphType: Type get() = UnorderedList()
-
-            override fun copy(): Type = UnorderedList()
-
-
-        }
-
-        class OrderedList(
-            val number: Int,
-        ) : Type {
-            override var startTextWidth: TextUnit = 0.sp
-                set(value) {
-                    field = value
-                    style = getParagraphStyle()
-                }
-
-            override var style: ParagraphStyle = getParagraphStyle()
-
-            private fun getParagraphStyle() = ParagraphStyle(
-                textIndent = TextIndent(firstLine = (38 - startTextWidth.value).sp, restLine = 38.sp),
-                lineHeight = 20.sp,
-            )
-
-            override val startRichSpan: RichSpan = RichSpan(
-                paragraph = RichParagraph(type = this),
-                text = "$number. ",
-            )
-            override val nextParagraphType: Type get() = OrderedList(number + 1)
-
-            override fun copy(): Type = OrderedList(number)
-        }
-
-        companion object {
-            val Type.startText : String get() = startRichSpan.text
-        }
-    }
 
     fun getRichSpanByTextIndex(
         paragraphIndex: Int,
@@ -190,7 +122,9 @@ internal class RichParagraph(
         return this
     }
 
-    fun isEmpty(): Boolean {
+    fun isEmpty(ignoreStartRichSpan: Boolean = true): Boolean {
+        if (!ignoreStartRichSpan && !type.startRichSpan.isEmpty()) return false
+
         if (children.isEmpty()) return true
         children.fastForEach { richSpan ->
             if (!richSpan.isEmpty()) return false
@@ -257,9 +191,6 @@ internal class RichParagraph(
     }
 
     companion object {
-        val DefaultParagraphStyle = ParagraphStyle(
-            textAlign = TextAlign.Left,
-            lineBreak = LineBreak.Paragraph,
-        )
+        val DefaultParagraphStyle = ParagraphStyle()
     }
 }

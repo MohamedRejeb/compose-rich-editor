@@ -5,7 +5,11 @@ import com.mohamedrejeb.ksoup.entities.KsoupEntities
 import com.mohamedrejeb.ksoup.html.parser.KsoupHtmlHandler
 import com.mohamedrejeb.ksoup.html.parser.KsoupHtmlParser
 import com.mohamedrejeb.richeditor.model.*
-import com.mohamedrejeb.richeditor.model.RichParagraph
+import com.mohamedrejeb.richeditor.paragraph.RichParagraph
+import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
+import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
+import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
+import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import com.mohamedrejeb.richeditor.parser.RichTextStateParser
 import com.mohamedrejeb.richeditor.parser.utils.*
 import com.mohamedrejeb.richeditor.utils.customMerge
@@ -83,7 +87,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     stringBuilder.append(' ')
 
                     val newRichParagraph = RichParagraph()
-                    var paragraphType: RichParagraph.Type = RichParagraph.Type.Default
+                    var paragraphType: ParagraphType = DefaultParagraph()
                     if (name == "li") {
                         skipText = false
                         openedTags.getOrNull(openedTags.lastIndex - 1)?.first?.let { lastOpenedTag ->
@@ -357,27 +361,27 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         }
 
     /**
-     * Encodes HTML elements to [RichParagraph.Type].
+     * Encodes HTML elements to [ParagraphType].
      */
     private fun encodeHtmlElementToRichParagraphType(
         tagName: String,
-    ): RichParagraph.Type {
+    ): ParagraphType {
         return when (tagName) {
-            "ul" -> RichParagraph.Type.UnorderedList()
-            "ol" -> RichParagraph.Type.OrderedList(1)
-            else -> RichParagraph.Type.Default
+            "ul" -> UnorderedList()
+            "ol" -> OrderedList(1)
+            else -> DefaultParagraph()
         }
     }
 
     /**
-     * Decodes HTML elements from [RichParagraph.Type].
+     * Decodes HTML elements from [ParagraphType].
      */
     private fun decodeHtmlElementFromRichParagraphType(
-        richParagraphType: RichParagraph.Type,
+        richParagraphType: ParagraphType,
     ): String {
         return when (richParagraphType) {
-            is RichParagraph.Type.UnorderedList -> "ul"
-            is RichParagraph.Type.OrderedList -> "ol"
+            is UnorderedList -> "ul"
+            is OrderedList -> "ol"
             else -> "p"
         }
     }

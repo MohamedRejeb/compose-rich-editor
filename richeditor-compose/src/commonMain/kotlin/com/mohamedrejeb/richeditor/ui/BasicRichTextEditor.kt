@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import com.mohamedrejeb.richeditor.model.RichTextState
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 
 /**
@@ -229,16 +228,6 @@ internal fun BasicRichTextEditor(
                     )
                 }
             }
-        }
-    }
-
-    DisposableEffect(state) {
-        scope.launch {
-            state.collectTextFieldValueSharedFlow()
-        }
-
-        onDispose {
-            state.collectTextFieldValueSharedFlowJob?.cancel()
         }
     }
 

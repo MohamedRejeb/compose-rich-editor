@@ -16,17 +16,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.*
+import androidx.compose.ui.platform.*
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.sp
-import com.mohamedrejeb.richeditor.model.RichParagraph
 import com.mohamedrejeb.richeditor.model.RichTextState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -193,6 +189,7 @@ internal fun BasicRichTextEditor(
     maxLength: Int = Int.MAX_VALUE,
     onTextLayout: (TextLayoutResult) -> Unit = {},
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    uriHandler: UriHandler = LocalUriHandler.current,
     cursorBrush: Brush = SolidColor(Color.Black),
     decorationBox: @Composable (innerTextField: @Composable () -> Unit) -> Unit =
         @Composable { innerTextField -> innerTextField() },

@@ -34,14 +34,14 @@ internal fun List<RichParagraph>.getCommonStyle(): ParagraphStyle? {
     }
 
     return ParagraphStyle(
-        textAlign = textAlign,
-        textDirection = textDirection,
+        textAlign = textAlign ?: TextAlign.Unspecified,
+        textDirection = textDirection ?: TextDirection.Unspecified,
         lineHeight = lineHeight,
         textIndent = textIndent,
         platformStyle = platformStyle,
         lineHeightStyle = lineHeightStyle,
-        lineBreak = lineBreak,
-        hyphens = hyphens
+        lineBreak = lineBreak ?: LineBreak.Unspecified,
+        hyphens = hyphens ?: Hyphens.Unspecified,
     )
 }
 

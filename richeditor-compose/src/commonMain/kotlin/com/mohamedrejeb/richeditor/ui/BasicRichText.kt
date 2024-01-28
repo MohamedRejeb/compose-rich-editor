@@ -12,6 +12,7 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
@@ -28,10 +29,10 @@ fun BasicRichText(
     softWrap: Boolean = true,
     maxLines: Int = Int.MAX_VALUE,
     minLines: Int = 1,
+    uriHandler: UriHandler = LocalUriHandler.current,
     inlineContent: Map<String, InlineTextContent> = mapOf()
 ) {
     val density = LocalDensity.current
-    val uriHandler = LocalUriHandler.current
     val pointerIcon = remember {
         mutableStateOf(PointerIcon.Default)
     }

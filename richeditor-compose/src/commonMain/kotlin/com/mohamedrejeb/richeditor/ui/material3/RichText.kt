@@ -5,13 +5,11 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.takeOrElse
-import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.text.Paragraph
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
@@ -79,7 +77,8 @@ fun RichText(
     maxLines: Int = Int.MAX_VALUE,
     inlineContent: Map<String, InlineTextContent> = mapOf(),
     onTextLayout: (TextLayoutResult) -> Unit = {},
-    style: TextStyle = LocalTextStyle.current
+    style: TextStyle = LocalTextStyle.current,
+    uriHandler: UriHandler = LocalUriHandler.current,
 ) {
     val textColor = color.takeOrElse {
         style.color.takeOrElse {
@@ -109,6 +108,7 @@ fun RichText(
         overflow = overflow,
         softWrap = softWrap,
         maxLines = maxLines,
-        inlineContent = inlineContent
+        inlineContent = inlineContent,
+        uriHandler = uriHandler,
     )
 }

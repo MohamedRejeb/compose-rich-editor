@@ -6,14 +6,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -24,7 +21,6 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.layout.*
-import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextLayoutResult

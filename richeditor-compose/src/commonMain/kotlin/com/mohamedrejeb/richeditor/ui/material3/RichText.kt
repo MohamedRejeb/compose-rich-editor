@@ -5,13 +5,9 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.takeOrElse
-import androidx.compose.ui.input.pointer.PointerIcon
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.Paragraph
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
@@ -72,7 +68,7 @@ fun RichText(
     fontFamily: FontFamily? = null,
     letterSpacing: TextUnit = TextUnit.Unspecified,
     textDecoration: TextDecoration? = null,
-    textAlign: TextAlign? = null,
+    textAlign: TextAlign = TextAlign.Unspecified,
     lineHeight: TextUnit = TextUnit.Unspecified,
     overflow: TextOverflow = TextOverflow.Clip,
     softWrap: Boolean = true,

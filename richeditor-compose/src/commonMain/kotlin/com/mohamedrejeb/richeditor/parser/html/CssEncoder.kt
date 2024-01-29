@@ -142,8 +142,8 @@ internal object CssEncoder {
      */
     internal fun parseCssStyleMapToParagraphStyle(cssStyleMap: Map<String, String>): ParagraphStyle {
         return ParagraphStyle(
-            textAlign = cssStyleMap["text-align"]?.let { parseCssTextAlign(it) },
-            textDirection = cssStyleMap["direction"]?.let { parseCssTextDirection(it) },
+            textAlign = cssStyleMap["text-align"]?.let { parseCssTextAlign(it) } ?: TextAlign.Unspecified,
+            textDirection = cssStyleMap["direction"]?.let { parseCssTextDirection(it) } ?: TextDirection.Unspecified,
             lineHeight = cssStyleMap["line-height"]?.let { parseCssLineHeight(it) } ?: TextUnit.Unspecified,
             textIndent = cssStyleMap["text-indent"]?.let { parseCssTextIndent(it) },
         )

@@ -16,7 +16,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.platform.*
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
@@ -193,6 +196,8 @@ public fun BasicRichTextEditor(
         @Composable { innerTextField -> innerTextField() },
     contentPadding: PaddingValues
 ) {
+    val scope = rememberCoroutineScope()
+    val uriHandler = LocalUriHandler.current
     val density = LocalDensity.current
     val localTextStyle = LocalTextStyle.current
     val layoutDirection = LocalLayoutDirection.current

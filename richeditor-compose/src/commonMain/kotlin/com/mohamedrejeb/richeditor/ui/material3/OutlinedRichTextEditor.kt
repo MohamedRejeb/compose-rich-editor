@@ -30,6 +30,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.*
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
+import com.mohamedrejeb.richeditor.ui.RichSpanClickListener
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -77,6 +78,7 @@ import kotlin.math.roundToInt
  * @param maxLength the maximum length of the text field. If the text is longer than this value,
  * it will be ignored. The default value of this parameter is [Int.MAX_VALUE].
  * onTextLayout
+ * @param onRichSpanClick A callback to allow handling of click on RichSpans.
  * @param interactionSource the [MutableInteractionSource] representing the stream of [Interaction]s
  * for this text field. You can create and pass in your own `remember`ed instance to observe
  * [Interaction]s and customize the appearance / behavior of this text field in different states.
@@ -105,6 +107,7 @@ public fun OutlinedRichTextEditor(
     maxLines: Int = Int.MAX_VALUE,
     minLines: Int = 1,
     maxLength: Int = Int.MAX_VALUE,
+    onRichSpanClick: RichSpanClickListener? = null,
     onTextLayout: (TextLayoutResult) -> Unit = {},
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape = RichTextEditorDefaults.outlinedShape,
@@ -145,6 +148,7 @@ public fun OutlinedRichTextEditor(
             maxLines = maxLines,
             minLines = minLines,
             maxLength = maxLength,
+            onRichSpanClick = onRichSpanClick,
             onTextLayout = onTextLayout,
             decorationBox = { innerTextField ->
                 RichTextEditorDefaults.OutlinedRichTextEditorDecorationBox(

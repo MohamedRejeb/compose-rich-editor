@@ -9,7 +9,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.*
-import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
@@ -21,7 +20,6 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.layout.*
-import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
@@ -29,6 +27,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.*
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
+import com.mohamedrejeb.richeditor.ui.RichSpanClickListener
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -76,6 +75,7 @@ import kotlin.math.roundToInt
  * that 1 <= [minLines] <= [maxLines]. This parameter is ignored when [singleLine] is true.
  * @param maxLength the maximum length of the text field. If the text is longer than this value,
  * it will be ignored. The default value of this parameter is [Int.MAX_VALUE].
+ * @param onRichSpanClick A callback to allow handling of click on RichSpans.
  * @param interactionSource the [MutableInteractionSource] representing the stream of [Interaction]s
  * for this text field. You can create and pass in your own `remember`ed instance to observe
  * [Interaction]s and customize the appearance / behavior of this text field in different states.
@@ -104,6 +104,7 @@ public fun RichTextEditor(
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
     maxLength: Int = Int.MAX_VALUE,
+    onRichSpanClick: RichSpanClickListener? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape = RichTextEditorDefaults.filledShape,
     colors: RichTextEditorColors = RichTextEditorDefaults.richTextEditorColors(),
@@ -137,6 +138,7 @@ public fun RichTextEditor(
             maxLines = maxLines,
             minLines = minLines,
             maxLength = maxLength,
+            onRichSpanClick = onRichSpanClick,
             interactionSource = interactionSource,
             cursorBrush = SolidColor(colors.cursorColor(isError).value),
             decorationBox = @Composable { innerTextField ->

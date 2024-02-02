@@ -14,8 +14,7 @@ import kotlin.collections.indices
 /**
  * A rich span is a part of a rich paragraph.
  */
-@OptIn(ExperimentalRichTextApi::class)
-internal class RichSpan(
+class RichSpan(
     internal val key: Int? = null,
     val children: MutableList<RichSpan> = mutableListOf(),
     var paragraph: RichParagraph,

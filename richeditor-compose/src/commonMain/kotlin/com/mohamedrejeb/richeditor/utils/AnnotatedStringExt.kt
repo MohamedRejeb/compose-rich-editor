@@ -12,25 +12,21 @@ import kotlin.math.max
 import kotlin.math.min
 
 internal fun AnnotatedString.Builder.append(
-    richSpanList: List<RichSpan>,
+    richSpanList: MutableList<RichSpan>,
     startIndex: Int,
     text: String,
     selection: TextRange,
     onStyledRichSpan: (RichSpan) -> Unit,
     richTextConfig: RichTextConfig,
 ): Int {
-    var index = startIndex
-    richSpanList.fastForEach { richSpan ->
-        index = append(
-            richSpan = richSpan,
-            startIndex = index,
-            text = text,
-            selection = selection,
-            onStyledRichSpan = onStyledRichSpan,
-            richTextConfig = richTextConfig,
-        )
-    }
-    return index
+    return appendRichSpan(
+        richSpanList = richSpanList,
+        startIndex = startIndex,
+        text = text,
+        selection = selection,
+        onStyledRichSpan = onStyledRichSpan,
+        richTextConfig = richTextConfig,
+    )
 }
 
 internal fun AnnotatedString.Builder.append(
@@ -111,17 +107,76 @@ internal fun AnnotatedString.Builder.append(
         }
 
         index += richSpan.text.length
-        richSpan.children.fastForEach { richSpan ->
-            index = append(
-                richSpan = richSpan,
-                startIndex = index,
-                text = text,
-                selection = selection,
-                onStyledRichSpan = onStyledRichSpan,
-                richTextConfig = richTextConfig,
-            )
+
+        index = appendRichSpan(
+            parent = richSpan,
+            richSpanList = richSpan.children,
+            startIndex = index,
+            text = text,
+            selection = selection,
+            onStyledRichSpan = onStyledRichSpan,
+            richTextConfig = richTextConfig,
+        )
+    }
+    return index
+}
+
+internal fun AnnotatedString.Builder.appendRichSpan(
+    parent: RichSpan? = null,
+    richSpanList: MutableList<RichSpan>,
+    startIndex: Int,
+    text: String,
+    selection: TextRange,
+    onStyledRichSpan: (RichSpan) -> Unit,
+    richTextConfig: RichTextConfig,
+): Int {
+    var index = startIndex
+    var previousRichSpan = parent
+    val toRemoveRichSpanIndices = mutableListOf<Int>()
+
+    richSpanList.fastForEachIndexed { i, richSpan ->
+        index = append(
+            richSpan = richSpan,
+            startIndex = index,
+            text = text,
+            selection = selection,
+            onStyledRichSpan = onStyledRichSpan,
+            richTextConfig = richTextConfig,
+        )
+
+        if (
+            previousRichSpan != null &&
+            previousRichSpan!!.spanStyle == richSpan.spanStyle &&
+            previousRichSpan!!.style == richSpan.style &&
+            previousRichSpan!!.children.isEmpty() &&
+            richSpan.children.isEmpty()
+        ) {
+            previousRichSpan!!.text += richSpan.text
+            previousRichSpan!!.textRange = TextRange(previousRichSpan!!.textRange.min, richSpan.textRange.max)
+            toRemoveRichSpanIndices.add(i)
+        } else {
+            previousRichSpan = richSpan
         }
     }
+
+    toRemoveRichSpanIndices.reversed().forEach { i ->
+        richSpanList.removeAt(i)
+    }
+
+    if (
+        parent != null &&
+        parent.text.isEmpty() &&
+        richSpanList.size == 1
+    ) {
+        val firstChild = richSpanList.first()
+        parent.spanStyle = parent.spanStyle.merge(firstChild.spanStyle)
+        parent.style = firstChild.style
+        parent.text = firstChild.text
+        parent.textRange = firstChild.textRange
+        parent.children.clear()
+        parent.children.addAll(firstChild.children)
+    }
+
     return index
 }
 

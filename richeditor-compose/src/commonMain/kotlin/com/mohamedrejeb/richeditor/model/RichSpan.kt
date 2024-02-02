@@ -58,6 +58,60 @@ internal class RichSpan(
         return spanStyle
     }
 
+    val before: RichSpan? get() {
+        val parentChildren = parent?.children ?: paragraph.children
+        val index = parentChildren.indexOf(this)
+
+        return if (index > 0) {
+            val beforeChild = parentChildren[index - 1]
+            if (beforeChild.isEmpty())
+                beforeChild.before
+            else
+                beforeChild
+        }
+        else if (parent?.isEmpty() == true)
+            parent?.before
+        else
+            parent
+    }
+
+    /**
+     * Get the next rich span in the paragraph
+     *
+     * @return The next rich span or null if the rich span is the last in the paragraph
+     */
+    val after: RichSpan? get() {
+        if (children.isNotEmpty())
+            return children.first()
+
+        var child: RichSpan = this
+        var parent: RichSpan? = parent
+
+        while (parent != null) {
+            val index = parent.children.indexOf(child)
+            if (index < parent.children.lastIndex) {
+                val afterChild = parent.children[index + 1]
+                return if (afterChild.isEmpty())
+                    afterChild.after
+                else
+                    afterChild
+            }
+            child = parent
+            parent = parent.parent
+        }
+
+        val index = child.paragraph.children.indexOf(child)
+        return if (index < child.paragraph.children.lastIndex) {
+            val afterChild = child.paragraph.children[index + 1]
+            if (afterChild.isEmpty())
+                afterChild.after
+            else
+                afterChild
+        }
+        else
+            null
+    }
+
     /**
      * Check if the rich span is the first in the paragraph
      *
@@ -119,12 +173,14 @@ internal class RichSpan(
     /**
      * Get the first non-empty child
      *
+     * @param offset The offset of the text range, just used to correct the [RichSpan] text range
+     *
      * @return The first non-empty child or null if there is no non-empty child
      */
-    internal fun getFirstNonEmptyChild(offset: Int? = null): RichSpan? {
+    internal fun getFirstNonEmptyChild(offset: Int = -1): RichSpan? {
         children.fastForEach { richSpan ->
             if (richSpan.text.isNotEmpty()) {
-                if (offset != null)
+                if (offset != -1)
                     richSpan.textRange = TextRange(offset, offset + richSpan.text.length)
 
                 return richSpan
@@ -132,13 +188,32 @@ internal class RichSpan(
             else {
                 val result = richSpan.getFirstNonEmptyChild(offset)
                 if (result != null) {
-                    if (offset != null)
+                    if (offset != -1)
                         richSpan.textRange = TextRange(offset, offset + richSpan.text.length)
 
                     return result
                 }
             }
         }
+        return null
+    }
+
+    /**
+     * Get the last non-empty child
+     *
+     * @return The last non-empty child or null if there is no non-empty child
+     */
+    internal fun getLastNonEmptyChild(): RichSpan? {
+        for (i in children.lastIndex downTo 0) {
+            val richSpan = children[i]
+            if (richSpan.text.isNotEmpty())
+                return richSpan
+
+            val result = richSpan.getLastNonEmptyChild()
+            if (result != null)
+                return result
+        }
+
         return null
     }
 
@@ -229,6 +304,14 @@ internal class RichSpan(
         }
 
         return index to richSpanList
+    }
+
+    /**
+     * Removes the current rich span from its parent and clears its text.
+     */
+    fun remove() {
+        text = ""
+        parent?.children?.remove(this)
     }
 
     /**

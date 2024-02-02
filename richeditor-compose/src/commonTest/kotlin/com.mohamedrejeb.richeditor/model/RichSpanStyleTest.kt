@@ -1,33 +1,38 @@
 package com.mohamedrejeb.richeditor.model
 
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.text.TextRange
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class RichSpanTest {
+class RichSpanTest {
     private val paragraph = RichParagraph(key = 0)
     private val richSpan get() = RichSpan(
         key = 0,
         paragraph = paragraph,
         text = "012",
         textRange = TextRange(0, 3),
-        children = mutableStateListOf(
-            RichSpan(
-                key = 10,
-                paragraph = paragraph,
-                text = "34",
-                textRange = TextRange(3, 5),
-            ),
-            RichSpan(
-                key = 11,
-                paragraph = paragraph,
-                text = "567",
-                textRange = TextRange(5, 8),
-            ),
+        children = mutableListOf()
+    ).also {
+        it.children.addAll(
+            listOf(
+                RichSpan(
+                    key = 10,
+                    paragraph = paragraph,
+                    text = "34",
+                    textRange = TextRange(3, 5),
+                    parent = it,
+                ),
+                RichSpan(
+                    key = 11,
+                    paragraph = paragraph,
+                    text = "567",
+                    textRange = TextRange(5, 8),
+                    parent = it,
+                )
+            )
         )
-    )
+    }
 
     @Test
     fun testGetSpanStyleByTextIndex() {
@@ -156,6 +161,54 @@ internal class RichSpanTest {
         assertEquals(
             null,
             removeAllText.second
+        )
+    }
+
+    @Test
+    fun testBefore() {
+        val before1 = richSpan.children.first().before
+
+        assertEquals(
+            0,
+            before1?.key,
+        )
+
+        val before2 = richSpan.children.last().before
+
+        assertEquals(
+            10,
+            before2?.key,
+        )
+
+        val before3 = richSpan.before
+
+        assertEquals(
+            null,
+            before3,
+        )
+    }
+
+    @Test
+    fun testAfter() {
+        val after1 = richSpan.children.first().after
+
+        assertEquals(
+            11,
+            after1?.key,
+        )
+
+        val after2 = richSpan.children.last().after
+
+        assertEquals(
+            null,
+            after2,
+        )
+
+        val after3 = richSpan.after
+
+        assertEquals(
+            10,
+            after3?.key,
         )
     }
 

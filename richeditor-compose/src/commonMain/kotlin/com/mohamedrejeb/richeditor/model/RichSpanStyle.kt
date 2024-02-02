@@ -53,6 +53,19 @@ interface RichSpanStyle {
 
         override val acceptNewTextInTheEdges: Boolean =
             false
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is Link) return false
+
+            if (url != other.url) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            return url.hashCode()
+        }
     }
 
     class Code(
@@ -115,6 +128,24 @@ interface RichSpanStyle {
 
         override val acceptNewTextInTheEdges: Boolean =
             true
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is Code) return false
+
+            if (cornerRadius != other.cornerRadius) return false
+            if (strokeWidth != other.strokeWidth) return false
+            if (padding != other.padding) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = cornerRadius.hashCode()
+            result = 31 * result + strokeWidth.hashCode()
+            result = 31 * result + padding.hashCode()
+            return result
+        }
     }
 
     object Default : RichSpanStyle {

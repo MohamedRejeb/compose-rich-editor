@@ -215,7 +215,7 @@ class RichTextState internal constructor(
         }
 
         if (!selection.collapsed)
-            handleAddingStyleToSelectedText()
+            applyRichSpanStyleToSelectedText()
     }
 
     /**
@@ -239,7 +239,7 @@ class RichTextState internal constructor(
         }
 
         if (!selection.collapsed)
-            handleRemovingStyleFromSelectedText()
+            applyRichSpanStyleToSelectedText()
     }
 
     fun addLink(
@@ -301,7 +301,7 @@ class RichTextState internal constructor(
         toAddRichSpanStyle = RichSpanStyle.Code()
 
         if (!selection.collapsed)
-            handleAddingStyleToSelectedText()
+            applyRichSpanStyleToSelectedText()
     }
 
     @Deprecated(
@@ -317,7 +317,7 @@ class RichTextState internal constructor(
         toRemoveRichSpanStyle = RichSpanStyle.Code()
 
         if (!selection.collapsed)
-            handleAddingStyleToSelectedText()
+            applyRichSpanStyleToSelectedText()
     }
 
     //RichSpanStyle
@@ -328,7 +328,7 @@ class RichTextState internal constructor(
         toAddRichSpanStyle = spanStyle
 
         if (!selection.collapsed)
-            handleAddingStyleToSelectedText()
+            applyRichSpanStyleToSelectedText()
     }
 
     fun removeRichSpan(spanStyle: RichSpanStyle) {
@@ -337,7 +337,7 @@ class RichTextState internal constructor(
         toRemoveRichSpanStyle = spanStyle
 
         if (!selection.collapsed)
-            handleAddingStyleToSelectedText()
+            applyRichSpanStyleToSelectedText()
     }
 
     /**
@@ -712,25 +712,12 @@ class RichTextState internal constructor(
                                 append(" ")
                                 index++
                             }
-
-                            // Add empty space to the last paragraph if it's empty.
-                            // Workaround to fix an issue with Compose TextField that causes a crash on long click
-//                            if (
-//                                (currentPlatform.isAndroid ||
-//                                currentPlatform.isIOS) &&
-//                                i > 0 && i == richParagraphList.lastIndex &&
-//                                richParagraph.isEmpty()
-//                            ) {
-//                                richParagraph.getFirstNonEmptyChild()?.text = " "
-//                                append(" ")
-//                                index++
-//                                newText += ' '
-//                            }
                         }
                     }
                 }
             }
         }
+
         styledRichSpanList.clear()
         textFieldValue = newTextFieldValue.copy(text = newText)
         visualTransformation = VisualTransformation { _ ->
@@ -1165,51 +1152,9 @@ class RichTextState internal constructor(
     }
 
     /**
-     * Handles adding the style in [toAddSpanStyle] to the selected text.
+     * Handles adding or removing the style in [toAddSpanStyle] and [toRemoveSpanStyle] from the selected text.
      */
-    private fun handleAddingStyleToSelectedText() {
-        val richSpanList = getRichSpanListByTextRange(selection)
-
-        val startSelectionIndex = selection.min
-        val endSelectionIndex = selection.max
-
-        for (i in richSpanList.lastIndex downTo 0) {
-            val richSpan = richSpanList[i]
-
-            val beforeText = if (startSelectionIndex in richSpan.textRange)
-                richSpan.text.substring(0, startSelectionIndex - richSpan.textRange.start)
-            else ""
-            val middleText = richSpan.text.substring(
-                maxOf(startSelectionIndex - richSpan.textRange.start, 0),
-                minOf(endSelectionIndex - richSpan.textRange.start, richSpan.text.length)
-            )
-            val afterText = if ((endSelectionIndex - 1) in richSpan.textRange)
-                richSpan.text.substring(endSelectionIndex - richSpan.textRange.start)
-            else ""
-
-            val richSpanFullSpanStyle = richSpan.fullSpanStyle
-            val newSpanStyle = richSpanFullSpanStyle.customMerge(toAddSpanStyle).unmerge(toRemoveSpanStyle)
-
-            val startApplyStyleIndex = maxOf(startSelectionIndex, richSpan.textRange.start)
-
-            handleUpdatingRichSpan(
-                richSpan = richSpan,
-                startIndex = startApplyStyleIndex,
-                beforeText = beforeText,
-                middleText = middleText,
-                afterText = afterText,
-                newSpanStyle = newSpanStyle,
-
-            )
-        }
-
-        updateTextFieldValue(textFieldValue)
-    }
-
-    /**
-     * Handles removing the style in [toRemoveSpanStyle] from the selected text.
-     */
-    private fun handleRemovingStyleFromSelectedText() {
+    private fun applyRichSpanStyleToSelectedText() {
         // Get the rich span list of the selected text
         val selectedRichSpanList = getRichSpanListByTextRange(selection)
 
@@ -1221,16 +1166,23 @@ class RichTextState internal constructor(
             val richSpan = selectedRichSpanList[i]
 
             // Get the text before, during, and after the selected text
-            val beforeText = if (startSelectionIndex in richSpan.textRange)
-                richSpan.text.substring(0, startSelectionIndex - richSpan.textRange.start)
-            else ""
-            val middleText = richSpan.text.substring(
-                maxOf(startSelectionIndex - richSpan.textRange.start, 0),
-                minOf(endSelectionIndex - richSpan.textRange.start, richSpan.text.length)
-            )
-            val afterText = if ((endSelectionIndex - 1) in richSpan.textRange)
-                richSpan.text.substring(endSelectionIndex - richSpan.textRange.start)
-            else ""
+            val beforeText =
+                if (startSelectionIndex in richSpan.textRange)
+                    richSpan.text.substring(0, startSelectionIndex - richSpan.textRange.start)
+                else
+                    ""
+
+            val middleText =
+                richSpan.text.substring(
+                    maxOf(startSelectionIndex - richSpan.textRange.start, 0),
+                    minOf(endSelectionIndex - richSpan.textRange.start, richSpan.text.length)
+                )
+
+            val afterText =
+                if (endSelectionIndex - 1 in richSpan.textRange)
+                    richSpan.text.substring(endSelectionIndex - richSpan.textRange.start)
+                else
+                    ""
 
             val richSpanFullSpanStyle = richSpan.fullSpanStyle
             val newSpanStyle = richSpanFullSpanStyle.customMerge(toAddSpanStyle).unmerge(toRemoveSpanStyle)
@@ -1281,7 +1233,7 @@ class RichTextState internal constructor(
             !richSpanFullSpanStyle.isSpecifiedFieldsEquals(toRemoveSpanStyle)) &&
             (toRemoveRichSpanStyle is RichSpanStyle.Default || newRichSpanStyle::class == richSpan.style::class)
         ) {
-            handleApplyingStyleToRichSpan(
+            applyStyleToRichSpan(
                 richSpan = richSpan,
                 beforeText = beforeText,
                 middleText = middleText,
@@ -1303,7 +1255,7 @@ class RichTextState internal constructor(
     }
 
     /**
-     * Handles applying a new [SpanStyle] to a [RichSpan].
+     * Handles applying a new [SpanStyle] and a new [RichSpanStyle] to a [RichSpan].
      *
      * @param richSpan The [RichSpan] to apply the new [SpanStyle] to.
      * @param beforeText The text before applying the styles.
@@ -1311,7 +1263,7 @@ class RichTextState internal constructor(
      * @param afterText The text after applying the styles.
      * @param startIndex The start index of the text to apply the styles to.
      */
-    private fun handleApplyingStyleToRichSpan(
+    private fun applyStyleToRichSpan(
         richSpan: RichSpan,
         beforeText: String,
         middleText: String,
@@ -1327,10 +1279,11 @@ class RichTextState internal constructor(
             richSpan.children.isEmpty()
         ) {
             richSpan.text = middleText
-            richSpan.spanStyle = richSpan.spanStyle.copy(
-                textDecoration = fullSpanStyle.textDecoration
-            ).customMerge(toAddSpanStyle)
+            richSpan.spanStyle = richSpan.spanStyle
+                .copy(textDecoration = fullSpanStyle.textDecoration)
+                .customMerge(toAddSpanStyle)
             richSpan.style = toAddRichSpanStyle
+
             return
         }
 
@@ -1339,13 +1292,14 @@ class RichTextState internal constructor(
             paragraph = richSpan.paragraph,
             parent = richSpan,
             text = middleText,
-            textRange = TextRange(
-                startIndex,
-                startIndex + middleText.length
-            ),
-            spanStyle = SpanStyle(
-                textDecoration = fullSpanStyle.textDecoration
-            ).customMerge(toAddSpanStyle),
+            textRange =
+                TextRange(
+                    startIndex,
+                    startIndex + middleText.length
+                ),
+            spanStyle =
+                SpanStyle(textDecoration = fullSpanStyle.textDecoration)
+                    .customMerge(toAddSpanStyle),
             style = toAddRichSpanStyle,
         )
 
@@ -1371,6 +1325,7 @@ class RichTextState internal constructor(
         } else {
             val firstRichSpan = richSpan.children.firstOrNull()
             val secondRichSpan = richSpan.children.getOrNull(1)
+
             if (
                 firstRichSpan != null &&
                 secondRichSpan != null &&
@@ -1596,6 +1551,7 @@ class RichTextState internal constructor(
             } else {
                 val firstRichSpan = activeRichSpan.children.firstOrNull()
                 val secondRichSpan = activeRichSpan.children.getOrNull(1)
+
                 if (
                     firstRichSpan != null &&
                     secondRichSpan != null &&

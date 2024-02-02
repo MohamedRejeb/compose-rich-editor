@@ -13,7 +13,7 @@ import com.mohamedrejeb.richeditor.model.RichTextConfig
 import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
 import com.mohamedrejeb.richeditor.utils.getBoundingBoxes
 
-class SpellCheck: RichSpanStyle {
+object SpellCheck: RichSpanStyle {
     override val spanStyle: (RichTextConfig) -> SpanStyle = {
         SpanStyle()
     }

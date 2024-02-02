@@ -206,7 +206,7 @@ fun RichTextStyleRow(
         item {
             RichTextStyleButton(
                 onClick = {
-                    state.addRichSpan(SpellCheck())
+                    state.addRichSpan(SpellCheck)
                 },
                 isSelected = false,
                 icon = Icons.Outlined.Spellcheck,

@@ -697,9 +697,7 @@ class RichTextState internal constructor(
                 }
             }
         }
-        richParagraphList.forEach {
-            println("richParagraphList: $it")
-        }
+
         styledRichSpanList.clear()
         textFieldValue = newTextFieldValue.copy(text = newText)
         visualTransformation = VisualTransformation { _ ->
@@ -1265,48 +1263,6 @@ class RichTextState internal constructor(
                 .copy(textDecoration = fullSpanStyle.textDecoration)
                 .customMerge(toAddSpanStyle)
             richSpan.style = toAddRichSpanStyle
-
-//            println("middleText: $middleText")
-//
-//            val beforeRichSpan = richSpan.before
-//            val afterRichSpan = richSpan.after
-//
-//            val beforeFullSpanStyle = beforeRichSpan?.fullSpanStyle
-//            val afterFullSpanStyle = afterRichSpan?.fullSpanStyle
-//            val newFullSpanStyle = fullSpanStyle
-//                .customMerge(toAddSpanStyle)
-//
-//            richParagraphList.forEach {
-//                println(it)
-//            }
-//
-//            println("beforeRichSpan: ${beforeRichSpan?.text}")
-//            println("afterRichSpan: ${afterRichSpan?.text}")
-////            val beforeRichSpan = richSpan.before
-//
-//            if (
-//                afterRichSpan != null &&
-//                afterFullSpanStyle == newFullSpanStyle &&
-//                afterRichSpan.style == richSpan.style
-//            ) {
-//                println("simpiyfying")
-//                richSpan.text += afterRichSpan.text
-//                afterRichSpan.remove()
-//            }
-//
-//            println("newFullSpanStyle: $newFullSpanStyle")
-//            println("beforeFullSpanStyle: $beforeFullSpanStyle")
-//            println(beforeFullSpanStyle == newFullSpanStyle)
-//
-//            if (
-//                beforeRichSpan != null &&
-//                beforeFullSpanStyle == newFullSpanStyle &&
-//                beforeRichSpan.style == richSpan.style
-//            ) {
-//                println("simpiyfying")
-//                beforeRichSpan.text += richSpan.text
-//                richSpan.remove()
-//            }
 
             return
         }

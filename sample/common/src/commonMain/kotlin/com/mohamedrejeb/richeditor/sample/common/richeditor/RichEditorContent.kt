@@ -5,9 +5,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -80,21 +81,46 @@ fun RichEditorContent() {
                 }
 
                 item {
-                    BasicRichTextEditor(
-                        modifier = Modifier.fillMaxWidth(),
-                        state = basicRichTextState,
-                        onRichSpanClick = { span ->
-                            println("clicked")
-                            if (span.style is SpellCheck) {
-                                println("Spell check clicked")
-                                val position =
-                                    basicRichTextState.textLayoutResult
-                                        ?.multiParagraph
-                                        ?.getBoundingBox(span.textRange.start)
-                                println("Position: ${position}")
+                    Box {
+                        var spellCheckExpanded by remember { mutableStateOf<Rect?>(null) }
+
+                        BasicRichTextEditor(
+                            modifier = Modifier.fillMaxWidth(),
+                            state = basicRichTextState,
+                            onRichSpanClick = { span ->
+                                println("clicked")
+                                if (span.style is SpellCheck) {
+                                    println("Spell check clicked")
+                                    val position =
+                                        basicRichTextState.textLayoutResult
+                                            ?.multiParagraph
+                                            ?.getBoundingBox(span.textRange.start)
+                                    println("Position: ${position}")
+                                    spellCheckExpanded = position
+                                }
                             }
+                        )
+
+                        DropdownMenu(
+                            expanded = spellCheckExpanded != null,
+                            onDismissRequest = { spellCheckExpanded = null },
+                            offset = DpOffset(
+                                x = spellCheckExpanded?.left?.dp ?: 0.dp,
+                                y = spellCheckExpanded?.top?.dp ?: 0.dp,
+                            ),
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Spelling") },
+                                onClick = {}
+                            )
+
+                            DropdownMenuItem(
+                                text = { Text("Spelling") },
+                                onClick = {}
+                            )
                         }
-                    )
+
+                    }
                 }
 
                 item {

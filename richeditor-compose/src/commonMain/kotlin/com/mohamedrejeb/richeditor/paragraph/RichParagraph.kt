@@ -132,10 +132,10 @@ internal class RichParagraph(
         return true
     }
 
-    fun getFirstNonEmptyChild(offset: Int? = null): RichSpan? {
+    fun getFirstNonEmptyChild(offset: Int = -1): RichSpan? {
         children.fastForEach { richSpan ->
             if (richSpan.text.isNotEmpty()) {
-                if (offset != null)
+                if (offset != -1)
                     richSpan.textRange = TextRange(offset, offset + richSpan.text.length)
                 return richSpan
             }
@@ -148,7 +148,7 @@ internal class RichParagraph(
         children.clear()
         if (firstChild != null) {
             firstChild.children.clear()
-            if (offset != null)
+            if (offset != -1)
                 firstChild.textRange = TextRange(offset, offset + firstChild.text.length)
             children.add(firstChild)
         }

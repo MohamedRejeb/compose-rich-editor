@@ -6,7 +6,7 @@ import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class RichParagraphStyleTest {
+class RichParagraphStyleTest {
     private val paragraph = RichParagraph(key = 0)
     private val richSpanLists get() = listOf(
         RichSpan(

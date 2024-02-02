@@ -4,7 +4,7 @@ import androidx.compose.ui.text.ParagraphStyle
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichTextConfig
 
-internal interface ParagraphType {
+interface ParagraphType {
 
     fun getStyle(config: RichTextConfig): ParagraphStyle
 

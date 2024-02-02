@@ -19,15 +19,16 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
+import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichTextState
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 
 /**
@@ -65,6 +66,7 @@ import kotlinx.coroutines.CoroutineScope
  * that 1 <= [minLines] <= [maxLines]. This parameter is ignored when [singleLine] is true.
  * @param maxLength the maximum length of the text field. If the text is longer than this value,
  * it will be ignored. The default value of this parameter is [Int.MAX_VALUE].
+ * @param onRichSpanClick A callback to allow handling of click on RichSpans.
  * @param onTextLayout Callback that is executed when a new text layout is calculated. A
  * [TextLayoutResult] object that callback provides contains paragraph information, size of the
  * text, baselines and other details. The callback can be used to add additional decoration or
@@ -96,6 +98,7 @@ public fun BasicRichTextEditor(
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
     maxLength: Int = Int.MAX_VALUE,
+    onRichSpanClick: RichSpanClickListener? = null,
     onTextLayout: (TextLayoutResult) -> Unit = {},
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     cursorBrush: Brush = SolidColor(Color.Black),
@@ -114,6 +117,7 @@ public fun BasicRichTextEditor(
         maxLines = maxLines,
         minLines = minLines,
         maxLength = maxLength,
+        onRichSpanClick = onRichSpanClick,
         onTextLayout = onTextLayout,
         interactionSource = interactionSource,
         cursorBrush = cursorBrush,
@@ -157,6 +161,7 @@ public fun BasicRichTextEditor(
  * that 1 <= [minLines] <= [maxLines]. This parameter is ignored when [singleLine] is true.
  * @param maxLength the maximum length of the text field. If the text is longer than this value,
  * it will be ignored. The default value of this parameter is [Int.MAX_VALUE].
+ * @param onRichSpanClick A callback to allow handling of click on RichSpans.
  * @param onTextLayout Callback that is executed when a new text layout is calculated. A
  * [TextLayoutResult] object that callback provides contains paragraph information, size of the
  * text, baselines and other details. The callback can be used to add additional decoration or
@@ -189,6 +194,7 @@ public fun BasicRichTextEditor(
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
     maxLength: Int = Int.MAX_VALUE,
+    onRichSpanClick: RichSpanClickListener? = null,
     onTextLayout: (TextLayoutResult) -> Unit = {},
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     cursorBrush: Brush = SolidColor(Color.Black),
@@ -197,7 +203,6 @@ public fun BasicRichTextEditor(
     contentPadding: PaddingValues
 ) {
     val scope = rememberCoroutineScope()
-    val uriHandler = LocalUriHandler.current
     val density = LocalDensity.current
     val localTextStyle = LocalTextStyle.current
     val layoutDirection = LocalLayoutDirection.current
@@ -213,13 +218,15 @@ public fun BasicRichTextEditor(
         state.singleParagraphMode = singleParagraph
     }
 
-    LaunchedEffect(interactionSource) {
-        scope.launch {
-            interactionSource.interactions.collect { interaction ->
-                if (interaction is PressInteraction.Press) {
-                    val clickedLink = state.getLinkByOffset(interaction.pressPosition)
-                    if (clickedLink != null) {
-                        uriHandler.openUri(clickedLink)
+    if(onRichSpanClick != null) {
+        // Start listening for rich span clicks
+        LaunchedEffect(interactionSource) {
+            scope.launch {
+                interactionSource.interactions.collect { interaction ->
+                    if (interaction is PressInteraction.Press) {
+                        state.getRichSpanByOffset(interaction.pressPosition)?.let { clickedSpan ->
+                            onRichSpanClick(clickedSpan)
+                        }
                     }
                 }
             }
@@ -329,3 +336,5 @@ internal suspend fun adjustTextIndicatorOffset(
         ),
     )
 }
+
+typealias RichSpanClickListener = (RichSpan) -> Unit

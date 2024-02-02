@@ -328,7 +328,7 @@ class RichTextState internal constructor(
         toAddRichSpanStyle = spanStyle
 
         if (!selection.collapsed)
-            handleAddingStyleToSelectedText()
+            applyRichSpanStyleToSelectedText()
     }
 
     fun removeRichSpan(spanStyle: RichSpanStyle) {
@@ -337,7 +337,7 @@ class RichTextState internal constructor(
         toRemoveRichSpanStyle = spanStyle
 
         if (!selection.collapsed)
-            handleAddingStyleToSelectedText()
+            applyRichSpanStyleToSelectedText()
     }
 
     /**

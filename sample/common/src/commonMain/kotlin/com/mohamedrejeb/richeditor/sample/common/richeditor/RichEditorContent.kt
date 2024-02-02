@@ -19,7 +19,7 @@ import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RichEditorContent() {
     val navigator = LocalNavigator.currentOrThrow
@@ -50,8 +50,7 @@ fun RichEditorContent() {
                     }
                 )
             },
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = Modifier.fillMaxSize()
         ) { paddingValue ->
             LazyColumn(
                 contentPadding = paddingValue,
@@ -84,6 +83,17 @@ fun RichEditorContent() {
                     BasicRichTextEditor(
                         modifier = Modifier.fillMaxWidth(),
                         state = basicRichTextState,
+                        onRichSpanClick = { span ->
+                            println("clicked")
+                            if (span.style is SpellCheck) {
+                                println("Spell check clicked")
+                                val position =
+                                    basicRichTextState.textLayoutResult
+                                        ?.multiParagraph
+                                        ?.getBoundingBox(span.textRange.start)
+                                println("Position: ${position}")
+                            }
+                        }
                     )
                 }
 

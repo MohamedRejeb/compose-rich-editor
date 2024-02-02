@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.sample.common.richeditor.SpellCheck
 
 @Composable
 fun RichTextStyleRow(
@@ -202,7 +203,15 @@ fun RichTextStyleRow(
             )
         }
 
-
+        item {
+            RichTextStyleButton(
+                onClick = {
+                    state.addRichSpan(SpellCheck)
+                },
+                isSelected = false,
+                icon = Icons.Outlined.Spellcheck,
+            )
+        }
 
         item {
             Box(

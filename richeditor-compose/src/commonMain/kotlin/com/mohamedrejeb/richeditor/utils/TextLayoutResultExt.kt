@@ -12,7 +12,7 @@ import androidx.compose.ui.text.style.ResolvedTextDirection
  * entire paragraphs is returned instead of separate lines if [startOffset]
  * and [endOffset] represent the extreme ends of those paragraph.
  */
-internal fun TextLayoutResult.getBoundingBoxes(
+fun TextLayoutResult.getBoundingBoxes(
     startOffset: Int,
     endOffset: Int,
     flattenForFullParagraphs: Boolean = false

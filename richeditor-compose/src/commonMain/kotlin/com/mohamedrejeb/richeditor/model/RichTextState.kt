@@ -320,6 +320,26 @@ class RichTextState internal constructor(
             applyRichSpanStyleToSelectedText()
     }
 
+    //RichSpanStyle
+
+    fun addRichSpan(spanStyle: RichSpanStyle) {
+        if (toRemoveRichSpanStyle::class == spanStyle)
+            toRemoveRichSpanStyle = RichSpanStyle.Default
+        toAddRichSpanStyle = spanStyle
+
+        if (!selection.collapsed)
+            handleAddingStyleToSelectedText()
+    }
+
+    fun removeRichSpan(spanStyle: RichSpanStyle) {
+        if (toAddRichSpanStyle::class == spanStyle::class)
+            toAddRichSpanStyle = RichSpanStyle.Default
+        toRemoveRichSpanStyle = spanStyle
+
+        if (!selection.collapsed)
+            handleAddingStyleToSelectedText()
+    }
+
     /**
      * Toggle the [ParagraphStyle]
      * If the passed paragraph style doesn't exist in the [currentParagraphStyle] it's going to be added.

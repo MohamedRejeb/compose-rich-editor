@@ -6,14 +6,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -24,9 +21,9 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.layout.*
-import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -79,6 +76,7 @@ import kotlin.math.roundToInt
  * that 1 <= [minLines] <= [maxLines]. This parameter is ignored when [singleLine] is true.
  * @param maxLength the maximum length of the text field. If the text is longer than this value,
  * it will be ignored. The default value of this parameter is [Int.MAX_VALUE].
+ * onTextLayout
  * @param interactionSource the [MutableInteractionSource] representing the stream of [Interaction]s
  * for this text field. You can create and pass in your own `remember`ed instance to observe
  * [Interaction]s and customize the appearance / behavior of this text field in different states.
@@ -107,6 +105,7 @@ fun OutlinedRichTextEditor(
     maxLines: Int = Int.MAX_VALUE,
     minLines: Int = 1,
     maxLength: Int = Int.MAX_VALUE,
+    onTextLayout: (TextLayoutResult) -> Unit = {},
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape = RichTextEditorDefaults.outlinedShape,
     colors: RichTextEditorColors = RichTextEditorDefaults.outlinedRichTextEditorColors(),
@@ -146,6 +145,7 @@ fun OutlinedRichTextEditor(
             maxLines = maxLines,
             minLines = minLines,
             maxLength = maxLength,
+            onTextLayout = onTextLayout,
             decorationBox = { innerTextField ->
                 RichTextEditorDefaults.OutlinedRichTextEditorDecorationBox(
                     value = state.textFieldValue.text,

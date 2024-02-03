@@ -94,6 +94,22 @@ To get if the current selection is a link, use `RichTextState.isLink`:
 val isLink = richTextState.isLink
 ```
 
+By default, links will be opened by your platform's `UriHandler`, if however you want to
+handle the links on your own, you can override the composition local as such:
+
+```kotlin
+val myUriHandler by remember {
+    mutableStateOf(object : UriHandler {
+        override fun openUri(uri: String) {
+            // Handle the clicked link however you want
+        }
+    })
+}
+CompositionLocalProvider(LocalUriHandler provides myUriHandler) {
+    RichText( ... )
+}
+```
+
 #### Add Code Blocks
 
 To add code blocks, `RichTextState` provides `toggleCodeSpan` method:

@@ -2131,13 +2131,15 @@ class RichTextState internal constructor(
      * @param text The text to update the [RichTextState] with.
      */
     fun setText(text: String) {
-        val richParagraphList = listOf(RichParagraph())
-        val richSpan = RichSpan(
-            text = text,
-            paragraph = richParagraphList.first(),
+        val textFieldValue =
+            TextFieldValue(
+                text = text,
+                selection = TextRange(text.length),
+            )
+
+        onTextFieldValueChange(
+            newTextFieldValue = textFieldValue
         )
-        richParagraphList.first().children.add(richSpan)
-        updateRichParagraphList(richParagraphList)
     }
 
     /**

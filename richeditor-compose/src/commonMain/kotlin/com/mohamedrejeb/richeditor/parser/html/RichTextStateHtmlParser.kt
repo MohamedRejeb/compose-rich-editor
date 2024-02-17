@@ -194,7 +194,14 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
             if (
                 (paragraphGroupTagName == "ol" || paragraphGroupTagName == "ul") &&
                 lastParagraphGroupTagName != paragraphGroupTagName
-            ) builder.append("<$paragraphGroupTagName>")
+            )
+                builder.append("<$paragraphGroupTagName>")
+            // Add line break if the paragraph is empty
+            else if (richParagraph.isEmpty()) {
+                builder.append("<br>")
+                return@fastForEachIndexed
+            }
+
 
             // Create paragraph tag name
             val paragraphTagName =

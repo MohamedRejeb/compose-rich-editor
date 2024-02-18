@@ -1,11 +1,11 @@
 [versions]
 agp = "8.2.2"
 kotlin = "1.9.22"
-compose = "1.6.0-beta01"
-dokka = "1.9.0"
+compose = "1.6.0-rc02"
+dokka = "1.9.10"
 
-ksoup = "0.3.0"
-jetbrainsMarkdown = "0.6.0"
+ksoup = "0.3.1"
+jetbrainsMarkdown = "0.6.1"
 
 nexus-publish = "2.0.0-rc-1"
 
@@ -13,7 +13,7 @@ nexus-publish = "2.0.0-rc-1"
 compose-compiler = "1.5.4"
 activity-compose = "1.8.2"
 voyager = "1.0.0"
-richeditor = "1.0.0-beta05"
+richeditor = "1.0.0-rc01"
 android-minSdk = "21"
 android-compileSdk = "34"
 

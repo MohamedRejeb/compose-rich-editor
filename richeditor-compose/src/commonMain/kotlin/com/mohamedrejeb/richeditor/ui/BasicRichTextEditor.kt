@@ -193,7 +193,6 @@ internal fun BasicRichTextEditor(
         @Composable { innerTextField -> innerTextField() },
     contentPadding: PaddingValues
 ) {
-    val scope = rememberCoroutineScope()
     val density = LocalDensity.current
     val localTextStyle = LocalTextStyle.current
     val layoutDirection = LocalLayoutDirection.current
@@ -232,13 +231,11 @@ internal fun BasicRichTextEditor(
 
     CompositionLocalProvider(LocalClipboardManager provides richClipboardManager) {
         BasicTextField(
-            value = state.textFieldValue,
+            value = state.textFieldValue.copy(annotatedString = state.annotatedString),
             onValueChange = {
                 if (readOnly) return@BasicTextField
                 if (it.text.length > maxLength) return@BasicTextField
-//                scope.launch {
-//                    state.emitTextFieldValue(it)
-//                }
+
                 state.onTextFieldValueChange(it)
             },
             modifier = modifier
@@ -276,7 +273,6 @@ internal fun BasicRichTextEditor(
             singleLine = singleLine,
             maxLines = maxLines,
             minLines = minLines,
-            visualTransformation = state.visualTransformation,
             onTextLayout = {
                 state.onTextLayout(
                     textLayoutResult = it,

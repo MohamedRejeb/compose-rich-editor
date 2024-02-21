@@ -331,7 +331,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         H6SPanStyle to "h6",
     )
 
-    private const val CodeSpanTagName = "code-span"
+    private const val CodeSpanTagName = "code"
 
     /**
      * Encodes HTML elements to [RichSpanStyle].

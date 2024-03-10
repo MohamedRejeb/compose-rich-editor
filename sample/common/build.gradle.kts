@@ -41,7 +41,7 @@ kotlin {
                 api(compose.material3)
                 api(compose.materialIconsExtended)
                 @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
-                api(compose.components.resources)
+                implementation(compose.components.resources)
 
 //                implementation(libs.richeditor.compose)
                 implementation(project(":richeditor-compose"))

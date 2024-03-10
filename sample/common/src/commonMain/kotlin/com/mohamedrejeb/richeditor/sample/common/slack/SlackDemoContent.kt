@@ -10,6 +10,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Send
 import androidx.compose.material.ripple.rememberRipple
@@ -26,18 +28,17 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.common.generated.resources.Res
+import com.mohamedrejeb.richeditor.common.generated.resources.slack_logo
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditorDefaults
-import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalRichTextApi::class, ExperimentalLayoutApi::class,
-    ExperimentalResourceApi::class,
-)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalRichTextApi::class, ExperimentalResourceApi::class)
 @Composable
 fun SlackDemoContent() {
     val navigator = LocalNavigator.currentOrThrow
@@ -77,7 +78,7 @@ fun SlackDemoContent() {
                             IconButton(
                                 onClick = { navigator.pop() }
                             ) {
-                                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                             }
                         },
                         colors = TopAppBarDefaults.mediumTopAppBarColors(
@@ -86,7 +87,8 @@ fun SlackDemoContent() {
                             navigationIconContentColor = Color.White,
                         )
                     )
-                    Divider(color = Color(0xFFCBCCCD), thickness = 1.dp)
+
+                    HorizontalDivider(color = Color(0xFFCBCCCD))
                 }
             },
             containerColor = Color(0xFF1a1d21),
@@ -121,7 +123,7 @@ fun SlackDemoContent() {
                                         .background(Color.White)
                                 ) {
                                     Image(
-                                        painterResource(DrawableResource("slack-logo.png")),
+                                        painterResource(Res.drawable.slack_logo),
                                         contentDescription = "Slack Logo",
                                         modifier = Modifier
                                             .fillMaxSize()
@@ -206,7 +208,7 @@ fun SlackDemoContent() {
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Outlined.Send,
+                                imageVector = Icons.AutoMirrored.Outlined.Send,
                                 contentDescription = "Send",
                                 tint = Color.White,
                                 modifier = Modifier
@@ -218,14 +220,13 @@ fun SlackDemoContent() {
                     }
                 }
 
-                if (openLinkDialog.value) {
+                if (openLinkDialog.value)
                     SlackDemoLinkDialog(
                         state = richTextState,
                         text = text,
                         link = link,
                         openLinkDialog = openLinkDialog
                     )
-                }
             }
         }
     }

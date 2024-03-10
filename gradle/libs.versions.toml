@@ -1,7 +1,7 @@
 [versions]
 agp = "8.2.2"
 kotlin = "1.9.22"
-compose = "1.6.0-rc02"
+compose = "1.6.0"
 dokka = "1.9.10"
 
 ksoup = "0.3.1"

@@ -332,6 +332,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
     )
 
     private const val CodeSpanTagName = "code"
+    private const val OldCodeSpanTagName = "code-span"
 
     /**
      * Encodes HTML elements to [RichSpanStyle].
@@ -343,7 +344,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         when (tagName) {
             "a" ->
                 RichSpanStyle.Link(url = attributes["href"].orEmpty())
-            CodeSpanTagName ->
+            CodeSpanTagName, OldCodeSpanTagName ->
                 RichSpanStyle.Code()
             else ->
                 RichSpanStyle.Default

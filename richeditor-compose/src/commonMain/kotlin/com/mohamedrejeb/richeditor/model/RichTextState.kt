@@ -719,7 +719,7 @@ class RichTextState internal constructor(
         }
 
         styledRichSpanList.clear()
-        textFieldValue = newTextFieldValue.copy(text = newText)
+        textFieldValue = newTextFieldValue.copy(text = annotatedString.te)
         visualTransformation = VisualTransformation { _ ->
             TransformedText(
                 annotatedString,

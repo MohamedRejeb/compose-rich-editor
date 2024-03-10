@@ -231,7 +231,7 @@ internal fun BasicRichTextEditor(
 
     CompositionLocalProvider(LocalClipboardManager provides richClipboardManager) {
         BasicTextField(
-            value = state.textFieldValue.copy(annotatedString = state.annotatedString),
+            value = state.textFieldValue,
             onValueChange = {
                 if (readOnly) return@BasicTextField
                 if (it.text.length > maxLength) return@BasicTextField
@@ -273,6 +273,7 @@ internal fun BasicRichTextEditor(
             singleLine = singleLine,
             maxLines = maxLines,
             minLines = minLines,
+            visualTransformation = state.visualTransformation,
             onTextLayout = {
                 state.onTextLayout(
                     textLayoutResult = it,

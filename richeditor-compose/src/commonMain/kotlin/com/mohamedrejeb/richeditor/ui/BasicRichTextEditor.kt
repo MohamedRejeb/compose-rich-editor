@@ -173,7 +173,7 @@ fun BasicRichTextEditor(
  *
  */
 @Composable
-internal fun BasicRichTextEditor(
+fun BasicRichTextEditor(
     state: RichTextState,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,

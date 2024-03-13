@@ -2130,7 +2130,7 @@ class RichTextState internal constructor(
      *
      * @param text The text to update the [RichTextState] with.
      */
-    fun setText(text: String) {
+    fun setText(text: String): RichTextState {
         val textFieldValue =
             TextFieldValue(
                 text = text,
@@ -2140,6 +2140,7 @@ class RichTextState internal constructor(
         onTextFieldValueChange(
             newTextFieldValue = textFieldValue
         )
+        return this
     }
 
     /**
@@ -2147,9 +2148,10 @@ class RichTextState internal constructor(
      *
      * @param html The html to update the [RichTextState] with.
      */
-    fun setHtml(html: String) {
+    fun setHtml(html: String): RichTextState {
         val richParagraphList = RichTextStateHtmlParser.encode(html).richParagraphList
         updateRichParagraphList(richParagraphList)
+        return this
     }
 
     /**
@@ -2157,9 +2159,10 @@ class RichTextState internal constructor(
      *
      * @param markdown The markdown to update the [RichTextState] with.
      */
-    fun setMarkdown(markdown: String) {
+    fun setMarkdown(markdown: String): RichTextState {
         val richParagraphList = RichTextStateMarkdownParser.encode(markdown).richParagraphList
         updateRichParagraphList(richParagraphList)
+        return this
     }
 
     /**

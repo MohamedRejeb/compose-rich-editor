@@ -2304,7 +2304,5 @@ class RichTextState internal constructor(
                 richTextState
             }
         )
-
-
     }
 }

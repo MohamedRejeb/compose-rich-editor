@@ -236,7 +236,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         return builder.toString()
     }
 
-    private fun decodeRichSpanToHtml(richSpan: RichSpan): String {
+    private fun decodeRichSpanToHtml(richSpan: RichSpan, parentFormattingTags: List<String> = emptyList()): String {
         val stringBuilder = StringBuilder()
 
         // Check if span is empty
@@ -256,6 +256,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         // Convert span style to CSS string
         val htmlStyleFormat = CssDecoder.decodeSpanStyleToHtmlStylingFormat(richSpan.spanStyle)
         val spanCss = CssDecoder.decodeCssStyleMap(htmlStyleFormat.cssStyleMap)
+        val htmlTags = htmlStyleFormat.htmlTags.filter { it !in parentFormattingTags }
 
         val isRequireOpeningTag = tagName != "span" || tagAttributes.isNotEmpty() || spanCss.isNotEmpty()
 
@@ -266,7 +267,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
             stringBuilder.append(">")
         }
 
-        htmlStyleFormat.htmlTags.forEach {
+        htmlTags.forEach {
             stringBuilder.append("<$it>")
         }
 
@@ -275,10 +276,15 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
         // Append children
         richSpan.children.fastForEach { child ->
-            stringBuilder.append(decodeRichSpanToHtml(child))
+            stringBuilder.append(
+                decodeRichSpanToHtml(
+                    richSpan = child,
+                    parentFormattingTags = parentFormattingTags + htmlTags,
+                )
+            )
         }
 
-        htmlStyleFormat.htmlTags.reversed().forEach {
+        htmlTags.reversed().forEach {
             stringBuilder.append("</$it>")
         }
 

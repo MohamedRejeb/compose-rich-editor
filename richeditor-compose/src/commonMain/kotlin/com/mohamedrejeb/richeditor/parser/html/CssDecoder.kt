@@ -14,6 +14,8 @@ import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.isUnspecified
+import com.mohamedrejeb.richeditor.parser.utils.MARK_BACKGROUND_COLOR
+import com.mohamedrejeb.richeditor.parser.utils.SMALL_FONT_SIZE
 import com.mohamedrejeb.richeditor.utils.maxDecimals
 import kotlin.math.roundToInt
 
@@ -38,16 +40,6 @@ internal object CssDecoder {
      * @return the decoded CSS style map.
      */
     internal fun decodeSpanStyleToHtmlStylingFormat(spanStyle: SpanStyle): HtmlStylingFormat {
-        // TODO Manage
-        //        "mark" to MarkSpanStyle,
-        //        "small" to SmallSpanStyle,
-        //        "h1" to H1SPanStyle,
-        //        "h2" to H2SPanStyle,
-        //        "h3" to H3SPanStyle,
-        //        "h4" to H4SPanStyle,
-        //        "h5" to H5SPanStyle,
-        //        "h6" to H6SPanStyle,
-
         val cssStyleMap = mutableMapOf<String, String>()
         val htmlTags = mutableListOf<String>()
 
@@ -55,20 +47,24 @@ internal object CssDecoder {
             cssStyleMap["color"] = decodeColorToCss(spanStyle.color)
         }
         if (spanStyle.fontSize.isSpecified) {
-            decodeTextUnitToCss(spanStyle.fontSize)?.let { fontSize ->
-                cssStyleMap["font-size"] = fontSize
+            if (spanStyle.fontSize == SMALL_FONT_SIZE) {
+                htmlTags.add("small")
+            } else {
+                decodeTextUnitToCss(spanStyle.fontSize)?.let { fontSize ->
+                    cssStyleMap["font-size"] = fontSize
+                }
             }
         }
         spanStyle.fontWeight?.let { fontWeight ->
             if (fontWeight == FontWeight.Bold) {
-                htmlTags.add("b") // TODO Check const
+                htmlTags.add("b")
             } else {
                 cssStyleMap["font-weight"] = decodeFontWeightToCss(fontWeight)
             }
         }
         spanStyle.fontStyle?.let { fontStyle ->
             if (fontStyle == FontStyle.Italic) {
-                htmlTags.add("i") // TODO Check const
+                htmlTags.add("i")
             } else {
                 cssStyleMap["font-style"] = decodeFontStyleToCss(fontStyle)
             }
@@ -80,21 +76,25 @@ internal object CssDecoder {
         }
         spanStyle.baselineShift?.let { baselineShift ->
             when (baselineShift) {
-                BaselineShift.Subscript -> htmlTags.add("sub") // TODO Check const
-                BaselineShift.Superscript -> htmlTags.add("sup") // TODO Check const
+                BaselineShift.Subscript -> htmlTags.add("sub")
+                BaselineShift.Superscript -> htmlTags.add("sup")
                 else -> cssStyleMap["baseline-shift"] = decodeBaselineShiftToCss(baselineShift)
             }
         }
         if (spanStyle.background.isSpecified) {
-            cssStyleMap["background"] = decodeColorToCss(spanStyle.background)
+            if (spanStyle.background == MARK_BACKGROUND_COLOR) {
+                htmlTags.add("mark")
+            } else {
+                cssStyleMap["background"] = decodeColorToCss(spanStyle.background)
+            }
         }
         spanStyle.textDecoration?.let { textDecoration ->
             when (textDecoration) {
-                TextDecoration.Underline -> htmlTags.add("u") // TODO Check const
-                TextDecoration.LineThrough -> htmlTags.add("s") // TODO Check const
+                TextDecoration.Underline -> htmlTags.add("u")
+                TextDecoration.LineThrough -> htmlTags.add("s")
                 TextDecoration.Underline + TextDecoration.LineThrough -> {
-                    htmlTags.add("u") // TODO Check const
-                    htmlTags.add("s") // TODO Check const
+                    htmlTags.add("u")
+                    htmlTags.add("s")
                 }
 
                 else -> cssStyleMap["text-decoration"] = decodeTextDecorationToCss(textDecoration)

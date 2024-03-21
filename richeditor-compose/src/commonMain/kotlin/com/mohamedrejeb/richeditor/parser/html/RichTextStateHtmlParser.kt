@@ -213,7 +213,9 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
             val paragraphCss = CssDecoder.decodeCssStyleMap(paragraphCssMap)
 
             // Append paragraph opening tag
-            builder.append("<$paragraphTagName style=\"$paragraphCss\">")
+            builder.append("<$paragraphTagName")
+            if (paragraphCss.isNotBlank()) builder.append(" style=\"$paragraphCss\"")
+            builder.append(">")
 
             // Append paragraph children
             richParagraph.children.fastForEach { richSpan ->

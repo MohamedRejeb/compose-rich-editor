@@ -254,8 +254,8 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         }
 
         // Convert span style to CSS string
-        val spanCssMap = CssDecoder.decodeSpanStyleToCssStyleMap(richSpan.spanStyle)
-        val spanCss = CssDecoder.decodeCssStyleMap(spanCssMap)
+        val htmlStyleFormat = CssDecoder.decodeSpanStyleToHtmlStylingFormat(richSpan.spanStyle)
+        val spanCss = CssDecoder.decodeCssStyleMap(htmlStyleFormat.cssStyleMap)
 
         val isRequireOpeningTag = tagName != "span" || tagAttributes.isNotEmpty() || spanCss.isNotEmpty()
 
@@ -266,12 +266,20 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
             stringBuilder.append(">")
         }
 
+        htmlStyleFormat.htmlTags.forEach {
+            stringBuilder.append("<$it>")
+        }
+
         // Append text
         stringBuilder.append(KsoupEntities.encodeHtml(richSpan.text))
 
         // Append children
         richSpan.children.fastForEach { child ->
             stringBuilder.append(decodeRichSpanToHtml(child))
+        }
+
+        htmlStyleFormat.htmlTags.reversed().forEach {
+            stringBuilder.append("</$it>")
         }
 
         if (isRequireOpeningTag) {

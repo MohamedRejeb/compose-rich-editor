@@ -14,7 +14,6 @@ import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.isUnspecified
-import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.utils.maxDecimals
 import kotlin.math.roundToInt
 
@@ -38,8 +37,19 @@ internal object CssDecoder {
      * @param spanStyle the span style to decode.
      * @return the decoded CSS style map.
      */
-    internal fun decodeSpanStyleToCssStyleMap(spanStyle: SpanStyle): Map<String, String> {
+    internal fun decodeSpanStyleToHtmlStylingFormat(spanStyle: SpanStyle): HtmlStylingFormat {
+        // TODO Manage
+        //        "mark" to MarkSpanStyle,
+        //        "small" to SmallSpanStyle,
+        //        "h1" to H1SPanStyle,
+        //        "h2" to H2SPanStyle,
+        //        "h3" to H3SPanStyle,
+        //        "h4" to H4SPanStyle,
+        //        "h5" to H5SPanStyle,
+        //        "h6" to H6SPanStyle,
+
         val cssStyleMap = mutableMapOf<String, String>()
+        val htmlTags = mutableListOf<String>()
 
         if (spanStyle.color.isSpecified) {
             cssStyleMap["color"] = decodeColorToCss(spanStyle.color)
@@ -50,10 +60,18 @@ internal object CssDecoder {
             }
         }
         spanStyle.fontWeight?.let { fontWeight ->
-            cssStyleMap["font-weight"] = decodeFontWeightToCss(fontWeight)
+            if (fontWeight == FontWeight.Bold) {
+                htmlTags.add("b") // TODO Check const
+            } else {
+                cssStyleMap["font-weight"] = decodeFontWeightToCss(fontWeight)
+            }
         }
         spanStyle.fontStyle?.let { fontStyle ->
-            cssStyleMap["font-style"] = decodeFontStyleToCss(fontStyle)
+            if (fontStyle == FontStyle.Italic) {
+                htmlTags.add("i") // TODO Check const
+            } else {
+                cssStyleMap["font-style"] = decodeFontStyleToCss(fontStyle)
+            }
         }
         if (spanStyle.letterSpacing.isSpecified) {
             decodeTextUnitToCss(spanStyle.letterSpacing)?.let { letterSpacing ->
@@ -61,19 +79,36 @@ internal object CssDecoder {
             }
         }
         spanStyle.baselineShift?.let { baselineShift ->
-            cssStyleMap["baseline-shift"] = decodeBaselineShiftToCss(baselineShift)
+            when (baselineShift) {
+                BaselineShift.Subscript -> htmlTags.add("sub") // TODO Check const
+                BaselineShift.Superscript -> htmlTags.add("sup") // TODO Check const
+                else -> cssStyleMap["baseline-shift"] = decodeBaselineShiftToCss(baselineShift)
+            }
         }
         if (spanStyle.background.isSpecified) {
             cssStyleMap["background"] = decodeColorToCss(spanStyle.background)
         }
         spanStyle.textDecoration?.let { textDecoration ->
-            cssStyleMap["text-decoration"] = decodeTextDecorationToCss(textDecoration)
+            when (textDecoration) {
+                TextDecoration.Underline -> htmlTags.add("u") // TODO Check const
+                TextDecoration.LineThrough -> htmlTags.add("s") // TODO Check const
+                TextDecoration.Underline + TextDecoration.LineThrough -> {
+                    htmlTags.add("u") // TODO Check const
+                    htmlTags.add("s") // TODO Check const
+                }
+
+                else -> cssStyleMap["text-decoration"] = decodeTextDecorationToCss(textDecoration)
+            }
+
         }
         spanStyle.shadow?.let { shadow ->
             cssStyleMap["text-shadow"] = decodeTextShadowToCss(shadow)
         }
 
-        return cssStyleMap
+        return HtmlStylingFormat(
+            htmlTags = htmlTags,
+            cssStyleMap = cssStyleMap,
+        )
     }
 
     /**
@@ -260,4 +295,8 @@ internal object CssDecoder {
         }
     }
 
+    data class HtmlStylingFormat(
+        val htmlTags: List<String>,
+        val cssStyleMap: Map<String, String>,
+    )
 }

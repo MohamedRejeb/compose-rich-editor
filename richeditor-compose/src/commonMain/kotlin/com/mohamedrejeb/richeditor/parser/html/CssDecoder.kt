@@ -14,8 +14,8 @@ import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.isUnspecified
-import com.mohamedrejeb.richeditor.parser.utils.MARK_BACKGROUND_COLOR
-import com.mohamedrejeb.richeditor.parser.utils.SMALL_FONT_SIZE
+import com.mohamedrejeb.richeditor.parser.utils.MarkBackgroundColor
+import com.mohamedrejeb.richeditor.parser.utils.SmallFontSize
 import com.mohamedrejeb.richeditor.utils.maxDecimals
 import kotlin.math.roundToInt
 
@@ -43,37 +43,37 @@ internal object CssDecoder {
         val cssStyleMap = mutableMapOf<String, String>()
         val htmlTags = mutableListOf<String>()
 
-        if (spanStyle.color.isSpecified) {
+        if (spanStyle.color.isSpecified)
             cssStyleMap["color"] = decodeColorToCss(spanStyle.color)
-        }
+
         if (spanStyle.fontSize.isSpecified) {
-            if (spanStyle.fontSize == SMALL_FONT_SIZE) {
+            if (spanStyle.fontSize == SmallFontSize)
                 htmlTags.add("small")
-            } else {
+            else
                 decodeTextUnitToCss(spanStyle.fontSize)?.let { fontSize ->
                     cssStyleMap["font-size"] = fontSize
                 }
-            }
         }
+
         spanStyle.fontWeight?.let { fontWeight ->
-            if (fontWeight == FontWeight.Bold) {
+            if (fontWeight == FontWeight.Bold)
                 htmlTags.add("b")
-            } else {
+            else
                 cssStyleMap["font-weight"] = decodeFontWeightToCss(fontWeight)
-            }
         }
+
         spanStyle.fontStyle?.let { fontStyle ->
-            if (fontStyle == FontStyle.Italic) {
+            if (fontStyle == FontStyle.Italic)
                 htmlTags.add("i")
-            } else {
+            else
                 cssStyleMap["font-style"] = decodeFontStyleToCss(fontStyle)
-            }
         }
-        if (spanStyle.letterSpacing.isSpecified) {
+
+        if (spanStyle.letterSpacing.isSpecified)
             decodeTextUnitToCss(spanStyle.letterSpacing)?.let { letterSpacing ->
                 cssStyleMap["letter-spacing"] = letterSpacing
             }
-        }
+
         spanStyle.baselineShift?.let { baselineShift ->
             when (baselineShift) {
                 BaselineShift.Subscript -> htmlTags.add("sub")
@@ -81,13 +81,14 @@ internal object CssDecoder {
                 else -> cssStyleMap["baseline-shift"] = decodeBaselineShiftToCss(baselineShift)
             }
         }
+
         if (spanStyle.background.isSpecified) {
-            if (spanStyle.background == MARK_BACKGROUND_COLOR) {
+            if (spanStyle.background == MarkBackgroundColor)
                 htmlTags.add("mark")
-            } else {
+            else
                 cssStyleMap["background"] = decodeColorToCss(spanStyle.background)
-            }
         }
+
         spanStyle.textDecoration?.let { textDecoration ->
             when (textDecoration) {
                 TextDecoration.Underline -> htmlTags.add("u")
@@ -99,8 +100,8 @@ internal object CssDecoder {
 
                 else -> cssStyleMap["text-decoration"] = decodeTextDecorationToCss(textDecoration)
             }
-
         }
+
         spanStyle.shadow?.let { shadow ->
             cssStyleMap["text-shadow"] = decodeTextShadowToCss(shadow)
         }

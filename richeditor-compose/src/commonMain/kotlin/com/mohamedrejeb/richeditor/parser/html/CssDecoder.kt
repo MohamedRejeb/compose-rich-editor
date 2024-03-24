@@ -14,7 +14,8 @@ import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.isUnspecified
-import androidx.compose.ui.unit.sp
+import com.mohamedrejeb.richeditor.parser.utils.MARK_BACKGROUND_COLOR
+import com.mohamedrejeb.richeditor.parser.utils.SMALL_FONT_SIZE
 import com.mohamedrejeb.richeditor.utils.maxDecimals
 import kotlin.math.roundToInt
 
@@ -38,22 +39,35 @@ internal object CssDecoder {
      * @param spanStyle the span style to decode.
      * @return the decoded CSS style map.
      */
-    internal fun decodeSpanStyleToCssStyleMap(spanStyle: SpanStyle): Map<String, String> {
+    internal fun decodeSpanStyleToHtmlStylingFormat(spanStyle: SpanStyle): HtmlStylingFormat {
         val cssStyleMap = mutableMapOf<String, String>()
+        val htmlTags = mutableListOf<String>()
 
         if (spanStyle.color.isSpecified) {
             cssStyleMap["color"] = decodeColorToCss(spanStyle.color)
         }
         if (spanStyle.fontSize.isSpecified) {
-            decodeTextUnitToCss(spanStyle.fontSize)?.let { fontSize ->
-                cssStyleMap["font-size"] = fontSize
+            if (spanStyle.fontSize == SMALL_FONT_SIZE) {
+                htmlTags.add("small")
+            } else {
+                decodeTextUnitToCss(spanStyle.fontSize)?.let { fontSize ->
+                    cssStyleMap["font-size"] = fontSize
+                }
             }
         }
         spanStyle.fontWeight?.let { fontWeight ->
-            cssStyleMap["font-weight"] = decodeFontWeightToCss(fontWeight)
+            if (fontWeight == FontWeight.Bold) {
+                htmlTags.add("b")
+            } else {
+                cssStyleMap["font-weight"] = decodeFontWeightToCss(fontWeight)
+            }
         }
         spanStyle.fontStyle?.let { fontStyle ->
-            cssStyleMap["font-style"] = decodeFontStyleToCss(fontStyle)
+            if (fontStyle == FontStyle.Italic) {
+                htmlTags.add("i")
+            } else {
+                cssStyleMap["font-style"] = decodeFontStyleToCss(fontStyle)
+            }
         }
         if (spanStyle.letterSpacing.isSpecified) {
             decodeTextUnitToCss(spanStyle.letterSpacing)?.let { letterSpacing ->
@@ -61,19 +75,40 @@ internal object CssDecoder {
             }
         }
         spanStyle.baselineShift?.let { baselineShift ->
-            cssStyleMap["baseline-shift"] = decodeBaselineShiftToCss(baselineShift)
+            when (baselineShift) {
+                BaselineShift.Subscript -> htmlTags.add("sub")
+                BaselineShift.Superscript -> htmlTags.add("sup")
+                else -> cssStyleMap["baseline-shift"] = decodeBaselineShiftToCss(baselineShift)
+            }
         }
         if (spanStyle.background.isSpecified) {
-            cssStyleMap["background"] = decodeColorToCss(spanStyle.background)
+            if (spanStyle.background == MARK_BACKGROUND_COLOR) {
+                htmlTags.add("mark")
+            } else {
+                cssStyleMap["background"] = decodeColorToCss(spanStyle.background)
+            }
         }
         spanStyle.textDecoration?.let { textDecoration ->
-            cssStyleMap["text-decoration"] = decodeTextDecorationToCss(textDecoration)
+            when (textDecoration) {
+                TextDecoration.Underline -> htmlTags.add("u")
+                TextDecoration.LineThrough -> htmlTags.add("s")
+                TextDecoration.Underline + TextDecoration.LineThrough -> {
+                    htmlTags.add("u")
+                    htmlTags.add("s")
+                }
+
+                else -> cssStyleMap["text-decoration"] = decodeTextDecorationToCss(textDecoration)
+            }
+
         }
         spanStyle.shadow?.let { shadow ->
             cssStyleMap["text-shadow"] = decodeTextShadowToCss(shadow)
         }
 
-        return cssStyleMap
+        return HtmlStylingFormat(
+            htmlTags = htmlTags,
+            cssStyleMap = cssStyleMap,
+        )
     }
 
     /**
@@ -260,4 +295,8 @@ internal object CssDecoder {
         }
     }
 
+    data class HtmlStylingFormat(
+        val htmlTags: List<String>,
+        val cssStyleMap: Map<String, String>,
+    )
 }

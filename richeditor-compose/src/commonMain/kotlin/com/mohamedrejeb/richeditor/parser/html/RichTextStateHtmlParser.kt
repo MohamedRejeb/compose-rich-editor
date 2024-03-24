@@ -213,7 +213,9 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
             val paragraphCss = CssDecoder.decodeCssStyleMap(paragraphCssMap)
 
             // Append paragraph opening tag
-            builder.append("<$paragraphTagName style=\"$paragraphCss\">")
+            builder.append("<$paragraphTagName")
+            if (paragraphCss.isNotBlank()) builder.append(" style=\"$paragraphCss\"")
+            builder.append(">")
 
             // Append paragraph children
             richParagraph.children.fastForEach { richSpan ->
@@ -236,7 +238,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         return builder.toString()
     }
 
-    private fun decodeRichSpanToHtml(richSpan: RichSpan): String {
+    private fun decodeRichSpanToHtml(richSpan: RichSpan, parentFormattingTags: List<String> = emptyList()): String {
         val stringBuilder = StringBuilder()
 
         // Check if span is empty
@@ -254,8 +256,9 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         }
 
         // Convert span style to CSS string
-        val spanCssMap = CssDecoder.decodeSpanStyleToCssStyleMap(richSpan.spanStyle)
-        val spanCss = CssDecoder.decodeCssStyleMap(spanCssMap)
+        val htmlStyleFormat = CssDecoder.decodeSpanStyleToHtmlStylingFormat(richSpan.spanStyle)
+        val spanCss = CssDecoder.decodeCssStyleMap(htmlStyleFormat.cssStyleMap)
+        val htmlTags = htmlStyleFormat.htmlTags.filter { it !in parentFormattingTags }
 
         val isRequireOpeningTag = tagName != "span" || tagAttributes.isNotEmpty() || spanCss.isNotEmpty()
 
@@ -266,12 +269,25 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
             stringBuilder.append(">")
         }
 
+        htmlTags.forEach {
+            stringBuilder.append("<$it>")
+        }
+
         // Append text
         stringBuilder.append(KsoupEntities.encodeHtml(richSpan.text))
 
         // Append children
         richSpan.children.fastForEach { child ->
-            stringBuilder.append(decodeRichSpanToHtml(child))
+            stringBuilder.append(
+                decodeRichSpanToHtml(
+                    richSpan = child,
+                    parentFormattingTags = parentFormattingTags + htmlTags,
+                )
+            )
+        }
+
+        htmlTags.reversed().forEach {
+            stringBuilder.append("</$it>")
         }
 
         if (isRequireOpeningTag) {

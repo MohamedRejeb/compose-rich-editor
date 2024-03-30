@@ -31,13 +31,19 @@ fun TextLayoutResult.getBoundingBoxes(
     if (multiParagraph.lineCount == 0)
         return emptyList()
 
-    val lastLinePosition =
-        Offset(
-            x = multiParagraph.getLineRight(multiParagraph.lineCount - 1),
-            y = multiParagraph.getLineTop(multiParagraph.lineCount - 1)
-        )
+    var lastOffset = 0
+    var lastNonEmptyLineIndex = multiParagraph.lineCount - 1
 
-    val lastOffset = multiParagraph.getOffsetForPosition(lastLinePosition)
+    while (lastOffset == 0 && lastNonEmptyLineIndex >= 0) {
+        val lastLinePosition =
+            Offset(
+                x = multiParagraph.getLineRight(lastNonEmptyLineIndex),
+                y = multiParagraph.getLineTop(lastNonEmptyLineIndex)
+            )
+
+        lastOffset = multiParagraph.getOffsetForPosition(lastLinePosition)
+        lastNonEmptyLineIndex--
+    }
 
     if (startOffset >= lastOffset)
         return emptyList()

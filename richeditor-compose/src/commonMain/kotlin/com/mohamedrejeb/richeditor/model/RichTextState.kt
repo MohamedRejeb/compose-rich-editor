@@ -34,6 +34,7 @@ fun rememberRichTextState(): RichTextState {
     }
 }
 
+@OptIn(ExperimentalRichTextApi::class)
 class RichTextState internal constructor(
     initialRichParagraphList: List<RichParagraph>,
 ) {
@@ -101,7 +102,7 @@ class RichTextState internal constructor(
     fun isRichSpan(spanStyle: RichSpanStyle): Boolean {
         return (currentRichSpanStyle::class == spanStyle::class ||
                 toAddRichSpanStyle::class == spanStyle::class) &&
-                toRemoveRichSpanStyle::class == spanStyle::class
+                toRemoveRichSpanStyle::class != spanStyle::class
     }
 
     /**

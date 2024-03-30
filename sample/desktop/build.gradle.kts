@@ -5,9 +5,12 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
 }
 
+compose {
+    kotlinCompilerPlugin.set(libs.versions.compose.compiler)
+}
+
 kotlin {
     jvm {
-        jvmToolchain(11)
         withJava()
     }
     sourceSets {

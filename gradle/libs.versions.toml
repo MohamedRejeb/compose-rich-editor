@@ -1,8 +1,9 @@
 [versions]
 agp = "8.2.2"
-kotlin = "1.9.22"
+kotlin = "2.0.0-Beta5"
 compose = "1.6.0"
 dokka = "1.9.10"
+compose-compiler = "1.5.11-kt-2.0.0-Beta5"
 
 ksoup = "0.3.1"
 jetbrainsMarkdown = "0.6.1"
@@ -10,7 +11,6 @@ jetbrainsMarkdown = "0.6.1"
 nexus-publish = "2.0.0-rc-1"
 
 # For sample
-compose-compiler = "1.5.4"
 activity-compose = "1.8.2"
 voyager = "1.1.0-alpha03"
 richeditor = "1.0.0-rc01"

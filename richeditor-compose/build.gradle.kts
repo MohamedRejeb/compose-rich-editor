@@ -5,6 +5,10 @@ plugins {
     id("module.publication")
 }
 
+compose {
+    kotlinCompilerPlugin.set(libs.versions.compose.compiler)
+}
+
 kotlin {
     applyDefaultHierarchyTemplate()
     androidTarget {
@@ -15,9 +19,7 @@ kotlin {
             }
         }
     }
-    jvm("desktop") {
-        jvmToolchain(11)
-    }
+    jvm("desktop")
     js(IR) {
         browser()
     }

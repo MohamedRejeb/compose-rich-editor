@@ -4,6 +4,10 @@ plugins {
     alias(libs.plugins.androidApplication)
 }
 
+compose {
+    kotlinCompilerPlugin.set(libs.versions.compose.compiler)
+}
+
 android {
     namespace = "com.mohamedrejeb.richeditor.android"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -16,12 +20,8 @@ android {
         versionCode = 1
         versionName = "1.0"
     }
-
     buildFeatures {
         compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8

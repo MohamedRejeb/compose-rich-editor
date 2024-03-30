@@ -4,6 +4,10 @@ plugins {
     alias(libs.plugins.androidLibrary)
 }
 
+compose {
+    kotlinCompilerPlugin.set(libs.versions.compose.compiler)
+}
+
 kotlin {
     applyDefaultHierarchyTemplate()
     androidTarget {
@@ -13,9 +17,7 @@ kotlin {
             }
         }
     }
-    jvm("desktop") {
-        jvmToolchain(11)
-    }
+    jvm("desktop")
     js(IR) {
         browser()
     }

@@ -8,11 +8,13 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.dp
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextConfig
 import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
 import com.mohamedrejeb.richeditor.utils.getBoundingBoxes
 
+@OptIn(ExperimentalRichTextApi::class)
 object SpellCheck: RichSpanStyle {
     override val spanStyle: (RichTextConfig) -> SpanStyle = {
         SpanStyle()

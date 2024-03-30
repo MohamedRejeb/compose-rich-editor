@@ -8,8 +8,8 @@ import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.em
 
-internal val MARK_BACKGROUND_COLOR = Color.Yellow
-internal val SMALL_FONT_SIZE = 0.8f.em
+internal val MarkBackgroundColor = Color.Yellow
+internal val SmallFontSize = 0.8f.em
 
 internal val BoldSpanStyle = SpanStyle(fontWeight = FontWeight.Bold)
 internal val ItalicSpanStyle = SpanStyle(fontStyle = FontStyle.Italic)
@@ -17,8 +17,8 @@ internal val UnderlineSpanStyle = SpanStyle(textDecoration = TextDecoration.Unde
 internal val StrikethroughSpanStyle = SpanStyle(textDecoration = TextDecoration.LineThrough)
 internal val SubscriptSpanStyle = SpanStyle(baselineShift = BaselineShift.Subscript)
 internal val SuperscriptSpanStyle = SpanStyle(baselineShift = BaselineShift.Superscript)
-internal val MarkSpanStyle = SpanStyle(background = MARK_BACKGROUND_COLOR)
-internal val SmallSpanStyle = SpanStyle(fontSize = SMALL_FONT_SIZE)
+internal val MarkSpanStyle = SpanStyle(background = MarkBackgroundColor)
+internal val SmallSpanStyle = SpanStyle(fontSize = SmallFontSize)
 internal val H1SPanStyle = SpanStyle(fontSize = 2.em, fontWeight = FontWeight.Bold)
 internal val H2SPanStyle = SpanStyle(fontSize = 1.5.em, fontWeight = FontWeight.Bold)
 internal val H3SPanStyle = SpanStyle(fontSize = 1.17.em, fontWeight = FontWeight.Bold)

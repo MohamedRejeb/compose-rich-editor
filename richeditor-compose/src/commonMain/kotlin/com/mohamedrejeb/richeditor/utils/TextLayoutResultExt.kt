@@ -1,8 +1,11 @@
 package com.mohamedrejeb.richeditor.utils
 
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.style.ResolvedTextDirection
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.annotation.InternalRichTextApi
 import kotlin.math.max
 import kotlin.math.min
 
@@ -19,24 +22,42 @@ import kotlin.math.min
  * @param flattenForFullParagraphs whether to return bounds for entire paragraphs instead of separate lines.
  * @return the list of bounds for the given range.
  */
+@ExperimentalRichTextApi
 fun TextLayoutResult.getBoundingBoxes(
     startOffset: Int,
     endOffset: Int,
     flattenForFullParagraphs: Boolean = false
 ): List<Rect> {
+    if (multiParagraph.lineCount == 0)
+        return emptyList()
+
+    val lastLinePosition =
+        Offset(
+            x = multiParagraph.getLineRight(multiParagraph.lineCount - 1),
+            y = multiParagraph.getLineTop(multiParagraph.lineCount - 1)
+        )
+
+    val lastOffset = multiParagraph.getOffsetForPosition(lastLinePosition)
+
+    if (startOffset >= lastOffset)
+        return emptyList()
+
     if (startOffset == endOffset)
         return emptyList()
 
-    if (startOffset < 0 || endOffset > layoutInput.text.length)
+    if (startOffset < 0 || endOffset < 0 || endOffset > layoutInput.text.length)
         return emptyList()
 
-    val startLineNum = getLineForOffset(min(startOffset, endOffset))
-    val endLineNum = getLineForOffset(max(startOffset, endOffset))
+    val start = min(startOffset, endOffset)
+    val end = min(max(start, endOffset), lastOffset)
+
+    val startLineNum = getLineForOffset(min(start, end))
+    val endLineNum = getLineForOffset(max(start, end))
 
     if (flattenForFullParagraphs) {
         val isFullParagraph = (startLineNum != endLineNum)
-                && getLineStart(startLineNum) == startOffset
-                && multiParagraph.getLineEnd(endLineNum, visibleEnd = true) == endOffset
+                && getLineStart(startLineNum) == start
+                && multiParagraph.getLineEnd(endLineNum, visibleEnd = true) == end
 
         if (isFullParagraph) {
             return listOf(
@@ -53,22 +74,36 @@ fun TextLayoutResult.getBoundingBoxes(
     // Compose UI does not offer any API for reading paragraph direction for an entire line.
     // So this code assumes that all paragraphs in the text will have the same direction.
     // It also assumes that this paragraph does not contain bi-directional text.
-    val isLtr = multiParagraph.getParagraphDirection(offset = layoutInput.text.lastIndex) == ResolvedTextDirection.Ltr
+    val isLtr = multiParagraph.getParagraphDirection(offset = start) == ResolvedTextDirection.Ltr
 
     return fastMapRange(startLineNum, endLineNum) { lineNum ->
+        val left =
+            if (lineNum == startLineNum)
+                getHorizontalPosition(
+                    offset = start,
+                    usePrimaryDirection = isLtr
+                )
+            else
+                getLineLeft(
+                    lineIndex = lineNum
+                )
+
+        val right =
+            if (lineNum == endLineNum)
+                getHorizontalPosition(
+                    offset = end,
+                    usePrimaryDirection = isLtr
+                )
+            else
+                getLineRight(
+                    lineIndex = lineNum
+                )
+
         Rect(
             top = getLineTop(lineNum),
             bottom = getLineBottom(lineNum),
-            left = if (lineNum == startLineNum) {
-                getHorizontalPosition(startOffset, usePrimaryDirection = isLtr)
-            } else {
-                getLineLeft(lineNum)
-            },
-            right = if (lineNum == endLineNum) {
-                getHorizontalPosition(endOffset, usePrimaryDirection = isLtr)
-            } else {
-                getLineRight(lineNum)
-            }
+            left = left,
+            right = right,
         )
     }
 }

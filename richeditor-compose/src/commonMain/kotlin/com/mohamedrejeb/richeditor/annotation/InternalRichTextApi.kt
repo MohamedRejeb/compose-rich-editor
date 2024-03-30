@@ -1,9 +1,8 @@
 package com.mohamedrejeb.richeditor.annotation
 
 @RequiresOptIn(
-    "This Rich Text API is experimental and is likely to change or to be removed in" +
-            " the future.",
-    level = RequiresOptIn.Level.WARNING
+    level = RequiresOptIn.Level.ERROR,
+    message = "This is internal API that may change frequently and without warning."
 )
 @Target(
     AnnotationTarget.CLASS,
@@ -11,4 +10,4 @@ package com.mohamedrejeb.richeditor.annotation
     AnnotationTarget.PROPERTY
 )
 @Retention(AnnotationRetention.BINARY)
-annotation class ExperimentalRichTextApi
+annotation class InternalRichTextApi

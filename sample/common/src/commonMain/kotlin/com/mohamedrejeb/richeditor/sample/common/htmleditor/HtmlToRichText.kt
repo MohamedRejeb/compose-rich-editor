@@ -11,7 +11,6 @@ import androidx.compose.ui.unit.dp
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HtmlToRichText(
     html: TextFieldValue,

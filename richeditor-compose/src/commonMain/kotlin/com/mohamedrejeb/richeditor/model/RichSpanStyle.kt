@@ -11,9 +11,11 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
 import com.mohamedrejeb.richeditor.utils.getBoundingBoxes
 
+@ExperimentalRichTextApi
 interface RichSpanStyle {
     val spanStyle: (RichTextConfig) -> SpanStyle
 
@@ -48,7 +50,7 @@ interface RichSpanStyle {
             textRange: TextRange,
             richTextConfig: RichTextConfig,
             topPadding: Float,
-            startPadding: Float
+            startPadding: Float,
         ) = Unit
 
         override val acceptNewTextInTheEdges: Boolean =
@@ -157,7 +159,7 @@ interface RichSpanStyle {
             textRange: TextRange,
             richTextConfig: RichTextConfig,
             topPadding: Float,
-            startPadding: Float
+            startPadding: Float,
         ) = Unit
 
         override val acceptNewTextInTheEdges: Boolean =

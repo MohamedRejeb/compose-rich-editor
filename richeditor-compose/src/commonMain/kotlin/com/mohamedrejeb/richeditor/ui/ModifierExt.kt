@@ -3,10 +3,12 @@ package com.mohamedrejeb.richeditor.ui
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.text.TextRange
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.utils.fastForEach
 
+@OptIn(ExperimentalRichTextApi::class)
 internal fun Modifier.drawRichSpanStyle(
     richTextState: RichTextState,
     topPadding: Float = 0f,
@@ -42,9 +44,9 @@ internal fun Modifier.drawRichSpanStyle(
                             drawCustomStyle(
                                 layoutResult = textLayoutResult,
                                 textRange = textRange,
-                                topPadding = topPadding,
-                                startPadding = startPadding,
                                 richTextConfig = richTextState.richTextConfig,
+                                topPadding = topPadding,
+                                startPadding = startPadding
                             )
                         }
                     }

@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.model.RichTextState
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SlackDemoLinkDialog(
     state: RichTextState,
@@ -27,144 +26,149 @@ fun SlackDemoLinkDialog(
     link: MutableState<String>,
     openLinkDialog: MutableState<Boolean>,
 ) {
-    Box(
-        contentAlignment = Alignment.Center,
+    Column(
+        horizontalAlignment = Alignment.Start,
         modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(.4f))
+            .clip(RoundedCornerShape(10.dp))
+            .background(Color(0xFF1a1d21))
+            .padding(20.dp)
     ) {
-        Column(
-            horizontalAlignment = Alignment.Start,
-            modifier = Modifier
-                .width(300.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(Color(0xFF1a1d21))
-                .padding(20.dp)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+            Text(
+                text = "Add link",
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            IconButton(
+                onClick = {
+                    openLinkDialog.value = false
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Close,
+                    contentDescription = "Close",
+                    tint = Color.White
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        OutlinedTextField(
+            value =
+            if (state.selection.collapsed)
+                text.value
+            else
+                state.annotatedString.text.substring(
+                    state.selection.min,
+                    state.selection.max
+                ),
+            onValueChange = {
+                text.value = it
+            },
+            label = {
+                Text(
+                    text = "Text",
+                    color = Color.White
+                )
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedBorderColor = Color.White,
+                unfocusedBorderColor = Color.White
+            ),
+            enabled = state.selection.collapsed,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        OutlinedTextField(
+            value = link.value,
+            onValueChange = {
+                link.value = it
+            },
+            label = {
+                Text(
+                    text = "Link",
+                    color = Color.White
+                )
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedBorderColor = Color.White,
+                unfocusedBorderColor = Color.White
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .align(Alignment.End)
+        ) {
+            OutlinedButton(
+                onClick = {
+                    openLinkDialog.value = false
+                    text.value = ""
+                    link.value = ""
+                },
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = Color.White
+                ),
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = Color.White
+                ),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier
             ) {
                 Text(
-                    text = "Add link",
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                    text = "Cancel",
+                    color = Color.White
                 )
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                IconButton(
-                    onClick = {
-                        openLinkDialog.value = false
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Close,
-                        contentDescription = "Close",
-                        tint = Color.White
-                    )
-                }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.width(10.dp))
 
-            OutlinedTextField(
-                value = text.value,
-                onValueChange = {
-                    text.value = it
-                },
-                label = {
-                    Text(
-                        text = "Text",
-                        color = Color.White
-                    )
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    focusedBorderColor = Color.White,
-                    unfocusedBorderColor = Color.White
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            OutlinedTextField(
-                value = link.value,
-                onValueChange = {
-                    link.value = it
-                },
-                label = {
-                    Text(
-                        text = "Link",
-                        color = Color.White
-                    )
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    focusedBorderColor = Color.White,
-                    unfocusedBorderColor = Color.White
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .align(Alignment.End)
-            ) {
-                OutlinedButton(
-                    onClick = {
-                        openLinkDialog.value = false
-                        text.value = ""
-                        link.value = ""
-                    },
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = Color.White
-                    ),
-                    border = BorderStroke(
-                        width = 1.dp,
-                        color = Color.White
-                    ),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier
-                ) {
-                    Text(
-                        text = "Cancel",
-                        color = Color.White
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(10.dp))
-
-                Button(
-                    onClick = {
+            Button(
+                onClick = {
+                    if (state.selection.collapsed)
                         state.addLink(
                             text = text.value,
                             url = link.value
                         )
-                        openLinkDialog.value = false
-                        text.value = ""
-                        link.value = ""
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF007a5a),
-                        contentColor = Color.White
-                    ),
-                    enabled = text.value.isNotEmpty() && link.value.isNotEmpty(),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier
-                ) {
-                    Text(
-                        text = "Save",
-                        color = Color.White
-                    )
-                }
+                    else
+                        state.addLinkToSelection(
+                            url = link.value
+                        )
+                    openLinkDialog.value = false
+                    text.value = ""
+                    link.value = ""
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF007a5a),
+                    contentColor = Color.White
+                ),
+                enabled = (text.value.isNotEmpty() || !state.selection.collapsed) && link.value.isNotEmpty(),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier
+            ) {
+                Text(
+                    text = "Save",
+                    color = Color.White
+                )
             }
         }
     }

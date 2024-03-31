@@ -21,18 +21,17 @@ internal fun Modifier.drawRichSpanStyle(
             richTextState.styledRichSpanList.fastForEach { richSpan ->
                 val lastAddedItem = styledRichSpanList.lastOrNull()
 
+                val end = richSpan.getLastNonEmptyChild()?.textRange?.end ?: richSpan.textRange.end
+
                 if (
                     lastAddedItem != null &&
                     lastAddedItem.first::class == richSpan.style::class &&
                     lastAddedItem.second.end == richSpan.textRange.start
-                ) {
-                    styledRichSpanList[styledRichSpanList.lastIndex] = Pair(
-                        lastAddedItem.first,
-                        TextRange(lastAddedItem.second.start, richSpan.textRange.end)
-                    )
-                } else {
-                    styledRichSpanList.add(Pair(richSpan.style, richSpan.textRange))
-                }
+                )
+                    styledRichSpanList[styledRichSpanList.lastIndex] =
+                        lastAddedItem.first to TextRange(lastAddedItem.second.start, end)
+                else
+                    styledRichSpanList.add(richSpan.style to TextRange(richSpan.textRange.start, end))
             }
 
             styledRichSpanList.fastForEach { (style, textRange) ->

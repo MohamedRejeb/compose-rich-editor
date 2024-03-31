@@ -58,7 +58,7 @@ internal class RichTextClipboardManager(
                                     !selection.collapsed &&
                                     selection.min < index + 1 &&
                                     selection.max > index
-                                ) append("\n")
+                                ) appendLine()
                                 index++
                             }
                         }

@@ -634,8 +634,10 @@ class RichTextState internal constructor(
      */
     private fun updateAnnotatedString(newTextFieldValue: TextFieldValue = textFieldValue) {
         var newText =
-            if (singleParagraphMode) newTextFieldValue.text
-            else newTextFieldValue.text.replace("\n", " ")
+            if (singleParagraphMode)
+                newTextFieldValue.text
+            else
+                newTextFieldValue.text.replace('\n', ' ')
 
         val newStyledRichSpanList = mutableListOf<RichSpan>()
         annotatedString = buildAnnotatedString {
@@ -692,7 +694,7 @@ class RichTextState internal constructor(
                             // Add empty space in the end of each paragraph to fix an issue with Compose TextField
                             // that makes that last char non-selectable when having multiple paragraphs
                             if (i != richParagraphList.lastIndex && index < newText.length) {
-                                append(" ")
+                                append(' ')
                                 index++
                             }
                         }
@@ -941,34 +943,35 @@ class RichTextState internal constructor(
         paragraphStartTextLength: Int,
         paragraphFirstChildMinIndex: Int,
     ) {
-        if (removeIndex < paragraphFirstChildMinIndex && paragraphStartTextLength > 0) {
-            val indexDiff = paragraphStartTextLength - (paragraphFirstChildMinIndex - removeIndex)
-            val beforeTextEndIndex = paragraphFirstChildMinIndex - paragraphStartTextLength
+        if (removeIndex >= paragraphFirstChildMinIndex || paragraphStartTextLength <= 0)
+            return
 
-            val beforeText =
-                if (beforeTextEndIndex <= 0)
-                    ""
-                else
-                    tempTextFieldValue.text.substring(
-                        startIndex = 0,
-                        endIndex = beforeTextEndIndex,
-                    )
-            val afterText =
-                if (tempTextFieldValue.text.length <= removeIndex)
-                    ""
-                else
-                    tempTextFieldValue.text.substring(
-                        startIndex = removeIndex,
-                        endIndex = tempTextFieldValue.text.length,
-                    )
-            val newText = beforeText + afterText
-            val newSelection = TextRange(removeIndex - indexDiff)
+        val indexDiff = paragraphStartTextLength - (paragraphFirstChildMinIndex - removeIndex)
+        val beforeTextEndIndex = paragraphFirstChildMinIndex - paragraphStartTextLength
 
-            tempTextFieldValue = tempTextFieldValue.copy(
-                text = newText,
-                selection = newSelection,
-            )
-        }
+        val beforeText =
+            if (beforeTextEndIndex <= 0)
+                ""
+            else
+                tempTextFieldValue.text.substring(
+                    startIndex = 0,
+                    endIndex = beforeTextEndIndex,
+                )
+        val afterText =
+            if (tempTextFieldValue.text.length <= removeIndex)
+                ""
+            else
+                tempTextFieldValue.text.substring(
+                    startIndex = removeIndex,
+                    endIndex = tempTextFieldValue.text.length,
+                )
+        val newText = beforeText + afterText
+        val newSelection = TextRange(removeIndex - indexDiff)
+
+        tempTextFieldValue = tempTextFieldValue.copy(
+            text = newText,
+            selection = newSelection,
+        )
     }
 
     private fun handleRemoveMaxParagraphStartText(
@@ -2202,7 +2205,7 @@ class RichTextState internal constructor(
                         )
                         if (!singleParagraphMode) {
                             if (i != richParagraphList.lastIndex) {
-                                append(" ")
+                                append(' ')
                                 index++
                             }
                         }

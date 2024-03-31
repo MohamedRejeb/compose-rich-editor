@@ -180,7 +180,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
             if (index < richTextState.richParagraphList.lastIndex) {
                 // Append new line
-                builder.append("\n")
+                builder.appendLine()
             }
         }
 

@@ -2,6 +2,7 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.utils.customMerge
 import com.mohamedrejeb.richeditor.utils.fastForEach
@@ -10,6 +11,7 @@ import com.mohamedrejeb.richeditor.utils.isSpecifiedFieldsEquals
 /**
  * A rich span is a part of a rich paragraph.
  */
+@OptIn(ExperimentalRichTextApi::class)
 internal class RichSpan(
     internal val key: Int? = null,
     val children: MutableList<RichSpan> = mutableListOf(),
@@ -56,6 +58,18 @@ internal class RichSpan(
         }
 
         return spanStyle
+    }
+
+    val fullStyle: RichSpanStyle get() {
+        var style = this.style
+        var parent = this.parent
+
+        while (parent != null && style::class == RichSpanStyle.Default::class) {
+            style = parent.style
+            parent = parent.parent
+        }
+
+        return style
     }
 
     val before: RichSpan? get() {
@@ -224,6 +238,7 @@ internal class RichSpan(
      * @param offset The offset of the text range
      * @return A pair of the offset and the rich span or null if the rich span is not found
      */
+    @OptIn(ExperimentalRichTextApi::class)
     fun getRichSpanByTextIndex(
         textIndex: Int,
         offset: Int = 0,

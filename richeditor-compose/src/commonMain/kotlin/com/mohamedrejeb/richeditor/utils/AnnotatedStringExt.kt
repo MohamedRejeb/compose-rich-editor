@@ -241,7 +241,6 @@ internal fun AnnotatedString.Builder.append(
 
     withStyle(richSpan.spanStyle.merge(richSpan.style.spanStyle(richTextConfig))) {
         richSpan.textRange = TextRange(index, index + richSpan.text.length)
-        println("richSpan.text: ${richSpan.text}")
         append(richSpan.text)
 
         if (richSpan.style !is RichSpanStyle.Default) {

@@ -1059,8 +1059,10 @@ class RichTextState internal constructor(
                     textFieldValue = tempTextFieldValue,
                 )
                 number++
-            } else if (i >= endParagraphIndex) break
-            else number = 1
+            } else if (i >= endParagraphIndex)
+                break
+            else
+                number = 1
         }
     }
 

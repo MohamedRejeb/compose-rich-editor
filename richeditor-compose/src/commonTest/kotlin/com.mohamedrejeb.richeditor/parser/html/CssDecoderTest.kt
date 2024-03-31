@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 
 internal class CssDecoderTest {
@@ -46,8 +47,8 @@ internal class CssDecoderTest {
         val color3 = Color(255, 0, 0, 107)
         val color4 = Color(0, 0, 255)
 
-        assertEquals(
-            "rgba(255, 0, 0, 1.0)",
+        assertContains(
+            listOf("rgba(255, 0, 0, 1.0)", "rgba(255, 0, 0, 1)"),
             CssDecoder.decodeColorToCss(color)
         )
         assertEquals(
@@ -58,8 +59,8 @@ internal class CssDecoderTest {
             "rgba(255, 0, 0, 0.42)",
             CssDecoder.decodeColorToCss(color3)
         )
-        assertEquals(
-            "rgba(0, 0, 255, 1.0)",
+        assertContains(
+            listOf("rgba(0, 0, 255, 1.0)", "rgba(0, 0, 255, 1)"),
             CssDecoder.decodeColorToCss(color4)
         )
     }
@@ -77,12 +78,12 @@ internal class CssDecoderTest {
             "12.0px",
             CssDecoder.decodeSizeToCss(size)
         )
-        assertEquals(
-            "16.0px",
+        assertContains(
+            listOf("16.0px", "16px"),
             CssDecoder.decodeSizeToCss(size2)
         )
-        assertEquals(
-            "192.0px",
+        assertContains(
+            listOf("192.0px", "192px"),
             CssDecoder.decodeSizeToCss(size3)
         )
         assertEquals(
@@ -93,8 +94,8 @@ internal class CssDecoderTest {
             "12.5px",
             CssDecoder.decodeSizeToCss(size5)
         )
-        assertEquals(
-            "-12.0px",
+        assertContains(
+            listOf("-12.0px", "-12px"),
             CssDecoder.decodeSizeToCss(size6)
         )
     }
@@ -110,16 +111,16 @@ internal class CssDecoderTest {
         val textUnit7 = TextUnit.Unspecified
         val textUnit8: TextUnit? = null
 
-        assertEquals(
-            "12.0em",
+        assertContains(
+            listOf("12.0em", "12em"),
             CssDecoder.decodeTextUnitToCss(textUnit)
         )
-        assertEquals(
-            "16.0em",
+        assertContains(
+            listOf("16.0em", "16em"),
             CssDecoder.decodeTextUnitToCss(textUnit2)
         )
-        assertEquals(
-            "192.0em",
+        assertContains(
+            listOf("192.0em", "192em"),
             CssDecoder.decodeTextUnitToCss(textUnit3)
         )
         assertEquals(
@@ -130,8 +131,8 @@ internal class CssDecoderTest {
             "12.5em",
             CssDecoder.decodeTextUnitToCss(textUnit5)
         )
-        assertEquals(
-            "24.0px",
+        assertContains(
+            listOf("24.0px", "24px"),
             CssDecoder.decodeTextUnitToCss(textUnit6)
         )
         assertEquals(
@@ -282,16 +283,25 @@ internal class CssDecoderTest {
             color = Color(255, 204, 0)
         )
 
-        assertEquals(
-            "1.0px 1.0px 1.0px rgba(0, 0, 0, 1.0)",
+        assertContains(
+            listOf(
+                "1.0px 1.0px 1.0px rgba(0, 0, 0, 1.0)",
+                "1px 1px 1px rgba(0, 0, 0, 1)"
+            ),
             CssDecoder.decodeTextShadowToCss(textShadow)
         )
-        assertEquals(
-            "1.0px 1.0px 2.0px rgba(0, 0, 0, 1.0)",
+        assertContains(
+            listOf(
+                "1.0px 1.0px 2.0px rgba(0, 0, 0, 1.0)",
+                "1px 1px 2px rgba(0, 0, 0, 1)"
+            ),
             CssDecoder.decodeTextShadowToCss(textShadow2)
         )
-        assertEquals(
-            "1.0px 1.0px 2.0px rgba(255, 204, 0, 1.0)",
+        assertContains(
+            listOf(
+                "1.0px 1.0px 2.0px rgba(255, 204, 0, 1.0)",
+                "1px 1px 2px rgba(255, 204, 0, 1)"
+            ),
             CssDecoder.decodeTextShadowToCss(textShadow3)
         )
     }

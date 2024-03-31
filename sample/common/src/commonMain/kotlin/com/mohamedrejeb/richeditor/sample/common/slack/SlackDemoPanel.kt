@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.FormatAlignLeft
+import androidx.compose.material.icons.automirrored.outlined.FormatAlignRight
+import androidx.compose.material.icons.automirrored.outlined.FormatListBulleted
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.runtime.Composable
@@ -45,7 +48,7 @@ fun SlackDemoPanel(
                     )
                 },
                 isSelected = state.currentParagraphStyle.textAlign == TextAlign.Left,
-                icon = Icons.Outlined.FormatAlignLeft
+                icon = Icons.AutoMirrored.Outlined.FormatAlignLeft
             )
         }
 
@@ -73,7 +76,7 @@ fun SlackDemoPanel(
                     )
                 },
                 isSelected = state.currentParagraphStyle.textAlign == TextAlign.Right,
-                icon = Icons.Outlined.FormatAlignRight
+                icon = Icons.AutoMirrored.Outlined.FormatAlignRight
             )
         }
 
@@ -229,7 +232,7 @@ fun SlackDemoPanel(
                     state.toggleUnorderedList()
                 },
                 isSelected = state.isUnorderedList,
-                icon = Icons.Outlined.FormatListBulleted,
+                icon = Icons.AutoMirrored.Outlined.FormatListBulleted,
             )
         }
 

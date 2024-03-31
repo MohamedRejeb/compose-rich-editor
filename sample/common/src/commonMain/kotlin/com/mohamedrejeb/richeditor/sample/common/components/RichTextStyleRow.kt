@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.FormatAlignLeft
+import androidx.compose.material.icons.automirrored.outlined.FormatAlignRight
+import androidx.compose.material.icons.automirrored.outlined.FormatListBulleted
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.runtime.Composable
@@ -20,9 +23,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.sample.common.richeditor.SpellCheck
 
+@OptIn(ExperimentalRichTextApi::class)
 @Composable
 fun RichTextStyleRow(
     modifier: Modifier = Modifier,
@@ -42,7 +47,7 @@ fun RichTextStyleRow(
                     )
                 },
                 isSelected = state.currentParagraphStyle.textAlign == TextAlign.Left,
-                icon = Icons.Outlined.FormatAlignLeft
+                icon = Icons.AutoMirrored.Outlined.FormatAlignLeft
             )
         }
 
@@ -70,7 +75,7 @@ fun RichTextStyleRow(
                     )
                 },
                 isSelected = state.currentParagraphStyle.textAlign == TextAlign.Right,
-                icon = Icons.Outlined.FormatAlignRight
+                icon = Icons.AutoMirrored.Outlined.FormatAlignRight
             )
         }
 
@@ -189,7 +194,7 @@ fun RichTextStyleRow(
                     state.toggleUnorderedList()
                 },
                 isSelected = state.isUnorderedList,
-                icon = Icons.Outlined.FormatListBulleted,
+                icon = Icons.AutoMirrored.Outlined.FormatListBulleted,
             )
         }
 

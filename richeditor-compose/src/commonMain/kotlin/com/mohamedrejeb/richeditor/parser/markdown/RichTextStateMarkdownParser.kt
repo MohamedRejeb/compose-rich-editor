@@ -3,6 +3,7 @@ package com.mohamedrejeb.richeditor.parser.markdown
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextDecoration
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.*
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
@@ -22,6 +23,7 @@ import org.intellij.markdown.flavours.gfm.GFMElementTypes
 
 internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
+    @OptIn(ExperimentalRichTextApi::class)
     override fun encode(input: String): RichTextState {
         val openedNodes = mutableListOf<ASTNode>()
         val stringBuilder = StringBuilder()
@@ -149,7 +151,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
                 currentRichSpan = currentRichSpan?.parent
             },
-            onHtml = { html ->
+            onHtml = { _ ->
                 // Todo: support HTML in markdown
             }
         )
@@ -187,6 +189,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         return builder.toString()
     }
 
+    @OptIn(ExperimentalRichTextApi::class)
     private fun decodeRichSpanToMarkdown(richSpan: RichSpan): String {
         val stringBuilder = StringBuilder()
 
@@ -239,6 +242,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     /**
      * Encodes Markdown elements to [RichSpanStyle].
      */
+    @OptIn(ExperimentalRichTextApi::class)
     private fun encodeMarkdownElementToRichSpanStyle(
         node: ASTNode,
         markdown: String,
@@ -269,6 +273,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     /**
      * Decodes HTML elements from [RichSpan].
      */
+    @OptIn(ExperimentalRichTextApi::class)
     private fun decodeMarkdownElementFromRichSpan(
         text: String,
         richSpanStyle: RichSpanStyle,

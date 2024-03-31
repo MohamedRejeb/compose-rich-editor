@@ -7,9 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,10 +20,11 @@ import com.mohamedrejeb.richeditor.model.RichTextState
 @Composable
 fun SlackDemoLinkDialog(
     state: RichTextState,
-    text: MutableState<String>,
-    link: MutableState<String>,
     openLinkDialog: MutableState<Boolean>,
 ) {
+    var text by remember { mutableStateOf(state.selectedLinkText.orEmpty()) }
+    var link by remember { mutableStateOf(state.selectedLinkUrl.orEmpty()) }
+
     Column(
         horizontalAlignment = Alignment.Start,
         modifier = Modifier
@@ -63,14 +62,14 @@ fun SlackDemoLinkDialog(
         OutlinedTextField(
             value =
             if (state.selection.collapsed)
-                text.value
+                text
             else
                 state.annotatedString.text.substring(
                     state.selection.min,
                     state.selection.max
                 ),
             onValueChange = {
-                text.value = it
+                text = it
             },
             label = {
                 Text(
@@ -84,16 +83,16 @@ fun SlackDemoLinkDialog(
                 focusedBorderColor = Color.White,
                 unfocusedBorderColor = Color.White
             ),
-            enabled = state.selection.collapsed,
+            enabled = state.selection.collapsed && !state.isLink,
             modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(20.dp))
 
         OutlinedTextField(
-            value = link.value,
+            value = link,
             onValueChange = {
-                link.value = it
+                link = it
             },
             label = {
                 Text(
@@ -117,11 +116,40 @@ fun SlackDemoLinkDialog(
             modifier = Modifier
                 .align(Alignment.End)
         ) {
+            if (state.isLink) {
+                OutlinedButton(
+                    onClick = {
+                        state.removeLink()
+
+                        openLinkDialog.value = false
+                        text = ""
+                        link = ""
+                    },
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = Color.White
+                    ),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = Color.Red
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier
+                ) {
+                    Text(
+                        text = "Remove",
+                        color = Color.Red
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(10.dp))
+            }
+
             OutlinedButton(
                 onClick = {
                     openLinkDialog.value = false
-                    text.value = ""
-                    link.value = ""
+                    text = ""
+                    link = ""
                 },
                 colors = ButtonDefaults.outlinedButtonColors(
                     containerColor = Color.Transparent,
@@ -144,24 +172,33 @@ fun SlackDemoLinkDialog(
 
             Button(
                 onClick = {
-                    if (state.selection.collapsed)
-                        state.addLink(
-                            text = text.value,
-                            url = link.value
-                        )
-                    else
-                        state.addLinkToSelection(
-                            url = link.value
-                        )
+                    when {
+                        state.isLink ->
+                            state.updateLink(
+                                url = link,
+                            )
+
+                        state.selection.collapsed ->
+                            state.addLink(
+                                text = text,
+                                url = link
+                            )
+
+                        else ->
+                            state.addLinkToSelection(
+                                url = link
+                            )
+                    }
+
                     openLinkDialog.value = false
-                    text.value = ""
-                    link.value = ""
+                    text = ""
+                    link = ""
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF007a5a),
                     contentColor = Color.White
                 ),
-                enabled = (text.value.isNotEmpty() || !state.selection.collapsed) && link.value.isNotEmpty(),
+                enabled = (text.isNotEmpty() || !state.selection.collapsed) && link.isNotEmpty(),
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier
             ) {

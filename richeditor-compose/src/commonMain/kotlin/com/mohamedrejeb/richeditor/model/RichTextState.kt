@@ -83,7 +83,24 @@ class RichTextState internal constructor(
             ?: RichSpanStyle.Default
     )
 
+    /**
+     * Returns whether the current selected text is a link.
+     */
     val isLink: Boolean get() = currentRichSpanStyle::class == RichSpanStyle.Link::class
+
+    /**
+     * Returns the selected link text.
+     */
+    val selectedLinkText: String? get() =
+        if (isLink)
+            getRichSpanByTextIndex(textIndex = selection.min - 1)?.text
+        else
+            null
+
+    /**
+     * Returns the selected link URL.
+     */
+    val selectedLinkUrl: String? get() = (currentRichSpanStyle as? RichSpanStyle.Link)?.url
 
     @Deprecated(
         message = "Use isCodeSpan instead",
@@ -92,13 +109,16 @@ class RichTextState internal constructor(
     )
     val isCode: Boolean get() = isCodeSpan
 
+    /**
+     * Returns whether the current selected text is a code span.
+     */
     val isCodeSpan: Boolean get() = isRichSpan<RichSpanStyle.Code>()
 
     private var toAddSpanStyle: SpanStyle by mutableStateOf(SpanStyle())
     private var toRemoveSpanStyle: SpanStyle by mutableStateOf(SpanStyle())
 
-    private var toAddRichSpanStyle: RichSpanStyle by mutableStateOf(RichSpanStyle.Default)
-    private var toRemoveRichSpanStyle: RichSpanStyle by mutableStateOf(RichSpanStyle.Default)
+    private var toAddRichSpanStyle: RichSpanStyle = RichSpanStyle.Default
+    private var toRemoveRichSpanStyle: KClass<out RichSpanStyle> = RichSpanStyle.Default::class
 
     @Deprecated(
         message = "Use isRichSpan with T or KClass instead",
@@ -114,7 +134,7 @@ class RichTextState internal constructor(
     fun isRichSpan(kClass: KClass<out RichSpanStyle>): Boolean {
         return (currentRichSpanStyle::class == kClass ||
                 toAddRichSpanStyle::class == kClass) &&
-                toRemoveRichSpanStyle::class != kClass
+                toRemoveRichSpanStyle != kClass
     }
 
     /**
@@ -249,6 +269,10 @@ class RichTextState internal constructor(
             applyRichSpanStyleToSelectedText()
     }
 
+    /**
+     * Add a link to the text field.
+     * The link is going to be added after the current selection.
+     */
     fun addLink(
         text: String,
         url: String,
@@ -281,6 +305,9 @@ class RichTextState internal constructor(
         )
     }
 
+    /**
+     * Add a link to the selected text.
+     */
     fun addLinkToSelection(
         url: String,
     ) {
@@ -291,11 +318,49 @@ class RichTextState internal constructor(
         )
 
         toAddRichSpanStyle = linkStyle
-        toRemoveRichSpanStyle = RichSpanStyle.Default
+        toRemoveRichSpanStyle = RichSpanStyle.Default::class
 
         addRichSpan(
             spanStyle = linkStyle
         )
+    }
+
+    /**
+     * Update the link of the selected text.
+     */
+    fun updateLink(
+        url: String,
+    ) {
+        if (!isLink) return
+
+        val linkStyle = RichSpanStyle.Link(
+            url = url,
+        )
+
+        val richSpan = getSelectedLinkRichSpan() ?: return
+
+        richSpan.style = linkStyle
+
+        updateTextFieldValue(textFieldValue)
+    }
+
+    /**
+     * Remove the link from the selected text.
+     */
+    fun removeLink() {
+        if (!isLink) return
+
+        val richSpan = getSelectedLinkRichSpan() ?: return
+
+        richSpan.style = RichSpanStyle.Default
+
+        updateTextFieldValue(textFieldValue)
+    }
+
+    private fun getSelectedLinkRichSpan(): RichSpan? {
+        val richSpan = getRichSpanByTextIndex(selection.min - 1)
+
+        return getLinkRichSpan(richSpan)
     }
 
     @Deprecated(
@@ -336,7 +401,7 @@ class RichTextState internal constructor(
 
     fun addRichSpan(spanStyle: RichSpanStyle) {
         if (toRemoveRichSpanStyle::class == spanStyle)
-            toRemoveRichSpanStyle = RichSpanStyle.Default
+            toRemoveRichSpanStyle = RichSpanStyle.Default::class
         toAddRichSpanStyle = spanStyle
 
         if (!selection.collapsed)
@@ -346,7 +411,7 @@ class RichTextState internal constructor(
     fun removeRichSpan(spanStyle: RichSpanStyle) {
         if (toAddRichSpanStyle::class == spanStyle::class)
             toAddRichSpanStyle = RichSpanStyle.Default
-        toRemoveRichSpanStyle = spanStyle
+        toRemoveRichSpanStyle = spanStyle::class
 
         if (!selection.collapsed)
             applyRichSpanStyleToSelectedText()
@@ -640,7 +705,7 @@ class RichTextState internal constructor(
         toAddSpanStyle = SpanStyle()
         toRemoveSpanStyle = SpanStyle()
         toAddRichSpanStyle = RichSpanStyle.Default
-        toRemoveRichSpanStyle = RichSpanStyle.Default
+        toRemoveRichSpanStyle = RichSpanStyle.Default::class
 
         // Update current span style
         updateCurrentSpanStyle()
@@ -1170,11 +1235,22 @@ class RichTextState internal constructor(
      * Handles adding or removing the style in [toAddSpanStyle] and [toRemoveSpanStyle] from the selected text.
      */
     private fun applyRichSpanStyleToSelectedText() {
-        // Get the rich span list of the selected text
-        val selectedRichSpanList = getRichSpanListByTextRange(selection)
+        applyRichSpanStyleToTextRange(selection)
+    }
 
-        val startSelectionIndex = selection.min
-        val endSelectionIndex = selection.max
+    /**
+     * Handles adding or removing the style in [toAddSpanStyle] and [toRemoveSpanStyle] from a given [TextRange].
+     *
+     * @param textRange The [TextRange] to apply the styles to.
+     */
+    private fun applyRichSpanStyleToTextRange(
+        textRange: TextRange
+    ) {
+        // Get the rich span list of the selected text
+        val selectedRichSpanList = getRichSpanListByTextRange(textRange)
+
+        val startSelectionIndex = textRange.min
+        val endSelectionIndex = textRange.max
 
         // Loop through the rich span list
         for (i in selectedRichSpanList.lastIndex downTo 0) {
@@ -1252,7 +1328,7 @@ class RichTextState internal constructor(
 
         if (
             (toRemoveSpanStyle == SpanStyle() || !richSpanFullSpanStyle.isSpecifiedFieldsEquals(toRemoveSpanStyle)) &&
-            (toRemoveRichSpanStyle is RichSpanStyle.Default || newRichSpanStyle::class == richSpan.style::class)
+            (toRemoveRichSpanStyle == RichSpanStyle.Default::class || newRichSpanStyle::class == richSpan.style::class)
         ) {
             applyStyleToRichSpan(
                 richSpan = richSpan,
@@ -1933,34 +2009,27 @@ class RichTextState internal constructor(
     }
 
     internal fun getLinkByOffset(offset: Offset): String? {
-        var richSpan = getRichSpanByOffset(offset)
-        var url: String? = null
+        val richSpan = getRichSpanByOffset(offset)
+        val linkRichSpan = getLinkRichSpan(richSpan)
 
-        while (richSpan != null) {
-            val style = richSpan.style
-            if (style is RichSpanStyle.Link) {
-                url = style.url
-                break
-            }
-
-            richSpan = richSpan.parent
-        }
-
-        return url
+        return (linkRichSpan?.style as? RichSpanStyle.Link)?.url
     }
 
     internal fun isLink(offset: Offset): Boolean {
-        var richSpan = getRichSpanByOffset(offset)
+        val richSpan = getRichSpanByOffset(offset)
+        val linkRichSpan = getLinkRichSpan(richSpan)
 
-        while (richSpan != null) {
-            val style = richSpan.style
-            if (style is RichSpanStyle.Link)
-                return true
+        return linkRichSpan != null
+    }
 
+    private fun getLinkRichSpan(initialRichSpan: RichSpan?): RichSpan? {
+        var richSpan = initialRichSpan
+
+        while (richSpan != null && richSpan.style !is RichSpanStyle.Link) {
             richSpan = richSpan.parent
         }
 
-        return false
+        return richSpan
     }
 
     private fun getRichSpanByOffset(offset: Offset): RichSpan? {

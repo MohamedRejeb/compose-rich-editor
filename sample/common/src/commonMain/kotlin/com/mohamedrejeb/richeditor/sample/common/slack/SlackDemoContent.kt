@@ -51,8 +51,6 @@ fun SlackDemoContent() {
     }
 
     val openLinkDialog = remember { mutableStateOf(false) }
-    val text = remember { mutableStateOf("") }
-    val link = remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         richTextState.setConfig(
@@ -229,8 +227,6 @@ fun SlackDemoContent() {
                     ) {
                         SlackDemoLinkDialog(
                             state = richTextState,
-                            text = text,
-                            link = link,
                             openLinkDialog = openLinkDialog
                         )
                     }

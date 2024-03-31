@@ -2,12 +2,14 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.text.TextRange
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class RichParagraphStyleTest {
     private val paragraph = RichParagraph(key = 0)
+    @OptIn(ExperimentalRichTextApi::class)
     private val richSpanLists get() = listOf(
         RichSpan(
             key = 0,

@@ -2,6 +2,7 @@ package com.mohamedrejeb.richeditor.paragraph
 
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.TextRange
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
@@ -17,6 +18,7 @@ internal class RichParagraph(
     var type: ParagraphType = DefaultParagraph(),
 ) {
 
+    @OptIn(ExperimentalRichTextApi::class)
     fun getRichSpanByTextIndex(
         paragraphIndex: Int,
         textIndex: Int,
@@ -60,6 +62,7 @@ internal class RichParagraph(
         return index to null
     }
 
+    @OptIn(ExperimentalRichTextApi::class)
     fun getRichSpanListByTextRange(
         paragraphIndex: Int,
         searchTextRange: TextRange,

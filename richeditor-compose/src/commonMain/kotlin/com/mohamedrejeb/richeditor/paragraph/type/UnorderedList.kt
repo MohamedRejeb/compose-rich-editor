@@ -2,8 +2,8 @@ package com.mohamedrejeb.richeditor.paragraph.type
 
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.style.TextIndent
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 
@@ -20,6 +20,7 @@ internal class UnorderedList : ParagraphType {
             )
         )
 
+    @OptIn(ExperimentalRichTextApi::class)
     override var startRichSpan: RichSpan =
         RichSpan(
             paragraph = RichParagraph(type = this),

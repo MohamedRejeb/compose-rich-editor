@@ -43,7 +43,7 @@ internal fun DebugRichTextEditor(
                 .padding(8.dp),
         )
 
-        Divider(modifier = Modifier.padding(vertical = 20.dp))
+        HorizontalDivider(modifier = Modifier.padding(vertical = 20.dp))
 
         Text(
             text = "Annotation Length: ${richTextState.annotatedString.text.length}",
@@ -83,7 +83,7 @@ internal fun DebugRichTextEditor(
                     RichTextStyleTreeRepresentation(childIndex, richTextStyle, " -")
                 }
 
-                Divider(modifier = Modifier.padding(vertical = 20.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 20.dp))
             }
         }
     }

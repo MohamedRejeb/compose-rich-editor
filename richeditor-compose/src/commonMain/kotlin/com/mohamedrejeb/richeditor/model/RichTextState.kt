@@ -743,31 +743,6 @@ class RichTextState internal constructor(
                 }
 
                 withStyle(richParagraph.paragraphStyle.merge(richParagraph.type.style)) {
-                    // Add empty space to the last paragraph if it's empty.
-                    // Workaround to fix an issue with Compose TextField that causes a crash on long click
-                    if (
-                        !singleParagraphMode &&
-                        (currentPlatform.isAndroid ||
-                                currentPlatform.isIOS) &&
-                        i > 0 && i == richParagraphList.lastIndex &&
-                        richParagraph.isEmpty(ignoreStartRichSpan = false)
-                    ) {
-                        richParagraph.type = OneSpaceParagraph()
-                        newText += ' '
-                    } else if (
-                        !singleParagraphMode &&
-                        i != richParagraphList.lastIndex &&
-                        richParagraph.type is OneSpaceParagraph
-                    ) {
-                        // If the paragraph no longer the last return its type to default
-                        newText =
-                            updateParagraphType(
-                                paragraph = richParagraph,
-                                newType = DefaultParagraph(),
-                                textFieldValue = newTextFieldValue,
-                            ).text
-                    }
-
                     append(richParagraph.type.startText)
                     val richParagraphStartTextLength = richParagraph.type.startText.length
                     richParagraph.type.startRichSpan.textRange = TextRange(index, index + richParagraphStartTextLength)
@@ -801,8 +776,8 @@ class RichTextState internal constructor(
         textFieldValue = newTextFieldValue.copy(text = annotatedString.text)
         visualTransformation = VisualTransformation { _ ->
             TransformedText(
-                annotatedString,
-                OffsetMapping.Identity
+                text = annotatedString,
+                offsetMapping = OffsetMapping.Identity
             )
         }
         styledRichSpanList.addAll(newStyledRichSpanList)

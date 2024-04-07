@@ -272,6 +272,9 @@ class RichTextState internal constructor(
     /**
      * Add a link to the text field.
      * The link is going to be added after the current selection.
+     *
+     * @param text the text of the link.
+     * @param url the URL of the link.
      */
     fun addLink(
         text: String,
@@ -307,6 +310,8 @@ class RichTextState internal constructor(
 
     /**
      * Add a link to the selected text.
+     *
+     * @param url the URL of the link.
      */
     fun addLinkToSelection(
         url: String,
@@ -327,6 +332,8 @@ class RichTextState internal constructor(
 
     /**
      * Update the link of the selected text.
+     *
+     * @param url the new URL of the link.
      */
     fun updateLink(
         url: String,

@@ -48,7 +48,7 @@ android {
         }
     }
     dependencies {
-        implementation(project(":sample:common"))
+        implementation(projects.sample.common)
 
         implementation(libs.activity.compose)
     }

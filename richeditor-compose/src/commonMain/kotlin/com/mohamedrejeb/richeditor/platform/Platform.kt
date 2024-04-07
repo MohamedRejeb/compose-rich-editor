@@ -1,7 +1,7 @@
 package com.mohamedrejeb.richeditor.platform
 
 internal enum class Platform {
-    Android, IOS, Desktop, Web;
+    Android, IOS, Desktop, WebJs, WebWasm;
 
     val isAndroid: Boolean
         get() = this == Android
@@ -12,8 +12,11 @@ internal enum class Platform {
     val isDesktop: Boolean
         get() = this == Desktop
 
-    val isWeb: Boolean
-        get() = this == Web
+    val isWebJs: Boolean
+        get() = this == WebJs
+
+    val isWebWasm: Boolean
+        get() = this == WebWasm
 }
 
 internal expect val currentPlatform: Platform

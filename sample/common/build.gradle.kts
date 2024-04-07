@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.composeMultiplatform)
@@ -19,6 +21,8 @@ kotlin {
     js(IR) {
         browser()
     }
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs().browser()
 
     listOf(
         iosX64(),
@@ -43,8 +47,7 @@ kotlin {
                 @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
                 implementation(compose.components.resources)
 
-//                implementation(libs.richeditor.compose)
-                implementation(project(":richeditor-compose"))
+                implementation(projects.richeditorCompose)
 
                 // Voyager Navigator
                 implementation(libs.voyager.navigator)

@@ -5,7 +5,7 @@ compose = "1.6.0"
 dokka = "1.9.10"
 
 ksoup = "0.3.1"
-jetbrainsMarkdown = "0.6.1"
+jetbrainsMarkdown = "0.7.0"
 
 nexus-publish = "2.0.0-rc-1"
 

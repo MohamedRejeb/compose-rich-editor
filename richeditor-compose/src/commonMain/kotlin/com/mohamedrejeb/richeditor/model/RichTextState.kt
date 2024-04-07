@@ -657,8 +657,6 @@ class RichTextState internal constructor(
      */
     internal fun onTextFieldValueChange(newTextFieldValue: TextFieldValue) {
         tempTextFieldValue = newTextFieldValue
-        println("newTextFieldValue text: ${newTextFieldValue.text}")
-        println("newTextFieldValue selection: ${newTextFieldValue.selection}")
 
         if (tempTextFieldValue.text.length > textFieldValue.text.length)
             handleAddingCharacters()

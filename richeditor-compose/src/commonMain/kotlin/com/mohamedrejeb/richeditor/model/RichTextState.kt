@@ -2321,8 +2321,8 @@ class RichTextState internal constructor(
         )
         visualTransformation = VisualTransformation { _ ->
             TransformedText(
-                annotatedString,
-                OffsetMapping.Identity
+                text = annotatedString,
+                offsetMapping = OffsetMapping.Identity
             )
         }
         styledRichSpanList.addAll(newStyledRichSpanList)
@@ -2340,7 +2340,7 @@ class RichTextState internal constructor(
     private fun checkParagraphsType() {
         var orderedListNumber = 0
         var orderedListStartTextSpanStyle = SpanStyle()
-        richParagraphList.fastForEachIndexed { _, richParagraph ->
+        richParagraphList.forEach { richParagraph ->
             val type = richParagraph.type
             if (type is OrderedList) {
                 orderedListNumber++
@@ -2348,9 +2348,7 @@ class RichTextState internal constructor(
                 if (orderedListNumber == 1)
                     orderedListStartTextSpanStyle = richParagraph.getFirstNonEmptyChild()?.spanStyle ?: SpanStyle()
 
-                if (orderedListNumber == type.number)
-
-                    type.number = orderedListNumber
+                type.number = orderedListNumber
                 type.startTextSpanStyle = orderedListStartTextSpanStyle
             } else {
                 orderedListNumber = 0

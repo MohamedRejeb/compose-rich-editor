@@ -657,6 +657,8 @@ class RichTextState internal constructor(
      */
     internal fun onTextFieldValueChange(newTextFieldValue: TextFieldValue) {
         tempTextFieldValue = newTextFieldValue
+        println("newTextFieldValue text: ${newTextFieldValue.text}")
+        println("newTextFieldValue selection: ${newTextFieldValue.selection}")
 
         if (tempTextFieldValue.text.length > textFieldValue.text.length)
             handleAddingCharacters()
@@ -790,7 +792,7 @@ class RichTextState internal constructor(
      */
     private fun handleAddingCharacters() {
         val typedCharsCount = tempTextFieldValue.text.length - textFieldValue.text.length
-        var startTypeIndex = tempTextFieldValue.selection.min - typedCharsCount
+        var startTypeIndex = tempTextFieldValue.selection.max - typedCharsCount
         val typedText = tempTextFieldValue.text.substring(
             startIndex = startTypeIndex,
             endIndex = startTypeIndex + typedCharsCount,
@@ -817,7 +819,10 @@ class RichTextState internal constructor(
                 val newTypedText = beforeTypedText + paragraphStartText + typedText + afterTypedText
                 tempTextFieldValue = tempTextFieldValue.copy(
                     text = newTypedText,
-                    selection = TextRange(tempTextFieldValue.selection.min + indexDiff),
+                    selection = TextRange(
+                        (tempTextFieldValue.selection.min + indexDiff).coerceAtLeast(0),
+                        (tempTextFieldValue.selection.max + indexDiff).coerceAtMost(newTypedText.length),
+                    ),
                 )
             }
 

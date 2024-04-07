@@ -842,6 +842,8 @@ class RichTextState internal constructor(
                 (newSpanStyle == activeRichSpanFullSpanStyle && newRichSpanStyle::class == activeRichSpan.style::class)
             ) {
                 activeRichSpan.text = beforeText + typedText + afterText
+
+                checkListStart(richSpan = activeRichSpan)
             } else {
                 handleUpdatingRichSpan(
                     richSpan = activeRichSpan,
@@ -1078,6 +1080,23 @@ class RichTextState internal constructor(
             tempTextFieldValue = tempTextFieldValue.copy(
                 text = newText,
             )
+        }
+    }
+
+    private fun checkListStart(richSpan: RichSpan) {
+        if (richSpan.paragraph.type !is DefaultParagraph)
+            return
+
+        if (!richSpan.isFirstInParagraph)
+            return
+
+        if (richSpan.text == "- " || richSpan.text == "* ") {
+            richSpan.paragraph.type = UnorderedList()
+            richSpan.text = ""
+        } else if (richSpan.text.matches(Regex("^\\d+\\. "))) {
+            val number = richSpan.text.first().digitToIntOrNull() ?: 1
+            richSpan.paragraph.type = OrderedList(number)
+            richSpan.text = ""
         }
     }
 

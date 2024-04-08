@@ -19,18 +19,7 @@ permissions:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        include:
-          - target: iosSimulatorArm64Test
-            os: macos-latest
-          - target: desktopTest
-            os: macos-latest
-          - target: testDebugUnitTest
-            os: macos-latest
-          - target: testReleaseUnitTest
-            os: macos-latest
-    runs-on: ${{ matrix.os }}
+    runs-on: macos-14
 
     steps:
       - uses: actions/checkout@v3
@@ -51,7 +40,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Run tests
-        run: ./gradlew ${{ matrix.target }}
+        run: ./gradlew allTests
 
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'

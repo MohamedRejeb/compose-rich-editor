@@ -13,10 +13,10 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    uses: ./.github/workflows/gradle.yml
+#  build:
+#    uses: ./.github/workflows/gradle.yml
   deploy:
-    needs: build
+#    needs: build
     strategy:
       matrix:
         include:

@@ -272,6 +272,9 @@ class RichTextState internal constructor(
     /**
      * Add a link to the text field.
      * The link is going to be added after the current selection.
+     *
+     * @param text the text of the link.
+     * @param url the URL of the link.
      */
     fun addLink(
         text: String,
@@ -307,6 +310,8 @@ class RichTextState internal constructor(
 
     /**
      * Add a link to the selected text.
+     *
+     * @param url the URL of the link.
      */
     fun addLinkToSelection(
         url: String,
@@ -327,6 +332,8 @@ class RichTextState internal constructor(
 
     /**
      * Update the link of the selected text.
+     *
+     * @param url the new URL of the link.
      */
     fun updateLink(
         url: String,
@@ -361,6 +368,41 @@ class RichTextState internal constructor(
         val richSpan = getRichSpanByTextIndex(selection.min - 1)
 
         return getLinkRichSpan(richSpan)
+    }
+
+    /**
+     * Replaces the currently selected text with the provided text.
+     *
+     * @param text The new text to be inserted
+     */
+    fun replaceSelectedText(text: String) {
+        removeSelectedText()
+        addTextAfterSelection(text = text)
+    }
+
+    private fun addTextAfterSelection(
+        text: String
+    ) {
+        addText(
+            text = text,
+            index = selection.min
+        )
+    }
+
+    private fun addText(
+        text: String,
+        index: Int,
+    ) {
+        val beforeText = textFieldValue.text.substring(0, index)
+        val afterText = textFieldValue.text.substring(selection.max)
+        val newText = "$beforeText$text$afterText"
+
+        onTextFieldValueChange(
+            newTextFieldValue = textFieldValue.copy(
+                text = newText,
+                selection = TextRange(index + text.length),
+            )
+        )
     }
 
     @Deprecated(
@@ -1226,6 +1268,36 @@ class RichTextState internal constructor(
             // Remove one from the index to continue searching for paragraphs
             index--
         }
+    }
+
+    /**
+     * Removes the selected text from the current text input.
+     *
+     * This method removes the text specified by the `selection` from the current text input.
+     *
+     * @see removeTextRange
+     */
+    private fun removeSelectedText() {
+        removeTextRange(selection)
+    }
+
+    /**x
+     * Removes the specified text range from the current text.
+     *
+     * @param textRange the range of text to be removed
+     */
+    private fun removeTextRange(
+        textRange: TextRange
+    ) {
+        onTextFieldValueChange(
+            newTextFieldValue = textFieldValue.copy(
+                text = textFieldValue.text.removeRange(
+                    startIndex = selection.min,
+                    endIndex = selection.max,
+                ),
+                selection = TextRange(textRange.min),
+            )
+        )
     }
 
     /**

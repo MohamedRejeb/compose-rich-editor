@@ -17,39 +17,36 @@ jobs:
     uses: ./.github/workflows/gradle.yml
   deploy:
     needs: build
-    runs-on: macos-14
-
-    env:
-      OSSRH_STAGING_PROFILE_ID: ${{ secrets.OSSRH_STAGING_PROFILE_ID }}
-      OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-      OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-      OSSRH_GPG_SECRET_KEY_PASSWORD: ${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}
-      OSSRH_GPG_SECRET_KEY_ID: ${{ secrets.OSSRH_GPG_SECRET_KEY_ID }}
-      OSSRH_GPG_SECRET_KEY: ${{ secrets.OSSRH_GPG_SECRET_KEY }}
-
+    strategy:
+      matrix:
+        include:
+          - target: publish
+            os: macos-14
+    runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-
+      - uses: actions/checkout@v3
       - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v2
-
-      - uses: actions/cache@v4
+        uses: gradle/wrapper-validation-action@v1
+      - uses: actions/cache@v3
         with:
           path: |
             ~/.konan
           key: ${{ runner.os }}-${{ hashFiles('**/.lock') }}
-
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
-
-      - name: Setup gradle
-        uses: gradle/actions/setup-gradle@v3
-
       - name: Gradle publish
-        run: ./gradlew publish
-
-      - name: Gradle close and release
-        run: ./gradlew closeAndReleaseSonatypeStagingRepository
+        uses: gradle/gradle-build-action@ce999babab2de1c4b649dc15f0ee67e6246c994f
+        with:
+          arguments: |
+            ${{ matrix.target }}
+            closeAndReleaseSonatypeStagingRepository
+        env:
+          OSSRH_STAGING_PROFILE_ID: ${{ secrets.OSSRH_STAGING_PROFILE_ID }}
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+          OSSRH_GPG_SECRET_KEY_PASSWORD: ${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}
+          OSSRH_GPG_SECRET_KEY_ID: ${{ secrets.OSSRH_GPG_SECRET_KEY_ID }}
+          OSSRH_GPG_SECRET_KEY: ${{ secrets.OSSRH_GPG_SECRET_KEY }}

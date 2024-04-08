@@ -26,7 +26,6 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     @OptIn(ExperimentalRichTextApi::class)
     override fun encode(input: String): RichTextState {
         val openedNodes = mutableListOf<ASTNode>()
-        val stringBuilder = StringBuilder()
         val richParagraphList = mutableListOf(RichParagraph())
         var currentRichSpan: RichSpan? = null
         var currentRichParagraphType: ParagraphType = DefaultParagraph()
@@ -35,8 +34,6 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
             markdown = input,
             onText = { text ->
                 if (text.isEmpty()) return@encodeMarkdownToRichText
-
-                stringBuilder.append(text)
 
                 if (richParagraphList.isEmpty())
                     richParagraphList.add(RichParagraph())
@@ -47,7 +44,10 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 if (safeCurrentRichSpan.children.isEmpty()) {
                     safeCurrentRichSpan.text += text
                 } else {
-                    val newRichSpan = RichSpan(paragraph = currentRichParagraph)
+                    val newRichSpan = RichSpan(
+                        paragraph = currentRichParagraph,
+                        parent = safeCurrentRichSpan,
+                    )
                     newRichSpan.text = text
                     safeCurrentRichSpan.children.add(newRichSpan)
                 }
@@ -63,8 +63,6 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 val tagSpanStyle = markdownElementsSpanStyleEncodeMap[node.type]
 
                 if (node.type in markdownBlockElements) {
-                    stringBuilder.append(' ')
-
                     val currentRichParagraph = richParagraphList.last()
 
                     // Get paragraph type from markdown element
@@ -127,6 +125,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                         currentRichSpan?.spanStyle = currentRichSpan?.spanStyle?.merge(child.spanStyle) ?: child.spanStyle
                         currentRichSpan?.style = child.style
                         currentRichSpan?.children?.clear()
+                        currentRichSpan?.children?.addAll(child.children)
                     }
                 }
 
@@ -166,7 +165,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
         richTextState.richParagraphList.fastForEachIndexed { index, richParagraph ->
             // Append paragraph start text
-            builder.append(richParagraph.type.startRichSpan.text)
+            builder.appendParagraphStartText(richParagraph)
 
             richParagraph.getFirstNonEmptyChild()?.let { firstNonEmptyChild ->
                 if (firstNonEmptyChild.text.isNotEmpty()) {
@@ -220,6 +219,19 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         stringBuilder.append(markdownOpen.reversed())
 
         return stringBuilder.toString()
+    }
+
+    private fun StringBuilder.appendParagraphStartText(paragraph: RichParagraph) {
+        when (val type = paragraph.type) {
+            is OrderedList ->
+                append("${type.number}. ")
+
+            is UnorderedList ->
+                append("- ")
+
+            else ->
+                Unit
+        }
     }
 
     /**

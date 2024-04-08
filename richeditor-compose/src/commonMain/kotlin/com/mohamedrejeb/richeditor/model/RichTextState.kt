@@ -370,6 +370,41 @@ class RichTextState internal constructor(
         return getLinkRichSpan(richSpan)
     }
 
+    /**
+     * Replaces the currently selected text with the provided text.
+     *
+     * @param text The new text to be inserted
+     */
+    fun replaceSelectedText(text: String) {
+        removeSelectedText()
+        addTextAfterSelection(text = text)
+    }
+
+    private fun addTextAfterSelection(
+        text: String
+    ) {
+        addText(
+            text = text,
+            index = selection.min
+        )
+    }
+
+    private fun addText(
+        text: String,
+        index: Int,
+    ) {
+        val beforeText = textFieldValue.text.substring(0, index)
+        val afterText = textFieldValue.text.substring(selection.max)
+        val newText = "$beforeText$text$afterText"
+
+        onTextFieldValueChange(
+            newTextFieldValue = textFieldValue.copy(
+                text = newText,
+                selection = TextRange(index + text.length),
+            )
+        )
+    }
+
     @Deprecated(
         message = "Use toggleCodeSpan instead",
         replaceWith = ReplaceWith("toggleCodeSpan()"),
@@ -1233,6 +1268,36 @@ class RichTextState internal constructor(
             // Remove one from the index to continue searching for paragraphs
             index--
         }
+    }
+
+    /**
+     * Removes the selected text from the current text input.
+     *
+     * This method removes the text specified by the `selection` from the current text input.
+     *
+     * @see removeTextRange
+     */
+    private fun removeSelectedText() {
+        removeTextRange(selection)
+    }
+
+    /**x
+     * Removes the specified text range from the current text.
+     *
+     * @param textRange the range of text to be removed
+     */
+    private fun removeTextRange(
+        textRange: TextRange
+    ) {
+        onTextFieldValueChange(
+            newTextFieldValue = textFieldValue.copy(
+                text = textFieldValue.text.removeRange(
+                    startIndex = selection.min,
+                    endIndex = selection.max,
+                ),
+                selection = TextRange(textRange.min),
+            )
+        )
     }
 
     /**

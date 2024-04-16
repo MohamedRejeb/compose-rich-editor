@@ -15,8 +15,8 @@ internal class UnorderedList : ParagraphType {
     private fun getParagraphStyle() =
         ParagraphStyle(
             textIndent = TextIndent(
-                firstLine = 38.sp,
-                restLine = 38.sp
+                firstLine = 8.sp,
+                restLine = 8.sp
             )
         )
 

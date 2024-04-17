@@ -11,7 +11,7 @@ import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 
 internal class OrderedList(
     number: Int,
-    indent: Int = 38,
+    private val indent: Int = 38,
     startTextSpanStyle: SpanStyle = SpanStyle(),
     startTextWidth: TextUnit = 0.sp
 ) : ParagraphType {

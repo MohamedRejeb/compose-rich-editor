@@ -8,7 +8,7 @@ import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 
 internal class UnorderedList(
-    private val indent: Int = 38
+    private val indent: Int
 ): ParagraphType {
 
     override var style: ParagraphStyle =

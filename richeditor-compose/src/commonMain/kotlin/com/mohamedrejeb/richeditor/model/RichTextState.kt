@@ -186,6 +186,7 @@ class RichTextState internal constructor(
         codeColor: Color = Color.Unspecified,
         codeBackgroundColor: Color = Color.Unspecified,
         codeStrokeColor: Color = Color.Unspecified,
+        listIndent: Int = 38
     ) {
         richTextConfig = RichTextConfig(
             linkColor = if (linkColor.isSpecified) linkColor else richTextConfig.linkColor,
@@ -193,6 +194,7 @@ class RichTextState internal constructor(
             codeColor = if (codeColor.isSpecified) codeColor else richTextConfig.codeColor,
             codeBackgroundColor = if (codeBackgroundColor.isSpecified) codeBackgroundColor else richTextConfig.codeBackgroundColor,
             codeStrokeColor = if (codeStrokeColor.isSpecified) codeStrokeColor else richTextConfig.codeStrokeColor,
+            listIndent = listIndent
         )
 
         updateTextFieldValue(textFieldValue)

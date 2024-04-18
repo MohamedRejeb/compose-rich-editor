@@ -551,14 +551,28 @@ class RichTextState internal constructor(
     }
 
     fun toggleUnorderedList() {
-        val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
-        if (paragraph.type is UnorderedList) removeUnorderedList()
-        else addUnorderedList()
+        val firstParagraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
+        val paragraphs = getRichParagraphListByTextRange(selection).toMutableList()
+        if (paragraphs.isEmpty()) {
+            paragraphs.add(firstParagraph)
+        }
+        val removeUnorderedList = firstParagraph.type is UnorderedList
+        paragraphs.forEach { paragraph ->
+            if (removeUnorderedList) {
+                removeUnorderedList(paragraph)
+            } else {
+                addUnorderedList(paragraph)
+            }
+        }
     }
 
+    @Deprecated("Use toggleUnorderedList() instead to add or remove unordered list")
     fun addUnorderedList() {
         val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
+        addUnorderedList(paragraph)
+    }
 
+    private fun addUnorderedList(paragraph: RichParagraph) {
         if (paragraph.type is UnorderedList) return
 
         val newType = UnorderedList()
@@ -569,21 +583,41 @@ class RichTextState internal constructor(
         )
     }
 
+    @Deprecated("Use toggleUnorderedList() instead to add or remove unordered list")
     fun removeUnorderedList() {
         val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
+        removeUnorderedList(paragraph)
+    }
+
+    private fun removeUnorderedList(paragraph: RichParagraph) {
         if (paragraph.type !is UnorderedList) return
 
         resetParagraphType(paragraph = paragraph)
     }
 
     fun toggleOrderedList() {
-        val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
-        if (paragraph.type is OrderedList) removeOrderedList()
-        else addOrderedList()
+        val firstParagraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
+        val paragraphs = getRichParagraphListByTextRange(selection).toMutableList()
+        if (paragraphs.isEmpty()) {
+            paragraphs.add(firstParagraph)
+        }
+        val removeOrderedList = firstParagraph.type is OrderedList
+        paragraphs.forEach { paragraph ->
+            if (removeOrderedList) {
+                removeOrderedList(paragraph)
+            } else {
+                addOrderedList(paragraph)
+            }
+        }
     }
 
+    @Deprecated("Use toggleOrderedList() instead to add or remove ordered list")
     fun addOrderedList() {
         val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
+        addOrderedList(paragraph)
+    }
+
+    private fun addOrderedList(paragraph: RichParagraph) {
         if (paragraph.type is OrderedList) return
         val index = richParagraphList.indexOf(paragraph)
         if (index == -1) return
@@ -615,8 +649,13 @@ class RichTextState internal constructor(
         )
     }
 
+    @Deprecated("Use toggleOrderedList() instead to add or remove ordered list")
     fun removeOrderedList() {
         val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
+        removeOrderedList(paragraph)
+    }
+
+    private fun removeOrderedList(paragraph: RichParagraph) {
         if (paragraph.type !is OrderedList) return
         val index = richParagraphList.indexOf(paragraph)
         if (index == -1) return

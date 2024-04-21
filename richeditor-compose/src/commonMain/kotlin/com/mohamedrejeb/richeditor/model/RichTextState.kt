@@ -2231,6 +2231,7 @@ class RichTextState internal constructor(
         var index = 0
         val richParagraphList = mutableListOf<RichParagraph>()
         this.richParagraphList.fastForEachIndexed { paragraphIndex, richParagraphStyle ->
+            // TODO: Improve this, we don't need to get all rich span list, we can stop when we find the first one.
             val result = richParagraphStyle.getRichSpanListByTextRange(
                 paragraphIndex = paragraphIndex,
                 searchTextRange = searchTextRange,

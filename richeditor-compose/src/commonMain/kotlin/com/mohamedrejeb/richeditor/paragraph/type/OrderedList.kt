@@ -5,6 +5,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 
@@ -46,6 +47,7 @@ internal class OrderedList(
     override var startRichSpan: RichSpan =
         getNewStartRichSpan()
 
+    @OptIn(ExperimentalRichTextApi::class)
     private fun getNewStartRichSpan() =
         RichSpan(
             paragraph = RichParagraph(type = this),

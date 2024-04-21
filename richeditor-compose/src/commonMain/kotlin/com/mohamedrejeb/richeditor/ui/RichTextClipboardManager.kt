@@ -4,6 +4,7 @@ import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startText
@@ -27,6 +28,7 @@ internal class RichTextClipboardManager(
         return clipboardManager.getText()
     }
 
+    @OptIn(ExperimentalRichTextApi::class)
     override fun setText(annotatedString: AnnotatedString) {
         val selection = richTextState.selection
         val richTextAnnotatedString = buildAnnotatedString {
@@ -58,7 +60,7 @@ internal class RichTextClipboardManager(
                                     !selection.collapsed &&
                                     selection.min < index + 1 &&
                                     selection.max > index
-                                ) append("\n")
+                                ) appendLine()
                                 index++
                             }
                         }

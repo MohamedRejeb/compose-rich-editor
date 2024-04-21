@@ -4,6 +4,7 @@ import androidx.compose.ui.text.SpanStyle
 import com.mohamedrejeb.ksoup.entities.KsoupEntities
 import com.mohamedrejeb.ksoup.html.parser.KsoupHtmlHandler
 import com.mohamedrejeb.ksoup.html.parser.KsoupHtmlParser
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.*
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
@@ -18,6 +19,7 @@ import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
 
 internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
+    @OptIn(ExperimentalRichTextApi::class)
     override fun encode(input: String): RichTextState {
         val openedTags = mutableListOf<Pair<String, Map<String, String>>>()
         val stringBuilder = StringBuilder()
@@ -238,6 +240,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         return builder.toString()
     }
 
+    @OptIn(ExperimentalRichTextApi::class)
     private fun decodeRichSpanToHtml(richSpan: RichSpan, parentFormattingTags: List<String> = emptyList()): String {
         val stringBuilder = StringBuilder()
 
@@ -353,6 +356,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
     /**
      * Encodes HTML elements to [RichSpanStyle].
      */
+    @OptIn(ExperimentalRichTextApi::class)
     private fun encodeHtmlElementToRichSpanStyle(
         tagName: String,
         attributes: Map<String, String>,
@@ -369,6 +373,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
     /**
      * Decodes HTML elements from [RichSpanStyle].
      */
+    @OptIn(ExperimentalRichTextApi::class)
     private fun decodeHtmlElementFromRichSpanStyle(
         richSpanStyle: RichSpanStyle,
     ): Pair<String, Map<String, String>> =

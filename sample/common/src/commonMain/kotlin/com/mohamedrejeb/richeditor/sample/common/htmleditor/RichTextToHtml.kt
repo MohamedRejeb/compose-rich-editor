@@ -55,7 +55,7 @@ fun RichTextToHtml(
 
         Spacer(Modifier.width(8.dp))
 
-        Divider(
+        HorizontalDivider(
             modifier = Modifier
                 .fillMaxHeight()
                 .width(2.dp)

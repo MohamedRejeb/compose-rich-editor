@@ -3,6 +3,7 @@ package com.mohamedrejeb.richeditor.parser.markdown
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextDecoration
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.*
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
@@ -22,9 +23,9 @@ import org.intellij.markdown.flavours.gfm.GFMElementTypes
 
 internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
+    @OptIn(ExperimentalRichTextApi::class)
     override fun encode(input: String): RichTextState {
         val openedNodes = mutableListOf<ASTNode>()
-        val stringBuilder = StringBuilder()
         val richParagraphList = mutableListOf(RichParagraph())
         var currentRichSpan: RichSpan? = null
         var currentRichParagraphType: ParagraphType = DefaultParagraph()
@@ -33,8 +34,6 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
             markdown = input,
             onText = { text ->
                 if (text.isEmpty()) return@encodeMarkdownToRichText
-
-                stringBuilder.append(text)
 
                 if (richParagraphList.isEmpty())
                     richParagraphList.add(RichParagraph())
@@ -45,7 +44,10 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 if (safeCurrentRichSpan.children.isEmpty()) {
                     safeCurrentRichSpan.text += text
                 } else {
-                    val newRichSpan = RichSpan(paragraph = currentRichParagraph)
+                    val newRichSpan = RichSpan(
+                        paragraph = currentRichParagraph,
+                        parent = safeCurrentRichSpan,
+                    )
                     newRichSpan.text = text
                     safeCurrentRichSpan.children.add(newRichSpan)
                 }
@@ -61,8 +63,6 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 val tagSpanStyle = markdownElementsSpanStyleEncodeMap[node.type]
 
                 if (node.type in markdownBlockElements) {
-                    stringBuilder.append(' ')
-
                     val currentRichParagraph = richParagraphList.last()
 
                     // Get paragraph type from markdown element
@@ -125,6 +125,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                         currentRichSpan?.spanStyle = currentRichSpan?.spanStyle?.merge(child.spanStyle) ?: child.spanStyle
                         currentRichSpan?.style = child.style
                         currentRichSpan?.children?.clear()
+                        currentRichSpan?.children?.addAll(child.children)
                     }
                 }
 
@@ -149,7 +150,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
                 currentRichSpan = currentRichSpan?.parent
             },
-            onHtml = { html ->
+            onHtml = { _ ->
                 // Todo: support HTML in markdown
             }
         )
@@ -164,7 +165,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
         richTextState.richParagraphList.fastForEachIndexed { index, richParagraph ->
             // Append paragraph start text
-            builder.append(richParagraph.type.startRichSpan.text)
+            builder.appendParagraphStartText(richParagraph)
 
             richParagraph.getFirstNonEmptyChild()?.let { firstNonEmptyChild ->
                 if (firstNonEmptyChild.text.isNotEmpty()) {
@@ -180,13 +181,14 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
             if (index < richTextState.richParagraphList.lastIndex) {
                 // Append new line
-                builder.append("\n")
+                builder.appendLine()
             }
         }
 
         return builder.toString()
     }
 
+    @OptIn(ExperimentalRichTextApi::class)
     private fun decodeRichSpanToMarkdown(richSpan: RichSpan): String {
         val stringBuilder = StringBuilder()
 
@@ -219,6 +221,19 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         return stringBuilder.toString()
     }
 
+    private fun StringBuilder.appendParagraphStartText(paragraph: RichParagraph) {
+        when (val type = paragraph.type) {
+            is OrderedList ->
+                append("${type.number}. ")
+
+            is UnorderedList ->
+                append("- ")
+
+            else ->
+                Unit
+        }
+    }
+
     /**
      * Encodes Markdown elements to [SpanStyle].
      *
@@ -239,6 +254,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     /**
      * Encodes Markdown elements to [RichSpanStyle].
      */
+    @OptIn(ExperimentalRichTextApi::class)
     private fun encodeMarkdownElementToRichSpanStyle(
         node: ASTNode,
         markdown: String,
@@ -269,6 +285,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     /**
      * Decodes HTML elements from [RichSpan].
      */
+    @OptIn(ExperimentalRichTextApi::class)
     private fun decodeMarkdownElementFromRichSpan(
         text: String,
         richSpanStyle: RichSpanStyle,

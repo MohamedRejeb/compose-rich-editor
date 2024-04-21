@@ -25,6 +25,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
@@ -50,8 +51,6 @@ fun SlackDemoContent() {
     }
 
     val openLinkDialog = remember { mutableStateOf(false) }
-    val text = remember { mutableStateOf("") }
-    val link = remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         richTextState.setConfig(
@@ -221,12 +220,16 @@ fun SlackDemoContent() {
                 }
 
                 if (openLinkDialog.value)
-                    SlackDemoLinkDialog(
-                        state = richTextState,
-                        text = text,
-                        link = link,
-                        openLinkDialog = openLinkDialog
-                    )
+                    Dialog(
+                        onDismissRequest = {
+                            openLinkDialog.value = false
+                        }
+                    ) {
+                        SlackDemoLinkDialog(
+                            state = richTextState,
+                            openLinkDialog = openLinkDialog
+                        )
+                    }
             }
         }
     }

@@ -327,7 +327,7 @@ internal object CssEncoder {
      * @return the parsed [Shadow] or `null` if the text shadow string could not be parsed.
      */
     internal fun parseCssTextShadow(cssTextShadow: String): Shadow? {
-        val values = cssTextShadow.split(" ").filter { it.isNotBlank() }
+        val values = cssTextShadow.split(' ').filter { it.isNotBlank() }
         if (values.isEmpty()) return null
 
         return when (values.size) {

@@ -1,12 +1,14 @@
 package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.ui.text.TextRange
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class RichSpanTest {
     private val paragraph = RichParagraph(key = 0)
+    @OptIn(ExperimentalRichTextApi::class)
     private val richSpan get() = RichSpan(
         key = 0,
         paragraph = paragraph,

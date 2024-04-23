@@ -6,9 +6,9 @@ plugins {
     alias(libs.plugins.androidLibrary)
 }
 
-compose {
-    kotlinCompilerPlugin.set(libs.versions.compose.compiler)
-}
+//compose {
+//    kotlinCompilerPlugin.set(libs.versions.compose.compiler)
+//}
 
 kotlin {
     applyDefaultHierarchyTemplate()

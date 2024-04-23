@@ -5,9 +5,9 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
 }
 
-compose {
-    kotlinCompilerPlugin.set(libs.versions.compose.compiler)
-}
+//compose {
+//    kotlinCompilerPlugin.set(libs.versions.compose.compiler)
+//}
 
 kotlin {
     js(IR) {

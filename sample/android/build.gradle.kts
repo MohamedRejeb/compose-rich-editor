@@ -4,9 +4,9 @@ plugins {
     alias(libs.plugins.androidApplication)
 }
 
-compose {
-    kotlinCompilerPlugin.set(libs.versions.compose.compiler)
-}
+//compose {
+//    kotlinCompilerPlugin.set(libs.versions.compose.compiler)
+//}
 
 android {
     namespace = "com.mohamedrejeb.richeditor.android"

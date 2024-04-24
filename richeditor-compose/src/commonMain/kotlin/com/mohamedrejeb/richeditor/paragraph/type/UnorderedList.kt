@@ -30,8 +30,12 @@ internal class UnorderedList(
         )
 
     override fun getNextParagraphType(): ParagraphType =
-        UnorderedList()
+        UnorderedList(
+            indent = indent
+        )
 
     override fun copy(): ParagraphType =
-        UnorderedList()
+        UnorderedList(
+            indent = indent
+        )
 }

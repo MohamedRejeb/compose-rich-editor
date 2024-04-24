@@ -59,6 +59,7 @@ internal class OrderedList(
     override fun getNextParagraphType(): ParagraphType =
         OrderedList(
             number = number + 1,
+            indent = indent,
             startTextSpanStyle = startTextSpanStyle,
             startTextWidth = startTextWidth
         )
@@ -66,6 +67,7 @@ internal class OrderedList(
     override fun copy(): ParagraphType =
         OrderedList(
             number = number,
+            indent = indent,
             startTextSpanStyle = startTextSpanStyle,
             startTextWidth = startTextWidth
         )

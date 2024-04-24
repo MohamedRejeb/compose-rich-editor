@@ -573,7 +573,9 @@ class RichTextState internal constructor(
     private fun addUnorderedList(paragraph: RichParagraph) {
         if (paragraph.type is UnorderedList) return
 
-        val newType = UnorderedList()
+        val newType = UnorderedList(
+            indent = richTextConfig.listIndent
+        )
 
         updateParagraphType(
             paragraph = paragraph,
@@ -630,6 +632,7 @@ class RichTextState internal constructor(
 
         val newType = OrderedList(
             number = orderedListNumber,
+            indent = richTextConfig.listIndent,
             startTextSpanStyle = firstRichSpan?.spanStyle ?: SpanStyle(),
             startTextWidth = 0.sp
         )
@@ -1164,11 +1167,16 @@ class RichTextState internal constructor(
             return
 
         if (richSpan.text == "- " || richSpan.text == "* ") {
-            richSpan.paragraph.type = UnorderedList()
+            richSpan.paragraph.type = UnorderedList(
+                indent = richTextConfig.listIndent,
+            )
             richSpan.text = ""
         } else if (richSpan.text.matches(Regex("^\\d+\\. "))) {
             val number = richSpan.text.first().digitToIntOrNull() ?: 1
-            richSpan.paragraph.type = OrderedList(number)
+            richSpan.paragraph.type = OrderedList(
+                number = number,
+                indent = richTextConfig.listIndent,
+            )
             richSpan.text = ""
         }
     }
@@ -1189,6 +1197,7 @@ class RichTextState internal constructor(
                     paragraph = currentParagraph,
                     newType = OrderedList(
                         number = number,
+                        indent = richTextConfig.listIndent,
                         startTextSpanStyle = currentParagraphType.startTextSpanStyle,
                         startTextWidth = currentParagraphType.startTextWidth
                     ),
@@ -1219,6 +1228,7 @@ class RichTextState internal constructor(
                     paragraph = currentParagraph,
                     newType = OrderedList(
                         number = number,
+                        indent = richTextConfig.listIndent,
                         startTextSpanStyle = currentParagraphType.startTextSpanStyle,
                         startTextWidth = currentParagraphType.startTextWidth
                     ),

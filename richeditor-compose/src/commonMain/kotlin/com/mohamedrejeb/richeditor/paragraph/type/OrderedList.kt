@@ -11,6 +11,7 @@ import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 
 internal class OrderedList(
     number: Int,
+    private val indent: Int,
     startTextSpanStyle: SpanStyle = SpanStyle(),
     startTextWidth: TextUnit = 0.sp
 ) : ParagraphType {
@@ -39,8 +40,8 @@ internal class OrderedList(
     private fun getNewParagraphStyle() =
         ParagraphStyle(
             textIndent = TextIndent(
-                firstLine = (38 - startTextWidth.value).sp,
-                restLine = 38.sp
+                firstLine = (indent - startTextWidth.value).sp,
+                restLine = indent.sp
             )
         )
 

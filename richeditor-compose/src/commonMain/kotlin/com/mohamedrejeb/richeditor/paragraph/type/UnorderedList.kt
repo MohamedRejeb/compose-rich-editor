@@ -7,7 +7,9 @@ import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 
-internal class UnorderedList : ParagraphType {
+internal class UnorderedList(
+    private val indent: Int
+): ParagraphType {
 
     override var style: ParagraphStyle =
         getParagraphStyle()
@@ -15,8 +17,8 @@ internal class UnorderedList : ParagraphType {
     private fun getParagraphStyle() =
         ParagraphStyle(
             textIndent = TextIndent(
-                firstLine = 38.sp,
-                restLine = 38.sp
+                firstLine = indent.sp,
+                restLine = indent.sp
             )
         )
 

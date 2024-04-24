@@ -9,4 +9,5 @@ data class RichTextConfig(
     val codeColor: Color = Color.Unspecified,
     val codeBackgroundColor: Color = Color.Transparent,
     val codeStrokeColor: Color = Color.LightGray,
+    val listIndent: Int = 38
 )

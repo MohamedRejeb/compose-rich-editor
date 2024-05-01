@@ -397,7 +397,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
     ): ParagraphType {
         return when (tagName) {
             "ul" -> UnorderedList()
-            "ol" -> OrderedList(1)
+            "ol" -> OrderedList(number = 1)
             else -> DefaultParagraph()
         }
     }

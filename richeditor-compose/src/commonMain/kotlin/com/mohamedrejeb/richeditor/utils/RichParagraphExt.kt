@@ -50,8 +50,10 @@ internal fun List<RichParagraph>.getCommonType(): ParagraphType? {
     var type: ParagraphType? = null
 
     for (paragraph in this) {
-        if (type == null) type = paragraph.type
-        else if (type != paragraph.type) return null
+        if (type == null)
+            type = paragraph.type
+        else
+            if (type != paragraph.type) return null
     }
 
     return type

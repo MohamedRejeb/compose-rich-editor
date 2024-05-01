@@ -566,15 +566,18 @@ class RichTextState internal constructor(
     }
 
     fun addUnorderedList() {
-        val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
-        addUnorderedList(paragraph)
+        val paragraphs = getRichParagraphListByTextRange(selection)
+
+        paragraphs.forEach { paragraph ->
+            addUnorderedList(paragraph)
+        }
     }
 
     private fun addUnorderedList(paragraph: RichParagraph) {
         if (paragraph.type is UnorderedList) return
 
         val newType = UnorderedList(
-            indent = richTextConfig.listIndent
+            initialIndent = richTextConfig.listIndent
         )
 
         updateParagraphType(
@@ -584,8 +587,11 @@ class RichTextState internal constructor(
     }
 
     fun removeUnorderedList() {
-        val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
-        removeUnorderedList(paragraph)
+        val paragraphs = getRichParagraphListByTextRange(selection)
+
+        paragraphs.forEach { paragraph ->
+            removeUnorderedList(paragraph)
+        }
     }
 
     private fun removeUnorderedList(paragraph: RichParagraph) {
@@ -608,8 +614,11 @@ class RichTextState internal constructor(
     }
 
     fun addOrderedList() {
-        val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
-        addOrderedList(paragraph)
+        val paragraphs = getRichParagraphListByTextRange(selection)
+
+        paragraphs.forEach { paragraph ->
+            addOrderedList(paragraph)
+        }
     }
 
     private fun addOrderedList(paragraph: RichParagraph) {
@@ -632,7 +641,7 @@ class RichTextState internal constructor(
 
         val newType = OrderedList(
             number = orderedListNumber,
-            indent = richTextConfig.listIndent,
+            initialIndent = richTextConfig.listIndent,
             startTextSpanStyle = firstRichSpan?.spanStyle ?: SpanStyle(),
             startTextWidth = 0.sp
         )
@@ -646,8 +655,11 @@ class RichTextState internal constructor(
     }
 
     fun removeOrderedList() {
-        val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
-        removeOrderedList(paragraph)
+        val paragraphs = getRichParagraphListByTextRange(selection)
+
+        paragraphs.forEach { paragraph ->
+            removeOrderedList(paragraph)
+        }
     }
 
     private fun removeOrderedList(paragraph: RichParagraph) {
@@ -803,7 +815,7 @@ class RichTextState internal constructor(
      * @see [annotatedString]
      */
     private fun updateAnnotatedString(newTextFieldValue: TextFieldValue = textFieldValue) {
-        var newText =
+        val newText =
             if (singleParagraphMode)
                 newTextFieldValue.text
             else
@@ -818,7 +830,7 @@ class RichTextState internal constructor(
                     return@fastForEachIndexed
                 }
 
-                withStyle(richParagraph.paragraphStyle.merge(richParagraph.type.style)) {
+                withStyle(richParagraph.paragraphStyle.merge(richParagraph.type.getStyle(richTextConfig))) {
                     append(richParagraph.type.startText)
                     val richParagraphStartTextLength = richParagraph.type.startText.length
                     richParagraph.type.startRichSpan.textRange = TextRange(index, index + richParagraphStartTextLength)
@@ -1168,14 +1180,14 @@ class RichTextState internal constructor(
 
         if (richSpan.text == "- " || richSpan.text == "* ") {
             richSpan.paragraph.type = UnorderedList(
-                indent = richTextConfig.listIndent,
+                initialIndent = richTextConfig.listIndent,
             )
             richSpan.text = ""
         } else if (richSpan.text.matches(Regex("^\\d+\\. "))) {
             val number = richSpan.text.first().digitToIntOrNull() ?: 1
             richSpan.paragraph.type = OrderedList(
                 number = number,
-                indent = richTextConfig.listIndent,
+                initialIndent = richTextConfig.listIndent,
             )
             richSpan.text = ""
         }
@@ -1197,7 +1209,7 @@ class RichTextState internal constructor(
                     paragraph = currentParagraph,
                     newType = OrderedList(
                         number = number,
-                        indent = richTextConfig.listIndent,
+                        initialIndent = richTextConfig.listIndent,
                         startTextSpanStyle = currentParagraphType.startTextSpanStyle,
                         startTextWidth = currentParagraphType.startTextWidth
                     ),
@@ -1228,7 +1240,7 @@ class RichTextState internal constructor(
                     paragraph = currentParagraph,
                     newType = OrderedList(
                         number = number,
-                        indent = richTextConfig.listIndent,
+                        initialIndent = richTextConfig.listIndent,
                         startTextSpanStyle = currentParagraphType.startTextSpanStyle,
                         startTextWidth = currentParagraphType.startTextWidth
                     ),
@@ -2269,22 +2281,32 @@ class RichTextState internal constructor(
     private fun getRichParagraphListByTextRange(searchTextRange: TextRange): List<RichParagraph> {
         if (singleParagraphMode) return richParagraphList.toList()
 
-        if (searchTextRange.collapsed) {
-            val paragraph = getRichParagraphByTextIndex(searchTextRange.min - 1) ?: return listOf()
-            return listOf(paragraph)
-        }
-
         var index = 0
         val richParagraphList = mutableListOf<RichParagraph>()
         this.richParagraphList.fastForEachIndexed { paragraphIndex, richParagraphStyle ->
-            // TODO: Improve this, we don't need to get all rich span list, we can stop when we find the first one.
             val result = richParagraphStyle.getRichSpanListByTextRange(
                 paragraphIndex = paragraphIndex,
                 searchTextRange = searchTextRange,
                 offset = index,
             )
-            if (result.second.isNotEmpty())
+
+            val paragraphStartIndex =
+                if (paragraphIndex == 0)
+                    0
+                else if (searchTextRange.collapsed)
+                    index + 1
+                // If the search text range is not collapsed, we need to ignore the first index of the paragraph.
+                // Because the first index of the paragraph is the last index of the previous paragraph.
+                else
+                    index + 2
+
+            val isCursorInParagraph =
+                searchTextRange.min in paragraphStartIndex..result.first ||
+                searchTextRange.max in paragraphStartIndex..result.first
+
+            if (result.second.isNotEmpty() || isCursorInParagraph)
                 richParagraphList.add(richParagraphStyle)
+
             index = result.first
         }
         return richParagraphList
@@ -2429,7 +2451,7 @@ class RichTextState internal constructor(
         annotatedString = buildAnnotatedString {
             var index = 0
             richParagraphList.fastForEachIndexed { i, richParagraphStyle ->
-                withStyle(richParagraphStyle.paragraphStyle.merge(richParagraphStyle.type.style)) {
+                withStyle(richParagraphStyle.paragraphStyle.merge(richParagraphStyle.type.getStyle(richTextConfig))) {
                     append(richParagraphStyle.type.startText)
                     val richParagraphStartTextLength = richParagraphStyle.type.startText.length
                     richParagraphStyle.type.startRichSpan.textRange =

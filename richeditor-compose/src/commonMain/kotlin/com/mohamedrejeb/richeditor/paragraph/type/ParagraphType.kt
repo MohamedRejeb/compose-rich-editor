@@ -2,10 +2,11 @@ package com.mohamedrejeb.richeditor.paragraph.type
 
 import androidx.compose.ui.text.ParagraphStyle
 import com.mohamedrejeb.richeditor.model.RichSpan
+import com.mohamedrejeb.richeditor.model.RichTextConfig
 
 internal interface ParagraphType {
 
-    val style: ParagraphStyle
+    fun getStyle(config: RichTextConfig): ParagraphStyle
 
     val startRichSpan: RichSpan
 

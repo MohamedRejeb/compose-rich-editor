@@ -1,18 +1,32 @@
 package com.mohamedrejeb.richeditor.paragraph.type
 
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.model.DefaultListIndent
 import com.mohamedrejeb.richeditor.model.RichSpan
+import com.mohamedrejeb.richeditor.model.RichTextConfig
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 
 internal class UnorderedList(
-    private val indent: Int
+    initialIndent: Int = DefaultListIndent,
 ): ParagraphType {
 
-    override var style: ParagraphStyle =
+    private var indent = initialIndent
+
+    private var style: ParagraphStyle =
         getParagraphStyle()
+
+    override fun getStyle(config: RichTextConfig): ParagraphStyle {
+        if (config.listIndent != indent) {
+            indent = config.listIndent
+            style = getParagraphStyle()
+        }
+
+        return style
+    }
 
     private fun getParagraphStyle() =
         ParagraphStyle(
@@ -31,11 +45,24 @@ internal class UnorderedList(
 
     override fun getNextParagraphType(): ParagraphType =
         UnorderedList(
-            indent = indent
+            initialIndent = indent
         )
 
     override fun copy(): ParagraphType =
         UnorderedList(
-            indent = indent
+            initialIndent = indent
         )
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is UnorderedList) return false
+
+        if (indent != other.indent) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return indent
+    }
 }

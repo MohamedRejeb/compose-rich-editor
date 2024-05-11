@@ -60,6 +60,7 @@ nav:
   - 'Ordered/Unordered lists': ordered_unordered_lists.md
   - 'HTML import/export': html_import_export.md
   - 'Markdown import/export': markdown_import_export.md
+  - 'FAQ': faq.md
   #- 'Compose Components': compose.md
   - 'Upgrading from 0.x to 1.x': upgrading.md
   #- 'Change Log': changelog.md

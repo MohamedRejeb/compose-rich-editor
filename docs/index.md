@@ -3,7 +3,8 @@
 <a href="https://github.com/MohamedRejeb"><img alt="Profile" src="https://raw.githubusercontent.com/MohamedRejeb/MohamedRejeb/main/badges/mohamedrejeb.svg"/></a>
 <a href="https://search.maven.org/search?q=g:%22com.mohamedrejeb.richeditor%22%20AND%20a:%22richeditor-compose%22"><img alt="Maven Central" src="https://img.shields.io/maven-central/v/com.mohamedrejeb.richeditor/richeditor-compose"/></a>
 
-![Compose Rich Editor](images/logo-large-light.svg)
+![Compose Rich Editor](images/logo-large-light.svg#only-light)
+![Compose Rich Editor](images/logo-large-dark.svg#only-dark)
 
 A rich text editor library for both Jetpack Compose and Compose Multiplatform, fully customizable and supports the common rich text editor features
 

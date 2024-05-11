@@ -9,7 +9,7 @@ Add the snapshots repository to your list of repositories in `build.gradle.kts`:
 ```kotlin
 allprojects {
     repositories {
-        maven("https://oss.sonatype.org/content/repositories/snapshots")
+        maven("https://s01.oss.sonatype.org/content/repositories/snapshots")
     }
 }
 ```

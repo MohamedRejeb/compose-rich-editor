@@ -91,11 +91,12 @@ class RichTextState internal constructor(
     /**
      * Returns the selected link text.
      */
-    val selectedLinkText: String? get() =
-        if (isLink)
-            getRichSpanByTextIndex(textIndex = selection.min - 1)?.text
-        else
-            null
+    val selectedLinkText: String?
+        get() =
+            if (isLink)
+                getRichSpanByTextIndex(textIndex = selection.min - 1)?.text
+            else
+                null
 
     /**
      * Returns the selected link URL.
@@ -128,7 +129,7 @@ class RichTextState internal constructor(
     fun isRichSpan(spanStyle: RichSpanStyle): Boolean =
         isRichSpan(spanStyle::class)
 
-    inline fun <reified T: RichSpanStyle> isRichSpan(): Boolean =
+    inline fun <reified T : RichSpanStyle> isRichSpan(): Boolean =
         isRichSpan(T::class)
 
     fun isRichSpan(kClass: KClass<out RichSpanStyle>): Boolean {
@@ -444,7 +445,7 @@ class RichTextState internal constructor(
     }
 
     fun addRichSpan(spanStyle: RichSpanStyle) {
-        if (toRemoveRichSpanStyle::class == spanStyle)
+        if (toRemoveRichSpanStyle == spanStyle::class)
             toRemoveRichSpanStyle = RichSpanStyle.Default::class
         toAddRichSpanStyle = spanStyle
 
@@ -926,7 +927,7 @@ class RichTextState internal constructor(
 
             if (
                 (toAddSpanStyle == SpanStyle() && toRemoveSpanStyle == SpanStyle() &&
-                toAddRichSpanStyle is RichSpanStyle.Default && toRemoveRichSpanStyle::class != activeRichSpan.style::class) ||
+                        toAddRichSpanStyle is RichSpanStyle.Default && toRemoveRichSpanStyle::class != activeRichSpan.style::class) ||
                 (newSpanStyle == activeRichSpanFullSpanStyle && newRichSpanStyle::class == activeRichSpan.style::class)
             ) {
                 activeRichSpan.text = beforeText + typedText + afterText
@@ -1501,36 +1502,77 @@ class RichTextState internal constructor(
             richSpan.spanStyle = richSpan.spanStyle
                 .copy(textDecoration = fullSpanStyle.textDecoration)
                 .customMerge(toAddSpanStyle)
-            richSpan.style = toAddRichSpanStyle
+            richSpan.style =
+                if (toAddRichSpanStyle !is RichSpanStyle.Default)
+                    toAddRichSpanStyle
+                else
+                    richSpan.style
 
             return
         }
 
         richSpan.text = beforeText
-        val newRichSpan = RichSpan(
-            paragraph = richSpan.paragraph,
-            parent = richSpan,
-            text = middleText,
-            textRange =
-            TextRange(
-                startIndex,
-                startIndex + middleText.length
-            ),
-            spanStyle =
-            SpanStyle(textDecoration = fullSpanStyle.textDecoration)
-                .customMerge(toAddSpanStyle),
-            style = toAddRichSpanStyle,
-        )
+        val newRichSpan =
+            RichSpan(
+                paragraph = richSpan.paragraph,
+                parent = richSpan,
+                text = middleText,
+                textRange = TextRange(
+                    startIndex,
+                    startIndex + middleText.length
+                ),
+                spanStyle = SpanStyle(textDecoration = fullSpanStyle.textDecoration).customMerge(toAddSpanStyle),
+                style =
+                if (toAddRichSpanStyle !is RichSpanStyle.Default)
+                    toAddRichSpanStyle
+                else
+                    richSpan.style,
+            )
+
+        val parent = richSpan.parent
+        val index =
+            parent?.children?.indexOf(richSpan) ?: richSpan.paragraph.children.indexOf(richSpan)
+        var isRemoved = false
+
+        val isRichSpanStylingEmpty = richSpan.spanStyle == SpanStyle() && richSpan.style is RichSpanStyle.Default
 
         if (middleText.isNotEmpty()) {
-            richSpan.children.add(
-                0,
-                newRichSpan
-            )
+            if (
+                (isRichSpanStylingEmpty || richSpan.text.isEmpty()) &&
+                index != -1 &&
+                richSpan.children.isEmpty()
+            ) {
+                newRichSpan.parent = richSpan.parent
+
+                if (!isRichSpanStylingEmpty) {
+                    newRichSpan.spanStyle = richSpan.spanStyle.customMerge(newRichSpan.spanStyle)
+                    if (richSpan.style !is RichSpanStyle.Default && newRichSpan.style is RichSpanStyle.Default)
+                        newRichSpan.style = richSpan.style
+                }
+
+                if (parent != null) {
+                    parent.children.add(index + 1, newRichSpan)
+
+                    if (richSpan.text.isEmpty()) {
+                        parent.children.removeAt(index)
+                        isRemoved = true
+                    }
+                } else {
+                    richSpan.paragraph.children.add(index + 1, newRichSpan)
+
+                    if (richSpan.text.isEmpty()) {
+                        richSpan.paragraph.children.removeAt(index)
+                        isRemoved = true
+                    }
+                }
+            } else {
+                richSpan.children.add(0, newRichSpan)
+                newRichSpan.parent = richSpan
+            }
         }
+
         if (afterText.isNotEmpty()) {
-            richSpan.children.add(
-                1,
+            val afterRichSpan =
                 RichSpan(
                     paragraph = richSpan.paragraph,
                     parent = richSpan,
@@ -1540,7 +1582,41 @@ class RichTextState internal constructor(
                         startIndex + middleText.length + afterText.length
                     ),
                 )
-            )
+
+            if (
+                (isRichSpanStylingEmpty || richSpan.text.isEmpty()) &&
+                index != -1 &&
+                richSpan.children.isEmpty()
+            ) {
+                afterRichSpan.parent = richSpan.parent
+
+                if (!isRichSpanStylingEmpty) {
+                    afterRichSpan.spanStyle = richSpan.spanStyle.customMerge(afterRichSpan.spanStyle)
+                    if (richSpan.style !is RichSpanStyle.Default && afterRichSpan.style is RichSpanStyle.Default)
+                        afterRichSpan.style = richSpan.style
+                }
+
+                val addIndex =
+                    if (isRemoved || middleText.isEmpty())
+                        index + 1
+                    else
+                        index + 2
+
+                if (parent != null) {
+                    parent.children.add(addIndex, afterRichSpan)
+
+                    if (richSpan.text.isEmpty() && !isRemoved)
+                        parent.children.removeAt(index)
+                } else {
+                    richSpan.paragraph.children.add(addIndex, afterRichSpan)
+
+                    if (richSpan.text.isEmpty() && !isRemoved)
+                        richSpan.paragraph.children.removeAt(index)
+                }
+            } else {
+                richSpan.children.add(1, afterRichSpan)
+                afterRichSpan.parent = richSpan
+            }
         } else {
             val firstRichSpan = richSpan.children.firstOrNull()
             val secondRichSpan = richSpan.children.getOrNull(1)
@@ -1548,7 +1624,8 @@ class RichTextState internal constructor(
             if (
                 firstRichSpan != null &&
                 secondRichSpan != null &&
-                firstRichSpan.spanStyle == secondRichSpan.spanStyle
+                firstRichSpan.spanStyle == secondRichSpan.spanStyle &&
+                firstRichSpan.style == secondRichSpan.style
             ) {
                 firstRichSpan.text += secondRichSpan.text
                 firstRichSpan.children.addAll(secondRichSpan.children)
@@ -2302,7 +2379,7 @@ class RichTextState internal constructor(
 
             val isCursorInParagraph =
                 searchTextRange.min in paragraphStartIndex..result.first ||
-                searchTextRange.max in paragraphStartIndex..result.first
+                        searchTextRange.max in paragraphStartIndex..result.first
 
             if (result.second.isNotEmpty() || isCursorInParagraph)
                 richParagraphList.add(richParagraphStyle)

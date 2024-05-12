@@ -150,7 +150,7 @@ interface RichSpanStyle {
         }
     }
 
-    object Default : RichSpanStyle {
+    data object Default : RichSpanStyle {
         override val spanStyle: (RichTextConfig) -> SpanStyle =
             { SpanStyle() }
 

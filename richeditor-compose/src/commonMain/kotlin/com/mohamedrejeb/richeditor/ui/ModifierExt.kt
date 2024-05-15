@@ -43,7 +43,7 @@ internal fun Modifier.drawRichSpanStyle(
                             drawCustomStyle(
                                 layoutResult = textLayoutResult,
                                 textRange = textRange,
-                                richTextConfig = richTextState.richTextConfig,
+                                richTextConfig = richTextState.config,
                                 topPadding = topPadding,
                                 startPadding = startPadding
                             )

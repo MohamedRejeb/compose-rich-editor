@@ -77,7 +77,7 @@ interface RichSpanStyle {
     ): RichSpanStyle {
         override val spanStyle: (RichTextConfig) -> SpanStyle = {
             SpanStyle(
-                color = it.codeColor,
+                color = it.codeSpanColor,
             )
         }
 
@@ -89,8 +89,8 @@ interface RichSpanStyle {
             startPadding: Float,
         ) {
             val path = Path()
-            val backgroundColor = richTextConfig.codeBackgroundColor
-            val strokeColor = richTextConfig.codeStrokeColor
+            val backgroundColor = richTextConfig.codeSpanBackgroundColor
+            val strokeColor = richTextConfig.codeSpanStrokeColor
             val cornerRadius = CornerRadius(cornerRadius.toPx())
             val boxes = layoutResult.getBoundingBoxes(
                 startOffset = textRange.start,

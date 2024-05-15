@@ -5,15 +5,15 @@ compose = "1.6.2"
 dokka = "1.9.10"
 compose-compiler = "1.5.11-kt-2.0.0-Beta5"
 
-ksoup = "0.3.1"
+ksoup = "0.3.2"
 jetbrainsMarkdown = "0.7.0"
 
 nexus-publish = "2.0.0-rc-1"
 
 # For sample
-activity-compose = "1.8.2"
-voyager = "1.1.0-alpha03"
-richeditor = "1.0.0-rc01"
+activity-compose = "1.9.0"
+voyager = "1.1.0-alpha04"
+richeditor = "1.0.0-rc04"
 android-minSdk = "21"
 android-compileSdk = "34"
 

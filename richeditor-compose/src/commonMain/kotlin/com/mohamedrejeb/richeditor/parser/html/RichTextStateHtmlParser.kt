@@ -141,11 +141,11 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     "br" -> {
                         stringBuilder.append(' ')
 
-                        if (richParagraphList.isEmpty())
-                            richParagraphList.add(RichParagraph())
-
-                        val currentRichParagraph = richParagraphList.last()
-                        val newParagraph = RichParagraph(paragraphStyle = currentRichParagraph.paragraphStyle)
+                        val newParagraph =
+                            if (richParagraphList.isEmpty())
+                                RichParagraph()
+                            else
+                                RichParagraph(paragraphStyle = richParagraphList.last().paragraphStyle)
                         richParagraphList.add(newParagraph)
                         currentRichSpan = null
                     }
@@ -397,7 +397,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
     ): ParagraphType {
         return when (tagName) {
             "ul" -> UnorderedList()
-            "ol" -> OrderedList(1)
+            "ol" -> OrderedList(number = 1)
             else -> DefaultParagraph()
         }
     }

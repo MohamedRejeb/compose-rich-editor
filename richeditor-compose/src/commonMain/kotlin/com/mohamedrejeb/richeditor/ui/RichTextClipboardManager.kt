@@ -34,7 +34,11 @@ internal class RichTextClipboardManager(
         val richTextAnnotatedString = buildAnnotatedString {
             var index = 0
             richTextState.richParagraphList.fastForEachIndexed { i, richParagraphStyle ->
-                withStyle(richParagraphStyle.paragraphStyle.merge(richParagraphStyle.type.style)) {
+                withStyle(
+                    richParagraphStyle.paragraphStyle.merge(
+                        richParagraphStyle.type.getStyle(richTextState.config)
+                    )
+                ) {
                     if (
                         !selection.collapsed &&
                         selection.min < index + richParagraphStyle.type.startText.length &&
@@ -52,7 +56,7 @@ internal class RichTextClipboardManager(
                             richSpanList = richParagraphStyle.children,
                             startIndex = index,
                             selection = selection,
-                            richTextConfig = richTextState.richTextConfig,
+                            richTextConfig = richTextState.config,
                         )
                         if (!richTextState.singleParagraphMode) {
                             if (i != richTextState.richParagraphList.lastIndex) {

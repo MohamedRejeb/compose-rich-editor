@@ -17,4 +17,17 @@ internal class RichTextStateHtmlParserTest {
             removeHtmlTextExtraSpaces(html)
         )
     }
+
+    @Test
+    fun testParsingSimpleHtmlWithBrBackAndForth() {
+        val html = "<br><p>Hello World&excl;</p>"
+
+        val richTextState = RichTextStateHtmlParser.encode(html)
+
+        assertEquals(2, richTextState.richParagraphList.size)
+
+        val parsedHtml = RichTextStateHtmlParser.decode(richTextState)
+
+        assertEquals(html, parsedHtml)
+    }
 }

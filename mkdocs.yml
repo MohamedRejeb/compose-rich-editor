@@ -6,6 +6,8 @@ site_url: 'https://github.com/MohamedRejeb/Compose-Rich-Editor'
 remote_branch: gh-pages
 edit_uri: ""
 
+docs_dir: docs
+
 # Repository
 repo_name: 'Compose-Rich-Editor'
 repo_url: 'https://github.com/MohamedRejeb/Compose-Rich-Editor'
@@ -19,19 +21,22 @@ theme:
   palette:
     - scheme: default
       toggle:
-        icon: material/toggle-switch-off-outline
+        icon: material/weather-night
         name: Switch to dark mode
       primary: white
-      accent: white
+      accent: teal
     - scheme: slate
       toggle:
-        icon: material/toggle-switch
+        icon: material/weather-sunny
         name: Switch to light mode
-      primary: teal
-      accent: lime
+      primary: black
+      accent: indigo
   font:
-    text: 'Roboto'
-    code: 'Roboto Mono'
+    text: 'DM Sans'
+    code: 'DM Mono'
+  features:
+    - content.tabs.link
+    - content.code.copy
 
 # Social
 extra:
@@ -55,15 +60,14 @@ nav:
   - 'Ordered/Unordered lists': ordered_unordered_lists.md
   - 'HTML import/export': html_import_export.md
   - 'Markdown import/export': markdown_import_export.md
+  - 'FAQ': faq.md
   #- 'Compose Components': compose.md
   - 'Upgrading from 0.x to 1.x': upgrading.md
   #- 'Change Log': changelog.md
   #- 'Contributing': contributing.md
   - 'Code of Conduct': code_of_conduct.md
-
-# CSS
-extra_css:
-  - 'css/site.css'
+  - 'Sample code': https://github.com/MohamedRejeb/Compose-Rich-Editor/blob/main/sample/common/src/commonMain/kotlin/com/mohamedrejeb/richeditor/sample/common
+  - '🕸️ Sample WASM app': https://compose-richeditor.netlify.app/
 
 # Extensions
 markdown_extensions:
@@ -90,6 +94,7 @@ plugins:
   - search
   - minify:
       minify_html: true
+  - open-in-new-tab
 
 # Copyright
 copyright: |

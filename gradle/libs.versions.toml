@@ -1,9 +1,8 @@
 [versions]
 agp = "8.2.2"
-kotlin = "2.0.0-RC1"
-compose = "1.6.2"
+kotlin = "2.0.0-RC3"
+compose = "1.6.10-rc01"
 dokka = "1.9.10"
-compose-compiler = "1.5.11-kt-2.0.0-Beta5"
 
 ksoup = "0.3.2"
 jetbrainsMarkdown = "0.7.0"
@@ -35,4 +34,5 @@ androidApplication = { id = "com.android.application", version.ref = "agp" }
 kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }

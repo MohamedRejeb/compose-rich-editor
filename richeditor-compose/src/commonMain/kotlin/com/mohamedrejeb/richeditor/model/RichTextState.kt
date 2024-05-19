@@ -189,7 +189,7 @@ class RichTextState internal constructor(
     val isOrderedList get() = currentRichParagraphType is OrderedList
 
     val config = RichTextConfig(
-        onConfigChanged = {
+        updateText = {
             updateTextFieldValue(textFieldValue)
         }
     )
@@ -969,9 +969,6 @@ class RichTextState internal constructor(
             val isToAddRemoveRichSpanStyleEmpty =
                 toAddRichSpanStyle is RichSpanStyle.Default && toRemoveRichSpanStyleKClass == RichSpanStyle.Default::class
 
-            println("Adding chars:")
-            println("toAddRichSpanStyle: $toAddRichSpanStyle")
-
             if (
                 (isToAddRemoveSpanStyleEmpty && isToAddRemoveRichSpanStyleEmpty) ||
                 (newSpanStyle == activeRichSpanFullSpanStyle && newRichSpanStyle::class == activeRichSpan.style::class)
@@ -1338,6 +1335,20 @@ class RichTextState internal constructor(
                 startIndex = sliceIndex,
                 richSpan = richSpan,
             )
+
+            // If the new paragraph is empty apply style depending on the config
+            if (tempTextFieldValue.selection.collapsed && newParagraph.isEmpty()) {
+                val richSpan = newParagraph.getFirstNonEmptyChild()
+
+                // Check if the cursor is at the new paragraph
+                if (
+                    !config.preserveStyleOnEmptyLine &&
+                    richSpan?.textRange?.min == tempTextFieldValue.selection.min - 1
+                ) {
+                    richSpan.spanStyle = SpanStyle()
+                    richSpan.style = RichSpanStyle.Default
+                }
+            }
 
             // Get the text before and after the slice index
             val beforeText = tempTextFieldValue.text.substring(0, sliceIndex + 1)
@@ -2156,13 +2167,16 @@ class RichTextState internal constructor(
      * Updates the [currentAppliedSpanStyle] to the [SpanStyle] that should be applied to the current selection.
      */
     private fun updateCurrentSpanStyle() {
-        if (selection.collapsed && selection.min == 0 && annotatedString.text.isEmpty()) {
-            toAddRichSpanStyle = currentAppliedRichSpanStyle
-            toAddSpanStyle = currentAppliedSpanStyle
-        }
-
         if (selection.collapsed) {
             val richSpan = getRichSpanByTextIndex(textIndex = selection.min - 1)
+
+            if (
+                config.preserveStyleOnEmptyLine &&
+                (richSpan == null || (richSpan.isFirstInParagraph && richSpan.paragraph.isEmpty()))
+            ) {
+                toAddRichSpanStyle = currentAppliedRichSpanStyle
+                toAddSpanStyle = currentAppliedSpanStyle
+            }
 
             currentAppliedRichSpanStyle = richSpan
                 ?.fullStyle

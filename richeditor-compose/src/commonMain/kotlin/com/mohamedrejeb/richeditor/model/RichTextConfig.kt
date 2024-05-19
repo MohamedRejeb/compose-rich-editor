@@ -49,7 +49,7 @@ class RichTextConfig internal constructor(
      *
      * Default is `true`.
      */
-    var preserveStyleOnEmptyLine: Boolean = false
+    var preserveStyleOnEmptyLine: Boolean = true
 }
 
 internal const val DefaultListIndent = 38

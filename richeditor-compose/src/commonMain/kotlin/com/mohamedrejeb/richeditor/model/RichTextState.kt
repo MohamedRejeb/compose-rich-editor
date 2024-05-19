@@ -233,6 +233,94 @@ class RichTextState internal constructor(
     }
 
     /**
+     * Returns the [SpanStyle] of the text at the specified text range.
+     * If the text range is collapsed, the style of the character preceding the text range is returned.
+     *
+     * @param textRange the text range.
+     * @return the [SpanStyle] of the text at the specified text range.
+     */
+    fun getSpanStyleByTextRange(textRange: TextRange): SpanStyle =
+        if (textRange.collapsed) {
+            val richSpan = getRichSpanByTextIndex(textIndex = textRange.min - 1)
+
+             richSpan
+                ?.fullSpanStyle
+                ?: RichSpanStyle.DefaultSpanStyle
+        } else {
+            val richSpanList = getRichSpanListByTextRange(textRange)
+
+            richSpanList
+                .getCommonStyle()
+                ?: RichSpanStyle.DefaultSpanStyle
+        }
+
+    /**
+     * Returns the [RichSpanStyle] of the text at the specified text range.
+     * If the text range is collapsed, the style of the character preceding the text range is returned.
+     *
+     * @param textRange the text range.
+     * @return the [RichSpanStyle] of the text at the specified text range.
+     */
+    fun getRichSpanStyleByTextRange(textRange: TextRange): RichSpanStyle =
+        if (textRange.collapsed) {
+            val richSpan = getRichSpanByTextIndex(textIndex = textRange.min - 1)
+
+            richSpan
+                ?.fullStyle
+                ?: RichSpanStyle.Default
+        } else {
+            val richSpanList = getRichSpanListByTextRange(textRange)
+
+            richSpanList
+                .getCommonRichStyle()
+                ?: RichSpanStyle.Default
+        }
+
+    /**
+     * Returns the [ParagraphStyle] of the text at the specified text range.
+     * If the text range is collapsed, the style of the paragraph containing the text range is returned.
+     *
+     * @param textRange the text range.
+     * @return the [ParagraphStyle] of the text at the specified text range.
+     */
+    fun getParagraphStyleByTextRange(textRange: TextRange): ParagraphStyle =
+        if (textRange.collapsed) {
+            val richParagraph = getRichParagraphByTextIndex(textIndex = textRange.min - 1)
+
+            richParagraph
+                ?.paragraphStyle
+                ?: RichParagraph.DefaultParagraphStyle
+        } else {
+            val richParagraphList = getRichParagraphListByTextRange(textRange)
+
+            richParagraphList
+                .getCommonStyle()
+                ?: RichParagraph.DefaultParagraphStyle
+        }
+
+    /**
+     * Returns the [ParagraphType] of the text at the specified text range.
+     * If the text range is collapsed, the type of the paragraph containing the text range is returned.
+     *
+     * @param textRange the text range.
+     * @return the [ParagraphType] of the text at the specified text range.
+     */
+    internal fun getParagraphTypeByTextRange(textRange: TextRange): ParagraphType =
+        if (textRange.collapsed) {
+            val richParagraph = getRichParagraphByTextIndex(textIndex = textRange.min - 1)
+
+            richParagraph
+                ?.type
+                ?: DefaultParagraph()
+        } else {
+            val richParagraphList = getRichParagraphListByTextRange(textRange)
+
+            richParagraphList
+                .getCommonType()
+                ?: DefaultParagraph()
+        }
+
+    /**
      * Toggle the [SpanStyle]
      * If the passed span style doesn't exist in the [currentSpanStyle] it's going to be added.
      * If the passed span style already exists in the [currentSpanStyle] it's going to be removed.
@@ -2319,7 +2407,7 @@ class RichTextState internal constructor(
             currentAppliedRichSpanStyle = richSpanList
                 .getCommonRichStyle()
                 ?: RichSpanStyle.Default
-            currentAppliedSpanStyle = getRichSpanListByTextRange(selection)
+            currentAppliedSpanStyle = richSpanList
                 .getCommonStyle()
                 ?: RichSpanStyle.DefaultSpanStyle
         }
@@ -2357,7 +2445,6 @@ class RichTextState internal constructor(
      * Updates the [currentAppliedParagraphStyle] to the [ParagraphStyle] that should be applied to the current selection.
      */
     private fun updateCurrentParagraphStyle() {
-        currentRichParagraphType
         if (selection.collapsed) {
             val richParagraph = getRichParagraphByTextIndex(selection.min - 1)
 

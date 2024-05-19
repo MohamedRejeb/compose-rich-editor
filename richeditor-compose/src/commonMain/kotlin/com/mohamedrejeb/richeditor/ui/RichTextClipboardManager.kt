@@ -36,7 +36,7 @@ internal class RichTextClipboardManager(
             richTextState.richParagraphList.fastForEachIndexed { i, richParagraphStyle ->
                 withStyle(
                     richParagraphStyle.paragraphStyle.merge(
-                        richParagraphStyle.type.getStyle(richTextState.richTextConfig)
+                        richParagraphStyle.type.getStyle(richTextState.config)
                     )
                 ) {
                     if (
@@ -56,7 +56,7 @@ internal class RichTextClipboardManager(
                             richSpanList = richParagraphStyle.children,
                             startIndex = index,
                             selection = selection,
-                            richTextConfig = richTextState.richTextConfig,
+                            richTextConfig = richTextState.config,
                         )
                         if (!richTextState.singleParagraphMode) {
                             if (i != richTextState.richParagraphList.lastIndex) {

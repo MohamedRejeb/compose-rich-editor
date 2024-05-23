@@ -9,7 +9,6 @@ import androidx.compose.ui.text.style.TextAlign
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
-import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -255,7 +254,7 @@ class RichTextStateTest {
     }
 
     @Test
-    fun testGetSpanStyleByTextRange() {
+    fun testGetSpanStyle() {
         val richTextState = RichTextState(
             initialRichParagraphList = listOf(
                 RichParagraph(
@@ -282,17 +281,17 @@ class RichTextStateTest {
         // Get the style by text range
         assertEquals(
             SpanStyle(fontWeight = FontWeight.Bold),
-            richTextState.getSpanStyleByTextRange(TextRange(0, 4)),
+            richTextState.getSpanStyle(TextRange(0, 4)),
         )
 
         assertEquals(
             SpanStyle(),
-            richTextState.getSpanStyleByTextRange(TextRange(9, 19)),
+            richTextState.getSpanStyle(TextRange(9, 19)),
         )
     }
 
     @Test
-    fun testGetRichSpanStyleByTextRange() {
+    fun testGetRichSpanStyle() {
         val richTextState = RichTextState(
             initialRichParagraphList = listOf(
                 RichParagraph(
@@ -319,17 +318,17 @@ class RichTextStateTest {
         // Get the style by text range
         assertEquals(
             RichSpanStyle.Code(),
-            richTextState.getRichSpanStyleByTextRange(TextRange(0, 4)),
+            richTextState.getRichSpanStyle(TextRange(0, 4)),
         )
 
         assertEquals(
             RichSpanStyle.Default,
-            richTextState.getRichSpanStyleByTextRange(TextRange(9, 19)),
+            richTextState.getRichSpanStyle(TextRange(9, 19)),
         )
     }
 
     @Test
-    fun testGetParagraphStyleByTextRange() {
+    fun testGetParagraphStyle() {
         val richTextState = RichTextState(
             initialRichParagraphList = listOf(
                 RichParagraph(
@@ -363,17 +362,17 @@ class RichTextStateTest {
             ParagraphStyle(
                 textAlign = TextAlign.Center,
             ),
-            richTextState.getParagraphStyleByTextRange(TextRange(0, 4)),
+            richTextState.getParagraphStyle(TextRange(0, 4)),
         )
 
         assertEquals(
             ParagraphStyle(),
-            richTextState.getParagraphStyleByTextRange(TextRange(19, 21)),
+            richTextState.getParagraphStyle(TextRange(19, 21)),
         )
     }
 
     @Test
-    fun testGetParagraphTypeByTextRange() {
+    fun testGetParagraphType() {
         val richTextState = RichTextState(
             initialRichParagraphList = listOf(
                 RichParagraph(
@@ -403,12 +402,12 @@ class RichTextStateTest {
         // Get the style by text range
         assertEquals(
             UnorderedList::class,
-            richTextState.getParagraphTypeByTextRange(TextRange(0, 4))::class,
+            richTextState.getParagraphType(TextRange(0, 4))::class,
         )
 
         assertEquals(
             DefaultParagraph::class,
-            richTextState.getParagraphTypeByTextRange(TextRange(19, 21))::class,
+            richTextState.getParagraphType(TextRange(19, 21))::class,
         )
     }
 

@@ -199,8 +199,8 @@ class RichTextState internal constructor(
     }
 
     @Deprecated(
-        message = "Use isCodeSpan instead",
-        replaceWith = ReplaceWith("isCodeSpan"),
+        message = "Use config instead",
+        replaceWith = ReplaceWith("config"),
         level = DeprecationLevel.WARNING,
     )
     fun setConfig(
@@ -239,7 +239,7 @@ class RichTextState internal constructor(
      * @param textRange the text range.
      * @return the [SpanStyle] of the text at the specified text range.
      */
-    fun getSpanStyleByTextRange(textRange: TextRange): SpanStyle =
+    fun getSpanStyle(textRange: TextRange): SpanStyle =
         if (textRange.collapsed) {
             val richSpan = getRichSpanByTextIndex(textIndex = textRange.min - 1)
 
@@ -261,7 +261,7 @@ class RichTextState internal constructor(
      * @param textRange the text range.
      * @return the [RichSpanStyle] of the text at the specified text range.
      */
-    fun getRichSpanStyleByTextRange(textRange: TextRange): RichSpanStyle =
+    fun getRichSpanStyle(textRange: TextRange): RichSpanStyle =
         if (textRange.collapsed) {
             val richSpan = getRichSpanByTextIndex(textIndex = textRange.min - 1)
 
@@ -283,7 +283,7 @@ class RichTextState internal constructor(
      * @param textRange the text range.
      * @return the [ParagraphStyle] of the text at the specified text range.
      */
-    fun getParagraphStyleByTextRange(textRange: TextRange): ParagraphStyle =
+    fun getParagraphStyle(textRange: TextRange): ParagraphStyle =
         if (textRange.collapsed) {
             val richParagraph = getRichParagraphByTextIndex(textIndex = textRange.min - 1)
 
@@ -305,7 +305,7 @@ class RichTextState internal constructor(
      * @param textRange the text range.
      * @return the [ParagraphType] of the text at the specified text range.
      */
-    internal fun getParagraphTypeByTextRange(textRange: TextRange): ParagraphType =
+    internal fun getParagraphType(textRange: TextRange): ParagraphType =
         if (textRange.collapsed) {
             val richParagraph = getRichParagraphByTextIndex(textIndex = textRange.min - 1)
 
@@ -2766,18 +2766,18 @@ class RichTextState internal constructor(
      *
      * @return A copy of this [RichTextState].
      */
-    @OptIn(ExperimentalRichTextApi::class)
     fun copy(): RichTextState {
         val richParagraphList = richParagraphList.map { it.copy() }
         val richTextState = RichTextState(richParagraphList)
         richTextState.updateTextFieldValue(textFieldValue)
-        richTextState.setConfig(
-            linkColor = config.linkColor,
-            linkTextDecoration = config.linkTextDecoration,
-            codeColor = config.codeSpanColor,
-            codeBackgroundColor = config.codeSpanBackgroundColor,
-            codeStrokeColor = config.codeSpanStrokeColor,
-        )
+        richTextState.config.linkColor = config.linkColor
+        richTextState.config.linkTextDecoration = config.linkTextDecoration
+        richTextState.config.codeSpanColor = config.codeSpanColor
+        richTextState.config.codeSpanBackgroundColor = config.codeSpanBackgroundColor
+        richTextState.config.codeSpanStrokeColor = config.codeSpanStrokeColor
+        richTextState.config.listIndent = config.listIndent
+        richTextState.config.preserveStyleOnEmptyLine = config.preserveStyleOnEmptyLine
+
         return richTextState
     }
 

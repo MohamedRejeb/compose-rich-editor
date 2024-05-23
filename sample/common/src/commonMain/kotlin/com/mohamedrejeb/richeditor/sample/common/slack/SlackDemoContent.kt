@@ -53,13 +53,11 @@ fun SlackDemoContent() {
     val openLinkDialog = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        richTextState.setConfig(
-            linkColor = Color(0xFF1d9bd1),
-            linkTextDecoration = TextDecoration.None,
-            codeColor = Color(0xFFd7882d),
-            codeBackgroundColor = Color.Transparent,
-            codeStrokeColor = Color(0xFF494b4d),
-        )
+        richTextState.config.linkColor = Color(0xFF1d9bd1)
+        richTextState.config.linkTextDecoration = TextDecoration.None
+        richTextState.config.codeSpanColor = Color(0xFFd7882d)
+        richTextState.config.codeSpanBackgroundColor = Color.Transparent
+        richTextState.config.codeSpanStrokeColor = Color(0xFF494b4d)
     }
 
     Box(

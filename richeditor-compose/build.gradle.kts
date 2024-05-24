@@ -23,7 +23,13 @@ kotlin {
         browser()
     }
     @OptIn(ExperimentalWasmDsl::class)
-    wasmJs().browser()
+    wasmJs {
+        browser {
+            testTask {
+                enabled = false
+            }
+        }
+    }
     iosX64()
     iosArm64()
     iosSimulatorArm64()

@@ -126,7 +126,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     val currentRichParagraph = richParagraphList.last()
                     val newRichSpan = RichSpan(paragraph = currentRichParagraph)
                     newRichSpan.spanStyle = cssSpanStyle.customMerge(tagSpanStyle)
-                    newRichSpan.style = richSpanStyle
+                    newRichSpan.richSpansStyle = richSpanStyle
 
                     if (currentRichSpan != null) {
                         newRichSpan.parent = currentRichSpan
@@ -248,7 +248,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         if (richSpan.isEmpty()) return ""
 
         // Get HTML element and attributes
-        val spanHtml = decodeHtmlElementFromRichSpanStyle(richSpan.style)
+        val spanHtml = decodeHtmlElementFromRichSpanStyle(richSpan.richSpansStyle)
         val tagName = spanHtml.first
         val tagAttributes = spanHtml.second
 

@@ -21,7 +21,7 @@ A rich text editor library for both Jetpack Compose and Compose Multiplatform, f
 Compose Rich Editor is available on `mavenCentral()`.
 
 ```kotlin
-implementation("com.mohamedrejeb.richeditor:richeditor-compose:1.0.0-rc04")
+implementation("com.mohamedrejeb.richeditor:richeditor-compose:1.0.0-rc05")
 ```
 
 ## Quick Start
@@ -154,13 +154,11 @@ val isUnorderedList = richTextState.isUnorderedList
 Some of the rich text editor's features can be customized, such as the color of the links and the code blocks.
 
 ```kotlin
-richTextState.setConfig(
-    linkColor = Color.Blue,
-    linkTextDecoration = TextDecoration.Underline,
-    codeColor = Color.Yellow,
-    codeBackgroundColor = Color.Transparent,
-    codeStrokeColor = Color.LightGray,
-)
+richTextState.config.linkColor = Color.Blue
+richTextState.config.linkTextDecoration = TextDecoration.Underline
+richTextState.config.codeSpanColor = Color.Yellow
+richTextState.config.codeSpanBackgroundColor = Color.Transparent
+richTextState.config.codeSpanStrokeColor = Color.LightGray
 ```
 
 #### HTML import and export

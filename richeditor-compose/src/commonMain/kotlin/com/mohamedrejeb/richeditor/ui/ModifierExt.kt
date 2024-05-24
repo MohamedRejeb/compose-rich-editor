@@ -25,13 +25,13 @@ internal fun Modifier.drawRichSpanStyle(
 
                 if (
                     lastAddedItem != null &&
-                    lastAddedItem.first::class == richSpan.style::class &&
+                    lastAddedItem.first::class == richSpan.richSpansStyle::class &&
                     lastAddedItem.second.end == richSpan.textRange.start
                 )
                     styledRichSpanList[styledRichSpanList.lastIndex] =
                         lastAddedItem.first to TextRange(lastAddedItem.second.start, end)
                 else
-                    styledRichSpanList.add(richSpan.style to TextRange(richSpan.textRange.start, end))
+                    styledRichSpanList.add(richSpan.richSpansStyle to TextRange(richSpan.textRange.start, end))
             }
 
             styledRichSpanList.fastForEach { (style, textRange) ->

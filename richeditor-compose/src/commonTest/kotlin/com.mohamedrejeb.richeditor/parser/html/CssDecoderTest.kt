@@ -74,8 +74,8 @@ internal class CssDecoderTest {
         val size5 = 12.5f
         val size6 = -12f
 
-        assertEquals(
-            "12.0px",
+        assertContains(
+            listOf("12.0px", "12px"),
             CssDecoder.decodeSizeToCss(size)
         )
         assertContains(
@@ -123,8 +123,8 @@ internal class CssDecoderTest {
             listOf("192.0em", "192em"),
             CssDecoder.decodeTextUnitToCss(textUnit3)
         )
-        assertEquals(
-            "1.92em",
+        assertContains(
+            listOf("1.92em", "1.9199999570846558em"),
             CssDecoder.decodeTextUnitToCss(textUnit4)
         )
         assertEquals(

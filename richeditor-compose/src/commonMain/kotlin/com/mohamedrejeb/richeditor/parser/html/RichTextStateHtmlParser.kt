@@ -27,14 +27,13 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         var currentRichSpan: RichSpan? = null
         var lastClosedTag: String? = null
 
-        var skipText = false
-
         val handler = KsoupHtmlHandler
             .Builder()
             .onText {
-                if (skipText) return@onText
-
+                // In html text inside ul/ol tags is skipped
                 val lastOpenedTag = openedTags.lastOrNull()?.first
+                if (lastOpenedTag == "ul" || lastOpenedTag == "ol") return@onText
+
                 if (lastOpenedTag in skippedHtmlElements) return@onText
 
                 val addedText = KsoupEntities.decodeHtml(
@@ -74,10 +73,12 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 }
             }
             .onOpenTag { name, attributes, _ ->
+                val lastOpenedTag = openedTags.lastOrNull()?.first
+
                 openedTags.add(name to attributes)
 
                 if (name == "ul" || name == "ol") {
-                    skipText = true
+                    // Todo: Apply ul/ol styling if exists
                     return@onOpenTag
                 }
 
@@ -85,16 +86,34 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 val cssSpanStyle = CssEncoder.parseCssStyleMapToSpanStyle(cssStyleMap)
                 val tagSpanStyle = htmlElementsSpanStyleEncodeMap[name]
 
-                if (name in htmlBlockElements) {
+                val currentRichParagraph = richParagraphList.lastOrNull()
+                val isCurrentRichParagraphBlank = currentRichParagraph?.isBlank() == true
+                val isCurrentTagBlockElement = name in htmlBlockElements
+                val isLastOpenedTagBlockElement = lastOpenedTag in htmlBlockElements
+
+                if (
+                    lastOpenedTag != null &&
+                    isCurrentTagBlockElement &&
+                    isLastOpenedTagBlockElement &&
+                    name == "li" &&
+                    currentRichParagraph != null &&
+                    currentRichParagraph.type is DefaultParagraph &&
+                    isCurrentRichParagraphBlank
+                ) {
+                    val paragraphType = encodeHtmlElementToRichParagraphType(lastOpenedTag)
+                    currentRichParagraph.type = paragraphType
+
+                    val cssParagraphStyle = CssEncoder.parseCssStyleMapToParagraphStyle(cssStyleMap)
+                    currentRichParagraph.paragraphStyle = currentRichParagraph.paragraphStyle.merge(cssParagraphStyle)
+                }
+
+                if (isCurrentTagBlockElement && (!isLastOpenedTagBlockElement || !isCurrentRichParagraphBlank)) {
                     stringBuilder.append(' ')
 
                     val newRichParagraph = RichParagraph()
                     var paragraphType: ParagraphType = DefaultParagraph()
-                    if (name == "li") {
-                        skipText = false
-                        openedTags.getOrNull(openedTags.lastIndex - 1)?.first?.let { lastOpenedTag ->
-                            paragraphType = encodeHtmlElementToRichParagraphType(lastOpenedTag)
-                        }
+                    if (name == "li" && lastOpenedTag != null) {
+                        paragraphType = encodeHtmlElementToRichParagraphType(lastOpenedTag)
                     }
                     val cssParagraphStyle = CssEncoder.parseCssStyleMapToParagraphStyle(cssStyleMap)
 
@@ -158,7 +177,6 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 lastClosedTag = name
 
                 if (name == "ul" || name == "ol") {
-                    skipText = false
                     return@onCloseTag
                 }
 
@@ -172,6 +190,12 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
         parser.write(input)
         parser.end()
+
+        for (i in richParagraphList.lastIndex downTo 0) {
+            if (richParagraphList[i].isBlank()) {
+                richParagraphList.removeAt(i)
+            }
+        }
 
         return RichTextState(
             initialRichParagraphList = richParagraphList,

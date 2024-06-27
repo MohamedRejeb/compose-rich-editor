@@ -9,141 +9,44 @@ import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextConfig
+import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.ui.RichTextClipboardManager
 import kotlin.math.max
 import kotlin.math.min
 
+/**
+ * Used in [RichTextState.updateAnnotatedString]
+*/
 internal fun AnnotatedString.Builder.append(
+    state: RichTextState,
     richSpanList: MutableList<RichSpan>,
     startIndex: Int,
     text: String,
     selection: TextRange,
     onStyledRichSpan: (RichSpan) -> Unit,
-    richTextConfig: RichTextConfig,
 ): Int {
     return appendRichSpan(
+        state = state,
         richSpanList = richSpanList,
         startIndex = startIndex,
         text = text,
         selection = selection,
         onStyledRichSpan = onStyledRichSpan,
-        richTextConfig = richTextConfig,
     )
 }
 
-internal fun AnnotatedString.Builder.append(
-    richSpanList: List<RichSpan>,
-    startIndex: Int,
-    selection: TextRange,
-    richTextConfig: RichTextConfig,
-): Int {
-    var index = startIndex
-    richSpanList.fastForEach { richSpan ->
-        index = append(
-            richSpan = richSpan,
-            startIndex = index,
-            selection = selection,
-            richTextConfig = richTextConfig,
-        )
-    }
-    return index
-}
-
-internal fun AnnotatedString.Builder.append(
-    richSpanList: List<RichSpan>,
-    startIndex: Int,
-    onStyledRichSpan: (RichSpan) -> Unit,
-    richTextConfig: RichTextConfig,
-): Int {
-    var index = startIndex
-    richSpanList.fastForEach { richSpan ->
-        index = append(
-            richSpan = richSpan,
-            startIndex = index,
-            onStyledRichSpan = onStyledRichSpan,
-            richTextConfig = richTextConfig,
-        )
-    }
-    return index
-}
-
-@OptIn(ExperimentalRichTextApi::class)
-internal fun AnnotatedString.Builder.append(
-    richSpan: RichSpan,
-    startIndex: Int,
-    text: String,
-    selection: TextRange,
-    onStyledRichSpan: (RichSpan) -> Unit,
-    richTextConfig: RichTextConfig,
-): Int {
-    var index = startIndex
-
-    withStyle(richSpan.spanStyle.merge(richSpan.richSpansStyle.spanStyle(richTextConfig))) {
-        val newText = text.substring(index, index + richSpan.text.length)
-
-        richSpan.text = newText
-        richSpan.textRange = TextRange(index, index + richSpan.text.length)
-
-        // Ignore setting the background color for the selected text to avoid the selection being hidden
-        if (
-            !selection.collapsed &&
-            selection.min < index + richSpan.text.length &&
-            selection.max > index
-        ) {
-            val beforeSelection =
-                if (selection.min > index)
-                    richSpan.text.substring(0, selection.min - index)
-                else
-                    ""
-
-            val selectedText =
-                richSpan.text.substring(
-                    max(0, selection.min - index),
-                    min(selection.max - index, richSpan.text.length)
-                )
-
-            val afterSelection =
-                if (selection.max - index < richSpan.text.length)
-                    richSpan.text.substring(selection.max - index)
-                else
-                    ""
-
-            append(beforeSelection)
-            withStyle(SpanStyle(background = Color.Transparent)) {
-                append(selectedText)
-            }
-            append(afterSelection)
-        } else {
-            append(newText)
-        }
-
-        if (richSpan.richSpansStyle !is RichSpanStyle.Default) {
-            onStyledRichSpan(richSpan)
-        }
-
-        index += richSpan.text.length
-
-        index = appendRichSpan(
-            parent = richSpan,
-            richSpanList = richSpan.children,
-            startIndex = index,
-            text = text,
-            selection = selection,
-            onStyledRichSpan = onStyledRichSpan,
-            richTextConfig = richTextConfig,
-        )
-    }
-    return index
-}
-
+/**
+ * Used in [RichTextState.updateAnnotatedString]
+ */
 @OptIn(ExperimentalRichTextApi::class)
 internal fun AnnotatedString.Builder.appendRichSpan(
+    state: RichTextState,
     parent: RichSpan? = null,
     richSpanList: MutableList<RichSpan>,
     startIndex: Int,
     text: String,
     selection: TextRange,
     onStyledRichSpan: (RichSpan) -> Unit,
-    richTextConfig: RichTextConfig,
 ): Int {
     var index = startIndex
     var previousRichSpan = parent
@@ -151,12 +54,12 @@ internal fun AnnotatedString.Builder.appendRichSpan(
 
     richSpanList.fastForEachIndexed { i, richSpan ->
         index = append(
+            state = state,
             richSpan = richSpan,
             startIndex = index,
             text = text,
             selection = selection,
             onStyledRichSpan = onStyledRichSpan,
-            richTextConfig = richTextConfig,
         )
 
         if (
@@ -195,6 +98,109 @@ internal fun AnnotatedString.Builder.appendRichSpan(
     return index
 }
 
+
+/**
+ * Used in [RichTextState.updateAnnotatedString]
+ */
+@OptIn(ExperimentalRichTextApi::class)
+internal fun AnnotatedString.Builder.append(
+    state: RichTextState,
+    richSpan: RichSpan,
+    startIndex: Int,
+    text: String,
+    selection: TextRange,
+    onStyledRichSpan: (RichSpan) -> Unit,
+): Int {
+    var index = startIndex
+
+    withStyle(richSpan.spanStyle.merge(richSpan.richSpansStyle.spanStyle(state.config))) {
+        val newText = text.substring(index, index + richSpan.text.length)
+
+        richSpan.text = newText
+        richSpan.textRange = TextRange(index, index + richSpan.text.length)
+
+        // Ignore setting the background color for the selected text to avoid the selection being hidden
+        if (
+            !selection.collapsed &&
+            selection.min < index + richSpan.text.length &&
+            selection.max > index
+        ) {
+            val beforeSelection =
+                if (selection.min > index)
+                    richSpan.text.substring(0, selection.min - index)
+                else
+                    ""
+
+            val selectedText =
+                richSpan.text.substring(
+                    max(0, selection.min - index),
+                    min(selection.max - index, richSpan.text.length)
+                )
+
+            val afterSelection =
+                if (selection.max - index < richSpan.text.length)
+                    richSpan.text.substring(selection.max - index)
+                else
+                    ""
+
+            append(beforeSelection)
+            withStyle(SpanStyle(background = Color.Transparent)) {
+                append(selectedText)
+            }
+            append(afterSelection)
+        } else {
+            append(newText)
+        }
+
+        with(richSpan.richSpansStyle) {
+            appendCustomContent(
+                richTextState = state
+            )
+        }
+
+        if (richSpan.richSpansStyle !is RichSpanStyle.Default) {
+            onStyledRichSpan(richSpan)
+        }
+
+        index += richSpan.text.length
+
+        index = appendRichSpan(
+            state = state,
+            parent = richSpan,
+            richSpanList = richSpan.children,
+            startIndex = index,
+            text = text,
+            selection = selection,
+            onStyledRichSpan = onStyledRichSpan,
+        )
+    }
+    return index
+}
+
+/**
+ * Used in [RichTextClipboardManager]
+ */
+internal fun AnnotatedString.Builder.append(
+    richSpanList: List<RichSpan>,
+    startIndex: Int,
+    selection: TextRange,
+    richTextConfig: RichTextConfig,
+): Int {
+    var index = startIndex
+    richSpanList.fastForEach { richSpan ->
+        index = append(
+            richSpan = richSpan,
+            startIndex = index,
+            selection = selection,
+            richTextConfig = richTextConfig,
+        )
+    }
+    return index
+}
+
+/**
+ * Used in [RichTextClipboardManager]
+ */
 @OptIn(ExperimentalRichTextApi::class)
 internal fun AnnotatedString.Builder.append(
     richSpan: RichSpan,
@@ -230,18 +236,47 @@ internal fun AnnotatedString.Builder.append(
     return index
 }
 
+/**
+ * Used in [RichTextState.updateRichParagraphList]
+ */
+internal fun AnnotatedString.Builder.append(
+    state: RichTextState,
+    richSpanList: List<RichSpan>,
+    startIndex: Int,
+    onStyledRichSpan: (RichSpan) -> Unit,
+): Int {
+    var index = startIndex
+    richSpanList.fastForEach { richSpan ->
+        index = append(
+            state = state,
+            richSpan = richSpan,
+            startIndex = index,
+            onStyledRichSpan = onStyledRichSpan,
+        )
+    }
+    return index
+}
+
+/**
+ * Used in [RichTextState.updateRichParagraphList]
+ */
 @OptIn(ExperimentalRichTextApi::class)
 internal fun AnnotatedString.Builder.append(
+    state: RichTextState,
     richSpan: RichSpan,
     startIndex: Int,
     onStyledRichSpan: (RichSpan) -> Unit,
-    richTextConfig: RichTextConfig,
 ): Int {
     var index = startIndex
 
-    withStyle(richSpan.spanStyle.merge(richSpan.richSpansStyle.spanStyle(richTextConfig))) {
+    withStyle(richSpan.spanStyle.merge(richSpan.richSpansStyle.spanStyle(state.config))) {
         richSpan.textRange = TextRange(index, index + richSpan.text.length)
         append(richSpan.text)
+        with(richSpan.richSpansStyle) {
+            appendCustomContent(
+                richTextState = state,
+            )
+        }
 
         if (richSpan.richSpansStyle !is RichSpanStyle.Default) {
             onStyledRichSpan(richSpan)
@@ -250,10 +285,10 @@ internal fun AnnotatedString.Builder.append(
         index += richSpan.text.length
         richSpan.children.fastForEach { richSpan ->
             index = append(
+                state = state,
                 richSpan = richSpan,
                 startIndex = index,
                 onStyledRichSpan = onStyledRichSpan,
-                richTextConfig = richTextConfig,
             )
         }
     }

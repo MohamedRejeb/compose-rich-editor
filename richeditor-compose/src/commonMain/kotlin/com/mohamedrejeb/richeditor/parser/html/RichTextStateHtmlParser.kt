@@ -1,6 +1,7 @@
 package com.mohamedrejeb.richeditor.parser.html
 
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.ksoup.entities.KsoupEntities
 import com.mohamedrejeb.ksoup.html.parser.KsoupHtmlHandler
 import com.mohamedrejeb.ksoup.html.parser.KsoupHtmlParser
@@ -388,8 +389,17 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         when (tagName) {
             "a" ->
                 RichSpanStyle.Link(url = attributes["href"].orEmpty())
+
             CodeSpanTagName, OldCodeSpanTagName ->
                 RichSpanStyle.Code()
+
+            "img" ->
+                RichSpanStyle.Image(
+                    model = attributes["src"].orEmpty(),
+                    width = (attributes["width"]?.toIntOrNull() ?: 0).sp,
+                    height = (attributes["height"]?.toIntOrNull() ?: 0).sp,
+                )
+
             else ->
                 RichSpanStyle.Default
         }
@@ -407,8 +417,20 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     "href" to richSpanStyle.url,
                     "target" to "_blank"
                 )
+
             is RichSpanStyle.Code ->
                 CodeSpanTagName to emptyMap()
+
+            is RichSpanStyle.Image ->
+                if (richSpanStyle.model is String)
+                    "img" to mapOf(
+                        "src" to richSpanStyle.model,
+                        "width" to richSpanStyle.width.value.toString(),
+                        "height" to richSpanStyle.height.value.toString(),
+                    )
+                else
+                    "span" to emptyMap()
+
             else ->
                 "span" to emptyMap()
         }

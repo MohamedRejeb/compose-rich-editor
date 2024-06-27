@@ -1,5 +1,6 @@
 package com.mohamedrejeb.richeditor.model
 
+import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
@@ -44,6 +45,8 @@ class RichTextState internal constructor(
     internal var visualTransformation: VisualTransformation by mutableStateOf(VisualTransformation.None)
     internal var textFieldValue by mutableStateOf(TextFieldValue())
         private set
+
+    internal val inlineContentMap = mutableStateMapOf<String, InlineTextContent>()
 
     /**
      * The annotated string representing the rich text.
@@ -1086,6 +1089,7 @@ class RichTextState internal constructor(
                     index += richParagraphStartTextLength
                     withStyle(RichSpanStyle.DefaultSpanStyle) {
                         index = append(
+                            state = this@RichTextState,
                             richSpanList = richParagraph.children,
                             startIndex = index,
                             text = newText,
@@ -1093,7 +1097,6 @@ class RichTextState internal constructor(
                             onStyledRichSpan = {
                                 newStyledRichSpanList.add(it)
                             },
-                            richTextConfig = config,
                         )
 
                         if (!singleParagraphMode) {
@@ -2846,12 +2849,12 @@ class RichTextState internal constructor(
                     index += richParagraphStartTextLength
                     withStyle(RichSpanStyle.DefaultSpanStyle) {
                         index = append(
+                            state = this@RichTextState,
                             richSpanList = richParagraphStyle.children,
                             startIndex = index,
                             onStyledRichSpan = {
                                 newStyledRichSpanList.add(it)
                             },
-                            richTextConfig = config,
                         )
                         if (!singleParagraphMode) {
                             if (i != richParagraphList.lastIndex) {

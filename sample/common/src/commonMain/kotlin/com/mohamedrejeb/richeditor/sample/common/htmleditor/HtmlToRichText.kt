@@ -3,11 +3,17 @@ package com.mohamedrejeb.richeditor.sample.common.htmleditor
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import com.mohamedrejeb.richeditor.coil3.Coil3ImageLoader
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 
@@ -81,11 +87,14 @@ fun HtmlToRichText(
                     .padding(vertical = 12.dp, horizontal = 12.dp)
             ) {
                 item {
-                    RichText(
-                        state = richTextState,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                    )
+                    SelectionContainer {
+                        RichText(
+                            state = richTextState,
+                            imageLoader = Coil3ImageLoader,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        )
+                    }
                 }
             }
         }

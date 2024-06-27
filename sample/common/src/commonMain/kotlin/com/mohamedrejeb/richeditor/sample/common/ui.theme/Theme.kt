@@ -6,6 +6,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import com.mohamedrejeb.richeditor.sample.common.coil.setSingletonImageLoaderFactory
 
 private val LightColors = lightColorScheme(
     primary = md_theme_light_primary,
@@ -77,6 +78,8 @@ internal fun ComposeRichEditorTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
+    setSingletonImageLoaderFactory()
+
     val colorScheme = if (darkTheme) {
         DarkColors
     } else {

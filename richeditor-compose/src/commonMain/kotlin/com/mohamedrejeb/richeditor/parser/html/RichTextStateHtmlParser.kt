@@ -345,12 +345,12 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         "sup" to SuperscriptSpanStyle,
         "mark" to MarkSpanStyle,
         "small" to SmallSpanStyle,
-        "h1" to H1SPanStyle,
-        "h2" to H2SPanStyle,
-        "h3" to H3SPanStyle,
-        "h4" to H4SPanStyle,
-        "h5" to H5SPanStyle,
-        "h6" to H6SPanStyle,
+        "h1" to H1SpanStyle,
+        "h2" to H2SpanStyle,
+        "h3" to H3SpanStyle,
+        "h4" to H4SpanStyle,
+        "h5" to H5SpanStyle,
+        "h6" to H6SpanStyle,
     )
 
     /**
@@ -367,12 +367,12 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         SuperscriptSpanStyle to "sup",
         MarkSpanStyle to "mark",
         SmallSpanStyle to "small",
-        H1SPanStyle to "h1",
-        H2SPanStyle to "h2",
-        H3SPanStyle to "h3",
-        H4SPanStyle to "h4",
-        H5SPanStyle to "h5",
-        H6SPanStyle to "h6",
+        H1SpanStyle to "h1",
+        H2SpanStyle to "h2",
+        H3SpanStyle to "h3",
+        H4SpanStyle to "h4",
+        H5SpanStyle to "h5",
+        H6SpanStyle to "h6",
     )
 
     private const val CodeSpanTagName = "code"

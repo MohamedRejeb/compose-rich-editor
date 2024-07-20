@@ -182,12 +182,8 @@ interface RichSpanStyle {
         override fun AnnotatedString.Builder.appendCustomContent(
             richTextState: RichTextState
         ): AnnotatedString.Builder {
-            println("richTextState.inlineContentMap: ${richTextState.inlineContentMap.keys.toSet()}")
-            println("contains key: ${richTextState.inlineContentMap.containsKey(model.toString())}")
-            if (!richTextState.inlineContentMap.containsKey(model.toString())) {
-                println("width: $width")
-                println("height: $height")
-                richTextState.inlineContentMap[model.toString()] =
+            if (id !in richTextState.inlineContentMap.keys) {
+                richTextState.inlineContentMap[id] =
                     InlineTextContent(
                         placeholder = Placeholder(
                             width = width,
@@ -209,8 +205,10 @@ interface RichSpanStyle {
                     )
             }
 
+            richTextState.usedInlineContentMapKeys.add(id)
+
             appendInlineContent(
-                id = model.toString(),
+                id = id,
             )
 
             return this

@@ -93,6 +93,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 val isCurrentTagBlockElement = name in htmlBlockElements
                 val isLastOpenedTagBlockElement = lastOpenedTag in htmlBlockElements
 
+                // For <li> tags inside <ul> or <ol> tags
                 if (
                     lastOpenedTag != null &&
                     isCurrentTagBlockElement &&
@@ -168,8 +169,11 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                             RichParagraph()
                         else
                             RichParagraph(paragraphStyle = richParagraphList.last().paragraphStyle)
+
                     richParagraphList.add(newParagraph)
+
                     lineBreakParagraphIndexSet.add(richParagraphList.lastIndex)
+
                     currentRichSpan = null
                 }
 

@@ -180,7 +180,7 @@ internal class RichSpan(
      *
      * @return True if the rich span is blank, false otherwise
      */
-    fun isBlank(): Boolean = text.isBlank() && isChildrenBlank()
+    fun isBlank(): Boolean = text.isBlank() && isChildrenBlank() && richSpansStyle !is RichSpanStyle.Image
 
     /**
      * Check if the rich span children are empty
@@ -189,7 +189,7 @@ internal class RichSpan(
      */
     private fun isChildrenEmpty(): Boolean =
         children.all { richSpan ->
-            richSpan.text.isEmpty() && richSpan.isChildrenEmpty()
+            richSpan.isEmpty()
         }
 
     /**
@@ -199,7 +199,7 @@ internal class RichSpan(
      */
     private fun isChildrenBlank(): Boolean =
         children.all { richSpan ->
-            richSpan.text.isBlank() && richSpan.isChildrenBlank()
+            richSpan.isBlank()
         }
 
     /**

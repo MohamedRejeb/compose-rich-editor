@@ -47,6 +47,7 @@ class RichTextState internal constructor(
         private set
 
     internal val inlineContentMap = mutableStateMapOf<String, InlineTextContent>()
+    internal val usedInlineContentMapKeys = mutableSetOf<String>()
 
     /**
      * The annotated string representing the rich text.
@@ -1074,6 +1075,9 @@ class RichTextState internal constructor(
                 newTextFieldValue.text.replace('\n', ' ')
 
         val newStyledRichSpanList = mutableListOf<RichSpan>()
+
+        usedInlineContentMapKeys.clear()
+
         annotatedString = buildAnnotatedString {
             var index = 0
             richParagraphList.fastForEachIndexed { i, richParagraph ->
@@ -1110,6 +1114,11 @@ class RichTextState internal constructor(
                     }
                 }
             }
+        }
+
+        inlineContentMap.keys.forEach { key ->
+            if (key !in usedInlineContentMapKeys)
+                inlineContentMap.remove(key)
         }
 
         styledRichSpanList.clear()
@@ -2838,24 +2847,28 @@ class RichTextState internal constructor(
             richParagraphList.add(RichParagraph())
 
         val newStyledRichSpanList = mutableListOf<RichSpan>()
+
+        usedInlineContentMapKeys.clear()
+
         annotatedString = buildAnnotatedString {
             var index = 0
-            richParagraphList.fastForEachIndexed { i, richParagraphStyle ->
-                withStyle(richParagraphStyle.paragraphStyle.merge(richParagraphStyle.type.getStyle(config))) {
-                    append(richParagraphStyle.type.startText)
-                    val richParagraphStartTextLength = richParagraphStyle.type.startText.length
-                    richParagraphStyle.type.startRichSpan.textRange =
+            richParagraphList.fastForEachIndexed { i, richParagraph ->
+                withStyle(richParagraph.paragraphStyle.merge(richParagraph.type.getStyle(config))) {
+                    append(richParagraph.type.startText)
+                    val richParagraphStartTextLength = richParagraph.type.startText.length
+                    richParagraph.type.startRichSpan.textRange =
                         TextRange(index, index + richParagraphStartTextLength)
                     index += richParagraphStartTextLength
                     withStyle(RichSpanStyle.DefaultSpanStyle) {
                         index = append(
                             state = this@RichTextState,
-                            richSpanList = richParagraphStyle.children,
+                            richSpanList = richParagraph.children,
                             startIndex = index,
                             onStyledRichSpan = {
                                 newStyledRichSpanList.add(it)
                             },
                         )
+
                         if (!singleParagraphMode) {
                             if (i != richParagraphList.lastIndex) {
                                 append(' ')
@@ -2865,6 +2878,11 @@ class RichTextState internal constructor(
                     }
                 }
             }
+        }
+
+        inlineContentMap.keys.forEach { key ->
+            if (key !in usedInlineContentMapKeys)
+                inlineContentMap.remove(key)
         }
 
         styledRichSpanList.clear()

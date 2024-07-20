@@ -108,7 +108,10 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     currentRichParagraph.paragraphStyle = currentRichParagraph.paragraphStyle.merge(cssParagraphStyle)
                 }
 
-                if (isCurrentTagBlockElement && (!isLastOpenedTagBlockElement || !isCurrentRichParagraphBlank)) {
+                if (
+                    isCurrentTagBlockElement &&
+                    (!isLastOpenedTagBlockElement || !isCurrentRichParagraphBlank)
+                ) {
                     stringBuilder.append(' ')
 
                     val newRichParagraph = RichParagraph()
@@ -131,7 +134,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     } else {
                         currentRichSpan = null
                     }
-                } else if (name != "br") {
+                } else if (name != BrElement) {
                     if (lastClosedTag in htmlBlockElements) {
                         lastClosedTag = null
                         currentRichSpan = null
@@ -155,20 +158,17 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                         currentRichParagraph.children.add(newRichSpan)
                     }
                     currentRichSpan = newRichSpan
-                }
+                } else {
+                    // name == "br"
+                    stringBuilder.append(' ')
 
-                when (name) {
-                    "br" -> {
-                        stringBuilder.append(' ')
-
-                        val newParagraph =
-                            if (richParagraphList.isEmpty())
-                                RichParagraph()
-                            else
-                                RichParagraph(paragraphStyle = richParagraphList.last().paragraphStyle)
-                        richParagraphList.add(newParagraph)
-                        currentRichSpan = null
-                    }
+                    val newParagraph =
+                        if (richParagraphList.isEmpty())
+                            RichParagraph()
+                        else
+                            RichParagraph(paragraphStyle = richParagraphList.last().paragraphStyle)
+                    richParagraphList.add(newParagraph)
+                    currentRichSpan = null
                 }
 
                 lastClosedTag = null
@@ -191,12 +191,6 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
         parser.write(input)
         parser.end()
-
-        for (i in richParagraphList.lastIndex downTo 0) {
-            if (richParagraphList[i].isBlank()) {
-                richParagraphList.removeAt(i)
-            }
-        }
 
         return RichTextState(
             initialRichParagraphList = richParagraphList,
@@ -225,7 +219,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 builder.append("<$paragraphGroupTagName>")
             // Add line break if the paragraph is empty
             else if (richParagraph.isEmpty()) {
-                builder.append("<br>")
+                builder.append("<$BrElement>")
                 return@fastForEachIndexed
             }
 

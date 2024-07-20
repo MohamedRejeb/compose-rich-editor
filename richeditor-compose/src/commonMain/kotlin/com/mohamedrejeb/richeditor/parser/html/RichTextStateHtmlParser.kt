@@ -25,6 +25,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         val openedTags = mutableListOf<Pair<String, Map<String, String>>>()
         val stringBuilder = StringBuilder()
         val richParagraphList = mutableListOf<RichParagraph>()
+        val lineBreakParagraphIndexSet = mutableSetOf<Int>()
         var currentRichSpan: RichSpan? = null
         var lastClosedTag: String? = null
 
@@ -168,6 +169,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                         else
                             RichParagraph(paragraphStyle = richParagraphList.last().paragraphStyle)
                     richParagraphList.add(newParagraph)
+                    lineBreakParagraphIndexSet.add(richParagraphList.lastIndex)
                     currentRichSpan = null
                 }
 
@@ -191,6 +193,16 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
         parser.write(input)
         parser.end()
+
+        for (i in richParagraphList.lastIndex downTo 0) {
+            // Keep empty paragraphs if they are line breaks
+            if (i in lineBreakParagraphIndexSet)
+                continue
+
+            // Remove empty paragraphs
+            if (richParagraphList[i].isBlank())
+                richParagraphList.removeAt(i)
+        }
 
         return RichTextState(
             initialRichParagraphList = richParagraphList,

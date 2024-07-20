@@ -94,7 +94,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     val currentRichParagraph = richParagraphList.last()
                     val newRichSpan = RichSpan(paragraph = currentRichParagraph)
                     newRichSpan.spanStyle = tagSpanStyle ?: SpanStyle()
-                    newRichSpan.richSpansStyle = richSpanStyle
+                    newRichSpan.richSpanStyle = richSpanStyle
 
                     if (currentRichSpan != null) {
                         newRichSpan.parent = currentRichSpan
@@ -123,7 +123,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     currentRichSpan?.children?.firstOrNull()?.let { child ->
                         currentRichSpan?.text = child.text
                         currentRichSpan?.spanStyle = currentRichSpan?.spanStyle?.merge(child.spanStyle) ?: child.spanStyle
-                        currentRichSpan?.richSpansStyle = child.richSpansStyle
+                        currentRichSpan?.richSpanStyle = child.richSpanStyle
                         currentRichSpan?.children?.clear()
                         currentRichSpan?.children?.addAll(child.children)
                     }
@@ -205,7 +205,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         stringBuilder.append(markdownOpen)
 
         // Apply rich span style to markdown
-        val spanMarkdown = decodeMarkdownElementFromRichSpan(richSpan.text, richSpan.richSpansStyle)
+        val spanMarkdown = decodeMarkdownElementFromRichSpan(richSpan.text, richSpan.richSpanStyle)
 
         // Append text
         stringBuilder.append(spanMarkdown)
@@ -243,12 +243,12 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         MarkdownElementTypes.STRONG to BoldSpanStyle,
         MarkdownElementTypes.EMPH to ItalicSpanStyle,
         GFMElementTypes.STRIKETHROUGH to StrikethroughSpanStyle,
-        MarkdownElementTypes.ATX_1 to H1SPanStyle,
-        MarkdownElementTypes.ATX_2 to H2SPanStyle,
-        MarkdownElementTypes.ATX_3 to H3SPanStyle,
-        MarkdownElementTypes.ATX_4 to H4SPanStyle,
-        MarkdownElementTypes.ATX_5 to H5SPanStyle,
-        MarkdownElementTypes.ATX_6 to H6SPanStyle,
+        MarkdownElementTypes.ATX_1 to H1SpanStyle,
+        MarkdownElementTypes.ATX_2 to H2SpanStyle,
+        MarkdownElementTypes.ATX_3 to H3SpanStyle,
+        MarkdownElementTypes.ATX_4 to H4SpanStyle,
+        MarkdownElementTypes.ATX_5 to H5SpanStyle,
+        MarkdownElementTypes.ATX_6 to H6SpanStyle,
     )
 
     /**
@@ -300,7 +300,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     /**
      * Returns the markdown line start text from the first [RichSpan].
      * This is used to determine the markdown line start text from the first [RichSpan] spanStyle.
-     * For example, if the first [RichSpan] spanStyle is [H1SPanStyle], the markdown line start text will be "# ".
+     * For example, if the first [RichSpan] spanStyle is [H1SpanStyle], the markdown line start text will be "# ".
      */
     private fun getMarkdownLineStartTextFromFirstRichSpan(firstRichSpan: RichSpan): String {
         if ((firstRichSpan.spanStyle.fontWeight?.weight ?: 400) <= 400) return ""
@@ -308,22 +308,22 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
         return if (fontSize.isEm) {
             when {
-                fontSize >= H1SPanStyle.fontSize -> "# "
-                fontSize >= H1SPanStyle.fontSize -> "## "
-                fontSize >= H1SPanStyle.fontSize -> "### "
-                fontSize >= H1SPanStyle.fontSize -> "#### "
-                fontSize >= H1SPanStyle.fontSize -> "##### "
-                fontSize >= H1SPanStyle.fontSize -> "###### "
+                fontSize >= H1SpanStyle.fontSize -> "# "
+                fontSize >= H1SpanStyle.fontSize -> "## "
+                fontSize >= H1SpanStyle.fontSize -> "### "
+                fontSize >= H1SpanStyle.fontSize -> "#### "
+                fontSize >= H1SpanStyle.fontSize -> "##### "
+                fontSize >= H1SpanStyle.fontSize -> "###### "
                 else -> ""
             }
         } else {
             when {
-                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "# "
-                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "## "
-                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "### "
-                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "#### "
-                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "##### "
-                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "###### "
+                fontSize.value >= H1SpanStyle.fontSize.value * 16 -> "# "
+                fontSize.value >= H1SpanStyle.fontSize.value * 16 -> "## "
+                fontSize.value >= H1SpanStyle.fontSize.value * 16 -> "### "
+                fontSize.value >= H1SpanStyle.fontSize.value * 16 -> "#### "
+                fontSize.value >= H1SpanStyle.fontSize.value * 16 -> "##### "
+                fontSize.value >= H1SpanStyle.fontSize.value * 16 -> "###### "
                 else -> ""
             }
         }

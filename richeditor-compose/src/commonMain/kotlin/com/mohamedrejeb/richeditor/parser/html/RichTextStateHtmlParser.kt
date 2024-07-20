@@ -1,6 +1,8 @@
 package com.mohamedrejeb.richeditor.parser.html
 
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.ksoup.entities.KsoupEntities
 import com.mohamedrejeb.ksoup.html.parser.KsoupHtmlHandler
 import com.mohamedrejeb.ksoup.html.parser.KsoupHtmlParser
@@ -24,6 +26,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         val openedTags = mutableListOf<Pair<String, Map<String, String>>>()
         val stringBuilder = StringBuilder()
         val richParagraphList = mutableListOf<RichParagraph>()
+        val lineBreakParagraphIndexSet = mutableSetOf<Int>()
         var currentRichSpan: RichSpan? = null
         var lastClosedTag: String? = null
 
@@ -33,6 +36,9 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 // In html text inside ul/ol tags is skipped
                 val lastOpenedTag = openedTags.lastOrNull()?.first
                 if (lastOpenedTag == "ul" || lastOpenedTag == "ol") return@onText
+
+                println("lastOpenedTag: $lastOpenedTag")
+                println("onText: $it")
 
                 if (lastOpenedTag in skippedHtmlElements) return@onText
 
@@ -73,6 +79,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 }
             }
             .onOpenTag { name, attributes, _ ->
+                println("onOpenTag: $name")
                 val lastOpenedTag = openedTags.lastOrNull()?.first
 
                 openedTags.add(name to attributes)
@@ -91,6 +98,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 val isCurrentTagBlockElement = name in htmlBlockElements
                 val isLastOpenedTagBlockElement = lastOpenedTag in htmlBlockElements
 
+                // For <li> tags inside <ul> or <ol> tags
                 if (
                     lastOpenedTag != null &&
                     isCurrentTagBlockElement &&
@@ -107,7 +115,10 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     currentRichParagraph.paragraphStyle = currentRichParagraph.paragraphStyle.merge(cssParagraphStyle)
                 }
 
-                if (isCurrentTagBlockElement && (!isLastOpenedTagBlockElement || !isCurrentRichParagraphBlank)) {
+                if (
+                    isCurrentTagBlockElement &&
+                    (!isLastOpenedTagBlockElement || !isCurrentRichParagraphBlank)
+                ) {
                     stringBuilder.append(' ')
 
                     val newRichParagraph = RichParagraph()
@@ -130,7 +141,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     } else {
                         currentRichSpan = null
                     }
-                } else if (name != "br") {
+                } else if (name != BrElement) {
                     if (lastClosedTag in htmlBlockElements) {
                         lastClosedTag = null
                         currentRichSpan = null
@@ -145,7 +156,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     val currentRichParagraph = richParagraphList.last()
                     val newRichSpan = RichSpan(paragraph = currentRichParagraph)
                     newRichSpan.spanStyle = cssSpanStyle.customMerge(tagSpanStyle)
-                    newRichSpan.richSpansStyle = richSpanStyle
+                    newRichSpan.richSpanStyle = richSpanStyle
 
                     if (currentRichSpan != null) {
                         newRichSpan.parent = currentRichSpan
@@ -154,33 +165,48 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                         currentRichParagraph.children.add(newRichSpan)
                     }
                     currentRichSpan = newRichSpan
-                }
+                } else {
+                    // name == "br"
+                    stringBuilder.append(' ')
 
-                when (name) {
-                    "br" -> {
-                        stringBuilder.append(' ')
+                    val newParagraph =
+                        if (richParagraphList.isEmpty())
+                            RichParagraph()
+                        else
+                            RichParagraph(paragraphStyle = richParagraphList.last().paragraphStyle)
 
-                        val newParagraph =
-                            if (richParagraphList.isEmpty())
-                                RichParagraph()
-                            else
-                                RichParagraph(paragraphStyle = richParagraphList.last().paragraphStyle)
-                        richParagraphList.add(newParagraph)
-                        currentRichSpan = null
+                    richParagraphList.add(newParagraph)
+
+                    lineBreakParagraphIndexSet.add(richParagraphList.lastIndex)
+
+                    // Keep the same style when having a line break in the middle of a paragraph,
+                    // Ex: <h1>Hello<br>World!</h1>
+                    currentRichSpan?.let { richSpan ->
+                        val newRichSpan = richSpan.copy(
+                            text = "",
+                            textRange = TextRange.Zero,
+                            paragraph = newParagraph,
+                            children = mutableListOf(),
+                        )
+
+                        newParagraph.children.add(newRichSpan)
+
+                        currentRichSpan = newRichSpan
                     }
                 }
 
                 lastClosedTag = null
             }
             .onCloseTag { name, _ ->
+                println("onCloseTag: $name")
                 openedTags.removeLastOrNull()
                 lastClosedTag = name
 
-                if (name == "ul" || name == "ol") {
+                if (name == "ul" || name == "ol")
                     return@onCloseTag
-                }
 
-                currentRichSpan = currentRichSpan?.parent
+                if (name != BrElement)
+                    currentRichSpan = currentRichSpan?.parent
             }
             .build()
 
@@ -192,9 +218,13 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         parser.end()
 
         for (i in richParagraphList.lastIndex downTo 0) {
-            if (richParagraphList[i].isBlank()) {
+            // Keep empty paragraphs if they are line breaks
+            if (i in lineBreakParagraphIndexSet)
+                continue
+
+            // Remove empty paragraphs
+            if (richParagraphList[i].isBlank())
                 richParagraphList.removeAt(i)
-            }
         }
 
         return RichTextState(
@@ -224,7 +254,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 builder.append("<$paragraphGroupTagName>")
             // Add line break if the paragraph is empty
             else if (richParagraph.isEmpty()) {
-                builder.append("<br>")
+                builder.append("<$BrElement>")
                 return@fastForEachIndexed
             }
 
@@ -272,7 +302,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         if (richSpan.isEmpty()) return ""
 
         // Get HTML element and attributes
-        val spanHtml = decodeHtmlElementFromRichSpanStyle(richSpan.richSpansStyle)
+        val spanHtml = decodeHtmlElementFromRichSpanStyle(richSpan.richSpanStyle)
         val tagName = spanHtml.first
         val tagAttributes = spanHtml.second
 
@@ -344,12 +374,12 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         "sup" to SuperscriptSpanStyle,
         "mark" to MarkSpanStyle,
         "small" to SmallSpanStyle,
-        "h1" to H1SPanStyle,
-        "h2" to H2SPanStyle,
-        "h3" to H3SPanStyle,
-        "h4" to H4SPanStyle,
-        "h5" to H5SPanStyle,
-        "h6" to H6SPanStyle,
+        "h1" to H1SpanStyle,
+        "h2" to H2SpanStyle,
+        "h3" to H3SpanStyle,
+        "h4" to H4SpanStyle,
+        "h5" to H5SpanStyle,
+        "h6" to H6SpanStyle,
     )
 
     /**
@@ -366,12 +396,12 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         SuperscriptSpanStyle to "sup",
         MarkSpanStyle to "mark",
         SmallSpanStyle to "small",
-        H1SPanStyle to "h1",
-        H2SPanStyle to "h2",
-        H3SPanStyle to "h3",
-        H4SPanStyle to "h4",
-        H5SPanStyle to "h5",
-        H6SPanStyle to "h6",
+        H1SpanStyle to "h1",
+        H2SpanStyle to "h2",
+        H3SpanStyle to "h3",
+        H4SpanStyle to "h4",
+        H5SpanStyle to "h5",
+        H6SpanStyle to "h6",
     )
 
     private const val CodeSpanTagName = "code"
@@ -388,8 +418,17 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         when (tagName) {
             "a" ->
                 RichSpanStyle.Link(url = attributes["href"].orEmpty())
+
             CodeSpanTagName, OldCodeSpanTagName ->
                 RichSpanStyle.Code()
+
+            "img" ->
+                RichSpanStyle.Image(
+                    model = attributes["src"].orEmpty(),
+                    width = (attributes["width"]?.toIntOrNull() ?: 0).sp,
+                    height = (attributes["height"]?.toIntOrNull() ?: 0).sp,
+                )
+
             else ->
                 RichSpanStyle.Default
         }
@@ -407,8 +446,20 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     "href" to richSpanStyle.url,
                     "target" to "_blank"
                 )
+
             is RichSpanStyle.Code ->
                 CodeSpanTagName to emptyMap()
+
+            is RichSpanStyle.Image ->
+                if (richSpanStyle.model is String)
+                    "img" to mapOf(
+                        "src" to richSpanStyle.model,
+                        "width" to richSpanStyle.width.value.toString(),
+                        "height" to richSpanStyle.height.value.toString(),
+                    )
+                else
+                    "span" to emptyMap()
+
             else ->
                 "span" to emptyMap()
         }

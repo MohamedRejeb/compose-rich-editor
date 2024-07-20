@@ -52,3 +52,5 @@ internal val skippedHtmlElements = setOf(
     "base",
     "template",
 )
+
+internal const val BrElement = "br"

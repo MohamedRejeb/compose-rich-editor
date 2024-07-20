@@ -94,7 +94,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     val currentRichParagraph = richParagraphList.last()
                     val newRichSpan = RichSpan(paragraph = currentRichParagraph)
                     newRichSpan.spanStyle = tagSpanStyle ?: SpanStyle()
-                    newRichSpan.richSpansStyle = richSpanStyle
+                    newRichSpan.richSpanStyle = richSpanStyle
 
                     if (currentRichSpan != null) {
                         newRichSpan.parent = currentRichSpan
@@ -123,7 +123,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     currentRichSpan?.children?.firstOrNull()?.let { child ->
                         currentRichSpan?.text = child.text
                         currentRichSpan?.spanStyle = currentRichSpan?.spanStyle?.merge(child.spanStyle) ?: child.spanStyle
-                        currentRichSpan?.richSpansStyle = child.richSpansStyle
+                        currentRichSpan?.richSpanStyle = child.richSpanStyle
                         currentRichSpan?.children?.clear()
                         currentRichSpan?.children?.addAll(child.children)
                     }
@@ -205,7 +205,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         stringBuilder.append(markdownOpen)
 
         // Apply rich span style to markdown
-        val spanMarkdown = decodeMarkdownElementFromRichSpan(richSpan.text, richSpan.richSpansStyle)
+        val spanMarkdown = decodeMarkdownElementFromRichSpan(richSpan.text, richSpan.richSpanStyle)
 
         // Append text
         stringBuilder.append(spanMarkdown)

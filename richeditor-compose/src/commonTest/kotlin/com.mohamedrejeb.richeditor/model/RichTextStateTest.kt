@@ -45,6 +45,7 @@ class RichTextStateTest {
         assertTrue(richTextState.isLink)
     }
 
+    @OptIn(ExperimentalRichTextApi::class)
     @Test
     fun testPreserveStyleOnRemoveAllCharacters() {
         val richTextState = RichTextState(
@@ -95,6 +96,7 @@ class RichTextStateTest {
         assertTrue(richTextState.isCodeSpan)
     }
 
+    @OptIn(ExperimentalRichTextApi::class)
     @Test
     fun testAddSpanStyleByTextRange() {
         val richTextState = RichTextState(
@@ -134,6 +136,7 @@ class RichTextStateTest {
         assertNotEquals(richTextState.currentSpanStyle, SpanStyle(fontWeight = FontWeight.Bold))
     }
 
+    @OptIn(ExperimentalRichTextApi::class)
     @Test
     fun testRemoveSpanStyleByTextRange() {
         val richTextState = RichTextState(
@@ -174,6 +177,7 @@ class RichTextStateTest {
         assertEquals(richTextState.currentSpanStyle, SpanStyle(fontWeight = FontWeight.Bold))
     }
 
+    @OptIn(ExperimentalRichTextApi::class)
     @Test
     fun testAddRichSpanStyleByTextRange() {
         val richTextState = RichTextState(
@@ -213,6 +217,7 @@ class RichTextStateTest {
         assertNotEquals(richTextState.currentRichSpanStyle::class, RichSpanStyle.Code::class)
     }
 
+    @OptIn(ExperimentalRichTextApi::class)
     @Test
     fun testRemoveRichSpanStyleByTextRange() {
         val richTextState = RichTextState(
@@ -224,7 +229,7 @@ class RichTextStateTest {
                         RichSpan(
                             text = "Testing some text",
                             paragraph = it,
-                            richSpansStyle = RichSpanStyle.Code(),
+                            richSpanStyle = RichSpanStyle.Code(),
                         ),
                     )
                 }
@@ -290,6 +295,7 @@ class RichTextStateTest {
         )
     }
 
+    @OptIn(ExperimentalRichTextApi::class)
     @Test
     fun testGetRichSpanStyle() {
         val richTextState = RichTextState(
@@ -301,7 +307,7 @@ class RichTextStateTest {
                         RichSpan(
                             text = "Testing some text",
                             paragraph = it,
-                            richSpansStyle = RichSpanStyle.Code(),
+                            richSpanStyle = RichSpanStyle.Code(),
                         ),
                     )
 
@@ -327,6 +333,7 @@ class RichTextStateTest {
         )
     }
 
+    @OptIn(ExperimentalRichTextApi::class)
     @Test
     fun testGetParagraphStyle() {
         val richTextState = RichTextState(
@@ -371,6 +378,7 @@ class RichTextStateTest {
         )
     }
 
+    @OptIn(ExperimentalRichTextApi::class)
     @Test
     fun testGetParagraphType() {
         val richTextState = RichTextState(

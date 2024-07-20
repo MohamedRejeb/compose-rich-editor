@@ -65,7 +65,7 @@ internal fun AnnotatedString.Builder.appendRichSpan(
         if (
             previousRichSpan != null &&
             previousRichSpan!!.spanStyle == richSpan.spanStyle &&
-            previousRichSpan!!.richSpansStyle == richSpan.richSpansStyle &&
+            previousRichSpan!!.richSpanStyle == richSpan.richSpanStyle &&
             previousRichSpan!!.children.isEmpty() &&
             richSpan.children.isEmpty()
         ) {
@@ -88,7 +88,7 @@ internal fun AnnotatedString.Builder.appendRichSpan(
     ) {
         val firstChild = richSpanList.first()
         parent.spanStyle = parent.spanStyle.merge(firstChild.spanStyle)
-        parent.richSpansStyle = firstChild.richSpansStyle
+        parent.richSpanStyle = firstChild.richSpanStyle
         parent.text = firstChild.text
         parent.textRange = firstChild.textRange
         parent.children.clear()
@@ -113,7 +113,7 @@ internal fun AnnotatedString.Builder.append(
 ): Int {
     var index = startIndex
 
-    withStyle(richSpan.spanStyle.merge(richSpan.richSpansStyle.spanStyle(state.config))) {
+    withStyle(richSpan.spanStyle.merge(richSpan.richSpanStyle.spanStyle(state.config))) {
         val newText = text.substring(index, index + richSpan.text.length)
 
         richSpan.text = newText
@@ -152,13 +152,13 @@ internal fun AnnotatedString.Builder.append(
             append(newText)
         }
 
-        with(richSpan.richSpansStyle) {
+        with(richSpan.richSpanStyle) {
             appendCustomContent(
                 richTextState = state
             )
         }
 
-        if (richSpan.richSpansStyle !is RichSpanStyle.Default) {
+        if (richSpan.richSpanStyle !is RichSpanStyle.Default) {
             onStyledRichSpan(richSpan)
         }
 
@@ -210,7 +210,7 @@ internal fun AnnotatedString.Builder.append(
 ): Int {
     var index = startIndex
 
-    withStyle(richSpan.spanStyle.merge(richSpan.richSpansStyle.spanStyle(richTextConfig))) {
+    withStyle(richSpan.spanStyle.merge(richSpan.richSpanStyle.spanStyle(richTextConfig))) {
         richSpan.textRange = TextRange(index, index + richSpan.text.length)
         if (
             !selection.collapsed &&
@@ -269,16 +269,16 @@ internal fun AnnotatedString.Builder.append(
 ): Int {
     var index = startIndex
 
-    withStyle(richSpan.spanStyle.merge(richSpan.richSpansStyle.spanStyle(state.config))) {
+    withStyle(richSpan.spanStyle.merge(richSpan.richSpanStyle.spanStyle(state.config))) {
         richSpan.textRange = TextRange(index, index + richSpan.text.length)
         append(richSpan.text)
-        with(richSpan.richSpansStyle) {
+        with(richSpan.richSpanStyle) {
             appendCustomContent(
                 richTextState = state,
             )
         }
 
-        if (richSpan.richSpansStyle !is RichSpanStyle.Default) {
+        if (richSpan.richSpanStyle !is RichSpanStyle.Default) {
             onStyledRichSpan(richSpan)
         }
 

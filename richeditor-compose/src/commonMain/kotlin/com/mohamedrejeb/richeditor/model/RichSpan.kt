@@ -20,7 +20,7 @@ internal class RichSpan(
     var text: String = "",
     var textRange: TextRange = TextRange(start = 0, end = 0),
     var spanStyle: SpanStyle = SpanStyle(),
-    var richSpansStyle: RichSpanStyle = RichSpanStyle.Default,
+    var richSpanStyle: RichSpanStyle = RichSpanStyle.Default,
 ) {
     /**
      * Return the full text range of the rich span.
@@ -61,11 +61,11 @@ internal class RichSpan(
     }
 
     val fullStyle: RichSpanStyle get() {
-        var style = this.richSpansStyle
+        var style = this.richSpanStyle
         var parent = this.parent
 
         while (parent != null && style::class == RichSpanStyle.Default::class) {
-            style = parent.richSpansStyle
+            style = parent.richSpanStyle
             parent = parent.parent
         }
 
@@ -180,7 +180,7 @@ internal class RichSpan(
      *
      * @return True if the rich span is blank, false otherwise
      */
-    fun isBlank(): Boolean = text.isBlank() && isChildrenBlank() && richSpansStyle !is RichSpanStyle.Image
+    fun isBlank(): Boolean = text.isBlank() && isChildrenBlank() && richSpanStyle !is RichSpanStyle.Image
 
     /**
      * Check if the rich span children are empty
@@ -267,7 +267,7 @@ internal class RichSpan(
         // Set start text range
         textRange = TextRange(start = index, end = index + text.length)
 
-        if (!richSpansStyle.acceptNewTextInTheEdges && !ignoreCustomFiltering) {
+        if (!richSpanStyle.acceptNewTextInTheEdges && !ignoreCustomFiltering) {
             val fullTextRange = fullTextRange
             if (textIndex == fullTextRange.max - 1) {
                 index += fullTextRange.length
@@ -423,7 +423,7 @@ internal class RichSpan(
     fun getClosestRichSpan(spanStyle: SpanStyle, newRichSpanStyle: RichSpanStyle): RichSpan? {
         if (
             spanStyle.isSpecifiedFieldsEquals(this.fullSpanStyle, strict = true) &&
-            newRichSpanStyle::class == richSpansStyle::class
+            newRichSpanStyle::class == richSpanStyle::class
         ) return this
 
         return parent?.getClosestRichSpan(spanStyle, newRichSpanStyle)
@@ -448,7 +448,7 @@ internal class RichSpan(
             paragraph = newParagraph,
             text = text,
             textRange = textRange,
-            richSpansStyle = richSpansStyle,
+            richSpanStyle = richSpanStyle,
             spanStyle = spanStyle,
         )
         children.fastForEach { childRichSpan ->
@@ -458,6 +458,26 @@ internal class RichSpan(
         }
         return newSpan
     }
+
+    internal fun copy(
+        key: Int? = this.key,
+        children: MutableList<RichSpan> = this.children,
+        paragraph: RichParagraph = this.paragraph,
+        parent: RichSpan? = this.parent,
+        text: String = this.text,
+        textRange: TextRange = this.textRange,
+        spanStyle: SpanStyle = this.spanStyle,
+        richSpanStyle: RichSpanStyle = this.richSpanStyle,
+    ) = RichSpan(
+        key = key,
+        children = children,
+        paragraph = paragraph,
+        parent = parent,
+        text = text,
+        textRange = textRange,
+        spanStyle = spanStyle,
+        richSpanStyle = richSpanStyle,
+    )
 
     override fun toString(): String {
         return "richSpan(text='$text', textRange=$textRange, fullTextRange=$fullTextRange)"

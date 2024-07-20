@@ -62,6 +62,28 @@ internal class RichTextStateHtmlParserTest {
         assertEquals(2, richTextState.richParagraphList[1].children.size)
         assertEquals("The img element", h1.text)
         assertEquals(H1SpanStyle, h1.spanStyle)
-        assertIs<RichSpanStyle.Image>(image.richSpansStyle)
+        assertIs<RichSpanStyle.Image>(image.richSpanStyle)
+    }
+
+    @Test
+    fun testBrInMiddleOrParagraph() {
+        val html = """
+            <h1>Hello<br>World!</h1>
+        """.trimIndent()
+
+        val richTextState = RichTextStateHtmlParser.encode(html)
+
+        assertEquals(2, richTextState.richParagraphList.size)
+        assertEquals(1, richTextState.richParagraphList[0].children.size)
+        assertEquals(1, richTextState.richParagraphList[1].children.size)
+
+        val firstPart = richTextState.richParagraphList[0].children.first()
+        val secondPart = richTextState.richParagraphList[1].children.first()
+
+        assertEquals("Hello", firstPart.text)
+        assertEquals("World!", secondPart.text)
+
+        assertEquals(H1SpanStyle, firstPart.spanStyle)
+        assertEquals(H1SpanStyle, secondPart.spanStyle)
     }
 }

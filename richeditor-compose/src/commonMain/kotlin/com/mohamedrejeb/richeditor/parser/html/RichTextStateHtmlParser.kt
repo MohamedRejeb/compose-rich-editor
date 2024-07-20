@@ -1,6 +1,7 @@
 package com.mohamedrejeb.richeditor.parser.html
 
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.ksoup.entities.KsoupEntities
 import com.mohamedrejeb.ksoup.html.parser.KsoupHtmlHandler
@@ -35,6 +36,9 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 // In html text inside ul/ol tags is skipped
                 val lastOpenedTag = openedTags.lastOrNull()?.first
                 if (lastOpenedTag == "ul" || lastOpenedTag == "ol") return@onText
+
+                println("lastOpenedTag: $lastOpenedTag")
+                println("onText: $it")
 
                 if (lastOpenedTag in skippedHtmlElements) return@onText
 
@@ -75,6 +79,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 }
             }
             .onOpenTag { name, attributes, _ ->
+                println("onOpenTag: $name")
                 val lastOpenedTag = openedTags.lastOrNull()?.first
 
                 openedTags.add(name to attributes)
@@ -151,7 +156,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     val currentRichParagraph = richParagraphList.last()
                     val newRichSpan = RichSpan(paragraph = currentRichParagraph)
                     newRichSpan.spanStyle = cssSpanStyle.customMerge(tagSpanStyle)
-                    newRichSpan.richSpansStyle = richSpanStyle
+                    newRichSpan.richSpanStyle = richSpanStyle
 
                     if (currentRichSpan != null) {
                         newRichSpan.parent = currentRichSpan
@@ -174,20 +179,34 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
                     lineBreakParagraphIndexSet.add(richParagraphList.lastIndex)
 
-                    currentRichSpan = null
+                    // Keep the same style when having a line break in the middle of a paragraph,
+                    // Ex: <h1>Hello<br>World!</h1>
+                    currentRichSpan?.let { richSpan ->
+                        val newRichSpan = richSpan.copy(
+                            text = "",
+                            textRange = TextRange.Zero,
+                            paragraph = newParagraph,
+                            children = mutableListOf(),
+                        )
+
+                        newParagraph.children.add(newRichSpan)
+
+                        currentRichSpan = newRichSpan
+                    }
                 }
 
                 lastClosedTag = null
             }
             .onCloseTag { name, _ ->
+                println("onCloseTag: $name")
                 openedTags.removeLastOrNull()
                 lastClosedTag = name
 
-                if (name == "ul" || name == "ol") {
+                if (name == "ul" || name == "ol")
                     return@onCloseTag
-                }
 
-                currentRichSpan = currentRichSpan?.parent
+                if (name != BrElement)
+                    currentRichSpan = currentRichSpan?.parent
             }
             .build()
 
@@ -283,7 +302,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         if (richSpan.isEmpty()) return ""
 
         // Get HTML element and attributes
-        val spanHtml = decodeHtmlElementFromRichSpanStyle(richSpan.richSpansStyle)
+        val spanHtml = decodeHtmlElementFromRichSpanStyle(richSpan.richSpanStyle)
         val tagName = spanHtml.first
         val tagAttributes = spanHtml.second
 

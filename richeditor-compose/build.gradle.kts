@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.bcv)
     id("module.publication")
 }
 
@@ -75,5 +76,12 @@ android {
     }
     kotlin {
         jvmToolchain(8)
+    }
+}
+
+apiValidation {
+    @OptIn(kotlinx.validation.ExperimentalBCVApi::class)
+    klib {
+        enabled = true
     }
 }

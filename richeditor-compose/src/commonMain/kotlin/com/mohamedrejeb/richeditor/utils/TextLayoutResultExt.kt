@@ -23,7 +23,7 @@ import kotlin.math.min
  * @return the list of bounds for the given range.
  */
 @ExperimentalRichTextApi
-fun TextLayoutResult.getBoundingBoxes(
+public fun TextLayoutResult.getBoundingBoxes(
     startOffset: Int,
     endOffset: Int,
     flattenForFullParagraphs: Boolean = false

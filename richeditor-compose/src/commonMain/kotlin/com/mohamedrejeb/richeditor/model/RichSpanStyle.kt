@@ -23,8 +23,8 @@ import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
 import com.mohamedrejeb.richeditor.utils.getBoundingBoxes
 
 @ExperimentalRichTextApi
-interface RichSpanStyle {
-    val spanStyle: (RichTextConfig) -> SpanStyle
+public interface RichSpanStyle {
+    public val spanStyle: (RichTextConfig) -> SpanStyle
 
     /**
      * If true, the user can add new text in the edges of the span,
@@ -32,9 +32,9 @@ interface RichSpanStyle {
      * If false, the user can't add new text in the edges of the span,
      * For example, if the span is a "Hello" link and the user adds "World" in the end, the "World" will be added in a separate a span,
      */
-    val acceptNewTextInTheEdges: Boolean
+    public val acceptNewTextInTheEdges: Boolean
 
-    fun DrawScope.drawCustomStyle(
+    public fun DrawScope.drawCustomStyle(
         layoutResult: TextLayoutResult,
         textRange: TextRange,
         richTextConfig: RichTextConfig,
@@ -42,12 +42,12 @@ interface RichSpanStyle {
         startPadding: Float = 0f,
     )
 
-    fun AnnotatedString.Builder.appendCustomContent(
+    public fun AnnotatedString.Builder.appendCustomContent(
         richTextState: RichTextState
-    ) = this
+    ): AnnotatedString.Builder = this
 
-    class Link(
-        val url: String,
+    public class Link(
+        public val url: String,
     ) : RichSpanStyle {
         override val spanStyle: (RichTextConfig) -> SpanStyle = {
             SpanStyle(
@@ -62,7 +62,7 @@ interface RichSpanStyle {
             richTextConfig: RichTextConfig,
             topPadding: Float,
             startPadding: Float,
-        ) = Unit
+        ): Unit = Unit
 
         override val acceptNewTextInTheEdges: Boolean =
             false
@@ -81,7 +81,7 @@ interface RichSpanStyle {
         }
     }
 
-    class Code(
+    public class Code(
         private val cornerRadius: TextUnit = 8.sp,
         private val strokeWidth: TextUnit = 1.sp,
         private val padding: TextPaddingValues = TextPaddingValues(horizontal = 2.sp, vertical = 2.sp)
@@ -161,10 +161,10 @@ interface RichSpanStyle {
         }
     }
 
-    class Image(
-        val model: Any,
-        val width: TextUnit,
-        val height: TextUnit,
+    public class Image(
+        public val model: Any,
+        public val width: TextUnit,
+        public val height: TextUnit,
     ) : RichSpanStyle {
         private val id = "$model-$width-$height"
 
@@ -177,7 +177,7 @@ interface RichSpanStyle {
             richTextConfig: RichTextConfig,
             topPadding: Float,
             startPadding: Float,
-        ) = Unit
+        ): Unit = Unit
 
         override fun AnnotatedString.Builder.appendCustomContent(
             richTextState: RichTextState
@@ -236,7 +236,7 @@ interface RichSpanStyle {
         }
     }
 
-    data object Default : RichSpanStyle {
+    public data object Default : RichSpanStyle {
         override val spanStyle: (RichTextConfig) -> SpanStyle =
             { SpanStyle() }
 
@@ -246,13 +246,13 @@ interface RichSpanStyle {
             richTextConfig: RichTextConfig,
             topPadding: Float,
             startPadding: Float,
-        ) = Unit
+        ): Unit = Unit
 
         override val acceptNewTextInTheEdges: Boolean =
             true
     }
 
-    companion object {
+    public companion object {
         internal val DefaultSpanStyle = SpanStyle()
     }
 }

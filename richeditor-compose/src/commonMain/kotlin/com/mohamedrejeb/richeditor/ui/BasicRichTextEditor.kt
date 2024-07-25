@@ -81,7 +81,7 @@ import kotlinx.coroutines.CoroutineScope
  *
  */
 @Composable
-fun BasicRichTextEditor(
+public fun BasicRichTextEditor(
     state: RichTextState,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
@@ -173,7 +173,7 @@ fun BasicRichTextEditor(
  *
  */
 @Composable
-fun BasicRichTextEditor(
+public fun BasicRichTextEditor(
     state: RichTextState,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,

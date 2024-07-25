@@ -3,40 +3,40 @@ package com.mohamedrejeb.richeditor.model
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextDecoration
 
-class RichTextConfig internal constructor(
+public class RichTextConfig internal constructor(
     private val updateText: () -> Unit,
 ) {
-    var linkColor: Color = Color.Blue
+    public var linkColor: Color = Color.Blue
         set(value) {
             field = value
             updateText()
         }
 
-    var linkTextDecoration: TextDecoration = TextDecoration.Underline
+    public var linkTextDecoration: TextDecoration = TextDecoration.Underline
         set(value) {
             field = value
             updateText()
         }
 
-    var codeSpanColor: Color = Color.Unspecified
+    public var codeSpanColor: Color = Color.Unspecified
         set(value) {
             field = value
             updateText()
         }
 
-    var codeSpanBackgroundColor: Color = Color.Transparent
+    public var codeSpanBackgroundColor: Color = Color.Transparent
         set(value) {
             field = value
             updateText()
         }
 
-    var codeSpanStrokeColor: Color = Color.LightGray
+    public var codeSpanStrokeColor: Color = Color.LightGray
         set(value) {
             field = value
             updateText()
         }
 
-    var listIndent: Int = DefaultListIndent
+    public var listIndent: Int = DefaultListIndent
         set(value) {
             field = value
             updateText()
@@ -49,7 +49,7 @@ class RichTextConfig internal constructor(
      *
      * Default is `true`.
      */
-    var preserveStyleOnEmptyLine: Boolean = true
+    public var preserveStyleOnEmptyLine: Boolean = true
 }
 
 internal const val DefaultListIndent = 38

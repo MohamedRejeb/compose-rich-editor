@@ -61,7 +61,7 @@ import com.mohamedrejeb.richeditor.ui.BasicRichText
  * @param style style configuration for the text such as color, font, line height etc.
  */
 @Composable
-fun RichText(
+public fun RichText(
     state: RichTextState,
     modifier: Modifier = Modifier,
     color: Color = Color.Unspecified,

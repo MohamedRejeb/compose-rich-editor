@@ -23,7 +23,7 @@ import com.mohamedrejeb.richeditor.model.LocalImageLoader
 import com.mohamedrejeb.richeditor.model.RichTextState
 
 @Composable
-fun BasicRichText(
+public fun BasicRichText(
     state: RichTextState,
     modifier: Modifier = Modifier,
     style: TextStyle = TextStyle.Default,

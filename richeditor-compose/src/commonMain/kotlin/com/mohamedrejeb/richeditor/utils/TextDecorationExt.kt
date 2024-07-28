@@ -2,7 +2,7 @@ package com.mohamedrejeb.richeditor.utils
 
 import androidx.compose.ui.text.style.TextDecoration
 
-operator fun TextDecoration.minus(decoration: TextDecoration): TextDecoration =
+public operator fun TextDecoration.minus(decoration: TextDecoration): TextDecoration =
     if (this == decoration)
         TextDecoration.None
     else if (decoration in this)

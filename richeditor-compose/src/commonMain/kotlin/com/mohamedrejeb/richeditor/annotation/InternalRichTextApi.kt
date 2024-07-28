@@ -10,4 +10,4 @@ package com.mohamedrejeb.richeditor.annotation
     AnnotationTarget.PROPERTY
 )
 @Retention(AnnotationRetention.BINARY)
-annotation class InternalRichTextApi
+public annotation class InternalRichTextApi

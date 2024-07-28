@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 
 @ExperimentalRichTextApi
-object DefaultImageLoader: ImageLoader {
+public object DefaultImageLoader: ImageLoader {
 
     @Composable
     override fun load(model: Any): ImageData? = null

@@ -287,10 +287,6 @@ public final class com/mohamedrejeb/richeditor/utils/FloatUtilsKt {
 	public static final fun maxDecimals (FI)F
 }
 
-public final class com/mohamedrejeb/richeditor/utils/ListExtKt {
-	public static final fun fastForEachIndexed (Ljava/util/List;Lkotlin/jvm/functions/Function2;)V
-}
-
 public final class com/mohamedrejeb/richeditor/utils/TextDecorationExtKt {
 	public static final fun minus (Landroidx/compose/ui/text/style/TextDecoration;Landroidx/compose/ui/text/style/TextDecoration;)Landroidx/compose/ui/text/style/TextDecoration;
 }

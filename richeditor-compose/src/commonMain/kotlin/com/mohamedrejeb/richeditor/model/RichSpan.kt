@@ -2,10 +2,12 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastForEachIndexed
+import androidx.compose.ui.util.fastForEachReversed
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.utils.customMerge
-import com.mohamedrejeb.richeditor.utils.fastForEach
 import com.mohamedrejeb.richeditor.utils.isSpecifiedFieldsEquals
 
 /**
@@ -172,7 +174,7 @@ internal class RichSpan(
      *
      * @return True if the rich span is empty, false otherwise
      */
-    fun isEmpty(): Boolean = text.isEmpty() && isChildrenEmpty()
+    fun isEmpty(): Boolean = text.isEmpty() && isChildrenEmpty() && richSpanStyle !is RichSpanStyle.Image
 
     /**
      * Check if the rich span is blank.
@@ -441,6 +443,21 @@ internal class RichSpan(
         }
     }
 
+    fun removeEmptyChildren() {
+        val toRemoveIndices = mutableListOf<Int>()
+
+        children.fastForEachIndexed { i, richSpan ->
+            if (richSpan.isEmpty())
+                toRemoveIndices.add(i)
+            else
+                richSpan.removeEmptyChildren()
+        }
+
+        toRemoveIndices.fastForEachReversed {
+            children.removeAt(it)
+        }
+    }
+
     fun copy(
         newParagraph: RichParagraph = paragraph,
     ): RichSpan {
@@ -480,6 +497,6 @@ internal class RichSpan(
     )
 
     override fun toString(): String {
-        return "richSpan(text='$text', textRange=$textRange, fullTextRange=$fullTextRange)"
+        return "richSpan(text='$text', textRange=$textRange, fullTextRange=$fullTextRange), richSpanStyle=$richSpanStyle)"
     }
 }

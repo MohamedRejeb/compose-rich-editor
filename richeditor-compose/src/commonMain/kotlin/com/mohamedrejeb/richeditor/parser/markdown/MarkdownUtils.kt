@@ -1,7 +1,6 @@
 package com.mohamedrejeb.richeditor.parser.markdown
 
-import com.mohamedrejeb.richeditor.utils.fastForEach
-import org.intellij.markdown.IElementType
+import androidx.compose.ui.util.fastForEach
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.MarkdownTokenTypes
 import org.intellij.markdown.ast.ASTNode

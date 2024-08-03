@@ -6,7 +6,7 @@ import androidx.compose.ui.text.TextRange
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
-import com.mohamedrejeb.richeditor.utils.fastForEach
+import androidx.compose.ui.util.fastForEach
 
 @OptIn(ExperimentalRichTextApi::class)
 internal fun Modifier.drawRichSpanStyle(

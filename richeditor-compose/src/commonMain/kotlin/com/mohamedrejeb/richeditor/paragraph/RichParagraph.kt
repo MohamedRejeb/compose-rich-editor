@@ -2,14 +2,15 @@ package com.mohamedrejeb.richeditor.paragraph
 
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastForEachIndexed
+import androidx.compose.ui.util.fastForEachReversed
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startText
 import com.mohamedrejeb.richeditor.ui.test.getRichTextStyleTreeRepresentation
-import com.mohamedrejeb.richeditor.utils.fastForEach
-import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
 
 internal class RichParagraph(
     val key: Int = 0,
@@ -177,6 +178,21 @@ internal class RichParagraph(
         children.fastForEach { childRichSpan ->
             childRichSpan.paragraph = newParagraph
             childRichSpan.updateChildrenParagraph(newParagraph)
+        }
+    }
+
+    fun removeEmptyChildren() {
+        val toRemoveIndices = mutableListOf<Int>()
+        
+        children.fastForEachIndexed { index, richSpan ->
+            if (richSpan.isEmpty())
+                toRemoveIndices.add(index)
+            else
+                richSpan.removeEmptyChildren()
+        }
+
+        toRemoveIndices.fastForEachReversed { 
+            children.removeAt(it)
         }
     }
 

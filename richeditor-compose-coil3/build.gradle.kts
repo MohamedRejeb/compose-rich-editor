@@ -9,6 +9,7 @@ plugins {
 }
 
 kotlin {
+    explicitApi()
     applyDefaultHierarchyTemplate()
     androidTarget {
         publishLibraryVariants("release")

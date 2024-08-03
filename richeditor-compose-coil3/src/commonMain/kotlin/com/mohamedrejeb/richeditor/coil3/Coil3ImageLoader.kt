@@ -9,7 +9,7 @@ import com.mohamedrejeb.richeditor.model.ImageData
 import com.mohamedrejeb.richeditor.model.ImageLoader
 
 @OptIn(ExperimentalRichTextApi::class)
-object Coil3ImageLoader: ImageLoader {
+public object Coil3ImageLoader: ImageLoader {
 
     @Composable
     override fun load(model: Any): ImageData {

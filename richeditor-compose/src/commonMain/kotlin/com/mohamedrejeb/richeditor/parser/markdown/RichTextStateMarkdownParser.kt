@@ -3,17 +3,21 @@ package com.mohamedrejeb.richeditor.parser.markdown
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastForEachIndexed
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
-import com.mohamedrejeb.richeditor.model.*
+import com.mohamedrejeb.richeditor.model.RichSpan
+import com.mohamedrejeb.richeditor.model.RichSpanStyle
+import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import com.mohamedrejeb.richeditor.parser.RichTextStateParser
+import com.mohamedrejeb.richeditor.parser.html.BrElement
+import com.mohamedrejeb.richeditor.parser.html.htmlElementsSpanStyleEncodeMap
 import com.mohamedrejeb.richeditor.parser.utils.*
-import androidx.compose.ui.util.fastForEach
-import androidx.compose.ui.util.fastForEachIndexed
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.MarkdownTokenTypes
 import org.intellij.markdown.ast.ASTNode
@@ -26,6 +30,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     @OptIn(ExperimentalRichTextApi::class)
     override fun encode(input: String): RichTextState {
         val openedNodes = mutableListOf<ASTNode>()
+        val openedHtmlTags = mutableListOf<String>()
         val richParagraphList = mutableListOf(RichParagraph())
         var currentRichSpan: RichSpan? = null
         var currentRichParagraphType: ParagraphType = DefaultParagraph()
@@ -150,8 +155,53 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
                 currentRichSpan = currentRichSpan?.parent
             },
-            onHtml = { _ ->
-                // Todo: support HTML in markdown
+            onHtmlTag = { tag ->
+                val tagName = tag
+                    .substringAfter("</")
+                    .substringAfter("<")
+                    .substringBefore(">")
+
+                val isClosingBr = (tag.contains("br") && openedHtmlTags.lastOrNull()?.contains("br") == true)
+                val isClosingTag = tag.startsWith("</") || isClosingBr
+
+                if (isClosingTag) {
+                    openedHtmlTags.removeLastOrNull()
+
+                    if (tagName != BrElement)
+                        currentRichSpan = currentRichSpan?.parent
+                } else {
+                    openedHtmlTags.add(tag)
+
+                    val tagSpanStyle = htmlElementsSpanStyleEncodeMap[tagName]
+
+                    if (tagName != BrElement) {
+                        val currentRichParagraph = richParagraphList.last()
+                        val newRichSpan = RichSpan(paragraph = currentRichParagraph)
+                        newRichSpan.spanStyle = tagSpanStyle ?: SpanStyle()
+
+                        if (currentRichSpan != null) {
+                            newRichSpan.parent = currentRichSpan
+                            currentRichSpan?.children?.add(newRichSpan)
+                        } else {
+                            currentRichParagraph.children.add(newRichSpan)
+                        }
+                        currentRichSpan = newRichSpan
+                    } else {
+                        // name == "br"
+                        val newParagraph =
+                            if (richParagraphList.isEmpty())
+                                RichParagraph()
+                            else
+                                RichParagraph(paragraphStyle = richParagraphList.last().paragraphStyle)
+
+                        richParagraphList.add(newParagraph)
+
+                        currentRichSpan = null
+                    }
+                }
+            },
+            onHtmlBlock = {
+                // Todo: support HTML Block in markdown
             }
         )
 
@@ -196,13 +246,31 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         if (richSpan.isEmpty()) return ""
 
         // Convert span style to CSS string
-        var markdownOpen = ""
-        if ((richSpan.spanStyle.fontWeight?.weight ?: 400) > 400) markdownOpen += "**"
-        if (richSpan.spanStyle.fontStyle == FontStyle.Italic) markdownOpen += "*"
-        if (richSpan.spanStyle.textDecoration == TextDecoration.LineThrough) markdownOpen += "~~"
+        val markdownOpen = mutableListOf<String>()
+        val markdownClose = mutableListOf<String>()
+
+        if ((richSpan.spanStyle.fontWeight?.weight ?: 400) > 400) {
+            markdownOpen += "**"
+            markdownClose += "**"
+        }
+
+        if (richSpan.spanStyle.fontStyle == FontStyle.Italic) {
+            markdownOpen += "*"
+            markdownClose += "*"
+        }
+
+        if (richSpan.spanStyle.textDecoration?.contains(TextDecoration.LineThrough) == true) {
+            markdownOpen += "~~"
+            markdownClose += "~~"
+        }
+
+        if (richSpan.spanStyle.textDecoration?.contains(TextDecoration.Underline) == true) {
+            markdownOpen += "<u>"
+            markdownClose += "</u>"
+        }
 
         // Append markdown open
-        stringBuilder.append(markdownOpen)
+        stringBuilder.append(markdownOpen.joinToString(separator = ""))
 
         // Apply rich span style to markdown
         val spanMarkdown = decodeMarkdownElementFromRichSpan(richSpan.text, richSpan.richSpanStyle)
@@ -216,7 +284,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         }
 
         // Append markdown close
-        stringBuilder.append(markdownOpen.reversed())
+        stringBuilder.append(markdownClose.reversed().joinToString(separator = ""))
 
         return stringBuilder.toString()
     }

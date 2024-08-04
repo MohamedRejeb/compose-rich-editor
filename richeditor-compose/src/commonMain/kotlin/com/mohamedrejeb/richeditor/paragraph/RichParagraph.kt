@@ -151,7 +151,6 @@ internal class RichParagraph(
     fun isNotBlank(ignoreStartRichSpan: Boolean = true): Boolean = !isBlank(ignoreStartRichSpan)
 
     fun getFirstNonEmptyChild(offset: Int = -1): RichSpan? {
-        println("children: $children")
         children.fastForEach { richSpan ->
             if (richSpan.text.isNotEmpty()) {
                 if (offset != -1)

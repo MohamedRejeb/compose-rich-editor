@@ -160,7 +160,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     val beforeLastParagraph = richParagraphList.getOrNull(richParagraphList.lastIndex - 1)
                     if (
                         lastParagraph?.isNotEmpty() == true ||
-                        (beforeLastParagraph?.isNotEmpty() == true)
+                        beforeLastParagraph?.isNotEmpty() == true
                     ) {
                         richParagraphList.add(RichParagraph())
                     }

@@ -161,7 +161,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     .substringAfter("<")
                     .substringBefore(">")
 
-                val isClosingBr = (tag.contains("br") && openedHtmlTags.lastOrNull()?.contains("br") == true)
+                val isClosingBr = tag.contains("br") && openedHtmlTags.lastOrNull()?.contains("br") == true
                 val isClosingTag = tag.startsWith("</") || isClosingBr
 
                 if (isClosingTag) {

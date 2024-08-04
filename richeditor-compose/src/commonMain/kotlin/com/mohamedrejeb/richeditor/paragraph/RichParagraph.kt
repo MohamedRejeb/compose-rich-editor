@@ -136,6 +136,8 @@ internal class RichParagraph(
         return true
     }
 
+    fun isNotEmpty(ignoreStartRichSpan: Boolean = true): Boolean = !isEmpty(ignoreStartRichSpan)
+
     fun isBlank(ignoreStartRichSpan: Boolean = true): Boolean {
         if (!ignoreStartRichSpan && !type.startRichSpan.isBlank()) return false
 
@@ -145,6 +147,8 @@ internal class RichParagraph(
         }
         return true
     }
+
+    fun isNotBlank(ignoreStartRichSpan: Boolean = true): Boolean = !isBlank(ignoreStartRichSpan)
 
     fun getFirstNonEmptyChild(offset: Int = -1): RichSpan? {
         children.fastForEach { richSpan ->

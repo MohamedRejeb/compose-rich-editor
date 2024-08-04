@@ -35,6 +35,25 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         var currentRichSpan: RichSpan? = null
         var currentRichParagraphType: ParagraphType = DefaultParagraph()
 
+        fun onAddLineBreak() {
+            val newParagraph =
+                if (richParagraphList.isEmpty())
+                    RichParagraph()
+                else
+                    RichParagraph(paragraphStyle = richParagraphList.last().paragraphStyle)
+
+            val lastParagraph = richParagraphList.lastOrNull()
+            val beforeLastParagraph = richParagraphList.getOrNull(richParagraphList.lastIndex - 1)
+
+            // We need this for line break to work fine with EOL
+            if (lastParagraph?.isEmpty() == true && beforeLastParagraph?.isEmpty() != true)
+                richParagraphList.add(newParagraph)
+
+            richParagraphList.add(newParagraph)
+
+            currentRichSpan = null
+        }
+
         encodeMarkdownToRichText(
             markdown = input,
             onText = { text ->
@@ -139,8 +158,12 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 if (node.type == MarkdownTokenTypes.EOL) {
                     val lastParagraph = richParagraphList.lastOrNull()
                     val beforeLastParagraph = richParagraphList.getOrNull(richParagraphList.lastIndex - 1)
-                    if (lastParagraph?.isEmpty() != true || beforeLastParagraph?.isEmpty() != true)
+                    if (
+                        lastParagraph?.isNotEmpty() == true ||
+                        (beforeLastParagraph?.isNotEmpty() == true)
+                    ) {
                         richParagraphList.add(RichParagraph())
+                    }
 
                     currentRichSpan = null
                 }
@@ -160,9 +183,11 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     .substringAfter("</")
                     .substringAfter("<")
                     .substringBefore(">")
+                    .substringBefore(" ")
+                    .trim()
+                    .lowercase()
 
-                val isClosingBr = tag.contains("br") && openedHtmlTags.lastOrNull()?.contains("br") == true
-                val isClosingTag = tag.startsWith("</") || isClosingBr
+                val isClosingTag = tag.startsWith("</")
 
                 if (isClosingTag) {
                     openedHtmlTags.removeLastOrNull()
@@ -188,19 +213,24 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                         currentRichSpan = newRichSpan
                     } else {
                         // name == "br"
-                        val newParagraph =
-                            if (richParagraphList.isEmpty())
-                                RichParagraph()
-                            else
-                                RichParagraph(paragraphStyle = richParagraphList.last().paragraphStyle)
-
-                        richParagraphList.add(newParagraph)
-
-                        currentRichSpan = null
+                        onAddLineBreak()
                     }
                 }
             },
             onHtmlBlock = {
+                var html = it
+
+                while (true) {
+                    val brIndex = html.indexOf("<br>")
+
+                    if (brIndex == -1)
+                        break
+
+                    html = html.substring(brIndex + 4)
+
+                    onAddLineBreak()
+                }
+
                 // Todo: support HTML Block in markdown
             }
         )
@@ -212,6 +242,8 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
     override fun decode(richTextState: RichTextState): String {
         val builder = StringBuilder()
+
+        var useLineBreak = false
 
         richTextState.richParagraphList.fastForEachIndexed { index, richParagraph ->
             // Append paragraph start text
@@ -228,6 +260,14 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
             richParagraph.children.fastForEach { richSpan ->
                 builder.append(decodeRichSpanToMarkdown(richSpan))
             }
+
+            // Append line break if needed
+            val isBlank = richParagraph.isBlank()
+
+            if (useLineBreak && isBlank)
+                builder.append("<br>")
+
+            useLineBreak = isBlank
 
             if (index < richTextState.richParagraphList.lastIndex) {
                 // Append new line

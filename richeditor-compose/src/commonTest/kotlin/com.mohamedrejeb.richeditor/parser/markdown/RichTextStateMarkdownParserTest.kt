@@ -99,6 +99,56 @@ class RichTextStateMarkdownParserTest {
         )
     }
 
+    @Test
+    fun testEncodeLineBreak() {
+        val markdown = """
+            Hello
+            <br>
+            
+            
+            
+            World!
+        """.trimIndent()
+
+        val state = RichTextStateMarkdownParser.encode(markdown)
+
+        assertEquals(
+            expected = 4,
+            actual = state.richParagraphList.size,
+        )
+
+        state.setMarkdown(
+            """
+            Hello
+            
+            
+            
+            World!
+        """.trimIndent()
+        )
+
+        assertEquals(
+            expected = 3,
+            actual = state.richParagraphList.size,
+        )
+
+        state.setMarkdown(
+            """
+            Hello
+            
+            <br>
+            <br>
+            
+            World!
+        """.trimIndent()
+        )
+
+        assertEquals(
+            expected = 5,
+            actual = state.richParagraphList.size,
+        )
+    }
+
     /**
      * Decode tests
      */
@@ -213,6 +263,48 @@ class RichTextStateMarkdownParserTest {
         assertEquals(
             expected = "<u>$expectedText</u>",
             actual = markdown
+        )
+    }
+
+    @OptIn(ExperimentalRichTextApi::class)
+    @Test
+    fun testDecodeLineBreak() {
+        val state = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph().also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Hello",
+                            paragraph = it
+                        )
+                    )
+                },
+                RichParagraph(),
+                RichParagraph(),
+                RichParagraph(),
+                RichParagraph().also {
+                    it.children.add(
+                        RichSpan(
+                            text = "World!",
+                            paragraph = it
+                        )
+                    )
+                }
+            )
+        )
+
+        val markdown = RichTextStateMarkdownParser.decode(state)
+
+        assertEquals(
+            expected =
+                """
+                    Hello
+                    
+                    <br>
+                    <br>
+                    World!
+                """.trimIndent(),
+            actual = markdown,
         )
     }
 

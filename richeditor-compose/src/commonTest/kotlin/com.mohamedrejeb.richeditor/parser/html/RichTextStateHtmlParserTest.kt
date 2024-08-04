@@ -29,10 +29,6 @@ internal class RichTextStateHtmlParserTest {
 
         val richTextState = RichTextStateHtmlParser.encode(html)
 
-        richTextState.richParagraphList.forEach {
-            println(it.toString())
-        }
-
         assertEquals(2, richTextState.richParagraphList.size)
         assertTrue(richTextState.richParagraphList[0].isBlank())
         assertEquals(1, richTextState.richParagraphList[1].children.size)
@@ -92,10 +88,6 @@ internal class RichTextStateHtmlParserTest {
         val h1 = richTextState.richParagraphList[0].children.first()
         val image = richTextState.richParagraphList[2].children.first()
 
-        richTextState.richParagraphList.forEach {
-            println(it.toString())
-        }
-
         assertEquals(3, richTextState.richParagraphList.size)
         assertEquals(1, richTextState.richParagraphList[0].children.size)
         assertTrue(richTextState.richParagraphList[1].isBlank())
@@ -153,10 +145,6 @@ internal class RichTextStateHtmlParserTest {
             """.trimIndent()
 
         val richTextState = RichTextStateHtmlParser.encode(html)
-
-        richTextState.richParagraphList.forEach {
-            println(it.toString())
-        }
 
         assertEquals(1, richTextState.richParagraphList.size)
         assertEquals("second", richTextState.annotatedString.text)

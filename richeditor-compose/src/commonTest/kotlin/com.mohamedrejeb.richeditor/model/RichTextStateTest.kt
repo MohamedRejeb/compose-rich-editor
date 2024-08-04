@@ -68,7 +68,7 @@ class RichTextStateTest {
         richTextState.addSpanStyle(SpanStyle(fontWeight = FontWeight.Bold))
         richTextState.addCodeSpan()
 
-        assertEquals(richTextState.currentSpanStyle, SpanStyle(fontWeight = FontWeight.Bold))
+        assertEquals(SpanStyle(fontWeight = FontWeight.Bold), richTextState.currentSpanStyle)
         assertTrue(richTextState.isCodeSpan)
 
         // Delete All text
@@ -80,7 +80,7 @@ class RichTextStateTest {
         )
 
         // Check that the style is preserved
-        assertEquals(richTextState.currentSpanStyle, SpanStyle(fontWeight = FontWeight.Bold))
+        assertEquals(SpanStyle(fontWeight = FontWeight.Bold), richTextState.currentSpanStyle)
         assertTrue(richTextState.isCodeSpan)
 
         // Add some text
@@ -92,7 +92,7 @@ class RichTextStateTest {
         )
 
         // Check that the style is preserved
-        assertEquals(richTextState.currentSpanStyle, SpanStyle(fontWeight = FontWeight.Bold))
+        assertEquals(SpanStyle(fontWeight = FontWeight.Bold), richTextState.currentSpanStyle)
         assertTrue(richTextState.isCodeSpan)
     }
 

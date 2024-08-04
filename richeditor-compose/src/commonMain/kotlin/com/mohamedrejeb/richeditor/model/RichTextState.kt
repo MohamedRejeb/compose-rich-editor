@@ -2406,8 +2406,13 @@ public class RichTextState internal constructor(
                 config.preserveStyleOnEmptyLine &&
                 (richSpan == null || (richSpan.isFirstInParagraph && richSpan.paragraph.isEmpty()))
             ) {
-                val paragraphBefore = getRichParagraphByTextIndex(selection.min - 2)
-                if (paragraphBefore != null && paragraphBefore.isNotEmpty()) {
+                val paragraphBefore =
+                    if (selection.min - 2 < 0)
+                        null
+                    else
+                        getRichParagraphByTextIndex(selection.min - 2)
+
+                if (paragraphBefore?.isEmpty() != true) {
                     toAddRichSpanStyle = currentAppliedRichSpanStyle
                     toAddSpanStyle = currentAppliedSpanStyle
                 }

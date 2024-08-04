@@ -1149,7 +1149,7 @@ public class RichTextState internal constructor(
         )
         val previousIndex = startTypeIndex - 1
 
-        val activeRichSpan = getRichSpanByTextIndex(previousIndex)
+        val activeRichSpan = getOrCreateRichSpanByTextIndex(previousIndex)
 
         if (activeRichSpan != null) {
             if (startTypeIndex < activeRichSpan.textRange.min) {
@@ -2714,6 +2714,29 @@ public class RichTextState internal constructor(
         return richParagraphList
     }
 
+    private fun getOrCreateRichSpanByTextIndex(
+        textIndex: Int,
+        ignoreCustomFiltering: Boolean = false,
+    ): RichSpan? {
+        val richSpan =
+            getRichSpanByTextIndex(
+                textIndex = textIndex,
+                ignoreCustomFiltering = ignoreCustomFiltering,
+            )
+
+        if (richSpan == null && textIndex < 0) {
+            val firstParagraph = richParagraphList.firstOrNull() ?: return null
+            val newRichSpan = RichSpan(
+                paragraph = firstParagraph,
+                text = "",
+            )
+            firstParagraph.children.add(0, newRichSpan)
+            return newRichSpan
+        }
+
+        return richSpan
+    }
+
     /**
      * Returns the [RichSpan] that contains the given [textIndex].
      * If no [RichSpan] contains the given [textIndex], null is returned.
@@ -2728,12 +2751,6 @@ public class RichTextState internal constructor(
         // If the text index is equal or less than 0, we can return the first non-empty child of the first paragraph.
         if (textIndex < 0) {
             val firstParagraph = richParagraphList.firstOrNull() ?: return null
-
-//            if (textIndex == 0 && firstParagraph.isEmpty() && richParagraphList.size > 1) {
-//                val secondParagraph = richParagraphList[1]
-//                return secondParagraph.getFirstNonEmptyChild(secondParagraph.type.startText.length)
-//            }
-
             return firstParagraph.getFirstNonEmptyChild(firstParagraph.type.startText.length)
         }
 

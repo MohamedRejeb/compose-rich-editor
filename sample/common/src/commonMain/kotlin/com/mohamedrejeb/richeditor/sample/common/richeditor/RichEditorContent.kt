@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import coil3.util.DebugLogger
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.sample.common.components.RichTextStyleRow
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
@@ -33,6 +34,16 @@ fun RichEditorContent() {
             """
             <p><b>RichTextEditor</b> is a <i>composable</i> that allows you to edit <u>rich text</u> content.</p>
             """.trimIndent()
+        )
+    }
+
+    LaunchedEffect(basicRichTextState.annotatedString) {
+        val plaintext = basicRichTextState.annotatedString.toString()
+        DebugLogger().log(
+            "RichEditorContent",
+            coil3.util.Logger.Level.Debug,
+            "BasicRichTextEditor plaintext: $plaintext",
+            null
         )
     }
 

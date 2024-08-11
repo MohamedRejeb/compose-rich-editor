@@ -138,6 +138,10 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun addSpanStyle-FDrldGo (Landroidx/compose/ui/text/SpanStyle;J)V
 	public final fun addUnorderedList ()V
 	public final fun clear ()V
+	public final fun clearRichSpans ()V
+	public final fun clearRichSpans-5zc-tL8 (J)V
+	public final fun clearSpanStyles ()V
+	public final fun clearSpanStyles-5zc-tL8 (J)V
 	public final fun copy ()Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public final fun getAnnotatedString ()Landroidx/compose/ui/text/AnnotatedString;
 	public final fun getComposition-MzsxiRA ()Landroidx/compose/ui/text/TextRange;

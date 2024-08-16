@@ -531,4 +531,35 @@ class RichTextStateTest {
         )
     }
 
+    @OptIn(ExperimentalRichTextApi::class)
+    @Test
+    fun testToText() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    key = 1,
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Testing some text",
+                            paragraph = it,
+                        ),
+                    )
+                },
+                RichParagraph(
+                    key = 2,
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Testing some text",
+                            paragraph = it,
+                        ),
+                    )
+                }
+            )
+        )
+
+        assertEquals("Testing some text\nTesting some text", richTextState.toText())
+    }
+
 }

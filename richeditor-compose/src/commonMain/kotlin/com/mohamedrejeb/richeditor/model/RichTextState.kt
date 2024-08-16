@@ -384,17 +384,16 @@ public class RichTextState internal constructor(
      * @param textRange the text range where the span style is going to be applied.
      */
     public fun addSpanStyle(spanStyle: SpanStyle, textRange: TextRange) {
-        val textRangeSpanStyle =
-            getCommonSpanStyleByTextRange(textRange)
-                .customMerge(toAddSpanStyle)
-                .unmerge(toRemoveSpanStyle)
+        val oldToRemoveSpanStyle = toRemoveSpanStyle
+        val oldToAddSpanStyle = toAddSpanStyle
 
-        if (!textRangeSpanStyle.isSpecifiedFieldsEquals(spanStyle)) {
-            toAddSpanStyle = toAddSpanStyle.customMerge(spanStyle)
-            toRemoveSpanStyle = toRemoveSpanStyle.unmerge(spanStyle)
-        }
+        toAddSpanStyle = spanStyle
+        toRemoveSpanStyle = SpanStyle()
 
         applyRichSpanStyleToTextRange(textRange)
+
+        toRemoveSpanStyle = oldToRemoveSpanStyle
+        toAddSpanStyle = oldToAddSpanStyle
     }
 
     /**
@@ -434,17 +433,16 @@ public class RichTextState internal constructor(
      * @param textRange the text range where the span style is going to be removed.
      */
     public fun removeSpanStyle(spanStyle: SpanStyle, textRange: TextRange) {
-        val textRangeSpanStyle =
-            getCommonSpanStyleByTextRange(textRange)
-                .customMerge(toAddSpanStyle)
-                .unmerge(toRemoveSpanStyle)
+        val oldToRemoveSpanStyle = toRemoveSpanStyle
+        val oldToAddSpanStyle = toAddSpanStyle
 
-        if (textRangeSpanStyle.isSpecifiedFieldsEquals(spanStyle)) {
-            toRemoveSpanStyle = toRemoveSpanStyle.customMerge(spanStyle)
-            toAddSpanStyle = toAddSpanStyle.unmerge(spanStyle)
-        }
+        toRemoveSpanStyle = spanStyle
+        toAddSpanStyle = SpanStyle()
 
         applyRichSpanStyleToTextRange(textRange)
+
+        toRemoveSpanStyle = oldToRemoveSpanStyle
+        toAddSpanStyle = oldToAddSpanStyle
     }
 
     /**

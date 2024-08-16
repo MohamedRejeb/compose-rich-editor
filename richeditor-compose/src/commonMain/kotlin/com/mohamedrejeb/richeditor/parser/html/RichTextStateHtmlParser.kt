@@ -37,9 +37,6 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 val lastOpenedTag = openedTags.lastOrNull()?.first
                 if (lastOpenedTag == "ul" || lastOpenedTag == "ol") return@onText
 
-                println("lastOpenedTag: $lastOpenedTag")
-                println("onText: $it")
-
                 if (lastOpenedTag in skippedHtmlElements) return@onText
 
                 val addedText = KsoupEntities.decodeHtml(
@@ -79,7 +76,6 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 }
             }
             .onOpenTag { name, attributes, _ ->
-                println("onOpenTag: $name")
                 val lastOpenedTag = openedTags.lastOrNull()?.first
 
                 openedTags.add(name to attributes)
@@ -198,7 +194,6 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 lastClosedTag = null
             }
             .onCloseTag { name, _ ->
-                println("onCloseTag: $name")
                 openedTags.removeLastOrNull()
                 lastClosedTag = name
 

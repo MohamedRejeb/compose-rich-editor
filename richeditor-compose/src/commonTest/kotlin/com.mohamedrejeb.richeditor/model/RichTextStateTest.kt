@@ -3,6 +3,7 @@ package com.mohamedrejeb.richeditor.model
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
@@ -228,6 +229,61 @@ class RichTextStateTest {
         assertEquals(richTextState.currentSpanStyle, SpanStyle(fontWeight = FontWeight.Bold))
     }
 
+    @Test
+    fun testClearSpanStyles() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    key = 1,
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Testing some text",
+                            paragraph = it,
+                        ),
+                    )
+                }
+            )
+        )
+
+        val boldSpan = SpanStyle(fontWeight = FontWeight.Bold)
+        val italicSpan = SpanStyle(fontStyle = FontStyle.Italic)
+        val defaultSpan = SpanStyle()
+
+        richTextState.addSpanStyle(
+            spanStyle = boldSpan,
+            // "Testing some" is bold.
+            textRange = TextRange(0, 12),
+        )
+        richTextState.addSpanStyle(
+            spanStyle = italicSpan,
+            // "some text" is italic.
+            textRange = TextRange(8, 17),
+        )
+
+        richTextState.selection = TextRange(8, 12)
+        // Clear spans of "some".
+        richTextState.clearSpanStyles()
+
+        assertEquals(defaultSpan, richTextState.currentSpanStyle)
+        richTextState.selection = TextRange(0, 8)
+        // "Testing" is bold.
+        assertEquals(boldSpan, richTextState.currentSpanStyle)
+        richTextState.selection = TextRange(8, 12)
+        // "some" is the default.
+        assertEquals(defaultSpan, richTextState.currentSpanStyle)
+        richTextState.selection = TextRange(12, 17)
+        // "text" is italic.
+        assertEquals(italicSpan, richTextState.currentSpanStyle)
+
+        // Clear all spans.
+        richTextState.clearSpanStyles(TextRange(0, 17))
+
+        assertEquals(defaultSpan, richTextState.currentSpanStyle)
+        richTextState.selection = TextRange(0, 17)
+        assertEquals(defaultSpan, richTextState.currentSpanStyle)
+    }
+
     @OptIn(ExperimentalRichTextApi::class)
     @Test
     fun testAddRichSpanStyleByTextRange() {
@@ -307,6 +363,62 @@ class RichTextStateTest {
         // Outside the range
         richTextState.selection = TextRange(5)
         assertEquals(richTextState.currentRichSpanStyle::class, RichSpanStyle.Code::class)
+    }
+
+    @OptIn(ExperimentalRichTextApi::class)
+    @Test
+    fun testClearRichSpanStyles() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    key = 1,
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Testing some text",
+                            paragraph = it,
+                        ),
+                    )
+                }
+            )
+        )
+
+        val codeSpan = RichSpanStyle.Code()
+        val linkSpan = RichSpanStyle.Link("https://example.com")
+        val defaultSpan = RichSpanStyle.Default
+
+        richTextState.addRichSpan(
+            spanStyle = codeSpan,
+            // "Testing some" is the code.
+            textRange = TextRange(0, 12),
+        )
+        richTextState.addRichSpan(
+            spanStyle = linkSpan,
+            // "some text" is the link.
+            textRange = TextRange(8, 17),
+        )
+
+        richTextState.selection = TextRange(8, 12)
+        // Clear spans of "some".
+        richTextState.clearRichSpans()
+
+        assertEquals(defaultSpan, richTextState.currentRichSpanStyle)
+        richTextState.selection = TextRange(0, 8)
+        // "Testing" is the code.
+        assertEquals(codeSpan, richTextState.currentRichSpanStyle)
+        richTextState.selection = TextRange(8, 12)
+        // "some" is the default.
+        assertEquals(defaultSpan, richTextState.currentRichSpanStyle)
+        richTextState.selection = TextRange(12, 17)
+        // "text" is the link.
+        assertEquals(linkSpan, richTextState.currentRichSpanStyle)
+
+        // Clear all spans.
+        richTextState.clearRichSpans(TextRange(0, 17))
+
+        assertEquals(defaultSpan, richTextState.currentRichSpanStyle)
+        richTextState.selection = TextRange(0, 17)
+        assertEquals(defaultSpan, richTextState.currentRichSpanStyle)
     }
 
     @Test

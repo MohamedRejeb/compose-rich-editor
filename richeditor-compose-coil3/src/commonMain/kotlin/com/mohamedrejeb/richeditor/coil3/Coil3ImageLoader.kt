@@ -8,7 +8,7 @@ import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.ImageData
 import com.mohamedrejeb.richeditor.model.ImageLoader
 
-@OptIn(ExperimentalRichTextApi::class)
+@ExperimentalRichTextApi
 public object Coil3ImageLoader: ImageLoader {
 
     @Composable

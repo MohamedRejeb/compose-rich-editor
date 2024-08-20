@@ -14,7 +14,7 @@ plugins {
 kotlin {
     explicitApi()
     applyDefaultHierarchyTemplate()
-    jvmToolchain(11)
+
     androidTarget {
         publishLibraryVariants("release")
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
@@ -22,10 +22,10 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_1_8)
         }
     }
+    jvmToolchain(11)
     jvm("desktop")
-    js(IR) {
-        browser()
-    }
+
+    js(IR).browser()
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         browser {
@@ -34,6 +34,7 @@ kotlin {
             }
         }
     }
+
     iosX64()
     iosArm64()
     iosSimulatorArm64()

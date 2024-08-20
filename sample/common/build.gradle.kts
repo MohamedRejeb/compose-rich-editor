@@ -63,10 +63,8 @@ kotlin {
     }
 
     sourceSets {
-
-
         androidMain.dependencies {
-            api("androidx.appcompat:appcompat:1.6.1")
+            api(libs.androidx.appcompat)
 
             implementation(libs.kotlinx.coroutines.android)
             implementation(libs.ktor.client.okhttp)

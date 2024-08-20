@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.DefaultImageLoader
 import com.mohamedrejeb.richeditor.model.ImageLoader
 import com.mohamedrejeb.richeditor.model.LocalImageLoader
@@ -60,6 +61,7 @@ import com.mohamedrejeb.richeditor.ui.BasicRichText
  * functionality to the text. For example, to draw selection around the text.
  * @param style style configuration for the text such as color, font, line height etc.
  */
+@OptIn(ExperimentalRichTextApi::class)
 @Composable
 public fun RichText(
     state: RichTextState,

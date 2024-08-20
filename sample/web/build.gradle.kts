@@ -22,7 +22,3 @@ kotlin {
         implementation(projects.sample.common)
     }
 }
-
-compose.experimental {
-    web.application {}
-}

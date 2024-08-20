@@ -11,11 +11,12 @@ coil = "3.0.0-alpha10"
 nexus-publish = "2.0.0"
 
 # For sample
+androidx-appcompat = "1.7.0"
 activity-compose = "1.9.1"
 voyager = "1.1.0-beta02"
 richeditor = "1.0.0-rc05"
 coroutines = "1.8.1"
-ktor = "3.0.0-wasm2"
+ktor = "3.0.0-beta-2"
 android-minSdk = "21"
 android-compileSdk = "34"
 
@@ -29,6 +30,7 @@ coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" 
 nexus-publish = { module = "io.github.gradle-nexus.publish-plugin:io.github.gradle-nexus.publish-plugin.gradle.plugin", version.ref = "nexus-publish" }
 
 # For sample
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity-compose" }
 voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
 richeditor-compose = { module = "com.mohamedrejeb.richeditor:richeditor-compose", version.ref = "richeditor" }
@@ -37,7 +39,7 @@ kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutine
 kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "coroutines" }
 
 coil-svg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coil" }
-coil-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor2", version.ref = "coil" }
+coil-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
 
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }

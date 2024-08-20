@@ -2983,6 +2983,14 @@ public class RichTextState internal constructor(
     }
 
     /**
+     * Returns the [RichTextState] as a text string.
+     *
+     * @return The text string.
+     */
+    public fun toText(): String =
+        toText(richParagraphList = richParagraphList)
+
+    /**
      * Decodes the [RichTextState] to a html string.
      *
      * @return The html string.

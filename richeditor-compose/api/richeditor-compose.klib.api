@@ -210,6 +210,7 @@ final class com.mohamedrejeb.richeditor.model/RichTextState { // com.mohamedreje
     final fun setText(kotlin/String): com.mohamedrejeb.richeditor.model/RichTextState // com.mohamedrejeb.richeditor.model/RichTextState.setText|setText(kotlin.String){}[0]
     final fun toHtml(): kotlin/String // com.mohamedrejeb.richeditor.model/RichTextState.toHtml|toHtml(){}[0]
     final fun toMarkdown(): kotlin/String // com.mohamedrejeb.richeditor.model/RichTextState.toMarkdown|toMarkdown(){}[0]
+    final fun toText(): kotlin/String // com.mohamedrejeb.richeditor.model/RichTextState.toText|toText(){}[0]
     final fun toggleCode() // com.mohamedrejeb.richeditor.model/RichTextState.toggleCode|toggleCode(){}[0]
     final fun toggleCodeSpan() // com.mohamedrejeb.richeditor.model/RichTextState.toggleCodeSpan|toggleCodeSpan(){}[0]
     final fun toggleOrderedList() // com.mohamedrejeb.richeditor.model/RichTextState.toggleOrderedList|toggleOrderedList(){}[0]

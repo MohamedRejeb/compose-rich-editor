@@ -4,6 +4,7 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -16,10 +17,13 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import com.mohamedrejeb.richeditor.gesture.detectTapGestures
+import com.mohamedrejeb.richeditor.model.DefaultImageLoader
+import com.mohamedrejeb.richeditor.model.ImageLoader
+import com.mohamedrejeb.richeditor.model.LocalImageLoader
 import com.mohamedrejeb.richeditor.model.RichTextState
 
 @Composable
-fun BasicRichText(
+public fun BasicRichText(
     state: RichTextState,
     modifier: Modifier = Modifier,
     style: TextStyle = TextStyle.Default,
@@ -28,7 +32,8 @@ fun BasicRichText(
     softWrap: Boolean = true,
     maxLines: Int = Int.MAX_VALUE,
     minLines: Int = 1,
-    inlineContent: Map<String, InlineTextContent> = mapOf()
+    inlineContent: Map<String, InlineTextContent> = mapOf(),
+    imageLoader: ImageLoader = LocalImageLoader.current,
 ) {
     val density = LocalDensity.current
     val uriHandler = LocalUriHandler.current
@@ -36,52 +41,65 @@ fun BasicRichText(
         mutableStateOf(PointerIcon.Default)
     }
 
-    BasicText(
-        text = state.visualTransformation.filter(state.annotatedString).text,
-        modifier = modifier
-            .drawRichSpanStyle(state)
-            .pointerHoverIcon(pointerIcon.value)
-            .pointerInput(Unit) {
-                awaitEachGesture {
-                    while (true) {
-                        val event = awaitPointerEvent()
-                        val position = event.changes.first().position
-                        val isLink = state.isLink(position)
+    val text = remember(
+        state.visualTransformation,
+        state.annotatedString,
+    ) {
+        state.visualTransformation.filter(state.annotatedString).text
+    }
 
-                        if (isLink) pointerIcon.value = PointerIcon.Hand
-                        else pointerIcon.value = PointerIcon.Default
+    CompositionLocalProvider(
+        LocalImageLoader provides imageLoader
+    ) {
+        BasicText(
+            text = text,
+            modifier = modifier
+                .drawRichSpanStyle(state)
+                .pointerHoverIcon(pointerIcon.value)
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val position = event.changes.first().position
+                            val isLink = state.isLink(position)
+
+                            if (isLink) pointerIcon.value = PointerIcon.Hand
+                            else pointerIcon.value = PointerIcon.Default
+                        }
                     }
                 }
-            }
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = { offset ->
-                        state.getLinkByOffset(offset)?.let { url ->
-                            try {
-                                uriHandler.openUri(url)
-                            } catch (e: Exception) {
-                                e.printStackTrace()
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onTap = { offset ->
+                            state.getLinkByOffset(offset)?.let { url ->
+                                try {
+                                    uriHandler.openUri(url)
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
                             }
-                        }
-                    },
-                    consumeDown = { offset ->
-                        state.isLink(offset)
-                    },
+                        },
+                        consumeDown = { offset ->
+                            state.isLink(offset)
+                        },
+                    )
+                },
+            style = style,
+            onTextLayout = {
+                state.onTextLayout(
+                    textLayoutResult = it,
+                    density = density,
+                    maxLines = maxLines,
                 )
+                onTextLayout(it)
             },
-        style = style,
-        onTextLayout = {
-            state.onTextLayout(
-                textLayoutResult = it,
-                density = density,
-                maxLines = maxLines,
-            )
-            onTextLayout(it)
-        },
-        overflow = overflow,
-        softWrap = softWrap,
-        maxLines = maxLines,
-        minLines = minLines,
-        inlineContent = inlineContent
-    )
+            overflow = overflow,
+            softWrap = softWrap,
+            maxLines = maxLines,
+            minLines = minLines,
+            inlineContent = remember(inlineContent, state.inlineContentMap.toMap()) {
+                inlineContent + state.inlineContentMap
+            }
+        )
+    }
 }

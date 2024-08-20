@@ -2,10 +2,12 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastForEachIndexed
+import androidx.compose.ui.util.fastForEachReversed
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.utils.customMerge
-import com.mohamedrejeb.richeditor.utils.fastForEach
 import com.mohamedrejeb.richeditor.utils.isSpecifiedFieldsEquals
 
 /**
@@ -20,7 +22,7 @@ internal class RichSpan(
     var text: String = "",
     var textRange: TextRange = TextRange(start = 0, end = 0),
     var spanStyle: SpanStyle = SpanStyle(),
-    var richSpansStyle: RichSpanStyle = RichSpanStyle.Default,
+    var richSpanStyle: RichSpanStyle = RichSpanStyle.Default,
 ) {
     /**
      * Return the full text range of the rich span.
@@ -61,11 +63,11 @@ internal class RichSpan(
     }
 
     val fullStyle: RichSpanStyle get() {
-        var style = this.richSpansStyle
+        var style = this.richSpanStyle
         var parent = this.parent
 
         while (parent != null && style::class == RichSpanStyle.Default::class) {
-            style = parent.richSpansStyle
+            style = parent.richSpanStyle
             parent = parent.parent
         }
 
@@ -172,7 +174,15 @@ internal class RichSpan(
      *
      * @return True if the rich span is empty, false otherwise
      */
-    fun isEmpty(): Boolean = text.isEmpty() && isChildrenEmpty()
+    fun isEmpty(): Boolean = text.isEmpty() && isChildrenEmpty() && richSpanStyle !is RichSpanStyle.Image
+
+    /**
+     * Check if the rich span is blank.
+     * A rich span is blank if its text is blank and its children are blank
+     *
+     * @return True if the rich span is blank, false otherwise
+     */
+    fun isBlank(): Boolean = text.isBlank() && isChildrenBlank() && richSpanStyle !is RichSpanStyle.Image
 
     /**
      * Check if the rich span children are empty
@@ -181,7 +191,17 @@ internal class RichSpan(
      */
     private fun isChildrenEmpty(): Boolean =
         children.all { richSpan ->
-            richSpan.text.isEmpty() && richSpan.isChildrenEmpty()
+            richSpan.isEmpty()
+        }
+
+    /**
+     * Check if the rich span children are blank
+     *
+     * @return True if the rich span children are blank, false otherwise
+     */
+    private fun isChildrenBlank(): Boolean =
+        children.all { richSpan ->
+            richSpan.isBlank()
         }
 
     /**
@@ -249,7 +269,7 @@ internal class RichSpan(
         // Set start text range
         textRange = TextRange(start = index, end = index + text.length)
 
-        if (!richSpansStyle.acceptNewTextInTheEdges && !ignoreCustomFiltering) {
+        if (!richSpanStyle.acceptNewTextInTheEdges && !ignoreCustomFiltering) {
             val fullTextRange = fullTextRange
             if (textIndex == fullTextRange.max - 1) {
                 index += fullTextRange.length
@@ -405,7 +425,7 @@ internal class RichSpan(
     fun getClosestRichSpan(spanStyle: SpanStyle, newRichSpanStyle: RichSpanStyle): RichSpan? {
         if (
             spanStyle.isSpecifiedFieldsEquals(this.fullSpanStyle, strict = true) &&
-            newRichSpanStyle::class == richSpansStyle::class
+            newRichSpanStyle::class == richSpanStyle::class
         ) return this
 
         return parent?.getClosestRichSpan(spanStyle, newRichSpanStyle)
@@ -423,6 +443,21 @@ internal class RichSpan(
         }
     }
 
+    fun removeEmptyChildren() {
+        val toRemoveIndices = mutableListOf<Int>()
+
+        children.fastForEachIndexed { i, richSpan ->
+            if (richSpan.isEmpty())
+                toRemoveIndices.add(i)
+            else
+                richSpan.removeEmptyChildren()
+        }
+
+        toRemoveIndices.fastForEachReversed {
+            children.removeAt(it)
+        }
+    }
+
     fun copy(
         newParagraph: RichParagraph = paragraph,
     ): RichSpan {
@@ -430,7 +465,7 @@ internal class RichSpan(
             paragraph = newParagraph,
             text = text,
             textRange = textRange,
-            richSpansStyle = richSpansStyle,
+            richSpanStyle = richSpanStyle,
             spanStyle = spanStyle,
         )
         children.fastForEach { childRichSpan ->
@@ -441,7 +476,27 @@ internal class RichSpan(
         return newSpan
     }
 
+    internal fun copy(
+        key: Int? = this.key,
+        children: MutableList<RichSpan> = this.children,
+        paragraph: RichParagraph = this.paragraph,
+        parent: RichSpan? = this.parent,
+        text: String = this.text,
+        textRange: TextRange = this.textRange,
+        spanStyle: SpanStyle = this.spanStyle,
+        richSpanStyle: RichSpanStyle = this.richSpanStyle,
+    ) = RichSpan(
+        key = key,
+        children = children,
+        paragraph = paragraph,
+        parent = parent,
+        text = text,
+        textRange = textRange,
+        spanStyle = spanStyle,
+        richSpanStyle = richSpanStyle,
+    )
+
     override fun toString(): String {
-        return "richSpan(text='$text', textRange=$textRange, fullTextRange=$fullTextRange)"
+        return "richSpan(text='$text', textRange=$textRange, fullTextRange=$fullTextRange), richSpanStyle=$richSpanStyle)"
     }
 }

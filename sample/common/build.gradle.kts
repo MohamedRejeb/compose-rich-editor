@@ -11,17 +11,18 @@ plugins {
 
 kotlin {
     applyDefaultHierarchyTemplate()
-    jvmToolchain(11)
+
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_1_8)
         }
     }
+
+    jvmToolchain(11)
     jvm("desktop")
-    js(IR) {
-        browser()
-    }
+
+    js(IR).browser()
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs().browser()
 
@@ -36,29 +37,58 @@ kotlin {
         }
     }
 
+    sourceSets.commonMain.dependencies {
+        api(compose.runtime)
+        api(compose.foundation)
+        api(compose.ui)
+        api(compose.material)
+        api(compose.material3)
+        api(compose.materialIconsExtended)
+        @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
+        implementation(compose.components.resources)
+
+        implementation(projects.richeditorCompose)
+        implementation(projects.richeditorComposeCoil3)
+
+        // Voyager Navigator
+        implementation(libs.voyager.navigator)
+
+        // Coil
+        implementation(libs.coil.compose)
+        implementation(libs.coil.svg)
+        implementation(libs.coil.network.ktor)
+
+        // Ktor
+        implementation(libs.ktor.client.core)
+    }
+
     sourceSets {
-        val commonMain by getting {
-            dependencies {
-                api(compose.runtime)
-                api(compose.foundation)
-                api(compose.ui)
-                api(compose.material)
-                api(compose.material3)
-                api(compose.materialIconsExtended)
-                @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
-                implementation(compose.components.resources)
 
-                implementation(projects.richeditorCompose)
 
-                // Voyager Navigator
-                implementation(libs.voyager.navigator)
-            }
+        androidMain.dependencies {
+            api("androidx.appcompat:appcompat:1.6.1")
+
+            implementation(libs.kotlinx.coroutines.android)
+            implementation(libs.ktor.client.okhttp)
         }
 
-        val androidMain by getting {
-            dependencies {
-                api("androidx.appcompat:appcompat:1.6.1")
-            }
+        named("desktopMain").dependencies {
+            implementation(compose.desktop.currentOs)
+
+            implementation(libs.kotlinx.coroutines.swing)
+            implementation(libs.ktor.client.okhttp)
+        }
+
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
+        }
+
+        jsMain.dependencies {
+            implementation(libs.ktor.client.js)
+        }
+
+        named("wasmJsMain").dependencies {
+            implementation(libs.ktor.client.js)
         }
     }
 }

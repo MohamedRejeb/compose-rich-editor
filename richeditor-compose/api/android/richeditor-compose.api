@@ -1,0 +1,303 @@
+public abstract interface annotation class com/mohamedrejeb/richeditor/annotation/ExperimentalRichTextApi : java/lang/annotation/Annotation {
+}
+
+public abstract interface annotation class com/mohamedrejeb/richeditor/annotation/InternalRichTextApi : java/lang/annotation/Annotation {
+}
+
+public final class com/mohamedrejeb/richeditor/model/DefaultImageLoader : com/mohamedrejeb/richeditor/model/ImageLoader {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/mohamedrejeb/richeditor/model/DefaultImageLoader;
+	public fun load (Ljava/lang/Object;Landroidx/compose/runtime/Composer;I)Lcom/mohamedrejeb/richeditor/model/ImageData;
+}
+
+public final class com/mohamedrejeb/richeditor/model/ImageData {
+	public static final field $stable I
+	public fun <init> (Landroidx/compose/ui/graphics/painter/Painter;Ljava/lang/String;Landroidx/compose/ui/Alignment;Landroidx/compose/ui/Modifier;)V
+	public synthetic fun <init> (Landroidx/compose/ui/graphics/painter/Painter;Ljava/lang/String;Landroidx/compose/ui/Alignment;Landroidx/compose/ui/Modifier;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Landroidx/compose/ui/graphics/painter/Painter;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Landroidx/compose/ui/Alignment;
+	public final fun component4 ()Landroidx/compose/ui/Modifier;
+	public final fun copy (Landroidx/compose/ui/graphics/painter/Painter;Ljava/lang/String;Landroidx/compose/ui/Alignment;Landroidx/compose/ui/Modifier;)Lcom/mohamedrejeb/richeditor/model/ImageData;
+	public static synthetic fun copy$default (Lcom/mohamedrejeb/richeditor/model/ImageData;Landroidx/compose/ui/graphics/painter/Painter;Ljava/lang/String;Landroidx/compose/ui/Alignment;Landroidx/compose/ui/Modifier;ILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/model/ImageData;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAlignment ()Landroidx/compose/ui/Alignment;
+	public final fun getContentDescription ()Ljava/lang/String;
+	public final fun getModifier ()Landroidx/compose/ui/Modifier;
+	public final fun getPainter ()Landroidx/compose/ui/graphics/painter/Painter;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/mohamedrejeb/richeditor/model/ImageLoader {
+	public abstract fun load (Ljava/lang/Object;Landroidx/compose/runtime/Composer;I)Lcom/mohamedrejeb/richeditor/model/ImageData;
+}
+
+public final class com/mohamedrejeb/richeditor/model/ImageLoaderKt {
+	public static final fun getLocalImageLoader ()Landroidx/compose/runtime/ProvidableCompositionLocal;
+}
+
+public abstract interface class com/mohamedrejeb/richeditor/model/RichSpanStyle {
+	public static final field Companion Lcom/mohamedrejeb/richeditor/model/RichSpanStyle$Companion;
+	public abstract fun appendCustomContent (Landroidx/compose/ui/text/AnnotatedString$Builder;Lcom/mohamedrejeb/richeditor/model/RichTextState;)Landroidx/compose/ui/text/AnnotatedString$Builder;
+	public abstract fun drawCustomStyle-zdrCDHg (Landroidx/compose/ui/graphics/drawscope/DrawScope;Landroidx/compose/ui/text/TextLayoutResult;JLcom/mohamedrejeb/richeditor/model/RichTextConfig;FF)V
+	public abstract fun getAcceptNewTextInTheEdges ()Z
+	public abstract fun getSpanStyle ()Lkotlin/jvm/functions/Function1;
+}
+
+public final class com/mohamedrejeb/richeditor/model/RichSpanStyle$Code : com/mohamedrejeb/richeditor/model/RichSpanStyle {
+	public static final field $stable I
+	public synthetic fun <init> (JJLcom/mohamedrejeb/richeditor/model/TextPaddingValues;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (JJLcom/mohamedrejeb/richeditor/model/TextPaddingValues;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun appendCustomContent (Landroidx/compose/ui/text/AnnotatedString$Builder;Lcom/mohamedrejeb/richeditor/model/RichTextState;)Landroidx/compose/ui/text/AnnotatedString$Builder;
+	public fun drawCustomStyle-zdrCDHg (Landroidx/compose/ui/graphics/drawscope/DrawScope;Landroidx/compose/ui/text/TextLayoutResult;JLcom/mohamedrejeb/richeditor/model/RichTextConfig;FF)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAcceptNewTextInTheEdges ()Z
+	public fun getSpanStyle ()Lkotlin/jvm/functions/Function1;
+	public fun hashCode ()I
+}
+
+public final class com/mohamedrejeb/richeditor/model/RichSpanStyle$Companion {
+}
+
+public final class com/mohamedrejeb/richeditor/model/RichSpanStyle$Default : com/mohamedrejeb/richeditor/model/RichSpanStyle {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/mohamedrejeb/richeditor/model/RichSpanStyle$Default;
+	public fun appendCustomContent (Landroidx/compose/ui/text/AnnotatedString$Builder;Lcom/mohamedrejeb/richeditor/model/RichTextState;)Landroidx/compose/ui/text/AnnotatedString$Builder;
+	public fun drawCustomStyle-zdrCDHg (Landroidx/compose/ui/graphics/drawscope/DrawScope;Landroidx/compose/ui/text/TextLayoutResult;JLcom/mohamedrejeb/richeditor/model/RichTextConfig;FF)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAcceptNewTextInTheEdges ()Z
+	public fun getSpanStyle ()Lkotlin/jvm/functions/Function1;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/model/RichSpanStyle$DefaultImpls {
+	public static fun appendCustomContent (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;Landroidx/compose/ui/text/AnnotatedString$Builder;Lcom/mohamedrejeb/richeditor/model/RichTextState;)Landroidx/compose/ui/text/AnnotatedString$Builder;
+	public static synthetic fun drawCustomStyle-zdrCDHg$default (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;Landroidx/compose/ui/graphics/drawscope/DrawScope;Landroidx/compose/ui/text/TextLayoutResult;JLcom/mohamedrejeb/richeditor/model/RichTextConfig;FFILjava/lang/Object;)V
+}
+
+public final class com/mohamedrejeb/richeditor/model/RichSpanStyle$Image : com/mohamedrejeb/richeditor/model/RichSpanStyle {
+	public static final field $stable I
+	public synthetic fun <init> (Ljava/lang/Object;JJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun appendCustomContent (Landroidx/compose/ui/text/AnnotatedString$Builder;Lcom/mohamedrejeb/richeditor/model/RichTextState;)Landroidx/compose/ui/text/AnnotatedString$Builder;
+	public fun drawCustomStyle-zdrCDHg (Landroidx/compose/ui/graphics/drawscope/DrawScope;Landroidx/compose/ui/text/TextLayoutResult;JLcom/mohamedrejeb/richeditor/model/RichTextConfig;FF)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAcceptNewTextInTheEdges ()Z
+	public final fun getHeight-XSAIIZE ()J
+	public final fun getModel ()Ljava/lang/Object;
+	public fun getSpanStyle ()Lkotlin/jvm/functions/Function1;
+	public final fun getWidth-XSAIIZE ()J
+	public fun hashCode ()I
+}
+
+public final class com/mohamedrejeb/richeditor/model/RichSpanStyle$Link : com/mohamedrejeb/richeditor/model/RichSpanStyle {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;)V
+	public fun appendCustomContent (Landroidx/compose/ui/text/AnnotatedString$Builder;Lcom/mohamedrejeb/richeditor/model/RichTextState;)Landroidx/compose/ui/text/AnnotatedString$Builder;
+	public fun drawCustomStyle-zdrCDHg (Landroidx/compose/ui/graphics/drawscope/DrawScope;Landroidx/compose/ui/text/TextLayoutResult;JLcom/mohamedrejeb/richeditor/model/RichTextConfig;FF)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAcceptNewTextInTheEdges ()Z
+	public fun getSpanStyle ()Lkotlin/jvm/functions/Function1;
+	public final fun getUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+}
+
+public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
+	public static final field $stable I
+	public final fun getCodeSpanBackgroundColor-0d7_KjU ()J
+	public final fun getCodeSpanColor-0d7_KjU ()J
+	public final fun getCodeSpanStrokeColor-0d7_KjU ()J
+	public final fun getLinkColor-0d7_KjU ()J
+	public final fun getLinkTextDecoration ()Landroidx/compose/ui/text/style/TextDecoration;
+	public final fun getListIndent ()I
+	public final fun getPreserveStyleOnEmptyLine ()Z
+	public final fun setCodeSpanBackgroundColor-8_81llA (J)V
+	public final fun setCodeSpanColor-8_81llA (J)V
+	public final fun setCodeSpanStrokeColor-8_81llA (J)V
+	public final fun setLinkColor-8_81llA (J)V
+	public final fun setLinkTextDecoration (Landroidx/compose/ui/text/style/TextDecoration;)V
+	public final fun setListIndent (I)V
+	public final fun setPreserveStyleOnEmptyLine (Z)V
+}
+
+public final class com/mohamedrejeb/richeditor/model/RichTextState {
+	public static final field $stable I
+	public static final field Companion Lcom/mohamedrejeb/richeditor/model/RichTextState$Companion;
+	public fun <init> ()V
+	public final fun addCode ()V
+	public final fun addCodeSpan ()V
+	public final fun addLink (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun addLinkToSelection (Ljava/lang/String;)V
+	public final fun addLinkToTextRange-FDrldGo (Ljava/lang/String;J)V
+	public final fun addOrderedList ()V
+	public final fun addParagraphStyle (Landroidx/compose/ui/text/ParagraphStyle;)V
+	public final fun addRichSpan (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;)V
+	public final fun addRichSpan-FDrldGo (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;J)V
+	public final fun addSpanStyle (Landroidx/compose/ui/text/SpanStyle;)V
+	public final fun addSpanStyle-FDrldGo (Landroidx/compose/ui/text/SpanStyle;J)V
+	public final fun addUnorderedList ()V
+	public final fun clear ()V
+	public final fun clearRichSpans ()V
+	public final fun clearRichSpans-5zc-tL8 (J)V
+	public final fun clearSpanStyles ()V
+	public final fun clearSpanStyles-5zc-tL8 (J)V
+	public final fun copy ()Lcom/mohamedrejeb/richeditor/model/RichTextState;
+	public final fun getAnnotatedString ()Landroidx/compose/ui/text/AnnotatedString;
+	public final fun getComposition-MzsxiRA ()Landroidx/compose/ui/text/TextRange;
+	public final fun getConfig ()Lcom/mohamedrejeb/richeditor/model/RichTextConfig;
+	public final fun getCurrentParagraphStyle ()Landroidx/compose/ui/text/ParagraphStyle;
+	public final fun getCurrentRichSpanStyle ()Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;
+	public final fun getCurrentSpanStyle ()Landroidx/compose/ui/text/SpanStyle;
+	public final fun getParagraphStyle-5zc-tL8 (J)Landroidx/compose/ui/text/ParagraphStyle;
+	public final fun getRichSpanStyle-5zc-tL8 (J)Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;
+	public final fun getSelectedLinkText ()Ljava/lang/String;
+	public final fun getSelectedLinkUrl ()Ljava/lang/String;
+	public final fun getSelection-d9O1mEE ()J
+	public final fun getSpanStyle-5zc-tL8 (J)Landroidx/compose/ui/text/SpanStyle;
+	public final fun isCode ()Z
+	public final fun isCodeSpan ()Z
+	public final fun isLink ()Z
+	public final fun isOrderedList ()Z
+	public final fun isRichSpan (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;)Z
+	public final fun isRichSpan (Lkotlin/reflect/KClass;)Z
+	public final fun isUnorderedList ()Z
+	public final fun removeCode ()V
+	public final fun removeCodeSpan ()V
+	public final fun removeLink ()V
+	public final fun removeOrderedList ()V
+	public final fun removeParagraphStyle (Landroidx/compose/ui/text/ParagraphStyle;)V
+	public final fun removeRichSpan (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;)V
+	public final fun removeRichSpan-FDrldGo (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;J)V
+	public final fun removeSpanStyle (Landroidx/compose/ui/text/SpanStyle;)V
+	public final fun removeSpanStyle-FDrldGo (Landroidx/compose/ui/text/SpanStyle;J)V
+	public final fun removeUnorderedList ()V
+	public final fun replaceSelectedText (Ljava/lang/String;)V
+	public final fun setConfig-kmsmbh4 (JLandroidx/compose/ui/text/style/TextDecoration;JJJI)V
+	public static synthetic fun setConfig-kmsmbh4$default (Lcom/mohamedrejeb/richeditor/model/RichTextState;JLandroidx/compose/ui/text/style/TextDecoration;JJJIILjava/lang/Object;)V
+	public final fun setHtml (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
+	public final fun setMarkdown (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
+	public final fun setSelection-5zc-tL8 (J)V
+	public final fun setText (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
+	public final fun toHtml ()Ljava/lang/String;
+	public final fun toMarkdown ()Ljava/lang/String;
+	public final fun toText ()Ljava/lang/String;
+	public final fun toggleCode ()V
+	public final fun toggleCodeSpan ()V
+	public final fun toggleOrderedList ()V
+	public final fun toggleParagraphStyle (Landroidx/compose/ui/text/ParagraphStyle;)V
+	public final fun toggleRichSpan (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;)V
+	public final fun toggleSpanStyle (Landroidx/compose/ui/text/SpanStyle;)V
+	public final fun toggleUnorderedList ()V
+	public final fun updateLink (Ljava/lang/String;)V
+}
+
+public final class com/mohamedrejeb/richeditor/model/RichTextState$Companion {
+	public final fun getSaver ()Landroidx/compose/runtime/saveable/Saver;
+}
+
+public final class com/mohamedrejeb/richeditor/model/RichTextStateKt {
+	public static final fun rememberRichTextState (Landroidx/compose/runtime/Composer;I)Lcom/mohamedrejeb/richeditor/model/RichTextState;
+}
+
+public final class com/mohamedrejeb/richeditor/model/TextPaddingValues {
+	public static final field $stable I
+	public synthetic fun <init> (JJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (JJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-XSAIIZE ()J
+	public final fun component2-XSAIIZE ()J
+	public final fun copy-NB67dxo (JJ)Lcom/mohamedrejeb/richeditor/model/TextPaddingValues;
+	public static synthetic fun copy-NB67dxo$default (Lcom/mohamedrejeb/richeditor/model/TextPaddingValues;JJILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/model/TextPaddingValues;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHorizontal-XSAIIZE ()J
+	public final fun getVertical-XSAIIZE ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/ui/BasicRichTextEditorKt {
+	public static final fun BasicRichTextEditor (Lcom/mohamedrejeb/richeditor/model/RichTextState;Landroidx/compose/ui/Modifier;ZZLandroidx/compose/ui/text/TextStyle;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;ZIIILkotlin/jvm/functions/Function1;Landroidx/compose/foundation/interaction/MutableInteractionSource;Landroidx/compose/ui/graphics/Brush;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V
+	public static final fun BasicRichTextEditor (Lcom/mohamedrejeb/richeditor/model/RichTextState;Landroidx/compose/ui/Modifier;ZZLandroidx/compose/ui/text/TextStyle;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;ZZIIILkotlin/jvm/functions/Function1;Landroidx/compose/foundation/interaction/MutableInteractionSource;Landroidx/compose/ui/graphics/Brush;Lkotlin/jvm/functions/Function3;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/runtime/Composer;III)V
+}
+
+public final class com/mohamedrejeb/richeditor/ui/BasicRichTextKt {
+	public static final fun BasicRichText-RWo7tUw (Lcom/mohamedrejeb/richeditor/model/RichTextState;Landroidx/compose/ui/Modifier;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function1;IZIILjava/util/Map;Lcom/mohamedrejeb/richeditor/model/ImageLoader;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/mohamedrejeb/richeditor/ui/ComposableSingletons$BasicRichTextEditorKt {
+	public static final field INSTANCE Lcom/mohamedrejeb/richeditor/ui/ComposableSingletons$BasicRichTextEditorKt;
+	public static field lambda-1 Lkotlin/jvm/functions/Function3;
+	public static field lambda-2 Lkotlin/jvm/functions/Function3;
+	public fun <init> ()V
+	public final fun getLambda-1$richeditor_compose_release ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda-2$richeditor_compose_release ()Lkotlin/jvm/functions/Function3;
+}
+
+public final class com/mohamedrejeb/richeditor/ui/material/OutlinedRichTextEditorKt {
+	public static final fun OutlinedRichTextEditor (Lcom/mohamedrejeb/richeditor/model/RichTextState;Landroidx/compose/ui/Modifier;ZZLandroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;ZLandroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;ZIIILandroidx/compose/foundation/interaction/MutableInteractionSource;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/material/TextFieldColors;Landroidx/compose/runtime/Composer;III)V
+}
+
+public final class com/mohamedrejeb/richeditor/ui/material/RichTextEditorKt {
+	public static final fun RichTextEditor (Lcom/mohamedrejeb/richeditor/model/RichTextState;Landroidx/compose/ui/Modifier;ZZLandroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;ZLandroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;ZIIILandroidx/compose/foundation/interaction/MutableInteractionSource;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/material/TextFieldColors;Landroidx/compose/runtime/Composer;III)V
+}
+
+public final class com/mohamedrejeb/richeditor/ui/material/RichTextKt {
+	public static final fun RichText-a0LXGaU (Lcom/mohamedrejeb/richeditor/model/RichTextState;Landroidx/compose/ui/Modifier;JJLandroidx/compose/ui/text/font/FontStyle;Landroidx/compose/ui/text/font/FontWeight;Landroidx/compose/ui/text/font/FontFamily;JLandroidx/compose/ui/text/style/TextDecoration;IJIZIILjava/util/Map;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/text/TextStyle;Lcom/mohamedrejeb/richeditor/model/ImageLoader;Landroidx/compose/runtime/Composer;III)V
+}
+
+public final class com/mohamedrejeb/richeditor/ui/material3/OutlinedRichTextEditorKt {
+	public static final fun OutlinedRichTextEditor (Lcom/mohamedrejeb/richeditor/model/RichTextState;Landroidx/compose/ui/Modifier;ZZLandroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;ZLandroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;ZIIILkotlin/jvm/functions/Function1;Landroidx/compose/foundation/interaction/MutableInteractionSource;Landroidx/compose/ui/graphics/Shape;Lcom/mohamedrejeb/richeditor/ui/material3/RichTextEditorColors;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/runtime/Composer;IIII)V
+}
+
+public final class com/mohamedrejeb/richeditor/ui/material3/RichTextEditorColors {
+	public static final field $stable I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public final class com/mohamedrejeb/richeditor/ui/material3/RichTextEditorDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/mohamedrejeb/richeditor/ui/material3/RichTextEditorDefaults;
+	public final fun FilledContainerBox (ZZLandroidx/compose/foundation/interaction/InteractionSource;Lcom/mohamedrejeb/richeditor/ui/material3/RichTextEditorColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/runtime/Composer;II)V
+	public final fun OutlinedBorderContainerBox-nbWgWpA (ZZLandroidx/compose/foundation/interaction/InteractionSource;Lcom/mohamedrejeb/richeditor/ui/material3/RichTextEditorColors;Landroidx/compose/ui/graphics/Shape;FFLandroidx/compose/runtime/Composer;II)V
+	public final fun OutlinedRichTextEditorDecorationBox (Ljava/lang/String;Lkotlin/jvm/functions/Function2;ZZLandroidx/compose/ui/text/input/VisualTransformation;Landroidx/compose/foundation/interaction/InteractionSource;ZLkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lcom/mohamedrejeb/richeditor/ui/material3/RichTextEditorColors;Landroidx/compose/foundation/layout/PaddingValues;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;III)V
+	public final fun RichTextEditorDecorationBox (Ljava/lang/String;Lkotlin/jvm/functions/Function2;ZZLandroidx/compose/ui/text/input/VisualTransformation;Landroidx/compose/foundation/interaction/InteractionSource;ZLkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/graphics/Shape;Lcom/mohamedrejeb/richeditor/ui/material3/RichTextEditorColors;Landroidx/compose/foundation/layout/PaddingValues;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;III)V
+	public final fun getFilledShape (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/graphics/Shape;
+	public final fun getFocusedBorderThickness-D9Ej5fM ()F
+	public final fun getMinHeight-D9Ej5fM ()F
+	public final fun getMinWidth-D9Ej5fM ()F
+	public final fun getOutlinedShape (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/graphics/Shape;
+	public final fun getUnfocusedBorderThickness-D9Ej5fM ()F
+	public final fun indicatorLine-gv0btCI (Landroidx/compose/ui/Modifier;ZZLandroidx/compose/foundation/interaction/InteractionSource;Lcom/mohamedrejeb/richeditor/ui/material3/RichTextEditorColors;FF)Landroidx/compose/ui/Modifier;
+	public static synthetic fun indicatorLine-gv0btCI$default (Lcom/mohamedrejeb/richeditor/ui/material3/RichTextEditorDefaults;Landroidx/compose/ui/Modifier;ZZLandroidx/compose/foundation/interaction/InteractionSource;Lcom/mohamedrejeb/richeditor/ui/material3/RichTextEditorColors;FFILjava/lang/Object;)Landroidx/compose/ui/Modifier;
+	public final fun outlinedRichTextEditorColors-l59Burw (JJJJJLandroidx/compose/foundation/text/selection/TextSelectionColors;JJJJJJJJJJJJJJJJJJJJJJLandroidx/compose/runtime/Composer;IIII)Lcom/mohamedrejeb/richeditor/ui/material3/RichTextEditorColors;
+	public final fun outlinedRichTextEditorPadding-a9UjIt4 (FFFF)Landroidx/compose/foundation/layout/PaddingValues;
+	public static synthetic fun outlinedRichTextEditorPadding-a9UjIt4$default (Lcom/mohamedrejeb/richeditor/ui/material3/RichTextEditorDefaults;FFFFILjava/lang/Object;)Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun richTextEditorColors-l59Burw (JJJJJLandroidx/compose/foundation/text/selection/TextSelectionColors;JJJJJJJJJJJJJJJJJJJJJJLandroidx/compose/runtime/Composer;IIII)Lcom/mohamedrejeb/richeditor/ui/material3/RichTextEditorColors;
+	public final fun richTextEditorWithLabelPadding-a9UjIt4 (FFFF)Landroidx/compose/foundation/layout/PaddingValues;
+	public static synthetic fun richTextEditorWithLabelPadding-a9UjIt4$default (Lcom/mohamedrejeb/richeditor/ui/material3/RichTextEditorDefaults;FFFFILjava/lang/Object;)Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun richTextEditorWithoutLabelPadding-a9UjIt4 (FFFF)Landroidx/compose/foundation/layout/PaddingValues;
+	public static synthetic fun richTextEditorWithoutLabelPadding-a9UjIt4$default (Lcom/mohamedrejeb/richeditor/ui/material3/RichTextEditorDefaults;FFFFILjava/lang/Object;)Landroidx/compose/foundation/layout/PaddingValues;
+}
+
+public final class com/mohamedrejeb/richeditor/ui/material3/RichTextEditorKt {
+	public static final fun RichTextEditor (Lcom/mohamedrejeb/richeditor/model/RichTextState;Landroidx/compose/ui/Modifier;ZZLandroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;ZLandroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;ZIIILandroidx/compose/foundation/interaction/MutableInteractionSource;Landroidx/compose/ui/graphics/Shape;Lcom/mohamedrejeb/richeditor/ui/material3/RichTextEditorColors;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/runtime/Composer;IIII)V
+}
+
+public final class com/mohamedrejeb/richeditor/ui/material3/RichTextKt {
+	public static final fun RichText-IFx5cF0 (Lcom/mohamedrejeb/richeditor/model/RichTextState;Landroidx/compose/ui/Modifier;JJLandroidx/compose/ui/text/font/FontStyle;Landroidx/compose/ui/text/font/FontWeight;Landroidx/compose/ui/text/font/FontFamily;JLandroidx/compose/ui/text/style/TextDecoration;IJIZILjava/util/Map;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/text/TextStyle;Lcom/mohamedrejeb/richeditor/model/ImageLoader;Landroidx/compose/runtime/Composer;III)V
+}
+
+public final class com/mohamedrejeb/richeditor/utils/FloatUtilsKt {
+	public static final fun maxDecimals (FI)F
+}
+
+public final class com/mohamedrejeb/richeditor/utils/TextDecorationExtKt {
+	public static final fun minus (Landroidx/compose/ui/text/style/TextDecoration;Landroidx/compose/ui/text/style/TextDecoration;)Landroidx/compose/ui/text/style/TextDecoration;
+}
+
+public final class com/mohamedrejeb/richeditor/utils/TextLayoutResultExtKt {
+	public static final fun getBoundingBoxes (Landroidx/compose/ui/text/TextLayoutResult;IIZ)Ljava/util/List;
+	public static synthetic fun getBoundingBoxes$default (Landroidx/compose/ui/text/TextLayoutResult;IIZILjava/lang/Object;)Ljava/util/List;
+}
+

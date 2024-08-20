@@ -1,0 +1,6 @@
+public final class com/mohamedrejeb/richeditor/coil3/Coil3ImageLoader : com/mohamedrejeb/richeditor/model/ImageLoader {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/mohamedrejeb/richeditor/coil3/Coil3ImageLoader;
+	public fun load (Ljava/lang/Object;Landroidx/compose/runtime/Composer;I)Lcom/mohamedrejeb/richeditor/model/ImageData;
+}
+

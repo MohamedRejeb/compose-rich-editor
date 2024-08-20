@@ -3,17 +3,21 @@ package com.mohamedrejeb.richeditor.parser.markdown
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastForEachIndexed
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
-import com.mohamedrejeb.richeditor.model.*
+import com.mohamedrejeb.richeditor.model.RichSpan
+import com.mohamedrejeb.richeditor.model.RichSpanStyle
+import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import com.mohamedrejeb.richeditor.parser.RichTextStateParser
+import com.mohamedrejeb.richeditor.parser.html.BrElement
+import com.mohamedrejeb.richeditor.parser.html.htmlElementsSpanStyleEncodeMap
 import com.mohamedrejeb.richeditor.parser.utils.*
-import com.mohamedrejeb.richeditor.utils.fastForEach
-import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.MarkdownTokenTypes
 import org.intellij.markdown.ast.ASTNode
@@ -26,9 +30,29 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     @OptIn(ExperimentalRichTextApi::class)
     override fun encode(input: String): RichTextState {
         val openedNodes = mutableListOf<ASTNode>()
+        val openedHtmlTags = mutableListOf<String>()
         val richParagraphList = mutableListOf(RichParagraph())
         var currentRichSpan: RichSpan? = null
         var currentRichParagraphType: ParagraphType = DefaultParagraph()
+
+        fun onAddLineBreak() {
+            val newParagraph =
+                if (richParagraphList.isEmpty())
+                    RichParagraph()
+                else
+                    RichParagraph(paragraphStyle = richParagraphList.last().paragraphStyle)
+
+            val lastParagraph = richParagraphList.lastOrNull()
+            val beforeLastParagraph = richParagraphList.getOrNull(richParagraphList.lastIndex - 1)
+
+            // We need this for line break to work fine with EOL
+            if (lastParagraph?.isEmpty() == true && beforeLastParagraph?.isEmpty() != true)
+                richParagraphList.add(newParagraph)
+
+            richParagraphList.add(newParagraph)
+
+            currentRichSpan = null
+        }
 
         encodeMarkdownToRichText(
             markdown = input,
@@ -94,7 +118,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     val currentRichParagraph = richParagraphList.last()
                     val newRichSpan = RichSpan(paragraph = currentRichParagraph)
                     newRichSpan.spanStyle = tagSpanStyle ?: SpanStyle()
-                    newRichSpan.richSpansStyle = richSpanStyle
+                    newRichSpan.richSpanStyle = richSpanStyle
 
                     if (currentRichSpan != null) {
                         newRichSpan.parent = currentRichSpan
@@ -123,7 +147,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     currentRichSpan?.children?.firstOrNull()?.let { child ->
                         currentRichSpan?.text = child.text
                         currentRichSpan?.spanStyle = currentRichSpan?.spanStyle?.merge(child.spanStyle) ?: child.spanStyle
-                        currentRichSpan?.richSpansStyle = child.richSpansStyle
+                        currentRichSpan?.richSpanStyle = child.richSpanStyle
                         currentRichSpan?.children?.clear()
                         currentRichSpan?.children?.addAll(child.children)
                     }
@@ -134,8 +158,12 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 if (node.type == MarkdownTokenTypes.EOL) {
                     val lastParagraph = richParagraphList.lastOrNull()
                     val beforeLastParagraph = richParagraphList.getOrNull(richParagraphList.lastIndex - 1)
-                    if (lastParagraph?.isEmpty() != true || beforeLastParagraph?.isEmpty() != true)
+                    if (
+                        lastParagraph?.isNotEmpty() == true ||
+                        beforeLastParagraph?.isNotEmpty() == true
+                    ) {
                         richParagraphList.add(RichParagraph())
+                    }
 
                     currentRichSpan = null
                 }
@@ -150,8 +178,60 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
                 currentRichSpan = currentRichSpan?.parent
             },
-            onHtml = { _ ->
-                // Todo: support HTML in markdown
+            onHtmlTag = { tag ->
+                val tagName = tag
+                    .substringAfter("</")
+                    .substringAfter("<")
+                    .substringBefore(">")
+                    .substringBefore(" ")
+                    .trim()
+                    .lowercase()
+
+                val isClosingTag = tag.startsWith("</")
+
+                if (isClosingTag) {
+                    openedHtmlTags.removeLastOrNull()
+
+                    if (tagName != BrElement)
+                        currentRichSpan = currentRichSpan?.parent
+                } else {
+                    openedHtmlTags.add(tag)
+
+                    val tagSpanStyle = htmlElementsSpanStyleEncodeMap[tagName]
+
+                    if (tagName != BrElement) {
+                        val currentRichParagraph = richParagraphList.last()
+                        val newRichSpan = RichSpan(paragraph = currentRichParagraph)
+                        newRichSpan.spanStyle = tagSpanStyle ?: SpanStyle()
+
+                        if (currentRichSpan != null) {
+                            newRichSpan.parent = currentRichSpan
+                            currentRichSpan?.children?.add(newRichSpan)
+                        } else {
+                            currentRichParagraph.children.add(newRichSpan)
+                        }
+                        currentRichSpan = newRichSpan
+                    } else {
+                        // name == "br"
+                        onAddLineBreak()
+                    }
+                }
+            },
+            onHtmlBlock = {
+                var html = it
+
+                while (true) {
+                    val brIndex = html.indexOf("<br>")
+
+                    if (brIndex == -1)
+                        break
+
+                    html = html.substring(brIndex + 4)
+
+                    onAddLineBreak()
+                }
+
+                // Todo: support HTML Block in markdown
             }
         )
 
@@ -162,6 +242,8 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
     override fun decode(richTextState: RichTextState): String {
         val builder = StringBuilder()
+
+        var useLineBreak = false
 
         richTextState.richParagraphList.fastForEachIndexed { index, richParagraph ->
             // Append paragraph start text
@@ -178,6 +260,14 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
             richParagraph.children.fastForEach { richSpan ->
                 builder.append(decodeRichSpanToMarkdown(richSpan))
             }
+
+            // Append line break if needed
+            val isBlank = richParagraph.isBlank()
+
+            if (useLineBreak && isBlank)
+                builder.append("<br>")
+
+            useLineBreak = isBlank
 
             if (index < richTextState.richParagraphList.lastIndex) {
                 // Append new line
@@ -196,16 +286,34 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         if (richSpan.isEmpty()) return ""
 
         // Convert span style to CSS string
-        var markdownOpen = ""
-        if ((richSpan.spanStyle.fontWeight?.weight ?: 400) > 400) markdownOpen += "**"
-        if (richSpan.spanStyle.fontStyle == FontStyle.Italic) markdownOpen += "*"
-        if (richSpan.spanStyle.textDecoration == TextDecoration.LineThrough) markdownOpen += "~~"
+        val markdownOpen = mutableListOf<String>()
+        val markdownClose = mutableListOf<String>()
+
+        if ((richSpan.spanStyle.fontWeight?.weight ?: 400) > 400) {
+            markdownOpen += "**"
+            markdownClose += "**"
+        }
+
+        if (richSpan.spanStyle.fontStyle == FontStyle.Italic) {
+            markdownOpen += "*"
+            markdownClose += "*"
+        }
+
+        if (richSpan.spanStyle.textDecoration?.contains(TextDecoration.LineThrough) == true) {
+            markdownOpen += "~~"
+            markdownClose += "~~"
+        }
+
+        if (richSpan.spanStyle.textDecoration?.contains(TextDecoration.Underline) == true) {
+            markdownOpen += "<u>"
+            markdownClose += "</u>"
+        }
 
         // Append markdown open
-        stringBuilder.append(markdownOpen)
+        stringBuilder.append(markdownOpen.joinToString(separator = ""))
 
         // Apply rich span style to markdown
-        val spanMarkdown = decodeMarkdownElementFromRichSpan(richSpan.text, richSpan.richSpansStyle)
+        val spanMarkdown = decodeMarkdownElementFromRichSpan(richSpan.text, richSpan.richSpanStyle)
 
         // Append text
         stringBuilder.append(spanMarkdown)
@@ -216,7 +324,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         }
 
         // Append markdown close
-        stringBuilder.append(markdownOpen.reversed())
+        stringBuilder.append(markdownClose.reversed().joinToString(separator = ""))
 
         return stringBuilder.toString()
     }
@@ -243,12 +351,12 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         MarkdownElementTypes.STRONG to BoldSpanStyle,
         MarkdownElementTypes.EMPH to ItalicSpanStyle,
         GFMElementTypes.STRIKETHROUGH to StrikethroughSpanStyle,
-        MarkdownElementTypes.ATX_1 to H1SPanStyle,
-        MarkdownElementTypes.ATX_2 to H2SPanStyle,
-        MarkdownElementTypes.ATX_3 to H3SPanStyle,
-        MarkdownElementTypes.ATX_4 to H4SPanStyle,
-        MarkdownElementTypes.ATX_5 to H5SPanStyle,
-        MarkdownElementTypes.ATX_6 to H6SPanStyle,
+        MarkdownElementTypes.ATX_1 to H1SpanStyle,
+        MarkdownElementTypes.ATX_2 to H2SpanStyle,
+        MarkdownElementTypes.ATX_3 to H3SpanStyle,
+        MarkdownElementTypes.ATX_4 to H4SpanStyle,
+        MarkdownElementTypes.ATX_5 to H5SpanStyle,
+        MarkdownElementTypes.ATX_6 to H6SpanStyle,
     )
 
     /**
@@ -300,7 +408,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     /**
      * Returns the markdown line start text from the first [RichSpan].
      * This is used to determine the markdown line start text from the first [RichSpan] spanStyle.
-     * For example, if the first [RichSpan] spanStyle is [H1SPanStyle], the markdown line start text will be "# ".
+     * For example, if the first [RichSpan] spanStyle is [H1SpanStyle], the markdown line start text will be "# ".
      */
     private fun getMarkdownLineStartTextFromFirstRichSpan(firstRichSpan: RichSpan): String {
         if ((firstRichSpan.spanStyle.fontWeight?.weight ?: 400) <= 400) return ""
@@ -308,22 +416,22 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
         return if (fontSize.isEm) {
             when {
-                fontSize >= H1SPanStyle.fontSize -> "# "
-                fontSize >= H1SPanStyle.fontSize -> "## "
-                fontSize >= H1SPanStyle.fontSize -> "### "
-                fontSize >= H1SPanStyle.fontSize -> "#### "
-                fontSize >= H1SPanStyle.fontSize -> "##### "
-                fontSize >= H1SPanStyle.fontSize -> "###### "
+                fontSize >= H1SpanStyle.fontSize -> "# "
+                fontSize >= H1SpanStyle.fontSize -> "## "
+                fontSize >= H1SpanStyle.fontSize -> "### "
+                fontSize >= H1SpanStyle.fontSize -> "#### "
+                fontSize >= H1SpanStyle.fontSize -> "##### "
+                fontSize >= H1SpanStyle.fontSize -> "###### "
                 else -> ""
             }
         } else {
             when {
-                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "# "
-                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "## "
-                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "### "
-                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "#### "
-                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "##### "
-                fontSize.value >= H1SPanStyle.fontSize.value * 16 -> "###### "
+                fontSize.value >= H1SpanStyle.fontSize.value * 16 -> "# "
+                fontSize.value >= H1SpanStyle.fontSize.value * 16 -> "## "
+                fontSize.value >= H1SpanStyle.fontSize.value * 16 -> "### "
+                fontSize.value >= H1SpanStyle.fontSize.value * 16 -> "#### "
+                fontSize.value >= H1SpanStyle.fontSize.value * 16 -> "##### "
+                fontSize.value >= H1SpanStyle.fontSize.value * 16 -> "###### "
                 else -> ""
             }
         }

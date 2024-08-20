@@ -6,7 +6,7 @@ import androidx.compose.ui.text.TextRange
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
-import com.mohamedrejeb.richeditor.utils.fastForEach
+import androidx.compose.ui.util.fastForEach
 
 @OptIn(ExperimentalRichTextApi::class)
 internal fun Modifier.drawRichSpanStyle(
@@ -25,13 +25,13 @@ internal fun Modifier.drawRichSpanStyle(
 
                 if (
                     lastAddedItem != null &&
-                    lastAddedItem.first::class == richSpan.richSpansStyle::class &&
+                    lastAddedItem.first::class == richSpan.richSpanStyle::class &&
                     lastAddedItem.second.end == richSpan.textRange.start
                 )
                     styledRichSpanList[styledRichSpanList.lastIndex] =
                         lastAddedItem.first to TextRange(lastAddedItem.second.start, end)
                 else
-                    styledRichSpanList.add(richSpan.richSpansStyle to TextRange(richSpan.textRange.start, end))
+                    styledRichSpanList.add(richSpan.richSpanStyle to TextRange(richSpan.textRange.start, end))
             }
 
             styledRichSpanList.fastForEach { (style, textRange) ->

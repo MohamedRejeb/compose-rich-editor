@@ -7,10 +7,12 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.bcv)
     id("module.publication")
 }
 
 kotlin {
+    explicitApi()
     applyDefaultHierarchyTemplate()
     jvmToolchain(11)
     androidTarget {
@@ -76,5 +78,12 @@ android {
     }
     kotlin {
         jvmToolchain(8)
+    }
+}
+
+apiValidation {
+    @OptIn(kotlinx.validation.ExperimentalBCVApi::class)
+    klib {
+        enabled = true
     }
 }

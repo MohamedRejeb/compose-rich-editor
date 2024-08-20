@@ -11,8 +11,10 @@ internal fun removeHtmlTextExtraSpaces(input: String, trimStart: Boolean = false
         .replace('\n', ' ')
         .replace("\\s+".toRegex(), " ")
         .let {
-            if (trimStart) it.trimStart()
-            else it
+            if (trimStart)
+                it.trimStart()
+            else
+                it
         }
 }
 
@@ -42,6 +44,7 @@ internal val htmlBlockElements = setOf(
  * HTML elements that should be skipped.
  */
 internal val skippedHtmlElements = setOf(
+    "html",
     "head",
     "meta",
     "title",
@@ -52,3 +55,5 @@ internal val skippedHtmlElements = setOf(
     "base",
     "template",
 )
+
+internal const val BrElement = "br"

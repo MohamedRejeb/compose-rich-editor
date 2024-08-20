@@ -1,0 +1,13 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.mohamedrejeb.richeditor:richeditor-compose-coil3>
+final object com.mohamedrejeb.richeditor.coil3/Coil3ImageLoader : com.mohamedrejeb.richeditor.model/ImageLoader { // com.mohamedrejeb.richeditor.coil3/Coil3ImageLoader|null[0]
+    final fun load(kotlin/Any, androidx.compose.runtime/Composer?, kotlin/Int): com.mohamedrejeb.richeditor.model/ImageData // com.mohamedrejeb.richeditor.coil3/Coil3ImageLoader.load|load(kotlin.Any;androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+}
+
+final const val com.mohamedrejeb.richeditor.coil3/com_mohamedrejeb_richeditor_coil3_Coil3ImageLoader$stableprop // com.mohamedrejeb.richeditor.coil3/com_mohamedrejeb_richeditor_coil3_Coil3ImageLoader$stableprop|#static{}com_mohamedrejeb_richeditor_coil3_Coil3ImageLoader$stableprop[0]

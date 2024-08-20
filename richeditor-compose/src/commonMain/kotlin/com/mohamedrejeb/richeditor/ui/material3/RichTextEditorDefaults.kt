@@ -40,36 +40,36 @@ import com.mohamedrejeb.richeditor.ui.material3.tokens.OutlinedRichTextEditorTok
  */
 @ExperimentalMaterial3Api
 @Immutable
-object RichTextEditorDefaults {
+public object RichTextEditorDefaults {
     /** Default shape for an outlined text field. */
-    val outlinedShape: Shape @Composable get() = OutlinedRichTextEditorTokens.ContainerShape.toShape()
+    public val outlinedShape: Shape @Composable get() = OutlinedRichTextEditorTokens.ContainerShape.toShape()
 
     /** Default shape for a filled text field. */
-    val filledShape: Shape @Composable get() = FiledRichTextEditorTokens.ContainerShape.toShape()
+    public val filledShape: Shape @Composable get() = FiledRichTextEditorTokens.ContainerShape.toShape()
 
     /**
      * The default min width applied for a [TextField] and [OutlinedTextField].
      * Note that you can override it by applying Modifier.heightIn directly on a text field.
      */
-    val MinHeight = 56.dp
+    public val MinHeight: Dp = 56.dp
 
     /**
      * The default min width applied for a [TextField] and [OutlinedTextField].
      * Note that you can override it by applying Modifier.widthIn directly on a text field.
      */
-    val MinWidth = 280.dp
+    public val MinWidth: Dp = 280.dp
 
     /**
      * The default thickness of the border in [OutlinedTextField] or indicator line in [TextField]
      * in unfocused state.
      */
-    val UnfocusedBorderThickness = 1.dp
+    public val UnfocusedBorderThickness: Dp = 1.dp
 
     /**
      * The default thickness of the border in [OutlinedTextField] or indicator line in [TextField]
      * in focused state.
      */
-    val FocusedBorderThickness = 2.dp
+    public val FocusedBorderThickness: Dp = 2.dp
 
     /**
      * Composable that draws a default container for the content of [TextField], with an indicator
@@ -85,7 +85,7 @@ object RichTextEditorDefaults {
      */
     @ExperimentalMaterial3Api
     @Composable
-    fun FilledContainerBox(
+    public fun FilledContainerBox(
         enabled: Boolean,
         isError: Boolean,
         interactionSource: InteractionSource,
@@ -114,14 +114,14 @@ object RichTextEditorDefaults {
      * not focused
      */
     @ExperimentalMaterial3Api
-    fun Modifier.indicatorLine(
+    public fun Modifier.indicatorLine(
         enabled: Boolean,
         isError: Boolean,
         interactionSource: InteractionSource,
         colors: RichTextEditorColors,
         focusedIndicatorLineThickness: Dp = FocusedBorderThickness,
         unfocusedIndicatorLineThickness: Dp = UnfocusedBorderThickness
-    ) = composed(inspectorInfo = debugInspectorInfo {
+    ): Modifier = composed(inspectorInfo = debugInspectorInfo {
         name = "indicatorLine"
         properties["enabled"] = enabled
         properties["isError"] = isError
@@ -158,7 +158,7 @@ object RichTextEditorDefaults {
      */
     @ExperimentalMaterial3Api
     @Composable
-    fun OutlinedBorderContainerBox(
+    public fun OutlinedBorderContainerBox(
         enabled: Boolean,
         isError: Boolean,
         interactionSource: InteractionSource,
@@ -192,7 +192,7 @@ object RichTextEditorDefaults {
      * See [PaddingValues]
      */
     @ExperimentalMaterial3Api
-    fun richTextEditorWithLabelPadding(
+    public fun richTextEditorWithLabelPadding(
         start: Dp = TextFieldPadding,
         end: Dp = TextFieldPadding,
         top: Dp = FirstBaselineOffset,
@@ -204,7 +204,7 @@ object RichTextEditorDefaults {
      * See [PaddingValues] for more details.
      */
     @ExperimentalMaterial3Api
-    fun richTextEditorWithoutLabelPadding(
+    public fun richTextEditorWithoutLabelPadding(
         start: Dp = TextFieldPadding,
         top: Dp = TextFieldPadding,
         end: Dp = TextFieldPadding,
@@ -216,7 +216,7 @@ object RichTextEditorDefaults {
      * See [PaddingValues] for more details.
      */
     @ExperimentalMaterial3Api
-    fun outlinedRichTextEditorPadding(
+    public fun outlinedRichTextEditorPadding(
         start: Dp = TextFieldPadding,
         top: Dp = TextFieldPadding,
         end: Dp = TextFieldPadding,
@@ -275,7 +275,7 @@ object RichTextEditorDefaults {
      */
     @ExperimentalMaterial3Api
     @Composable
-    fun richTextEditorColors(
+    public fun richTextEditorColors(
         textColor: Color = FiledRichTextEditorTokens.InputColor.toColor(),
         disabledTextColor: Color = FiledRichTextEditorTokens.DisabledInputColor.toColor()
             .copy(alpha = FiledRichTextEditorTokens.DisabledInputOpacity),
@@ -382,7 +382,7 @@ object RichTextEditorDefaults {
      */
     @ExperimentalMaterial3Api
     @Composable
-    fun outlinedRichTextEditorColors(
+    public fun outlinedRichTextEditorColors(
         textColor: Color = OutlinedRichTextEditorTokens.InputColor.toColor(),
         disabledTextColor: Color = OutlinedRichTextEditorTokens.DisabledInputColor.toColor()
             .copy(alpha = OutlinedRichTextEditorTokens.DisabledInputOpacity),
@@ -510,7 +510,7 @@ object RichTextEditorDefaults {
      */
     @Composable
     @ExperimentalMaterial3Api
-    fun RichTextEditorDecorationBox(
+    public fun RichTextEditorDecorationBox(
         value: String,
         innerTextField: @Composable () -> Unit,
         enabled: Boolean,
@@ -612,7 +612,7 @@ object RichTextEditorDefaults {
      */
     @Composable
     @ExperimentalMaterial3Api
-    fun OutlinedRichTextEditorDecorationBox(
+    public fun OutlinedRichTextEditorDecorationBox(
         value: String,
         innerTextField: @Composable () -> Unit,
         enabled: Boolean,
@@ -661,7 +661,7 @@ object RichTextEditorDefaults {
  * [OutlinedTextField].
  */
 @Immutable
-class RichTextEditorColors internal constructor(
+public class RichTextEditorColors internal constructor(
     private val textColor: Color,
     private val disabledTextColor: Color,
     private val containerColor: Color,

@@ -4,6 +4,7 @@ import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.PlatformParagraphStyle
 import androidx.compose.ui.text.style.*
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.util.fastForEach
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
 

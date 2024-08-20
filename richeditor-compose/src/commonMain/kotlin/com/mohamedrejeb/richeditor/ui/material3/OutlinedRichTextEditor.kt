@@ -87,7 +87,7 @@ import kotlin.math.roundToInt
  */
 @ExperimentalMaterial3Api
 @Composable
-fun OutlinedRichTextEditor(
+public fun OutlinedRichTextEditor(
     state: RichTextState,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,

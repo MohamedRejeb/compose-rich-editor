@@ -81,7 +81,7 @@ import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
     ),
     level = DeprecationLevel.ERROR
 )
-fun RichTextEditor(
+public fun RichTextEditor(
     state: RichTextState,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,

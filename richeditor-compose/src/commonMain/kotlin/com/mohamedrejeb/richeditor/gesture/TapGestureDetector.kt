@@ -7,8 +7,8 @@ import androidx.compose.ui.input.pointer.PointerEventTimeoutCancellationExceptio
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.platform.ViewConfiguration
-import com.mohamedrejeb.richeditor.utils.fastAny
-import com.mohamedrejeb.richeditor.utils.fastForEach
+import androidx.compose.ui.util.fastAny
+import androidx.compose.ui.util.fastForEach
 import kotlinx.coroutines.coroutineScope
 
 /**

@@ -75,7 +75,7 @@ import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
  * different states. See [TextFieldDefaults.outlinedTextFieldColors]
  */
 @Composable
-fun OutlinedRichTextEditor(
+public fun OutlinedRichTextEditor(
     state: RichTextState,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,

@@ -1,23 +1,27 @@
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
+    alias(libs.plugins.compose.compiler)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.androidLibrary)
 }
 
 kotlin {
     applyDefaultHierarchyTemplate()
+
     androidTarget {
-        compilations.all {
-            kotlinOptions {
-                jvmTarget = "1.8"
-            }
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_1_8)
         }
     }
-    jvm("desktop") {
-        jvmToolchain(11)
-    }
+
+    jvmToolchain(11)
+    jvm("desktop")
+
     js(IR).browser()
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs().browser()
@@ -59,10 +63,8 @@ kotlin {
     }
 
     sourceSets {
-
-
         androidMain.dependencies {
-            api("androidx.appcompat:appcompat:1.6.1")
+            api(libs.androidx.appcompat)
 
             implementation(libs.kotlinx.coroutines.android)
             implementation(libs.ktor.client.okhttp)

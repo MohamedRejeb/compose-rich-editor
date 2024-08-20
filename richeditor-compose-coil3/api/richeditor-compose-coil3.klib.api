@@ -10,4 +10,6 @@ final object com.mohamedrejeb.richeditor.coil3/Coil3ImageLoader : com.mohamedrej
     final fun load(kotlin/Any, androidx.compose.runtime/Composer?, kotlin/Int): com.mohamedrejeb.richeditor.model/ImageData // com.mohamedrejeb.richeditor.coil3/Coil3ImageLoader.load|load(kotlin.Any;androidx.compose.runtime.Composer?;kotlin.Int){}[0]
 }
 
-final const val com.mohamedrejeb.richeditor.coil3/com_mohamedrejeb_richeditor_coil3_Coil3ImageLoader$stableprop // com.mohamedrejeb.richeditor.coil3/com_mohamedrejeb_richeditor_coil3_Coil3ImageLoader$stableprop|#static{}com_mohamedrejeb_richeditor_coil3_Coil3ImageLoader$stableprop[0]
+final val com.mohamedrejeb.richeditor.coil3/com_mohamedrejeb_richeditor_coil3_Coil3ImageLoader$stableprop // com.mohamedrejeb.richeditor.coil3/com_mohamedrejeb_richeditor_coil3_Coil3ImageLoader$stableprop|#static{}com_mohamedrejeb_richeditor_coil3_Coil3ImageLoader$stableprop[0]
+
+final fun com.mohamedrejeb.richeditor.coil3/com_mohamedrejeb_richeditor_coil3_Coil3ImageLoader$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.coil3/com_mohamedrejeb_richeditor_coil3_Coil3ImageLoader$stableprop_getter|com_mohamedrejeb_richeditor_coil3_Coil3ImageLoader$stableprop_getter(){}[0]

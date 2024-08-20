@@ -2,12 +2,12 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
+    alias(libs.plugins.compose.compiler)
     alias(libs.plugins.composeMultiplatform)
 }
 
 kotlin {
     jvm {
-        jvmToolchain(11)
         withJava()
     }
 

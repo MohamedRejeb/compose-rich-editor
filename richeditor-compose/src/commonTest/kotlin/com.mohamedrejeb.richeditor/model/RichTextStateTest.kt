@@ -11,10 +11,7 @@ import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class RichTextStateTest {
 
@@ -69,7 +66,7 @@ class RichTextStateTest {
         richTextState.addSpanStyle(SpanStyle(fontWeight = FontWeight.Bold))
         richTextState.addCodeSpan()
 
-        assertEquals(richTextState.currentSpanStyle, SpanStyle(fontWeight = FontWeight.Bold))
+        assertEquals(SpanStyle(fontWeight = FontWeight.Bold), richTextState.currentSpanStyle)
         assertTrue(richTextState.isCodeSpan)
 
         // Delete All text
@@ -81,7 +78,7 @@ class RichTextStateTest {
         )
 
         // Check that the style is preserved
-        assertEquals(richTextState.currentSpanStyle, SpanStyle(fontWeight = FontWeight.Bold))
+        assertEquals(SpanStyle(fontWeight = FontWeight.Bold), richTextState.currentSpanStyle)
         assertTrue(richTextState.isCodeSpan)
 
         // Add some text
@@ -93,8 +90,62 @@ class RichTextStateTest {
         )
 
         // Check that the style is preserved
-        assertEquals(richTextState.currentSpanStyle, SpanStyle(fontWeight = FontWeight.Bold))
+        assertEquals(SpanStyle(fontWeight = FontWeight.Bold), richTextState.currentSpanStyle)
         assertTrue(richTextState.isCodeSpan)
+    }
+
+    @OptIn(ExperimentalRichTextApi::class)
+    @Test
+    fun testResetStylingOnMultipleNewLine() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    key = 1,
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Testing some text",
+                            paragraph = it,
+                        ),
+                    )
+                }
+            )
+        )
+
+        // Add some styling
+        richTextState.selection = TextRange(0, richTextState.annotatedString.text.length)
+        richTextState.addSpanStyle(SpanStyle(fontWeight = FontWeight.Bold))
+        richTextState.addCodeSpan()
+
+        assertEquals(SpanStyle(fontWeight = FontWeight.Bold), richTextState.currentSpanStyle)
+        assertTrue(richTextState.isCodeSpan)
+
+        // Add new line
+        val newText = "${richTextState.annotatedString.text}\n"
+        richTextState.selection = TextRange(richTextState.annotatedString.text.length)
+        richTextState.onTextFieldValueChange(
+            TextFieldValue(
+                text = newText,
+                selection = TextRange(newText.length),
+            )
+        )
+
+        // Check that the style is preserved
+        assertEquals(SpanStyle(fontWeight = FontWeight.Bold), richTextState.currentSpanStyle)
+        assertTrue(richTextState.isCodeSpan)
+
+        // Add new line
+        val newText2 = "${richTextState.annotatedString.text}\n"
+        richTextState.onTextFieldValueChange(
+            TextFieldValue(
+                text = newText2,
+                selection = TextRange(newText2.length),
+            )
+        )
+
+        // Check that the style is being reset
+        assertEquals(SpanStyle(), richTextState.currentSpanStyle)
+        assertFalse(richTextState.isCodeSpan)
     }
 
     @OptIn(ExperimentalRichTextApi::class)

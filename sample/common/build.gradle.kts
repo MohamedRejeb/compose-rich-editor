@@ -86,7 +86,7 @@ kotlin {
         }
 
         named("wasmJsMain").dependencies {
-            implementation(libs.ktor.client.js)
+            implementation(libs.ktor.client.wasm)
         }
     }
 }

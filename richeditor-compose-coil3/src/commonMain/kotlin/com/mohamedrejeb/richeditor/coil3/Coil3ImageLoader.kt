@@ -1,8 +1,6 @@
 package com.mohamedrejeb.richeditor.coil3
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.ImageData

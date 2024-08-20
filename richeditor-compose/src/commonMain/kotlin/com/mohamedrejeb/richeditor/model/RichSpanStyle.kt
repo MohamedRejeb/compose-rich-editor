@@ -16,10 +16,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.*
 import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
-import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
+import androidx.compose.ui.util.fastForEachIndexed
 import com.mohamedrejeb.richeditor.utils.getBoundingBoxes
 
 @ExperimentalRichTextApi

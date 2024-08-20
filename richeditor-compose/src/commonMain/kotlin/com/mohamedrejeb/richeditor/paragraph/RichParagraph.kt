@@ -8,8 +8,8 @@ import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startText
 import com.mohamedrejeb.richeditor.ui.test.getRichTextStyleTreeRepresentation
-import com.mohamedrejeb.richeditor.utils.fastForEach
-import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
+import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastForEachIndexed
 
 internal class RichParagraph(
     val key: Int = 0,

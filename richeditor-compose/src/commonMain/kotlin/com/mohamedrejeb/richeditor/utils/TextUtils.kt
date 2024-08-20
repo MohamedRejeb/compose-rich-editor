@@ -1,5 +1,7 @@
 package com.mohamedrejeb.richeditor.utils
 
+import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastForEachIndexed
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
@@ -14,7 +16,7 @@ internal fun toText(richParagraphList: List<RichParagraph>): String =
         richParagraphList.fastForEachIndexed { i, richParagraphStyle ->
             append(richParagraphStyle.type.startText)
 
-            append(
+            appendRichSpanList(
                 richSpanList = richParagraphStyle.children,
             )
 
@@ -24,14 +26,14 @@ internal fun toText(richParagraphList: List<RichParagraph>): String =
     }
 
 @OptIn(ExperimentalRichTextApi::class)
-internal fun StringBuilder.append(
+internal fun StringBuilder.appendRichSpanList(
     richSpanList: List<RichSpan>,
 ) {
     richSpanList.fastForEach { richSpanStyle ->
         append(richSpanStyle.text)
 
         if (richSpanStyle.children.isNotEmpty())
-            append(
+            appendRichSpanList(
                 richSpanList = richSpanStyle.children,
             )
     }

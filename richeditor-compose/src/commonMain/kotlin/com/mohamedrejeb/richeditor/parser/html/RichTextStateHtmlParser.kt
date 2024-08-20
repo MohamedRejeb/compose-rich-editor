@@ -16,8 +16,8 @@ import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import com.mohamedrejeb.richeditor.parser.RichTextStateParser
 import com.mohamedrejeb.richeditor.parser.utils.*
 import com.mohamedrejeb.richeditor.utils.customMerge
-import com.mohamedrejeb.richeditor.utils.fastForEach
-import com.mohamedrejeb.richeditor.utils.fastForEachIndexed
+import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastForEachIndexed
 
 internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 

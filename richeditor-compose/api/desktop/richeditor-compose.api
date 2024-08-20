@@ -181,6 +181,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun setText (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public final fun toHtml ()Ljava/lang/String;
 	public final fun toMarkdown ()Ljava/lang/String;
+	public final fun toText ()Ljava/lang/String;
 	public final fun toggleCode ()V
 	public final fun toggleCodeSpan ()V
 	public final fun toggleOrderedList ()V

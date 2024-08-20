@@ -250,7 +250,7 @@ public class RichTextState internal constructor(
         if (textRange.collapsed) {
             val richSpan = getRichSpanByTextIndex(textIndex = textRange.min - 1)
 
-             richSpan
+            richSpan
                 ?.fullSpanStyle
                 ?: RichSpanStyle.DefaultSpanStyle
         } else {
@@ -1850,7 +1850,8 @@ public class RichTextState internal constructor(
             parent?.children?.indexOf(richSpan) ?: richSpan.paragraph.children.indexOf(richSpan)
         var isRemoved = false
 
-        val isRichSpanStylingEmpty = richSpan.spanStyle == SpanStyle() && richSpan.richSpanStyle is RichSpanStyle.Default
+        val isRichSpanStylingEmpty =
+            richSpan.spanStyle == SpanStyle() && richSpan.richSpanStyle is RichSpanStyle.Default
 
         if (middleText.isNotEmpty()) {
             if (
@@ -2250,15 +2251,23 @@ public class RichTextState internal constructor(
         else
             startIndex - richSpan.textRange.min
 
-
         newRichParagraph.type.startRichSpan.paragraph = newRichParagraph
         newRichParagraph.type.startRichSpan.textRange = TextRange(
             0,
             newRichParagraph.type.startRichSpan.text.length
         )
 
-        val beforeText = if (textStartIndex > 0) richSpan.text.substring(0, textStartIndex) else "" // + ' '
-        val afterText = richSpan.text.substring(textStartIndex + 1)
+        val beforeText =
+            richSpan.text.substring(
+                startIndex = 0,
+                endIndex = textStartIndex
+                    .coerceIn(0, richSpan.text.length)
+            )
+        val afterText =
+            richSpan.text.substring(
+                startIndex = (textStartIndex + 1)
+                    .coerceIn(0, richSpan.text.length)
+            )
 
         richSpan.text = beforeText
         richSpan.textRange = TextRange(

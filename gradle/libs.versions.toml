@@ -1,22 +1,22 @@
 [versions]
 agp = "8.2.2"
-kotlin = "1.9.24"
-compose = "1.6.10"
+kotlin = "2.0.10"
+compose = "1.6.11"
 dokka = "1.9.10"
 
-ksoup = "0.3.2"
-jetbrainsMarkdown = "0.7.0"
-coil = "3.0.0-alpha06"
+ksoup = "0.4.0"
+jetbrainsMarkdown = "0.7.3"
+coil = "3.0.0-alpha10"
 
 nexus-publish = "2.0.0"
 
 # For sample
-compose-compiler = "1.5.14"
-activity-compose = "1.9.0"
-voyager = "1.1.0-alpha04"
-richeditor = "1.0.0-rc04"
+androidx-appcompat = "1.7.0"
+activity-compose = "1.9.1"
+voyager = "1.1.0-beta02"
+richeditor = "1.0.0-rc05"
 coroutines = "1.8.1"
-ktor = "3.0.0-wasm2"
+ktor = "3.0.0-beta-2"
 android-minSdk = "21"
 android-compileSdk = "34"
 
@@ -30,6 +30,7 @@ coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" 
 nexus-publish = { module = "io.github.gradle-nexus.publish-plugin:io.github.gradle-nexus.publish-plugin.gradle.plugin", version.ref = "nexus-publish" }
 
 # For sample
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity-compose" }
 voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
 richeditor-compose = { module = "com.mohamedrejeb.richeditor:richeditor-compose", version.ref = "richeditor" }
@@ -38,12 +39,13 @@ kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutine
 kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "coroutines" }
 
 coil-svg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coil" }
-coil-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor", version.ref = "coil" }
+coil-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
 
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
+ktor-client-wasm = { module = "io.ktor:ktor-client-js-wasm-js", version.ref = "ktor" }
 
 [plugins]
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
@@ -51,5 +53,6 @@ androidApplication = { id = "com.android.application", version.ref = "agp" }
 kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 bcv = "org.jetbrains.kotlinx.binary-compatibility-validator:0.16.2"

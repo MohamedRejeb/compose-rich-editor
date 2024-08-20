@@ -250,7 +250,7 @@ public class RichTextState internal constructor(
         if (textRange.collapsed) {
             val richSpan = getRichSpanByTextIndex(textIndex = textRange.min - 1)
 
-             richSpan
+            richSpan
                 ?.fullSpanStyle
                 ?: RichSpanStyle.DefaultSpanStyle
         } else {
@@ -387,17 +387,16 @@ public class RichTextState internal constructor(
      * @param textRange the text range where the span style is going to be applied.
      */
     public fun addSpanStyle(spanStyle: SpanStyle, textRange: TextRange) {
-        val textRangeSpanStyle =
-            getCommonSpanStyleByTextRange(textRange)
-                .customMerge(toAddSpanStyle)
-                .unmerge(toRemoveSpanStyle)
+        val oldToRemoveSpanStyle = toRemoveSpanStyle
+        val oldToAddSpanStyle = toAddSpanStyle
 
-        if (!textRangeSpanStyle.isSpecifiedFieldsEquals(spanStyle)) {
-            toAddSpanStyle = toAddSpanStyle.customMerge(spanStyle)
-            toRemoveSpanStyle = toRemoveSpanStyle.unmerge(spanStyle)
-        }
+        toAddSpanStyle = spanStyle
+        toRemoveSpanStyle = SpanStyle()
 
         applyRichSpanStyleToTextRange(textRange)
+
+        toRemoveSpanStyle = oldToRemoveSpanStyle
+        toAddSpanStyle = oldToAddSpanStyle
     }
 
     /**
@@ -437,17 +436,30 @@ public class RichTextState internal constructor(
      * @param textRange the text range where the span style is going to be removed.
      */
     public fun removeSpanStyle(spanStyle: SpanStyle, textRange: TextRange) {
-        val textRangeSpanStyle =
-            getCommonSpanStyleByTextRange(textRange)
-                .customMerge(toAddSpanStyle)
-                .unmerge(toRemoveSpanStyle)
+        val oldToRemoveSpanStyle = toRemoveSpanStyle
+        val oldToAddSpanStyle = toAddSpanStyle
 
-        if (textRangeSpanStyle.isSpecifiedFieldsEquals(spanStyle)) {
-            toRemoveSpanStyle = toRemoveSpanStyle.customMerge(spanStyle)
-            toAddSpanStyle = toAddSpanStyle.unmerge(spanStyle)
-        }
+        toRemoveSpanStyle = spanStyle
+        toAddSpanStyle = SpanStyle()
 
         applyRichSpanStyleToTextRange(textRange)
+
+        toRemoveSpanStyle = oldToRemoveSpanStyle
+        toAddSpanStyle = oldToAddSpanStyle
+    }
+
+    /**
+     * Clear all [SpanStyle]s.
+     */
+    public fun clearSpanStyles() {
+        removeSpanStyle(currentSpanStyle)
+    }
+
+    /**
+     * Clear all [SpanStyle]s from a specific [TextRange].
+     */
+    public fun clearSpanStyles(textRange: TextRange) {
+        removeSpanStyle(currentSpanStyle, textRange)
     }
 
     /**
@@ -715,6 +727,20 @@ public class RichTextState internal constructor(
         toRemoveRichSpanStyleKClass = spanStyle::class
 
         applyRichSpanStyleToTextRange(textRange)
+    }
+
+    /**
+     * Clear all [RichSpanStyle]s.
+     */
+    public fun clearRichSpans() {
+        removeRichSpan(currentRichSpanStyle)
+    }
+
+    /**
+     * Clear all [RichSpanStyle]s from a specific [TextRange].
+     */
+    public fun clearRichSpans(textRange: TextRange) {
+        removeRichSpan(currentRichSpanStyle, textRange)
     }
 
     /**
@@ -1824,7 +1850,8 @@ public class RichTextState internal constructor(
             parent?.children?.indexOf(richSpan) ?: richSpan.paragraph.children.indexOf(richSpan)
         var isRemoved = false
 
-        val isRichSpanStylingEmpty = richSpan.spanStyle == SpanStyle() && richSpan.richSpanStyle is RichSpanStyle.Default
+        val isRichSpanStylingEmpty =
+            richSpan.spanStyle == SpanStyle() && richSpan.richSpanStyle is RichSpanStyle.Default
 
         if (middleText.isNotEmpty()) {
             if (
@@ -2224,15 +2251,23 @@ public class RichTextState internal constructor(
         else
             startIndex - richSpan.textRange.min
 
-
         newRichParagraph.type.startRichSpan.paragraph = newRichParagraph
         newRichParagraph.type.startRichSpan.textRange = TextRange(
             0,
             newRichParagraph.type.startRichSpan.text.length
         )
 
-        val beforeText = if (textStartIndex > 0) richSpan.text.substring(0, textStartIndex) else "" // + ' '
-        val afterText = richSpan.text.substring(textStartIndex + 1)
+        val beforeText =
+            richSpan.text.substring(
+                startIndex = 0,
+                endIndex = textStartIndex
+                    .coerceIn(0, richSpan.text.length)
+            )
+        val afterText =
+            richSpan.text.substring(
+                startIndex = (textStartIndex + 1)
+                    .coerceIn(0, richSpan.text.length)
+            )
 
         richSpan.text = beforeText
         richSpan.textRange = TextRange(
@@ -2955,6 +2990,14 @@ public class RichTextState internal constructor(
             }
         }
     }
+
+    /**
+     * Returns the [RichTextState] as a text string.
+     *
+     * @return The text string.
+     */
+    public fun toText(): String =
+        toText(richParagraphList = richParagraphList)
 
     /**
      * Decodes the [RichTextState] to a html string.

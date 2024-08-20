@@ -187,7 +187,7 @@ internal class RichParagraph(
 
     fun removeEmptyChildren() {
         val toRemoveIndices = mutableListOf<Int>()
-        
+
         children.fastForEachIndexed { index, richSpan ->
             if (richSpan.isEmpty())
                 toRemoveIndices.add(index)
@@ -195,7 +195,7 @@ internal class RichParagraph(
                 richSpan.removeEmptyChildren()
         }
 
-        toRemoveIndices.fastForEachReversed { 
+        toRemoveIndices.fastForEachReversed {
             children.removeAt(it)
         }
     }

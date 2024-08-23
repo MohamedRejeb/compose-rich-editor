@@ -24,6 +24,7 @@ import org.intellij.markdown.ast.ASTNode
 import org.intellij.markdown.ast.findChildOfType
 import org.intellij.markdown.ast.getTextInNode
 import org.intellij.markdown.flavours.gfm.GFMElementTypes
+import org.intellij.markdown.flavours.gfm.GFMTokenTypes
 
 internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
@@ -62,6 +63,8 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 if (richParagraphList.isEmpty())
                     richParagraphList.add(RichParagraph())
 
+                println("onText: $text")
+
                 val currentRichParagraph = richParagraphList.last()
                 val safeCurrentRichSpan = currentRichSpan ?: RichSpan(paragraph = currentRichParagraph)
 
@@ -82,6 +85,12 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 }
             },
             onOpenNode = { node ->
+                println("onOpenNode: ${node.type}")
+                println("onOpenNode before: ${openedNodes.lastOrNull()?.type}")
+                println("onOpenNode startOffset: ${node.startOffset}")
+                println("onOpenNode endOffset: ${node.endOffset}")
+                println("onOpenNode children.size: ${node.children.size}")
+                println("onOpenNode getTextInNode: ${node.getTextInNode(input)}")
                 openedNodes.add(node)
 
                 val tagSpanStyle = markdownElementsSpanStyleEncodeMap[node.type]
@@ -128,9 +137,16 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                         currentRichParagraph.children.add(newRichSpan)
                         currentRichSpan = newRichSpan
                     }
+
+                    if (
+                        openedNodes.getOrNull(openedNodes.lastIndex - 1)?.type != GFMElementTypes.INLINE_MATH &&
+                        node.type == GFMTokenTypes.DOLLAR
+                    )
+                        newRichSpan.text = "$".repeat(node.endOffset - node.startOffset)
                 }
             },
             onCloseNode = { node ->
+                println("onCloseNode: ${node.type}")
                 openedNodes.removeLastOrNull()
 
                 // Remove empty spans
@@ -179,6 +195,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 currentRichSpan = currentRichSpan?.parent
             },
             onHtmlTag = { tag ->
+                println("onHtmlTag: ${tag}")
                 val tagName = tag
                     .substringAfter("</")
                     .substringAfter("<")
@@ -218,6 +235,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 }
             },
             onHtmlBlock = {
+                println("onHtmlBlock: ${it}")
                 var html = it
 
                 while (true) {

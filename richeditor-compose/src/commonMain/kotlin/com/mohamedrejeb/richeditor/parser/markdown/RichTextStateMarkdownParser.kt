@@ -63,8 +63,6 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 if (richParagraphList.isEmpty())
                     richParagraphList.add(RichParagraph())
 
-                println("onText: $text")
-
                 val currentRichParagraph = richParagraphList.last()
                 val safeCurrentRichSpan = currentRichSpan ?: RichSpan(paragraph = currentRichParagraph)
 
@@ -85,12 +83,6 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 }
             },
             onOpenNode = { node ->
-                println("onOpenNode: ${node.type}")
-                println("onOpenNode before: ${openedNodes.lastOrNull()?.type}")
-                println("onOpenNode startOffset: ${node.startOffset}")
-                println("onOpenNode endOffset: ${node.endOffset}")
-                println("onOpenNode children.size: ${node.children.size}")
-                println("onOpenNode getTextInNode: ${node.getTextInNode(input)}")
                 openedNodes.add(node)
 
                 val tagSpanStyle = markdownElementsSpanStyleEncodeMap[node.type]
@@ -146,7 +138,6 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 }
             },
             onCloseNode = { node ->
-                println("onCloseNode: ${node.type}")
                 openedNodes.removeLastOrNull()
 
                 // Remove empty spans
@@ -195,7 +186,6 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 currentRichSpan = currentRichSpan?.parent
             },
             onHtmlTag = { tag ->
-                println("onHtmlTag: ${tag}")
                 val tagName = tag
                     .substringAfter("</")
                     .substringAfter("<")
@@ -235,7 +225,6 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 }
             },
             onHtmlBlock = {
-                println("onHtmlBlock: ${it}")
                 var html = it
 
                 while (true) {

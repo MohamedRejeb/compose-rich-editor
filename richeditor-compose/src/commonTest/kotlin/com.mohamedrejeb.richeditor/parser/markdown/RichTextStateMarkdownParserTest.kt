@@ -149,6 +149,45 @@ class RichTextStateMarkdownParserTest {
         )
     }
 
+    @Test
+    fun testEncodeMarkdownWithSingleDollar() {
+        val markdown = "Hello World $100!"
+        val expectedText = "Hello World $100!"
+        val state = RichTextStateMarkdownParser.encode(markdown)
+        val actualText = state.annotatedString.text
+
+        assertEquals(
+            expected = expectedText,
+            actual = actualText,
+        )
+    }
+
+    @Test
+    fun testEncodeMarkdownWithDoubleDollar() {
+        val markdown = "Hello World $$100!"
+        val expectedText = "Hello World $$100!"
+        val state = RichTextStateMarkdownParser.encode(markdown)
+        val actualText = state.annotatedString.text
+
+        assertEquals(
+            expected = expectedText,
+            actual = actualText,
+        )
+    }
+
+    @Test
+    fun testEncodeMarkdownWithInlineMath() {
+        val markdown = "Hello World \$100$!"
+        val expectedText = "Hello World 100!"
+        val state = RichTextStateMarkdownParser.encode(markdown)
+        val actualText = state.annotatedString.text
+
+        assertEquals(
+            expected = expectedText,
+            actual = actualText,
+        )
+    }
+
     /**
      * Decode tests
      */

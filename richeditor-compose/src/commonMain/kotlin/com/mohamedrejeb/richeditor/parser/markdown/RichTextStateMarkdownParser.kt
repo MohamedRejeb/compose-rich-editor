@@ -24,6 +24,7 @@ import org.intellij.markdown.ast.ASTNode
 import org.intellij.markdown.ast.findChildOfType
 import org.intellij.markdown.ast.getTextInNode
 import org.intellij.markdown.flavours.gfm.GFMElementTypes
+import org.intellij.markdown.flavours.gfm.GFMTokenTypes
 
 internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
@@ -128,6 +129,12 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                         currentRichParagraph.children.add(newRichSpan)
                         currentRichSpan = newRichSpan
                     }
+
+                    if (
+                        openedNodes.getOrNull(openedNodes.lastIndex - 1)?.type != GFMElementTypes.INLINE_MATH &&
+                        node.type == GFMTokenTypes.DOLLAR
+                    )
+                        newRichSpan.text = "$".repeat(node.endOffset - node.startOffset)
                 }
             },
             onCloseNode = { node ->

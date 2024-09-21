@@ -1168,7 +1168,7 @@ public class RichTextState internal constructor(
      */
     private fun handleAddingCharacters() {
         val typedCharsCount = tempTextFieldValue.text.length - textFieldValue.text.length
-        var startTypeIndex = tempTextFieldValue.selection.max - typedCharsCount
+        var startTypeIndex = textFieldValue.selection.min
         val typedText = tempTextFieldValue.text.substring(
             startIndex = startTypeIndex,
             endIndex = startTypeIndex + typedCharsCount,

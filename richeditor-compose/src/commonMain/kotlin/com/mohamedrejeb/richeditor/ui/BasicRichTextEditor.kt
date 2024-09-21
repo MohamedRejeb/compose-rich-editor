@@ -245,13 +245,15 @@ public fun BasicRichTextEditor(
                     startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() },
                 )
                 .then(
-                    if (!readOnly) Modifier
-                    else Modifier.focusProperties { canFocus = false }
+                    if (!readOnly)
+                        Modifier
+                    else
+                        Modifier.focusProperties { canFocus = false }
                 )
                 .then(
-                    if (singleParagraph) {
+                    if (singleParagraph)
                         Modifier
-                    } else {
+                    else
                         Modifier
                             // Workaround for Desktop to fix a bug in BasicTextField where it doesn't select the correct text
                             // when the text contains multiple paragraphs.
@@ -263,7 +265,6 @@ public fun BasicRichTextEditor(
                                 layoutDirection = layoutDirection,
                                 scope = rememberCoroutineScope()
                             )
-                    }
                 ),
             enabled = enabled,
             readOnly = readOnly,

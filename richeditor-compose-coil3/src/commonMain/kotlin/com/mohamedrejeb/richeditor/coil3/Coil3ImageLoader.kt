@@ -17,7 +17,6 @@ public object Coil3ImageLoader: ImageLoader {
 
     @Composable
     override fun load(model: Any): ImageData {
-        println("Loading image with Coil3")
         val painter = rememberAsyncImagePainter(model = model)
 
         var imageData by remember {
@@ -30,22 +29,10 @@ public object Coil3ImageLoader: ImageLoader {
 
         LaunchedEffect(painter.state) {
             painter.state.collect { state ->
-                when (state) {
-                    is AsyncImagePainter.State.Loading -> {
-                        println("Loading image")
-                    }
-                    is AsyncImagePainter.State.Error -> {
-                        println("Error loading image")
-                    }
-                    is AsyncImagePainter.State.Success -> {
-                        println("Image loaded")
-                        imageData = ImageData(
-                            painter = state.painter
-                        )
-                    }
-                    else -> {
-                        println("Unknown state")
-                    }
+                if (state is AsyncImagePainter.State.Success) {
+                    imageData = ImageData(
+                        painter = state.painter
+                    )
                 }
             }
         }

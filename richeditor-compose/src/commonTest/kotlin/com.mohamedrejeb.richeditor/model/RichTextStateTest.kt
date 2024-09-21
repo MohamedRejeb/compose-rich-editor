@@ -229,6 +229,7 @@ class RichTextStateTest {
         assertEquals(richTextState.currentSpanStyle, SpanStyle(fontWeight = FontWeight.Bold))
     }
 
+    @OptIn(ExperimentalRichTextApi::class)
     @Test
     fun testClearSpanStyles() {
         val richTextState = RichTextState(
@@ -421,6 +422,7 @@ class RichTextStateTest {
         assertEquals(defaultSpan, richTextState.currentRichSpanStyle)
     }
 
+    @OptIn(ExperimentalRichTextApi::class)
     @Test
     fun testGetSpanStyle() {
         val richTextState = RichTextState(

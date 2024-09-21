@@ -16,15 +16,11 @@ import com.mohamedrejeb.richeditor.model.ImageLoader
 public object Coil3ImageLoader: ImageLoader {
 
     @Composable
-    override fun load(model: Any): ImageData {
+    override fun load(model: Any): ImageData? {
         val painter = rememberAsyncImagePainter(model = model)
 
         var imageData by remember {
-            mutableStateOf<ImageData>(
-                ImageData(
-                    painter = painter
-                )
-            )
+            mutableStateOf<ImageData?>(null)
         }
 
         LaunchedEffect(painter.state) {

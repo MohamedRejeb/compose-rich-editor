@@ -390,6 +390,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     model = attributes["src"].orEmpty(),
                     width = (attributes["width"]?.toIntOrNull() ?: 0).sp,
                     height = (attributes["height"]?.toIntOrNull() ?: 0).sp,
+                    contentDescription = attributes["alt"] ?: ""
                 )
 
             else ->

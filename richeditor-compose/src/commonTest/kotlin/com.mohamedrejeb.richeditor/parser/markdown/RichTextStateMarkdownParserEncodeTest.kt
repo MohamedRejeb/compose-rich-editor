@@ -224,4 +224,28 @@ class RichTextStateMarkdownParserEncodeTest {
         assertEquals(linkRichSpanStyle.url, "https://www.google.com")
     }
 
+    @OptIn(ExperimentalRichTextApi::class)
+    @Test
+    fun testEncodeMarkdownWithImage() {
+        val imageUrl = "https://www.imageurl.com"
+        val imageAlt = "image-alt"
+
+        val markdown = "Image: ![$imageAlt]($imageUrl)"
+        val expectedText = "Image: "
+        val state = RichTextStateMarkdownParser.encode(markdown)
+        val actualText = state.annotatedString.text
+
+        assertEquals(
+            expected = expectedText,
+            actual = actualText.dropLast(1),
+        )
+
+        val imageRichSpan = state.richParagraphList.first().children[1]
+        val imageRichSpanStyle = imageRichSpan.richSpanStyle
+
+        assertIs<RichSpanStyle.Image>(imageRichSpanStyle)
+        assertEquals(imageUrl, imageRichSpanStyle.model)
+        assertEquals(imageAlt, imageRichSpanStyle.contentDescription)
+    }
+
 }

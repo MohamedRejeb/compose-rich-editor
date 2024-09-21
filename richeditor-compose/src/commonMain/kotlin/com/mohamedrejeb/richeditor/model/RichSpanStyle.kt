@@ -92,7 +92,7 @@ public interface RichSpanStyle {
         private val cornerRadius: TextUnit = 8.sp,
         private val strokeWidth: TextUnit = 1.sp,
         private val padding: TextPaddingValues = TextPaddingValues(horizontal = 2.sp, vertical = 2.sp)
-    ): RichSpanStyle {
+    ) : RichSpanStyle {
         override val spanStyle: (RichTextConfig) -> SpanStyle = {
             SpanStyle(
                 color = it.codeSpanColor,
@@ -172,7 +172,22 @@ public interface RichSpanStyle {
         public val model: Any,
         width: TextUnit,
         height: TextUnit,
+        public val contentDescription: String? = null,
     ) : RichSpanStyle {
+
+        init {
+            require(width.isSpecified || height.isSpecified) {
+                "At least one of the width or height should be specified"
+            }
+
+            require(width.value >= 0 || height.value >= 0) {
+                "The width and height should be greater than or equal to 0"
+            }
+
+            require(width.value.isFinite() || height.value.isFinite()) {
+                "The width and height should be finite"
+            }
+        }
 
         public var width: TextUnit by mutableStateOf(width)
             private set
@@ -202,9 +217,7 @@ public interface RichSpanStyle {
 
             richTextState.usedInlineContentMapKeys.add(id)
 
-            appendInlineContent(
-                id = id,
-            )
+            appendInlineContent(id = id)
 
             return this
         }
@@ -219,48 +232,44 @@ public interface RichSpanStyle {
                     placeholderVerticalAlign = PlaceholderVerticalAlign.TextBottom
                 ),
                 children = {
-                    key(id) {
-                        val density = LocalDensity.current
-                        val imageLoader = LocalImageLoader.current
-                        val data = imageLoader.load(model) ?: return@InlineTextContent
+                    val density = LocalDensity.current
+                    val imageLoader = LocalImageLoader.current
+                    val data = imageLoader.load(model) ?: return@InlineTextContent
 
-                        LaunchedEffect(id, data) {
-                            if (data.painter.intrinsicSize.isUnspecified)
-                                return@LaunchedEffect
+                    LaunchedEffect(id, data) {
+                        if (data.painter.intrinsicSize.isUnspecified)
+                            return@LaunchedEffect
 
-                            val newWidth = with(density) {
-                                data.painter.intrinsicSize.width.coerceAtLeast(0f).toSp()
-                            }
-                            val newHeight = with(density) {
-                                data.painter.intrinsicSize.height.coerceAtLeast(0f).toSp()
-                            }
-
-                            if (width == newWidth && height == newHeight)
-                                return@LaunchedEffect
-
-                            richTextState.inlineContentMap.remove(id)
-                            richTextState.usedInlineContentMapKeys.remove(id)
-
-                            if (width.isUnspecified || width.value <= 0)
-                                width = newWidth
-
-                            if (height.isUnspecified || height.value <= 0)
-                                height = newHeight
-
-                            richTextState.inlineContentMap[id] = createInlineTextContent(richTextState = richTextState)
-                            richTextState.usedInlineContentMapKeys.add(id)
-                            richTextState.updateAnnotatedString()
+                        val newWidth = with(density) {
+                            data.painter.intrinsicSize.width.coerceAtLeast(0f).toSp()
+                        }
+                        val newHeight = with(density) {
+                            data.painter.intrinsicSize.height.coerceAtLeast(0f).toSp()
                         }
 
-                        Image(
-                            painter = data.painter,
-                            contentDescription = data.contentDescription,
-                            alignment = data.alignment,
-                            contentScale = data.contentScale,
-                            modifier = data.modifier
-                                .fillMaxSize()
-                        )
+                        if (width == newWidth && height == newHeight)
+                            return@LaunchedEffect
+
+                        richTextState.inlineContentMap.remove(id)
+
+                        if (width.isUnspecified || width.value <= 0)
+                            width = newWidth
+
+                        if (height.isUnspecified || height.value <= 0)
+                            height = newHeight
+
+                        richTextState.inlineContentMap[id] = createInlineTextContent(richTextState = richTextState)
+                        richTextState.updateAnnotatedString()
                     }
+
+                    Image(
+                        painter = data.painter,
+                        contentDescription = data.contentDescription ?: contentDescription,
+                        alignment = data.alignment,
+                        contentScale = data.contentScale,
+                        modifier = data.modifier
+                            .fillMaxSize()
+                    )
                 }
             )
 

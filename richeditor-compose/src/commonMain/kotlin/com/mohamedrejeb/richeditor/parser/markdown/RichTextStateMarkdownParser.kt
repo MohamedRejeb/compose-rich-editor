@@ -3,6 +3,7 @@ package com.mohamedrejeb.richeditor.parser.markdown
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
@@ -78,6 +79,25 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
             if (currentRichSpan == null) {
                 currentRichSpan = safeCurrentRichSpan
                 currentRichParagraph.children.add(safeCurrentRichSpan)
+            }
+
+            val currentRichSpanRichSpanStyle = currentRichSpan?.richSpanStyle
+            val lastOpenedNode = openedNodes.lastOrNull()
+
+            if (lastOpenedNode?.type == MarkdownElementTypes.IMAGE && text == "!") {
+                currentRichSpan?.text = ""
+            }
+
+            if (currentRichSpanRichSpanStyle is RichSpanStyle.Image) {
+                currentRichSpan?.richSpanStyle =
+                    RichSpanStyle.Image(
+                        model = currentRichSpanRichSpanStyle.model,
+                        width = currentRichSpanRichSpanStyle.width,
+                        height = currentRichSpanRichSpanStyle.height,
+                        contentDescription = text
+                    )
+
+                currentRichSpan?.text = ""
             }
         }
 
@@ -397,21 +417,36 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         node: ASTNode,
         markdown: String,
     ): RichSpanStyle {
+        val isImage = node.parent?.type == MarkdownElementTypes.IMAGE
+
         return when (node.type) {
             GFMTokenTypes.GFM_AUTOLINK -> {
                 val destination = node.getTextInNode(markdown).toString()
                 RichSpanStyle.Link(url = destination)
             }
+
             MarkdownElementTypes.INLINE_LINK -> {
                 val destination = node
                     .findChildOfType(MarkdownElementTypes.LINK_DESTINATION)
                     ?.getTextInNode(markdown)
                     ?.toString()
                     .orEmpty()
-                RichSpanStyle.Link(url = destination)
+
+                if (isImage)
+                    RichSpanStyle.Image(
+                        model = destination,
+                        width = 0.sp,
+                        height = 0.sp,
+                    )
+                else
+                    RichSpanStyle.Link(url = destination)
             }
-            MarkdownElementTypes.CODE_SPAN -> RichSpanStyle.Code()
-            else -> RichSpanStyle.Default
+
+            MarkdownElementTypes.CODE_SPAN ->
+                RichSpanStyle.Code()
+
+            else ->
+                RichSpanStyle.Default
         }
     }
 

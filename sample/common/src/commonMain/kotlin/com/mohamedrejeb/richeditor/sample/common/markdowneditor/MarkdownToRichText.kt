@@ -8,10 +8,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.coil3.Coil3ImageLoader
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalRichTextApi::class)
 @Composable
 fun MarkdownToRichText(
     markdown: TextFieldValue,
@@ -84,6 +86,7 @@ fun MarkdownToRichText(
                 item {
                     RichText(
                         state = richTextState,
+                        imageLoader = Coil3ImageLoader,
                         modifier = Modifier
                             .fillMaxWidth()
                     )

@@ -65,8 +65,11 @@ public fun BasicRichText(
                             val position = event.changes.first().position
                             val isLink = state.isLink(position)
 
-                            if (isLink) pointerIcon.value = PointerIcon.Hand
-                            else pointerIcon.value = PointerIcon.Default
+                            pointerIcon.value =
+                                if (isLink)
+                                    PointerIcon.Hand
+                                else
+                                    PointerIcon.Default
                         }
                     }
                 }

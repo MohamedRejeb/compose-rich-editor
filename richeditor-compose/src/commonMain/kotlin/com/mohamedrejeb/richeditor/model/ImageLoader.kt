@@ -8,6 +8,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Density
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 
@@ -24,10 +25,12 @@ public val LocalImageLoader: ProvidableCompositionLocal<ImageLoader> = staticCom
     DefaultImageLoader
 }
 
+@ExperimentalRichTextApi
 @Immutable
-public data class ImageData(
-    val painter: Painter,
-    val contentDescription: String? = "Image",
-    val alignment: Alignment = Alignment.CenterStart,
-    val modifier: Modifier = Modifier.fillMaxWidth()
+public class ImageData(
+    public val painter: Painter,
+    public val contentDescription: String? = null,
+    public val alignment: Alignment = Alignment.CenterStart,
+    public val contentScale: ContentScale = ContentScale.Fit,
+    public val modifier: Modifier = Modifier.fillMaxWidth()
 )

@@ -19,7 +19,7 @@ A rich text editor library for both Jetpack Compose and Compose Multiplatform, f
 Compose Rich Editor is available on `mavenCentral()`.
 
 ```kotlin
-implementation("com.mohamedrejeb.richeditor:richeditor-compose:1.0.0-rc06")
+implementation("com.mohamedrejeb.richeditor:richeditor-compose:1.0.0-rc07")
 ```
 
 ## Compatibility
@@ -28,6 +28,7 @@ implementation("com.mohamedrejeb.richeditor:richeditor-compose:1.0.0-rc06")
 
 | Kotlin version | Compose version | Compose Rich Editor version |
 |----------------|-----------------|-----------------------------|
+| 2.0.20         | 1.6.11          | 1.0.0-rc07                  |
 | 2.0.10         | 1.6.11          | 1.0.0-rc06                  |
 | 2.0.0          | 1.6.10          | 1.0.0-rc05-k2               |
 | 1.9.24         | 1.6.10          | 1.0.0-rc05                  |

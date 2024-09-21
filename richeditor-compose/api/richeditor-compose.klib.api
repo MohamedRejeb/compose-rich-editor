@@ -45,13 +45,14 @@ abstract interface com.mohamedrejeb.richeditor.model/RichSpanStyle { // com.moha
 
         final val acceptNewTextInTheEdges // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.acceptNewTextInTheEdges|{}acceptNewTextInTheEdges[0]
             final fun <get-acceptNewTextInTheEdges>(): kotlin/Boolean // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.acceptNewTextInTheEdges.<get-acceptNewTextInTheEdges>|<get-acceptNewTextInTheEdges>(){}[0]
-        final val height // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.height|{}height[0]
-            final fun <get-height>(): androidx.compose.ui.unit/TextUnit // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.height.<get-height>|<get-height>(){}[0]
         final val model // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.model|{}model[0]
             final fun <get-model>(): kotlin/Any // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.model.<get-model>|<get-model>(){}[0]
         final val spanStyle // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.spanStyle|{}spanStyle[0]
             final fun <get-spanStyle>(): kotlin/Function1<com.mohamedrejeb.richeditor.model/RichTextConfig, androidx.compose.ui.text/SpanStyle> // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.spanStyle.<get-spanStyle>|<get-spanStyle>(){}[0]
-        final val width // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.width|{}width[0]
+
+        final var height // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.height|{}height[0]
+            final fun <get-height>(): androidx.compose.ui.unit/TextUnit // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.height.<get-height>|<get-height>(){}[0]
+        final var width // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.width|{}width[0]
             final fun <get-width>(): androidx.compose.ui.unit/TextUnit // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.width.<get-width>|<get-width>(){}[0]
 
         final fun (androidx.compose.ui.graphics.drawscope/DrawScope).drawCustomStyle(androidx.compose.ui.text/TextLayoutResult, androidx.compose.ui.text/TextRange, com.mohamedrejeb.richeditor.model/RichTextConfig, kotlin/Float, kotlin/Float) // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.drawCustomStyle|drawCustomStyle@androidx.compose.ui.graphics.drawscope.DrawScope(androidx.compose.ui.text.TextLayoutResult;androidx.compose.ui.text.TextRange;com.mohamedrejeb.richeditor.model.RichTextConfig;kotlin.Float;kotlin.Float){}[0]
@@ -91,25 +92,18 @@ abstract interface com.mohamedrejeb.richeditor.model/RichSpanStyle { // com.moha
 }
 
 final class com.mohamedrejeb.richeditor.model/ImageData { // com.mohamedrejeb.richeditor.model/ImageData|null[0]
-    constructor <init>(androidx.compose.ui.graphics.painter/Painter, kotlin/String? = ..., androidx.compose.ui/Alignment = ..., androidx.compose.ui/Modifier = ...) // com.mohamedrejeb.richeditor.model/ImageData.<init>|<init>(androidx.compose.ui.graphics.painter.Painter;kotlin.String?;androidx.compose.ui.Alignment;androidx.compose.ui.Modifier){}[0]
+    constructor <init>(androidx.compose.ui.graphics.painter/Painter, kotlin/String? = ..., androidx.compose.ui/Alignment = ..., androidx.compose.ui.layout/ContentScale = ..., androidx.compose.ui/Modifier = ...) // com.mohamedrejeb.richeditor.model/ImageData.<init>|<init>(androidx.compose.ui.graphics.painter.Painter;kotlin.String?;androidx.compose.ui.Alignment;androidx.compose.ui.layout.ContentScale;androidx.compose.ui.Modifier){}[0]
 
     final val alignment // com.mohamedrejeb.richeditor.model/ImageData.alignment|{}alignment[0]
         final fun <get-alignment>(): androidx.compose.ui/Alignment // com.mohamedrejeb.richeditor.model/ImageData.alignment.<get-alignment>|<get-alignment>(){}[0]
     final val contentDescription // com.mohamedrejeb.richeditor.model/ImageData.contentDescription|{}contentDescription[0]
         final fun <get-contentDescription>(): kotlin/String? // com.mohamedrejeb.richeditor.model/ImageData.contentDescription.<get-contentDescription>|<get-contentDescription>(){}[0]
+    final val contentScale // com.mohamedrejeb.richeditor.model/ImageData.contentScale|{}contentScale[0]
+        final fun <get-contentScale>(): androidx.compose.ui.layout/ContentScale // com.mohamedrejeb.richeditor.model/ImageData.contentScale.<get-contentScale>|<get-contentScale>(){}[0]
     final val modifier // com.mohamedrejeb.richeditor.model/ImageData.modifier|{}modifier[0]
         final fun <get-modifier>(): androidx.compose.ui/Modifier // com.mohamedrejeb.richeditor.model/ImageData.modifier.<get-modifier>|<get-modifier>(){}[0]
     final val painter // com.mohamedrejeb.richeditor.model/ImageData.painter|{}painter[0]
         final fun <get-painter>(): androidx.compose.ui.graphics.painter/Painter // com.mohamedrejeb.richeditor.model/ImageData.painter.<get-painter>|<get-painter>(){}[0]
-
-    final fun component1(): androidx.compose.ui.graphics.painter/Painter // com.mohamedrejeb.richeditor.model/ImageData.component1|component1(){}[0]
-    final fun component2(): kotlin/String? // com.mohamedrejeb.richeditor.model/ImageData.component2|component2(){}[0]
-    final fun component3(): androidx.compose.ui/Alignment // com.mohamedrejeb.richeditor.model/ImageData.component3|component3(){}[0]
-    final fun component4(): androidx.compose.ui/Modifier // com.mohamedrejeb.richeditor.model/ImageData.component4|component4(){}[0]
-    final fun copy(androidx.compose.ui.graphics.painter/Painter = ..., kotlin/String? = ..., androidx.compose.ui/Alignment = ..., androidx.compose.ui/Modifier = ...): com.mohamedrejeb.richeditor.model/ImageData // com.mohamedrejeb.richeditor.model/ImageData.copy|copy(androidx.compose.ui.graphics.painter.Painter;kotlin.String?;androidx.compose.ui.Alignment;androidx.compose.ui.Modifier){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.model/ImageData.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.model/ImageData.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.model/ImageData.toString|toString(){}[0]
 }
 
 final class com.mohamedrejeb.richeditor.model/RichTextConfig { // com.mohamedrejeb.richeditor.model/RichTextConfig|null[0]

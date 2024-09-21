@@ -55,32 +55,36 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
             currentRichSpan = null
         }
 
+        fun onText(text: String) {
+            if (text.isEmpty()) return
+
+            if (richParagraphList.isEmpty())
+                richParagraphList.add(RichParagraph())
+
+            val currentRichParagraph = richParagraphList.last()
+            val safeCurrentRichSpan = currentRichSpan ?: RichSpan(paragraph = currentRichParagraph)
+
+            if (safeCurrentRichSpan.children.isEmpty()) {
+                safeCurrentRichSpan.text += text
+            } else {
+                val newRichSpan = RichSpan(
+                    paragraph = currentRichParagraph,
+                    parent = safeCurrentRichSpan,
+                )
+                newRichSpan.text = text
+                safeCurrentRichSpan.children.add(newRichSpan)
+            }
+
+            if (currentRichSpan == null) {
+                currentRichSpan = safeCurrentRichSpan
+                currentRichParagraph.children.add(safeCurrentRichSpan)
+            }
+        }
+
         encodeMarkdownToRichText(
             markdown = input,
             onText = { text ->
-                if (text.isEmpty()) return@encodeMarkdownToRichText
-
-                if (richParagraphList.isEmpty())
-                    richParagraphList.add(RichParagraph())
-
-                val currentRichParagraph = richParagraphList.last()
-                val safeCurrentRichSpan = currentRichSpan ?: RichSpan(paragraph = currentRichParagraph)
-
-                if (safeCurrentRichSpan.children.isEmpty()) {
-                    safeCurrentRichSpan.text += text
-                } else {
-                    val newRichSpan = RichSpan(
-                        paragraph = currentRichParagraph,
-                        parent = safeCurrentRichSpan,
-                    )
-                    newRichSpan.text = text
-                    safeCurrentRichSpan.children.add(newRichSpan)
-                }
-
-                if (currentRichSpan == null) {
-                    currentRichSpan = safeCurrentRichSpan
-                    currentRichParagraph.children.add(safeCurrentRichSpan)
-                }
+                onText(text)
             },
             onOpenNode = { node ->
                 openedNodes.add(node)
@@ -121,7 +125,22 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     newRichSpan.spanStyle = tagSpanStyle ?: SpanStyle()
                     newRichSpan.richSpanStyle = richSpanStyle
 
-                    if (currentRichSpan != null) {
+                    // Avoid nesting if the current rich span doesn't add a styling
+                    if (currentRichSpan?.isEmpty() == true) {
+                        currentRichSpan = null
+                        currentRichParagraph.children.removeLast()
+                    }
+
+                    if (
+                        currentRichSpan?.fullSpanStyle == SpanStyle() &&
+                        currentRichSpan?.fullStyle is RichSpanStyle.Default
+                    ) {
+                        currentRichSpan = null
+                    }
+
+                    if (
+                        currentRichSpan != null
+                    ) {
                         newRichSpan.parent = currentRichSpan
                         currentRichSpan?.children?.add(newRichSpan)
                         currentRichSpan = newRichSpan
@@ -135,6 +154,10 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                         node.type == GFMTokenTypes.DOLLAR
                     )
                         newRichSpan.text = "$".repeat(node.endOffset - node.startOffset)
+                }
+
+                if (node.type == GFMTokenTypes.GFM_AUTOLINK) {
+                    onText(node.getTextInNode(input).toString())
                 }
             },
             onCloseNode = { node ->
@@ -375,9 +398,17 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         markdown: String,
     ): RichSpanStyle {
         return when (node.type) {
+            GFMTokenTypes.GFM_AUTOLINK -> {
+                val destination = node.getTextInNode(markdown).toString()
+                RichSpanStyle.Link(url = destination)
+            }
             MarkdownElementTypes.INLINE_LINK -> {
-                val destination = node.findChildOfType(MarkdownElementTypes.LINK_DESTINATION)?.getTextInNode(markdown)?.toString()
-                RichSpanStyle.Link(url = destination ?: "")
+                val destination = node
+                    .findChildOfType(MarkdownElementTypes.LINK_DESTINATION)
+                    ?.getTextInNode(markdown)
+                    ?.toString()
+                    .orEmpty()
+                RichSpanStyle.Link(url = destination)
             }
             MarkdownElementTypes.CODE_SPAN -> RichSpanStyle.Code()
             else -> RichSpanStyle.Default

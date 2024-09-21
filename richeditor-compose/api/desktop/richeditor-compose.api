@@ -71,11 +71,13 @@ public final class com/mohamedrejeb/richeditor/model/RichSpanStyle$DefaultImpls 
 
 public final class com/mohamedrejeb/richeditor/model/RichSpanStyle$Image : com/mohamedrejeb/richeditor/model/RichSpanStyle {
 	public static final field $stable I
-	public synthetic fun <init> (Ljava/lang/Object;JJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/Object;JJLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/Object;JJLjava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun appendCustomContent (Landroidx/compose/ui/text/AnnotatedString$Builder;Lcom/mohamedrejeb/richeditor/model/RichTextState;)Landroidx/compose/ui/text/AnnotatedString$Builder;
 	public fun drawCustomStyle-zdrCDHg (Landroidx/compose/ui/graphics/drawscope/DrawScope;Landroidx/compose/ui/text/TextLayoutResult;JLcom/mohamedrejeb/richeditor/model/RichTextConfig;FF)V
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getAcceptNewTextInTheEdges ()Z
+	public final fun getContentDescription ()Ljava/lang/String;
 	public final fun getHeight-XSAIIZE ()J
 	public final fun getModel ()Ljava/lang/Object;
 	public fun getSpanStyle ()Lkotlin/jvm/functions/Function1;

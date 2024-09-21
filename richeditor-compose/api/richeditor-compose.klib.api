@@ -41,10 +41,12 @@ abstract interface com.mohamedrejeb.richeditor.model/RichSpanStyle { // com.moha
     }
 
     final class Image : com.mohamedrejeb.richeditor.model/RichSpanStyle { // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image|null[0]
-        constructor <init>(kotlin/Any, androidx.compose.ui.unit/TextUnit, androidx.compose.ui.unit/TextUnit) // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.<init>|<init>(kotlin.Any;androidx.compose.ui.unit.TextUnit;androidx.compose.ui.unit.TextUnit){}[0]
+        constructor <init>(kotlin/Any, androidx.compose.ui.unit/TextUnit, androidx.compose.ui.unit/TextUnit, kotlin/String? = ...) // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.<init>|<init>(kotlin.Any;androidx.compose.ui.unit.TextUnit;androidx.compose.ui.unit.TextUnit;kotlin.String?){}[0]
 
         final val acceptNewTextInTheEdges // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.acceptNewTextInTheEdges|{}acceptNewTextInTheEdges[0]
             final fun <get-acceptNewTextInTheEdges>(): kotlin/Boolean // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.acceptNewTextInTheEdges.<get-acceptNewTextInTheEdges>|<get-acceptNewTextInTheEdges>(){}[0]
+        final val contentDescription // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.contentDescription|{}contentDescription[0]
+            final fun <get-contentDescription>(): kotlin/String? // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.contentDescription.<get-contentDescription>|<get-contentDescription>(){}[0]
         final val model // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.model|{}model[0]
             final fun <get-model>(): kotlin/Any // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.model.<get-model>|<get-model>(){}[0]
         final val spanStyle // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.spanStyle|{}spanStyle[0]

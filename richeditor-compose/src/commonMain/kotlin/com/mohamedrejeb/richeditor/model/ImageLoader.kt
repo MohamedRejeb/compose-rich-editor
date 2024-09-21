@@ -30,7 +30,7 @@ public val LocalImageLoader: ProvidableCompositionLocal<ImageLoader> = staticCom
 public class ImageData(
     public val painter: Painter,
     public val contentDescription: String? = null,
-    public val alignment: Alignment = Alignment.CenterStart,
+    public val alignment: Alignment = Alignment.Center,
     public val contentScale: ContentScale = ContentScale.Fit,
     public val modifier: Modifier = Modifier.fillMaxWidth()
 )

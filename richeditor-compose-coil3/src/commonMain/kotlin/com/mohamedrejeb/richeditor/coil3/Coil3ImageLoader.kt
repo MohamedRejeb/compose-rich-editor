@@ -13,7 +13,7 @@ import com.mohamedrejeb.richeditor.model.ImageData
 import com.mohamedrejeb.richeditor.model.ImageLoader
 
 @ExperimentalRichTextApi
-public object Coil3ImageLoader: ImageLoader {
+public object Coil3ImageLoader : ImageLoader {
 
     @Composable
     override fun load(model: Any): ImageData? {
@@ -25,11 +25,13 @@ public object Coil3ImageLoader: ImageLoader {
 
         LaunchedEffect(painter.state) {
             painter.state.collect { state ->
-                if (state is AsyncImagePainter.State.Success) {
-                    imageData = ImageData(
-                        painter = state.painter
-                    )
-                }
+                imageData =
+                    if (state is AsyncImagePainter.State.Success)
+                        ImageData(
+                            painter = state.painter
+                        )
+                    else
+                        null
             }
         }
 

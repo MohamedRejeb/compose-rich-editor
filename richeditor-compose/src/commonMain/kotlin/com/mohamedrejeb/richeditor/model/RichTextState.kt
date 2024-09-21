@@ -1096,7 +1096,7 @@ public class RichTextState internal constructor(
      * @see [textFieldValue]
      * @see [annotatedString]
      */
-    private fun updateAnnotatedString(newTextFieldValue: TextFieldValue = textFieldValue) {
+    internal fun updateAnnotatedString(newTextFieldValue: TextFieldValue = textFieldValue) {
         val newText =
             if (singleParagraphMode)
                 newTextFieldValue.text
@@ -1146,8 +1146,9 @@ public class RichTextState internal constructor(
         }
 
         inlineContentMap.keys.forEach { key ->
-            if (key !in usedInlineContentMapKeys)
+            if (key !in usedInlineContentMapKeys) {
                 inlineContentMap.remove(key)
+            }
         }
 
         styledRichSpanList.clear()
@@ -2944,8 +2945,9 @@ public class RichTextState internal constructor(
         }
 
         inlineContentMap.keys.forEach { key ->
-            if (key !in usedInlineContentMapKeys)
+            if (key !in usedInlineContentMapKeys) {
                 inlineContentMap.remove(key)
+            }
         }
 
         styledRichSpanList.clear()

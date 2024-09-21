@@ -103,6 +103,7 @@ public fun BasicRichText(
             maxLines = maxLines,
             minLines = minLines,
             inlineContent = remember(inlineContent, state.inlineContentMap.toMap()) {
+                println("state.inlineContentMap: ${state.inlineContentMap.keys.toSet()}")
                 inlineContent + state.inlineContentMap
             }
         )

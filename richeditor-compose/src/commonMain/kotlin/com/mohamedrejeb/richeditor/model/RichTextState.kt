@@ -26,11 +26,8 @@ import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startT
 import com.mohamedrejeb.richeditor.parser.html.RichTextStateHtmlParser
 import com.mohamedrejeb.richeditor.parser.markdown.RichTextStateMarkdownParser
 import com.mohamedrejeb.richeditor.utils.*
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.reflect.KClass
 
@@ -2646,48 +2643,20 @@ public class RichTextState internal constructor(
             val top = textLayoutResult.getLineTop(i)
 
             if (i == 0) {
-                if (start > 0f)
-                    pressX += start
-
-                if (top > 0f)
-                    pressY += top
+                if (start > 0f) pressX += start
+                if (top > 0f) pressY += top
             }
 
-            if (i == 0 && top > pressY)
-                break
-
+            if (i == 0 && top > pressY) break
             if (top > pressY) {
                 index = i - 1
                 break
             }
         }
-
-        if (textLayoutResult.lineCount > richParagraphList.size) {
-            val start = textLayoutResult.getLineStart(index)
-            val top = textLayoutResult.getLineTop(index)
-
-            val lineTextStartIndex =
-                textLayoutResult.getOffsetForPosition(
-                    position = Offset(start.toFloat(), top.toFloat())
-                )
-
-            val lineParagraph = getRichParagraphByTextIndex(lineTextStartIndex) ?: return
-
-            val lineParagraphStart = lineParagraph.getFirstNonEmptyChild()?.textRange?.min ?: return
-
-            index = richParagraphList.indexOf(lineParagraph)
-
-            val lineParagraphStartBounds = textLayoutResult.getBoundingBox(lineParagraphStart)
-
-            if (index > 0 && lineParagraphStartBounds.top > pressY)
-                index--
-        }
-
         val selectedParagraph = richParagraphList.getOrNull(index) ?: return
         val nextParagraph = richParagraphList.getOrNull(index + 1)
         val nextParagraphStart =
-            nextParagraph?.getFirstNonEmptyChild()?.textRange?.min?.minus(nextParagraph.type.startText.length)
-
+            nextParagraph?.children?.firstOrNull()?.textRange?.min?.minus(nextParagraph.type.startText.length)
         if (
             selection.collapsed &&
             selection.min == nextParagraphStart
@@ -2716,14 +2685,10 @@ public class RichTextState internal constructor(
             )
     }
 
-    private var registerLastPressPositionJob: Job? = null
-    private suspend fun registerLastPressPosition(pressPosition: Offset): Unit = coroutineScope {
-        registerLastPressPositionJob?.cancel()
-        registerLastPressPositionJob = launch {
-            lastPressPosition = pressPosition
-            delay(300)
-            lastPressPosition = null
-        }
+    private suspend fun registerLastPressPosition(pressPosition: Offset) {
+        lastPressPosition = pressPosition
+        delay(100)
+        lastPressPosition = null
     }
 
     /**

@@ -79,6 +79,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 if (name == "body") {
                     stringBuilder.clear()
                     richParagraphList.clear()
+                    println("add paragraph on body")
                     richParagraphList.add(RichParagraph())
                     currentRichSpan = null
                 }
@@ -128,6 +129,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     if (!isCurrentRichParagraphBlank) {
                         stringBuilder.append(' ')
 
+                        println("add paragraph on $name")
                         richParagraphList.add(newRichParagraph)
                     }
 
@@ -165,6 +167,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                         else
                             RichParagraph(paragraphStyle = richParagraphList.last().paragraphStyle)
 
+                    println("add paragraph on br")
                     richParagraphList.add(newParagraph)
 
                     if (richParagraphList.lastIndex > 0)
@@ -206,6 +209,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                         else
                             RichParagraph(paragraphStyle = richParagraphList.last().paragraphStyle)
 
+                    println("add paragraph on $name")
                     richParagraphList.add(newParagraph)
 
                     toKeepEmptyParagraphIndexSet.add(richParagraphList.lastIndex)
@@ -251,8 +255,10 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         val builder = StringBuilder()
 
         var lastParagraphGroupTagName: String? = null
+        var isLastParagraphEmpty = false
 
         richTextState.richParagraphList.fastForEachIndexed { index, richParagraph ->
+            val isParagraphEmpty = richParagraph.isEmpty()
             val paragraphGroupTagName = decodeHtmlElementFromRichParagraphType(richParagraph.type)
 
             // Close last paragraph group tag if needed
@@ -268,8 +274,15 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
             )
                 builder.append("<$paragraphGroupTagName>")
             // Add line break if the paragraph is empty
-            else if (richParagraph.isEmpty()) {
-                builder.append("<$BrElement>")
+            else if (isParagraphEmpty) {
+                val skipAddingBr =
+                    isLastParagraphEmpty && richParagraph.isEmpty() && index == richTextState.richParagraphList.lastIndex
+
+                if (!skipAddingBr)
+                    builder.append("<$BrElement>")
+
+                isLastParagraphEmpty = isParagraphEmpty
+
                 return@fastForEachIndexed
             }
 
@@ -304,6 +317,8 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 (lastParagraphGroupTagName == "ol" || lastParagraphGroupTagName == "ul") &&
                 index == richTextState.richParagraphList.lastIndex
             ) builder.append("</$lastParagraphGroupTagName>")
+
+            isLastParagraphEmpty = isParagraphEmpty
         }
 
         return builder.toString()

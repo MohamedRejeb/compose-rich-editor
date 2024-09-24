@@ -16,7 +16,7 @@ import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 
-internal class CssDecoderTest {
+class CssDecoderTest {
     @Test
     fun testDecodeCssStyleMap() {
         val map = mapOf(

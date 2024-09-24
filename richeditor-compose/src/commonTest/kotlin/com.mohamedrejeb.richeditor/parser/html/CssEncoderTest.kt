@@ -13,7 +13,7 @@ import kotlin.math.roundToInt
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class CssEncoderTest {
+class CssEncoderTest {
     @Test
     fun testParseCssStyle() {
         val style = "font-weight: bold; color: #ff0000; font-size: 12px;"

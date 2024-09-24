@@ -8,7 +8,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
-internal class RichTextStateHtmlParserTest {
+class RichTextStateHtmlParserTest {
     @Test
     fun testRemoveHtmlTextExtraSpaces() {
         val html = """
@@ -148,6 +148,26 @@ internal class RichTextStateHtmlParserTest {
 
         assertEquals(1, richTextState.richParagraphList.size)
         assertEquals("second", richTextState.annotatedString.text)
+    }
+
+    @Test
+    fun testBrEncodeDecode() {
+        val html = "<p>ABC</p><br><br><br>"
+
+        val state = RichTextStateHtmlParser.encode(html)
+
+        assertEquals(5, state.richParagraphList.size)
+        assertEquals(html, state.toHtml())
+    }
+
+    @Test
+    fun testBrEncodeDecode2() {
+        val html = "<br><p>ABC</p><br><br><p>ABC</p><br><br>"
+
+        val state = RichTextStateHtmlParser.encode(html)
+
+        assertEquals(8, state.richParagraphList.size)
+        assertEquals(html, state.toHtml())
     }
 
     @Test

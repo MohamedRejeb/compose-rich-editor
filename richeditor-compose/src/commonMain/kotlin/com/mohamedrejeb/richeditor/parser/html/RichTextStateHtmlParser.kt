@@ -79,7 +79,6 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 if (name == "body") {
                     stringBuilder.clear()
                     richParagraphList.clear()
-                    println("add paragraph on body")
                     richParagraphList.add(RichParagraph())
                     currentRichSpan = null
                 }
@@ -129,7 +128,6 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     if (!isCurrentRichParagraphBlank) {
                         stringBuilder.append(' ')
 
-                        println("add paragraph on $name")
                         richParagraphList.add(newRichParagraph)
                     }
 
@@ -167,7 +165,6 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                         else
                             RichParagraph(paragraphStyle = richParagraphList.last().paragraphStyle)
 
-                    println("add paragraph on br")
                     richParagraphList.add(newParagraph)
 
                     if (richParagraphList.lastIndex > 0)
@@ -209,7 +206,6 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                         else
                             RichParagraph(paragraphStyle = richParagraphList.last().paragraphStyle)
 
-                    println("add paragraph on $name")
                     richParagraphList.add(newParagraph)
 
                     toKeepEmptyParagraphIndexSet.add(richParagraphList.lastIndex)

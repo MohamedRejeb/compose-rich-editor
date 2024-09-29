@@ -694,4 +694,103 @@ class RichTextStateTest {
         assertEquals("Hello\nb", richTextState.toText())
     }
 
+    @OptIn(ExperimentalRichTextApi::class)
+    @Test
+    fun testKeepStyleChangesOnLineBreak() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    key = 1,
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Hello",
+                            paragraph = it,
+                            spanStyle = SpanStyle(fontWeight = FontWeight.Bold, fontStyle = FontStyle.Italic),
+                        ),
+                    )
+                }
+            )
+        )
+
+        richTextState.selection = TextRange(5)
+        richTextState.toggleSpanStyle(SpanStyle(fontWeight = FontWeight.Bold))
+        richTextState.toggleCodeSpan()
+        richTextState.onTextFieldValueChange(
+            TextFieldValue(
+                text = "Hello\n",
+                selection = TextRange(6),
+            )
+        )
+
+        assertEquals("Hello\n", richTextState.toText())
+        assertEquals(SpanStyle(fontStyle = FontStyle.Italic), richTextState.currentSpanStyle)
+        assertIs<RichSpanStyle.Code>(richTextState.currentRichSpanStyle)
+    }
+
+    @OptIn(ExperimentalRichTextApi::class)
+    @Test
+    fun testKeepSpanStylesOnLineBreakOnTheMiddleOrParagraph() {
+        val spanStyle = SpanStyle(fontWeight = FontWeight.Bold, fontStyle = FontStyle.Italic)
+
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    key = 1,
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Hello",
+                            paragraph = it,
+                            spanStyle = spanStyle,
+                        ),
+                    )
+                }
+            )
+        )
+
+        richTextState.selection = TextRange(3)
+        richTextState.onTextFieldValueChange(
+            TextFieldValue(
+                text = "Hel\nlo",
+                selection = TextRange(4),
+            )
+        )
+
+        assertEquals("Hel\nlo", richTextState.toText())
+        assertEquals(spanStyle, richTextState.currentSpanStyle)
+    }
+
+    @OptIn(ExperimentalRichTextApi::class)
+    @Test
+    fun testResetRichSpanStylesOnLineBreakOnTheMiddleOrParagraph() {
+
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    key = 1,
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Hello",
+                            paragraph = it,
+                            richSpanStyle = RichSpanStyle.Code(),
+                        ),
+                    )
+                }
+            )
+        )
+
+        richTextState.selection = TextRange(3)
+        richTextState.onTextFieldValueChange(
+            TextFieldValue(
+                text = "Hel\nlo",
+                selection = TextRange(4),
+            )
+        )
+
+        assertEquals("Hel\nlo", richTextState.toText())
+        assertIs<RichSpanStyle.Default>(richTextState.currentRichSpanStyle)
+    }
+
 }

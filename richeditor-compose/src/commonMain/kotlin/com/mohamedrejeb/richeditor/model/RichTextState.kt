@@ -1400,6 +1400,29 @@ public class RichTextState internal constructor(
             }
         }
 
+        // Set current applied style to min rich span if the paragraph is empty
+        if (
+            config.preserveStyleOnEmptyLine &&
+            minRichSpan.paragraph.isEmpty()
+        ) {
+            val minParagraphFirstRichSpan =
+                minRichSpan.paragraph.getFirstNonEmptyChild() ?: run {
+                    val richSpan =
+                        RichSpan(
+                            paragraph = minRichSpan.paragraph,
+                            text = "",
+                            textRange = TextRange(minRemoveIndex, minRemoveIndex),
+                        )
+
+                    minRichSpan.paragraph.children.add(richSpan)
+
+                    richSpan
+                }
+
+            minParagraphFirstRichSpan.spanStyle = currentAppliedSpanStyle
+            minParagraphFirstRichSpan.richSpanStyle = currentAppliedRichSpanStyle
+        }
+
         checkOrderedListsNumbers(
             startParagraphIndex = minParagraphIndex - 1,
             endParagraphIndex = minParagraphIndex + 1,
@@ -1602,13 +1625,22 @@ public class RichTextState internal constructor(
             if (tempTextFieldValue.selection.collapsed && newParagraph.isEmpty()) {
                 val newParagraphFirstRichSpan = newParagraph.getFirstNonEmptyChild()
 
+                val isSelectionAtNewRichSpan =
+                    newParagraphFirstRichSpan?.textRange?.min == tempTextFieldValue.selection.min - 1
+
                 // Check if the cursor is at the new paragraph
                 if (
                     (!config.preserveStyleOnEmptyLine || richSpan.paragraph.isEmpty()) &&
-                    newParagraphFirstRichSpan?.textRange?.min == tempTextFieldValue.selection.min - 1
+                    isSelectionAtNewRichSpan
                 ) {
                     newParagraphFirstRichSpan.spanStyle = SpanStyle()
                     newParagraphFirstRichSpan.richSpanStyle = RichSpanStyle.Default
+                } else if (
+                    config.preserveStyleOnEmptyLine &&
+                    isSelectionAtNewRichSpan
+                ) {
+                    newParagraphFirstRichSpan.spanStyle = currentSpanStyle
+                    newParagraphFirstRichSpan.richSpanStyle = currentRichSpanStyle
                 }
             }
 
@@ -2250,10 +2282,11 @@ public class RichTextState internal constructor(
         var previousRichSpan: RichSpan
         var currentRichSpan: RichSpan = richSpan
 
-        val textStartIndex = if (startIndex == type.startRichSpan.textRange.min)
-            startIndex - richSpan.textRange.min + type.startRichSpan.text.length
-        else
-            startIndex - richSpan.textRange.min
+        val textStartIndex =
+            if (startIndex == type.startRichSpan.textRange.min)
+                startIndex - richSpan.textRange.min + type.startRichSpan.text.length
+            else
+                startIndex - richSpan.textRange.min
 
         newRichParagraph.type.startRichSpan.paragraph = newRichParagraph
         newRichParagraph.type.startRichSpan.textRange = TextRange(
@@ -2279,6 +2312,7 @@ public class RichTextState internal constructor(
             richSpan.textRange.min + beforeText.length
         )
 
+        // We don't copy the current rich span style to the new rich span
         val newRichSpan = RichSpan(
             paragraph = newRichParagraph,
             parent = null,
@@ -2441,28 +2475,28 @@ public class RichTextState internal constructor(
         if (selection.collapsed) {
             val richSpan = getRichSpanByTextIndex(textIndex = selection.min - 1)
 
-            if (
-                config.preserveStyleOnEmptyLine &&
-                (richSpan == null || (richSpan.isFirstInParagraph && richSpan.paragraph.isEmpty()))
-            ) {
-                val paragraphBefore =
-                    if (selection.min - 2 < 0)
-                        null
-                    else
-                        getRichParagraphByTextIndex(selection.min - 2)
-
-                if (paragraphBefore?.isEmpty() != true) {
-                    toAddRichSpanStyle = currentAppliedRichSpanStyle
-                    toAddSpanStyle = currentAppliedSpanStyle
-                }
-            }
-
             currentAppliedRichSpanStyle = richSpan
                 ?.fullStyle
                 ?: RichSpanStyle.Default
             currentAppliedSpanStyle = richSpan
                 ?.fullSpanStyle
                 ?: RichSpanStyle.DefaultSpanStyle
+
+//            if (
+//                config.preserveStyleOnEmptyLine &&
+//                (richSpan == null || (richSpan.isFirstInParagraph && richSpan.paragraph.isEmpty()))
+//            ) {
+//                val paragraphBefore =
+//                    if (selection.min - 2 < 0)
+//                        null
+//                    else
+//                        getRichParagraphByTextIndex(selection.min - 2)
+//
+//                if (paragraphBefore == null || paragraphBefore.isNotEmpty()) {
+//                    toAddRichSpanStyle = currentRichSpanStyle
+//                    toAddSpanStyle = currentSpanStyle
+//                }
+//            }
         } else {
             val richSpanList = getRichSpanListByTextRange(selection)
 

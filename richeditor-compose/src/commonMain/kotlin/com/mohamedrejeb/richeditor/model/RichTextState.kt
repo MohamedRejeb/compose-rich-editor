@@ -1272,8 +1272,15 @@ public class RichTextState internal constructor(
      */
     private fun handleRemovingCharacters() {
         val removedCharsCount = textFieldValue.text.length - tempTextFieldValue.text.length
-        val minRemoveIndex = tempTextFieldValue.selection.min
-        val maxRemoveIndex = tempTextFieldValue.selection.min + removedCharsCount
+
+        val minRemoveIndex =
+            (textFieldValue.selection.max - removedCharsCount)
+                .coerceAtLeast(0)
+
+        val maxRemoveIndex =
+            (minRemoveIndex + removedCharsCount)
+                .coerceAtMost(textFieldValue.text.length)
+
         val removeRange = TextRange(minRemoveIndex, maxRemoveIndex)
 
         val minRichSpan = getRichSpanByTextIndex(textIndex = minRemoveIndex, true) ?: return
@@ -1369,24 +1376,24 @@ public class RichTextState internal constructor(
                 }
             }
 
-            if (
-                minRemoveIndex == minParagraphFirstChildMinIndex - minParagraphStartTextLength - 1
-            ) {
-                if (
-                    minRemoveIndex == minParagraphFirstChildMinIndex - minParagraphStartTextLength - 1 &&
-                    minParagraphStartTextLength > 0
-                ) {
+            if (minRemoveIndex == minParagraphFirstChildMinIndex - minParagraphStartTextLength - 1) {
+                if (minParagraphStartTextLength > 0) {
                     val beforeText = tempTextFieldValue.text.substring(
                         startIndex = 0,
-                        endIndex = minRemoveIndex,
+                        endIndex = minRemoveIndex
+                            .coerceAtMost(tempTextFieldValue.text.length),
                     )
-                    val afterText = tempTextFieldValue.text.substring(
-                        startIndex = minRemoveIndex + 1,
-                        endIndex = tempTextFieldValue.text.length,
-                    )
+                    val afterText =
+                        if (minRemoveIndex + 1 > tempTextFieldValue.text.lastIndex)
+                            ""
+                        else
+                            tempTextFieldValue.text.substring(
+                                startIndex = minRemoveIndex + 1,
+                            )
+
                     tempTextFieldValue = tempTextFieldValue.copy(
                         text = beforeText + afterText,
-                        selection = TextRange(tempTextFieldValue.selection.min - 1),
+                        selection = TextRange(tempTextFieldValue.selection.min),
                     )
                 }
 
@@ -1437,8 +1444,11 @@ public class RichTextState internal constructor(
         if (removeIndex >= paragraphFirstChildMinIndex || paragraphStartTextLength <= 0)
             return
 
-        val indexDiff = paragraphStartTextLength - (paragraphFirstChildMinIndex - removeIndex)
-        val beforeTextEndIndex = paragraphFirstChildMinIndex - paragraphStartTextLength
+        val indexDiff = (paragraphStartTextLength - (paragraphFirstChildMinIndex - removeIndex))
+            .coerceAtLeast(0)
+        val beforeTextEndIndex =
+            (paragraphFirstChildMinIndex - paragraphStartTextLength)
+                .coerceAtMost(tempTextFieldValue.text.length)
 
         val beforeText =
             if (beforeTextEndIndex <= 0)
@@ -1493,6 +1503,7 @@ public class RichTextState internal constructor(
                         startIndex = afterTextStartIndex,
                         endIndex = tempTextFieldValue.text.length,
                     )
+
             val newText = beforeText + afterText
 
             tempTextFieldValue = tempTextFieldValue.copy(

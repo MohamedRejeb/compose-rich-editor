@@ -1,8 +1,8 @@
 package com.mohamedrejeb.richeditor.paragraph.type
 
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.style.TextIndent
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.DefaultListIndent
@@ -12,7 +12,14 @@ import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 
 internal class UnorderedList(
     initialIndent: Int = DefaultListIndent,
-): ParagraphType {
+    startTextWidth: TextUnit = 0.sp,
+): ParagraphType, ConfigurableStartTextWidth {
+
+    override var startTextWidth: TextUnit = startTextWidth
+        set(value) {
+            field = value
+            style = getParagraphStyle()
+        }
 
     private var indent = initialIndent
 
@@ -32,7 +39,7 @@ internal class UnorderedList(
         ParagraphStyle(
             textIndent = TextIndent(
                 firstLine = indent.sp,
-                restLine = indent.sp
+                restLine = (indent + startTextWidth.value).sp
             )
         )
 
@@ -45,12 +52,14 @@ internal class UnorderedList(
 
     override fun getNextParagraphType(): ParagraphType =
         UnorderedList(
-            initialIndent = indent
+            initialIndent = indent,
+            startTextWidth = startTextWidth
         )
 
     override fun copy(): ParagraphType =
         UnorderedList(
-            initialIndent = indent
+            initialIndent = indent,
+            startTextWidth = startTextWidth
         )
 
     override fun equals(other: Any?): Boolean {

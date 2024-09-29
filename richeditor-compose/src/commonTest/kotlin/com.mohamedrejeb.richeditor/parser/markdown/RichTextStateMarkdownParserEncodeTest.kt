@@ -248,4 +248,32 @@ class RichTextStateMarkdownParserEncodeTest {
         assertEquals(imageAlt, imageRichSpanStyle.contentDescription)
     }
 
+
+    @Test
+    fun testEncodeMarkdownWithSpacesInsideStyling() {
+        val markdown = "**Bold **Normal"
+        val expectedText = "Bold Normal"
+        val state = RichTextStateMarkdownParser.encode(markdown)
+        val actualText = state.annotatedString.text
+
+        assertEquals(
+            expected = expectedText,
+            actual = actualText,
+        )
+
+        val paragraph = state.richParagraphList.first()
+        val boldRichSpan = paragraph.children[0]
+        val normalRichSpan = paragraph.children[1]
+
+        assertEquals(
+            expected = SpanStyle(fontWeight = FontWeight.Bold),
+            actual = boldRichSpan.spanStyle,
+        )
+
+        assertEquals(
+            expected = SpanStyle(),
+            actual = normalRichSpan.spanStyle,
+        )
+    }
+
 }

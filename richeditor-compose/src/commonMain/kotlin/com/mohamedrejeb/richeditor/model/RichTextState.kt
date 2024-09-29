@@ -2591,12 +2591,16 @@ public class RichTextState internal constructor(
     ) {
         var isParagraphUpdated = false
 
-        richParagraphList.forEachIndexed { index, richParagraph ->
-            val paragraphType = richParagraph.type
-            if (index + 1 > maxLines || paragraphType !is OrderedList) return@forEachIndexed
+        textLayoutResult?.let { textLayoutResult ->
+            richParagraphList.forEachIndexed { index, richParagraph ->
+                val paragraphType = richParagraph.type
+                if (index + 1 > maxLines || paragraphType !is OrderedList)
+                    return@forEachIndexed
 
-            if (!paragraphType.startRichSpan.textRange.collapsed) {
-                textLayoutResult?.let { textLayoutResult ->
+                if (
+                    paragraphType.startText.isNotEmpty() &&
+                    paragraphType.startRichSpan.textRange.max < textLayoutResult.layoutInput.text.text.length
+                ) {
                     val start =
                         textLayoutResult.getHorizontalPosition(
                             offset = paragraphType.startRichSpan.textRange.min,
@@ -3000,8 +3004,7 @@ public class RichTextState internal constructor(
                 withStyle(richParagraph.paragraphStyle.merge(richParagraph.type.getStyle(config))) {
                     append(richParagraph.type.startText)
                     val richParagraphStartTextLength = richParagraph.type.startText.length
-                    richParagraph.type.startRichSpan.textRange =
-                        TextRange(index, index + richParagraphStartTextLength)
+                    richParagraph.type.startRichSpan.textRange = TextRange(index, index + richParagraphStartTextLength)
                     index += richParagraphStartTextLength
                     withStyle(RichSpanStyle.DefaultSpanStyle) {
                         index = append(

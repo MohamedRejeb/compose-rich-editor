@@ -145,24 +145,28 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     newRichSpan.spanStyle = tagSpanStyle ?: SpanStyle()
                     newRichSpan.richSpanStyle = richSpanStyle
 
-                    // Avoid nesting if the current rich span doesn't add a styling
-                    if (currentRichSpan?.isEmpty() == true) {
-                        currentRichSpan = null
-                        currentRichParagraph.children.removeLast()
-                    }
+                    val currentRichSpanParent = currentRichSpan?.parent
 
+                    // Avoid nesting if the current rich span doesn't add a styling
                     if (
                         currentRichSpan?.fullSpanStyle == SpanStyle() &&
                         currentRichSpan?.fullStyle is RichSpanStyle.Default
                     ) {
+                        if (currentRichSpan?.isEmpty() == true) {
+                            if (currentRichSpanParent != null)
+                                currentRichSpanParent.children.removeLast()
+                            else
+                                currentRichParagraph.children.removeLast()
+                        }
+
                         currentRichSpan = null
                     }
 
-                    if (
-                        currentRichSpan != null
-                    ) {
-                        newRichSpan.parent = currentRichSpan
-                        currentRichSpan?.children?.add(newRichSpan)
+                    val newRichSpanParent = currentRichSpan ?: currentRichSpanParent
+
+                    if (newRichSpanParent != null) {
+                        newRichSpan.parent = newRichSpanParent
+                        newRichSpanParent.children.add(newRichSpan)
                         currentRichSpan = newRichSpan
                     } else {
                         currentRichParagraph.children.add(newRichSpan)

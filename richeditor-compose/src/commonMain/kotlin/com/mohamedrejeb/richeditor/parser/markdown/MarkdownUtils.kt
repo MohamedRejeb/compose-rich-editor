@@ -19,12 +19,14 @@ internal fun encodeMarkdownToRichText(
     onHtmlTag: (tag: String) -> Unit,
     onHtmlBlock: (html: String) -> Unit,
 ) {
+    val markdownText = correctMarkdownText(markdown)
+
     val parser = MarkdownParser(GFMFlavourDescriptor())
-    val tree = parser.buildMarkdownTreeFromString(markdown)
+    val tree = parser.buildMarkdownTreeFromString(markdownText)
     tree.children.fastForEach { node ->
         encodeMarkdownNodeToRichText(
             node = node,
-            markdown = markdown,
+            markdown = markdownText,
             onOpenNode = onOpenNode,
             onCloseNode = onCloseNode,
             onText = onText,
@@ -32,6 +34,121 @@ internal fun encodeMarkdownToRichText(
             onHtmlBlock = onHtmlBlock,
         )
     }
+}
+
+internal fun correctMarkdownText(text: String): String {
+    var newText = StringBuilder()
+
+    var pendingSpaces = 0
+
+    var pendingTag = ""
+    val lastOpenedTags = mutableListOf<String>()
+
+    fun isCloseTag(tag: String = pendingTag) =
+        tag == lastOpenedTags.lastOrNull()
+
+    fun addPendingSpaces() {
+        if (pendingSpaces > 0)
+            newText.append(" ".repeat(pendingSpaces))
+
+        pendingSpaces = 0
+    }
+
+    fun onTag(tag: String = pendingTag) {
+        if (tag.isEmpty())
+            return
+
+        if (isCloseTag(tag)) {
+            // On close tag
+
+            lastOpenedTags.removeLastOrNull()
+        } else {
+            // On open tag
+
+            addPendingSpaces()
+
+            lastOpenedTags.add(tag)
+        }
+
+        newText.append(tag)
+
+        if (tag == pendingTag)
+            pendingTag = ""
+    }
+
+    fun onPendingTag() {
+        while (pendingTag.isNotEmpty()) {
+            val lastOpenedTag = lastOpenedTags.lastOrNull()
+
+            if (
+                lastOpenedTag == null ||
+                pendingTag.first() != lastOpenedTag.first() ||
+                pendingTag.length < lastOpenedTag.length
+            ) {
+                // Handle open tag
+
+                val tag =
+                    if (pendingTag.length > 2)
+                        pendingTag.substring(0, pendingTag.length - 2)
+                    else
+                        pendingTag
+
+                val newPendingTag =
+                    if (pendingTag.length > 2)
+                        pendingTag.substring(pendingTag.length - 2)
+                    else
+                        ""
+
+                onTag(tag)
+
+                pendingTag = newPendingTag
+            } else {
+                // Handle close tag
+
+                val tag = lastOpenedTag
+
+                val newPendingTag =
+                    pendingTag.substring(tag.length)
+
+                onTag(tag)
+
+                pendingTag = newPendingTag
+            }
+        }
+    }
+
+    fun onTextChar(char: Char) {
+        onTag()
+
+        if (pendingTag.isEmpty() || isCloseTag())
+            addPendingSpaces()
+
+        newText.append(char)
+    }
+
+    text.forEachIndexed { i, char ->
+        if (char == '*' || char == '~') {
+            if (!pendingTag.all { it == char })
+                onPendingTag()
+
+            pendingTag += char
+
+            if (pendingTag.length > 2)
+                onPendingTag()
+        } else if (char == ' ') {
+            if (isCloseTag())
+                onTag()
+
+            pendingSpaces++
+        } else {
+            onTextChar(char)
+        }
+    }
+
+    onTag()
+    addPendingSpaces()
+
+    return newText.toString()
 }
 
 private fun encodeMarkdownNodeToRichText(
@@ -78,6 +195,7 @@ private fun encodeMarkdownNodeToRichText(
             }
             onCloseNode(node)
         }
+
         MarkdownElementTypes.EMPH -> {
             onOpenNode(node)
             val children = node.children.toMutableList()
@@ -96,11 +214,13 @@ private fun encodeMarkdownNodeToRichText(
             }
             onCloseNode(node)
         }
+
         MarkdownElementTypes.CODE_SPAN -> {
             onOpenNode(node)
             onText(node.getTextInNode(markdown).removeSurrounding("`").toString())
             onCloseNode(node)
         }
+
         MarkdownElementTypes.INLINE_LINK -> {
             onOpenNode(node)
             val text = node
@@ -112,12 +232,15 @@ private fun encodeMarkdownNodeToRichText(
             onText(text ?: "")
             onCloseNode(node)
         }
+
         MarkdownTokenTypes.HTML_TAG -> {
             onHtmlTag(node.getTextInNode(markdown).toString())
         }
+
         MarkdownElementTypes.HTML_BLOCK -> {
             onHtmlBlock(node.getTextInNode(markdown).toString())
         }
+
         else -> {
             onOpenNode(node)
             node.children.fastForEach { child ->

@@ -17,7 +17,7 @@ internal class OrderedList(
     initialIndent: Int = DefaultListIndent,
     startTextSpanStyle: SpanStyle = SpanStyle(),
     startTextWidth: TextUnit = 0.sp
-) : ParagraphType {
+) : ParagraphType, ConfigurableStartTextWidth {
 
     var number = number
         set(value) {
@@ -31,7 +31,7 @@ internal class OrderedList(
             style = getNewParagraphStyle()
         }
 
-    var startTextWidth: TextUnit = startTextWidth
+    override var startTextWidth: TextUnit = startTextWidth
         set(value) {
             field = value
             style = getNewParagraphStyle()

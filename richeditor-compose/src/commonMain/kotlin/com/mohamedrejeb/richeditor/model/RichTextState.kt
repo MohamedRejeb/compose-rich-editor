@@ -928,7 +928,6 @@ public class RichTextState internal constructor(
             number = orderedListNumber,
             initialIndent = config.listIndent,
             startTextSpanStyle = firstRichSpan?.spanStyle ?: SpanStyle(),
-            startTextWidth = 0.sp
         )
         updateTextFieldValue(
             newTextFieldValue = updateParagraphType(

@@ -52,12 +52,14 @@ internal class UnorderedList(
 
     override fun getNextParagraphType(): ParagraphType =
         UnorderedList(
-            initialIndent = indent
+            initialIndent = indent,
+            startTextWidth = startTextWidth
         )
 
     override fun copy(): ParagraphType =
         UnorderedList(
-            initialIndent = indent
+            initialIndent = indent,
+            startTextWidth = startTextWidth
         )
 
     override fun equals(other: Any?): Boolean {

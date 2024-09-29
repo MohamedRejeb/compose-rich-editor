@@ -61,6 +61,26 @@ class RichTextStateMarkdownParserEncodeTest {
     }
 
     @Test
+    fun testBoldWithItalic() {
+        val markdown = "***Hello World!***"
+        val expectedText = "Hello World!"
+        val state = RichTextStateMarkdownParser.encode(markdown)
+        val actualText = state.annotatedString.text
+
+        assertEquals(
+            expected = expectedText,
+            actual = actualText,
+        )
+
+        val richSpan = state.richParagraphList.first().children[0]
+
+        assertEquals(
+            expected = SpanStyle(fontStyle = FontStyle.Italic, fontWeight = FontWeight.Bold),
+            actual = richSpan.spanStyle
+        )
+    }
+
+    @Test
     fun testUnderline() {
         val markdown = "<u>Hello World!</u>"
         val expectedText = "Hello World!"

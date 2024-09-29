@@ -2594,7 +2594,7 @@ public class RichTextState internal constructor(
         textLayoutResult?.let { textLayoutResult ->
             richParagraphList.forEachIndexed { index, richParagraph ->
                 val paragraphType = richParagraph.type
-                if (index + 1 > maxLines || (paragraphType !is ConfigurableStartTextWidth))
+                if (index + 1 > maxLines || paragraphType !is ConfigurableStartTextWidth)
                     return@forEachIndexed
 
                 if (

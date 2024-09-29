@@ -17,7 +17,7 @@ fun RichTextToMarkdown(
     richTextState: RichTextState,
     modifier: Modifier = Modifier,
 ) {
-    val html by remember(richTextState.annotatedString) {
+    val markdown by remember(richTextState.annotatedString) {
         mutableStateOf(richTextState.toMarkdown())
     }
 
@@ -85,7 +85,7 @@ fun RichTextToMarkdown(
             ) {
                 item {
                     Text(
-                        text = html,
+                        text = markdown,
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)

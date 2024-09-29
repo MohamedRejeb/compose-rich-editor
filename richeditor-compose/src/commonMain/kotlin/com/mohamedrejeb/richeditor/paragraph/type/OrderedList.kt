@@ -2,6 +2,7 @@ package com.mohamedrejeb.richeditor.paragraph.type
 
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
@@ -21,7 +22,7 @@ internal class OrderedList(
     var number = number
         set(value) {
             field = value
-            startRichSpan = getNewStartRichSpan()
+            startRichSpan = getNewStartRichSpan(startRichSpan.textRange)
         }
 
     var startTextSpanStyle = startTextSpanStyle
@@ -62,12 +63,19 @@ internal class OrderedList(
         getNewStartRichSpan()
 
     @OptIn(ExperimentalRichTextApi::class)
-    private fun getNewStartRichSpan() =
-        RichSpan(
+    private fun getNewStartRichSpan(textRange: TextRange = TextRange(0)): RichSpan {
+        val text = "$number. "
+
+        return RichSpan(
             paragraph = RichParagraph(type = this),
-            text = "$number. ",
-            spanStyle = startTextSpanStyle
+            text = text,
+            spanStyle = startTextSpanStyle,
+            textRange = TextRange(
+                textRange.min,
+                textRange.min + text.length
+            )
         )
+    }
 
     override fun getNextParagraphType(): ParagraphType =
         OrderedList(

@@ -107,22 +107,27 @@ internal class RichParagraph(
     ): RichParagraph? {
         var index = offset
         val toRemoveIndices = mutableListOf<Int>()
+
         for (i in 0..children.lastIndex) {
             val child = children[i]
             val result = child.removeTextRange(textRange, index)
             val newRichSpan = result.second
-            if (newRichSpan != null) {
+
+            if (newRichSpan != null)
                 children[i] = newRichSpan
-            } else {
+            else
                 toRemoveIndices.add(i)
-            }
+
             index = result.first
         }
+
         for (i in toRemoveIndices.lastIndex downTo 0) {
             children.removeAt(toRemoveIndices[i])
         }
 
-        if (children.isEmpty()) return null
+        if (children.isEmpty())
+            return null
+
         return this
     }
 

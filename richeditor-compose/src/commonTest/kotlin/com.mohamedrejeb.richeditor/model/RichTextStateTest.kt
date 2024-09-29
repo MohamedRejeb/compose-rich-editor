@@ -10,9 +10,11 @@ import androidx.compose.ui.text.style.TextAlign
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
+import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import kotlin.test.*
 
+@ExperimentalRichTextApi
 class RichTextStateTest {
 
     @OptIn(ExperimentalRichTextApi::class)
@@ -791,6 +793,130 @@ class RichTextStateTest {
 
         assertEquals("Hel\nlo", richTextState.toText())
         assertIs<RichSpanStyle.Default>(richTextState.currentRichSpanStyle)
+    }
+
+    @OptIn(ExperimentalRichTextApi::class)
+    @Test
+    fun testUpdateSelectionOnAddOrderedListItem() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    key = 1,
+                    type = OrderedList(1),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Hello",
+                            paragraph = it,
+                        ),
+                    )
+                }
+            )
+        )
+
+        richTextState.selection = TextRange(5)
+
+        // Add new line which is going to add a new list item
+        richTextState.onTextFieldValueChange(
+            TextFieldValue(
+                text = "1. Hello\n",
+                selection = TextRange(6),
+            )
+        )
+
+        // Mimic undo adding new list item
+        richTextState.onTextFieldValueChange(
+            TextFieldValue(
+                text = "1. Hello",
+                selection = TextRange(5),
+            )
+        )
+
+//        assertEquals("1. Hello", richTextState.toText())
+//        assertEquals(TextRange(5), richTextState.selection)
+    }
+
+    @Test
+    fun testMergeTwoListItemsByRemovingLineBreak() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    key = 1,
+                    type = UnorderedList(),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "aaa",
+                            paragraph = it,
+                        ),
+                    )
+                },
+                RichParagraph(
+                    key = 1,
+                    type = UnorderedList(),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "bbb",
+                            paragraph = it,
+                        ),
+                    )
+                }
+            )
+        )
+
+        richTextState.selection = TextRange(6)
+
+        // Remove line break
+        richTextState.onTextFieldValueChange(
+            TextFieldValue(
+                text = "• aaa• bbb",
+                selection = TextRange(5),
+            )
+        )
+
+        assertEquals("• aaabbb", richTextState.toText())
+        assertEquals(TextRange(5), richTextState.selection)
+    }
+
+    @Test
+    fun testUndoAddingOrderedListItem() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    key = 1,
+                    type = OrderedList(1),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Hello",
+                            paragraph = it,
+                        ),
+                    )
+                }
+            )
+        )
+
+        richTextState.selection = TextRange(5)
+
+        // Add new line which is going to add a new list item
+        richTextState.onTextFieldValueChange(
+            TextFieldValue(
+                text = "1. Hello\n",
+                selection = TextRange(9),
+            )
+        )
+
+        // Mimic undo adding new list item
+        richTextState.onTextFieldValueChange(
+            TextFieldValue(
+                text = "1. Hello",
+                selection = TextRange(8),
+            )
+        )
+
+        assertEquals("1. Hello", richTextState.toText())
+        assertEquals(TextRange(8), richTextState.selection)
     }
 
 }

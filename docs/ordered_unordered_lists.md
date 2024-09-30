@@ -19,3 +19,16 @@ val isOrderedList = richTextState.isOrderedList
 // Get if the current selection is an unordered list.
 val isUnorderedList = richTextState.isUnorderedList
 ```
+
+You can control the list indentation using `RichTextState`:
+
+```kotlin
+// Change list indentation (ordered and unordered).
+richTextState.config.listIndent = 20
+
+// Change only ordered list indentation.
+richTextState.config.orderedListIndent = 20
+
+// Change only unordered list indentation.
+richTextState.config.unorderedListIndent = 20
+```

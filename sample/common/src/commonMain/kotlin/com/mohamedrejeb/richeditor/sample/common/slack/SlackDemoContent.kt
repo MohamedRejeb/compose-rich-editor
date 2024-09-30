@@ -58,6 +58,8 @@ fun SlackDemoContent() {
         richTextState.config.codeSpanColor = Color(0xFFd7882d)
         richTextState.config.codeSpanBackgroundColor = Color.Transparent
         richTextState.config.codeSpanStrokeColor = Color(0xFF494b4d)
+        richTextState.config.unorderedListIndent = 40
+        richTextState.config.orderedListIndent = 50
     }
 
     Box(

@@ -27,8 +27,8 @@ internal class UnorderedList(
         getParagraphStyle()
 
     override fun getStyle(config: RichTextConfig): ParagraphStyle {
-        if (config.listIndent != indent) {
-            indent = config.listIndent
+        if (config.unorderedListIndent != indent) {
+            indent = config.unorderedListIndent
             style = getParagraphStyle()
         }
 

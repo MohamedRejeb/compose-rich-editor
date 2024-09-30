@@ -862,7 +862,7 @@ public class RichTextState internal constructor(
         if (paragraph.type is UnorderedList) return
 
         val newType = UnorderedList(
-            initialIndent = config.listIndent
+            initialIndent = config.unorderedListIndent
         )
 
         updateParagraphType(
@@ -926,7 +926,7 @@ public class RichTextState internal constructor(
 
         val newType = OrderedList(
             number = orderedListNumber,
-            initialIndent = config.listIndent,
+            initialIndent = config.orderedListIndent,
             startTextSpanStyle = firstRichSpan?.spanStyle ?: SpanStyle(),
         )
         updateTextFieldValue(
@@ -1520,14 +1520,14 @@ public class RichTextState internal constructor(
 
         if (richSpan.text == "- " || richSpan.text == "* ") {
             richSpan.paragraph.type = UnorderedList(
-                initialIndent = config.listIndent,
+                initialIndent = config.unorderedListIndent,
             )
             richSpan.text = ""
         } else if (richSpan.text.matches(Regex("^\\d+\\. "))) {
             val number = richSpan.text.first().digitToIntOrNull() ?: 1
             richSpan.paragraph.type = OrderedList(
                 number = number,
-                initialIndent = config.listIndent,
+                initialIndent = config.orderedListIndent,
             )
             richSpan.text = ""
         }
@@ -1549,7 +1549,7 @@ public class RichTextState internal constructor(
                     paragraph = currentParagraph,
                     newType = OrderedList(
                         number = number,
-                        initialIndent = config.listIndent,
+                        initialIndent = config.orderedListIndent,
                         startTextSpanStyle = currentParagraphType.startTextSpanStyle,
                         startTextWidth = currentParagraphType.startTextWidth
                     ),
@@ -1580,7 +1580,7 @@ public class RichTextState internal constructor(
                     paragraph = currentParagraph,
                     newType = OrderedList(
                         number = number,
-                        initialIndent = config.listIndent,
+                        initialIndent = config.orderedListIndent,
                         startTextSpanStyle = currentParagraphType.startTextSpanStyle,
                         startTextWidth = currentParagraphType.startTextWidth
                     ),
@@ -2598,7 +2598,7 @@ public class RichTextState internal constructor(
 
                 if (
                     paragraphType.startText.isNotEmpty() &&
-                    paragraphType.startRichSpan.textRange.max < textLayoutResult.layoutInput.text.text.length
+                    paragraphType.startRichSpan.textRange.max <= textLayoutResult.layoutInput.text.text.length
                 ) {
                     val start =
                         textLayoutResult.getHorizontalPosition(
@@ -2935,6 +2935,8 @@ public class RichTextState internal constructor(
         richTextState.config.codeSpanBackgroundColor = config.codeSpanBackgroundColor
         richTextState.config.codeSpanStrokeColor = config.codeSpanStrokeColor
         richTextState.config.listIndent = config.listIndent
+        richTextState.config.orderedListIndent = config.orderedListIndent
+        richTextState.config.unorderedListIndent = config.unorderedListIndent
         richTextState.config.preserveStyleOnEmptyLine = config.preserveStyleOnEmptyLine
 
         return richTextState

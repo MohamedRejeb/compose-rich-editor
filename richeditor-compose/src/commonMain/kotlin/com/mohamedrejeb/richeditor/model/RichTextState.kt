@@ -15,7 +15,6 @@ import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastFirstOrNull
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
@@ -208,6 +207,10 @@ public class RichTextState internal constructor(
         updateRichParagraphList(initialRichParagraphList)
     }
 
+    /**
+     * Public methods
+     */
+
     @Deprecated(
         message = "Use config instead",
         replaceWith = ReplaceWith("config"),
@@ -241,6 +244,124 @@ public class RichTextState internal constructor(
 
         updateTextFieldValue(textFieldValue)
     }
+
+    // Text
+
+    /**
+     * Removes the selected text from the current text input.
+     *
+     * This method removes the text specified by the `selection` from the current text input.
+     *
+     * @see removeTextRange
+     */
+    public fun removeSelectedText(): Unit =
+        removeTextRange(selection)
+
+    /**x
+     * Removes the specified text range from the current text.
+     *
+     * @param textRange the range of text to be removed
+     */
+    public fun removeTextRange(
+        textRange: TextRange
+    ) {
+        require(textRange.min >= 0) {
+            "The start index must be non-negative."
+        }
+
+        require(textRange.max <= textFieldValue.text.length) {
+            "The end index must be within the text bounds. " +
+                "The text length is ${textFieldValue.text.length}, " +
+                "but the end index is ${textRange.max}."
+        }
+
+        onTextFieldValueChange(
+            newTextFieldValue = textFieldValue.copy(
+                text = textFieldValue.text.removeRange(
+                    startIndex = textRange.min,
+                    endIndex = textRange.max,
+                ),
+                selection = TextRange(textRange.min),
+            )
+        )
+    }
+
+    /**
+     * Replaces the currently selected text with the provided text.
+     *
+     * @param text The new text to be inserted
+     */
+    public fun replaceSelectedText(text: String): Unit =
+        replaceTextRange(selection, text)
+
+    /**
+     * Replaces the text in the specified range with the provided text.
+     *
+     * @param textRange The range of text to be replaced
+     * @param text The new text to be inserted
+     */
+    public fun replaceTextRange(
+        textRange: TextRange,
+        text: String
+    ) {
+        require(textRange.min >= 0) {
+            "The start index must be non-negative."
+        }
+
+        require(textRange.max <= textFieldValue.text.length) {
+            "The end index must be within the text bounds. " +
+                    "The text length is ${textFieldValue.text.length}, " +
+                    "but the end index is ${textRange.max}."
+        }
+
+        removeTextRange(textRange)
+        addTextAfterSelection(text = text)
+    }
+
+    /**
+     * Adds the provided text to the text field at the current selection.
+     *
+     * @param text The text to be added
+     */
+    public fun addTextAfterSelection(text: String): Unit =
+        addTextAtIndex(
+            index = selection.min,
+            text = text
+        )
+
+    /**
+     * Adds the provided text to the text field at the specified index.
+     *
+     * @param index The index at which the text should be added
+     * @param text The text to be added
+     */
+    public fun addTextAtIndex(
+        index: Int,
+        text: String,
+    ) {
+        require(index >= 0) {
+            "The index must be non-negative."
+        }
+
+        require(index <= textFieldValue.text.length) {
+            "The index must be within the text bounds. " +
+                    "The text length is ${textFieldValue.text.length}, " +
+                    "but the index is $index."
+        }
+
+        val beforeText = textFieldValue.text.substring(0, index)
+        val afterText = textFieldValue.text.substring(selection.max)
+        val newText = "$beforeText$text$afterText"
+
+        onTextFieldValueChange(
+            newTextFieldValue = textFieldValue.copy(
+                text = newText,
+                selection = TextRange(index + text.length),
+            )
+        )
+    }
+
+    // SpanStyle
 
     /**
      * Returns the [SpanStyle] of the text at the specified text range.
@@ -306,28 +427,6 @@ public class RichTextState internal constructor(
             richParagraphList
                 .getCommonStyle()
                 ?: RichParagraph.DefaultParagraphStyle
-        }
-
-    /**
-     * Returns the [ParagraphType] of the text at the specified text range.
-     * If the text range is collapsed, the type of the paragraph containing the text range is returned.
-     *
-     * @param textRange the text range.
-     * @return the [ParagraphType] of the text at the specified text range.
-     */
-    internal fun getParagraphType(textRange: TextRange): ParagraphType =
-        if (textRange.collapsed) {
-            val richParagraph = getRichParagraphByTextIndex(textIndex = textRange.min - 1)
-
-            richParagraph
-                ?.type
-                ?: DefaultParagraph()
-        } else {
-            val richParagraphList = getRichParagraphListByTextRange(textRange)
-
-            richParagraphList
-                .getCommonType()
-                ?: DefaultParagraph()
         }
 
     /**
@@ -465,6 +564,8 @@ public class RichTextState internal constructor(
         removeSpanStyle(currentSpanStyle, textRange)
     }
 
+    // RichSpanStyle
+
     /**
      * Add a link to the text field.
      * The link is going to be added after the current selection.
@@ -585,47 +686,6 @@ public class RichTextState internal constructor(
         updateTextFieldValue(textFieldValue)
     }
 
-    private fun getSelectedLinkRichSpan(): RichSpan? {
-        val richSpan = getRichSpanByTextIndex(selection.min - 1)
-
-        return getLinkRichSpan(richSpan)
-    }
-
-    /**
-     * Replaces the currently selected text with the provided text.
-     *
-     * @param text The new text to be inserted
-     */
-    public fun replaceSelectedText(text: String) {
-        removeSelectedText()
-        addTextAfterSelection(text = text)
-    }
-
-    private fun addTextAfterSelection(
-        text: String
-    ) {
-        addText(
-            text = text,
-            index = selection.min
-        )
-    }
-
-    private fun addText(
-        text: String,
-        index: Int,
-    ) {
-        val beforeText = textFieldValue.text.substring(0, index)
-        val afterText = textFieldValue.text.substring(selection.max)
-        val newText = "$beforeText$text$afterText"
-
-        onTextFieldValueChange(
-            newTextFieldValue = textFieldValue.copy(
-                text = newText,
-                selection = TextRange(index + text.length),
-            )
-        )
-    }
-
     @Deprecated(
         message = "Use toggleCodeSpan instead",
         replaceWith = ReplaceWith("toggleCodeSpan()"),
@@ -652,8 +712,6 @@ public class RichTextState internal constructor(
     public fun removeCode(): Unit = removeCodeSpan()
 
     public fun removeCodeSpan(): Unit = removeRichSpan(RichSpanStyle.Code())
-
-    //RichSpanStyle
 
     public fun toggleRichSpan(spanStyle: RichSpanStyle) {
         if (isRichSpan(spanStyle::class))
@@ -858,31 +916,12 @@ public class RichTextState internal constructor(
         }
     }
 
-    private fun addUnorderedList(paragraph: RichParagraph) {
-        if (paragraph.type is UnorderedList) return
-
-        val newType = UnorderedList(
-            initialIndent = config.unorderedListIndent
-        )
-
-        updateParagraphType(
-            paragraph = paragraph,
-            newType = newType
-        )
-    }
-
     public fun removeUnorderedList() {
         val paragraphs = getRichParagraphListByTextRange(selection)
 
         paragraphs.forEach { paragraph ->
             removeUnorderedList(paragraph)
         }
-    }
-
-    private fun removeUnorderedList(paragraph: RichParagraph) {
-        if (paragraph.type !is UnorderedList) return
-
-        resetParagraphType(paragraph = paragraph)
     }
 
     public fun toggleOrderedList() {
@@ -904,6 +943,65 @@ public class RichTextState internal constructor(
         paragraphs.forEach { paragraph ->
             addOrderedList(paragraph)
         }
+    }
+
+    public fun removeOrderedList() {
+        val paragraphs = getRichParagraphListByTextRange(selection)
+
+        paragraphs.forEach { paragraph ->
+            removeOrderedList(paragraph)
+        }
+    }
+
+    /**
+     * Private/Internal methods
+     */
+
+    /**
+     * Returns the [ParagraphType] of the text at the specified text range.
+     * If the text range is collapsed, the type of the paragraph containing the text range is returned.
+     *
+     * @param textRange the text range.
+     * @return the [ParagraphType] of the text at the specified text range.
+     */
+    internal fun getParagraphType(textRange: TextRange): ParagraphType =
+        if (textRange.collapsed) {
+            val richParagraph = getRichParagraphByTextIndex(textIndex = textRange.min - 1)
+
+            richParagraph
+                ?.type
+                ?: DefaultParagraph()
+        } else {
+            val richParagraphList = getRichParagraphListByTextRange(textRange)
+
+            richParagraphList
+                .getCommonType()
+                ?: DefaultParagraph()
+        }
+
+    private fun getSelectedLinkRichSpan(): RichSpan? {
+        val richSpan = getRichSpanByTextIndex(selection.min - 1)
+
+        return getLinkRichSpan(richSpan)
+    }
+
+    private fun addUnorderedList(paragraph: RichParagraph) {
+        if (paragraph.type is UnorderedList) return
+
+        val newType = UnorderedList(
+            initialIndent = config.unorderedListIndent
+        )
+
+        updateParagraphType(
+            paragraph = paragraph,
+            newType = newType
+        )
+    }
+
+    private fun removeUnorderedList(paragraph: RichParagraph) {
+        if (paragraph.type !is UnorderedList) return
+
+        resetParagraphType(paragraph = paragraph)
     }
 
     private fun addOrderedList(paragraph: RichParagraph) {
@@ -936,14 +1034,6 @@ public class RichTextState internal constructor(
                 textFieldValue = newTextFieldValue,
             ),
         )
-    }
-
-    public fun removeOrderedList() {
-        val paragraphs = getRichParagraphListByTextRange(selection)
-
-        paragraphs.forEach { paragraph ->
-            removeOrderedList(paragraph)
-        }
     }
 
     private fun removeOrderedList(paragraph: RichParagraph) {
@@ -1684,36 +1774,6 @@ public class RichTextState internal constructor(
             // Remove one from the index to continue searching for paragraphs
             index--
         }
-    }
-
-    /**
-     * Removes the selected text from the current text input.
-     *
-     * This method removes the text specified by the `selection` from the current text input.
-     *
-     * @see removeTextRange
-     */
-    private fun removeSelectedText() {
-        removeTextRange(selection)
-    }
-
-    /**x
-     * Removes the specified text range from the current text.
-     *
-     * @param textRange the range of text to be removed
-     */
-    private fun removeTextRange(
-        textRange: TextRange
-    ) {
-        onTextFieldValueChange(
-            newTextFieldValue = textFieldValue.copy(
-                text = textFieldValue.text.removeRange(
-                    startIndex = selection.min,
-                    endIndex = selection.max,
-                ),
-                selection = TextRange(textRange.min),
-            )
-        )
     }
 
     /**

@@ -12,6 +12,8 @@ import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
+import com.mohamedrejeb.richeditor.span.RichSpan
+import com.mohamedrejeb.richeditor.span.RichSpanStyle
 import kotlin.test.*
 
 @ExperimentalRichTextApi

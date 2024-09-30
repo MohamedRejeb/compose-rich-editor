@@ -2,7 +2,7 @@ package com.mohamedrejeb.richeditor.paragraph.type
 
 import androidx.compose.ui.text.ParagraphStyle
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
-import com.mohamedrejeb.richeditor.model.RichSpan
+import com.mohamedrejeb.richeditor.span.RichSpan
 import com.mohamedrejeb.richeditor.model.RichTextConfig
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 

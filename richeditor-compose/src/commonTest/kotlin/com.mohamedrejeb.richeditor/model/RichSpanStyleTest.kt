@@ -3,6 +3,7 @@ package com.mohamedrejeb.richeditor.model
 import androidx.compose.ui.text.TextRange
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
+import com.mohamedrejeb.richeditor.span.RichSpan
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

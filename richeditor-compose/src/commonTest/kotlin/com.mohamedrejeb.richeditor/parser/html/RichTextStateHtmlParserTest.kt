@@ -1,7 +1,7 @@
 package com.mohamedrejeb.richeditor.parser.html
 
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
-import com.mohamedrejeb.richeditor.model.RichSpanStyle
+import com.mohamedrejeb.richeditor.span.RichSpanStyle
 import com.mohamedrejeb.richeditor.parser.utils.H1SpanStyle
 import kotlin.test.Test
 import kotlin.test.assertEquals

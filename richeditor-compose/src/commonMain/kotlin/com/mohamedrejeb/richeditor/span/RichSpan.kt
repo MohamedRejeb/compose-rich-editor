@@ -1,4 +1,4 @@
-package com.mohamedrejeb.richeditor.model
+package com.mohamedrejeb.richeditor.span
 
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange

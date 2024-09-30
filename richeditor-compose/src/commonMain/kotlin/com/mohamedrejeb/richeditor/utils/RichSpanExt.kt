@@ -14,8 +14,8 @@ import androidx.compose.ui.text.style.TextGeometricTransform
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.util.fastForEach
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
-import com.mohamedrejeb.richeditor.model.RichSpan
-import com.mohamedrejeb.richeditor.model.RichSpanStyle
+import com.mohamedrejeb.richeditor.span.RichSpan
+import com.mohamedrejeb.richeditor.span.RichSpanStyle
 
 internal fun List<RichSpan>.getCommonStyle(strict: Boolean = false): SpanStyle? {
     if (this.isEmpty()) return null

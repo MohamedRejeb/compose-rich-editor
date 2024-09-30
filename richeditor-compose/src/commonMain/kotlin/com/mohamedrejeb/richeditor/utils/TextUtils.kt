@@ -3,7 +3,7 @@ package com.mohamedrejeb.richeditor.utils
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
-import com.mohamedrejeb.richeditor.model.RichSpan
+import com.mohamedrejeb.richeditor.span.RichSpan
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startText
 import kotlin.text.buildString

@@ -8,7 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.mohamedrejeb.richeditor.model.RichSpan
+import com.mohamedrejeb.richeditor.span.RichSpan
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 import androidx.compose.ui.util.fastForEachIndexed

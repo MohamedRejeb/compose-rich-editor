@@ -4,9 +4,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.text.TextRange
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
-import com.mohamedrejeb.richeditor.model.RichSpanStyle
+import com.mohamedrejeb.richeditor.span.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import androidx.compose.ui.util.fastForEach
+import com.mohamedrejeb.richeditor.span.RichSpan
 
 @OptIn(ExperimentalRichTextApi::class)
 internal fun Modifier.drawRichSpanStyle(

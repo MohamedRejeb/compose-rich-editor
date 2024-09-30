@@ -18,6 +18,8 @@ import com.mohamedrejeb.richeditor.parser.utils.*
 import com.mohamedrejeb.richeditor.utils.customMerge
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
+import com.mohamedrejeb.richeditor.span.RichSpan
+import com.mohamedrejeb.richeditor.span.RichSpanStyle
 
 internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 

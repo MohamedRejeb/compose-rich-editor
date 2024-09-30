@@ -10,7 +10,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
-import com.mohamedrejeb.richeditor.model.RichSpanStyle
+import com.mohamedrejeb.richeditor.span.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextConfig
 import com.mohamedrejeb.richeditor.utils.getBoundingBoxes
 

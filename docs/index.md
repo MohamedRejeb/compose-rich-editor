@@ -14,6 +14,8 @@ A rich text editor library for both Jetpack Compose and Compose Multiplatform, f
 - **Easy to use**: Compose Rich Editor's API leverages Kotlin's language features for simplicity and minimal boilerplate.
 - **WYSIWYG**: Compose Rich Editor is a WYSIWYG editor that supports the most common text styling features.
 
+![Slack Demo](docs/images/slack-demo.png)
+
 ## Download
 
 [![Maven Central](https://img.shields.io/maven-central/v/com.mohamedrejeb.richeditor/richeditor-compose/1.0.0-rc08)](https://search.maven.org/search?q=g:%22com.mohamedrejeb.richeditor%22%20AND%20a:%22richeditor-compose%22)

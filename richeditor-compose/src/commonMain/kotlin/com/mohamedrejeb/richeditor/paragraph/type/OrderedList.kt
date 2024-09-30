@@ -43,8 +43,8 @@ internal class OrderedList(
         getNewParagraphStyle()
 
     override fun getStyle(config: RichTextConfig): ParagraphStyle {
-        if (config.listIndent != indent) {
-            indent = config.listIndent
+        if (config.orderedListIndent != indent) {
+            indent = config.orderedListIndent
             style = getNewParagraphStyle()
         }
 

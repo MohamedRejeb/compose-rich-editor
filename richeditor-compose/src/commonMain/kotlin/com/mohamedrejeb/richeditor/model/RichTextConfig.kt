@@ -36,10 +36,40 @@ public class RichTextConfig internal constructor(
             updateText()
         }
 
-    public var listIndent: Int = DefaultListIndent
+    /**
+     * The indent for ordered lists.
+     */
+    public var orderedListIndent: Int = DefaultListIndent
         set(value) {
             field = value
             updateText()
+        }
+
+    /**
+     * The indent for unordered lists.
+     */
+    public var unorderedListIndent: Int = DefaultListIndent
+        set(value) {
+            field = value
+            updateText()
+        }
+
+    /**
+     * The indent for both ordered and unordered lists.
+     *
+     * This property is a shortcut for setting both [orderedListIndent] and [unorderedListIndent].
+     */
+    public var listIndent: Int = DefaultListIndent
+        get() {
+            if (orderedListIndent == unorderedListIndent)
+                field = orderedListIndent
+
+            return field
+        }
+        set(value) {
+            field = value
+            orderedListIndent = value
+            unorderedListIndent = value
         }
 
     /**

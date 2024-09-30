@@ -919,4 +919,157 @@ class RichTextStateTest {
         assertEquals(TextRange(8), richTextState.selection)
     }
 
+    @Test
+    fun testRemoveTextRange() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    key = 1,
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Hello",
+                            paragraph = it,
+                        ),
+                    )
+                }
+            )
+        )
+
+        // Remove the text range
+        richTextState.removeTextRange(TextRange(0, 5))
+
+        assertEquals("", richTextState.toText())
+        assertEquals(TextRange(0), richTextState.selection)
+    }
+
+    @Test
+    fun testRemoveSelectedText() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    key = 1,
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Hello",
+                            paragraph = it,
+                        ),
+                    )
+                }
+            )
+        )
+
+        // Select the text
+        richTextState.selection = TextRange(0, 5)
+
+        // Remove the selected text
+        richTextState.removeSelectedText()
+
+        assertEquals("", richTextState.toText())
+        assertEquals(TextRange(0), richTextState.selection)
+    }
+
+    @Test
+    fun testAddTextAtIndex() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    key = 1,
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Hello",
+                            paragraph = it,
+                        ),
+                    )
+                }
+            )
+        )
+
+        // Add text at index
+        richTextState.addTextAtIndex(5, " World")
+
+        assertEquals("Hello World", richTextState.toText())
+        assertEquals(TextRange(11), richTextState.selection)
+    }
+
+    @Test
+    fun testAddTextAfterSelection() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    key = 1,
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Hello",
+                            paragraph = it,
+                        ),
+                    )
+                }
+            )
+        )
+
+        // Select the text
+        richTextState.selection = TextRange(5)
+
+        // Add text after selection
+        richTextState.addTextAfterSelection(" World")
+
+        assertEquals("Hello World", richTextState.toText())
+        assertEquals(TextRange(11), richTextState.selection)
+    }
+
+    @Test
+    fun testReplaceTextRange() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    key = 1,
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Hello",
+                            paragraph = it,
+                        ),
+                    )
+                }
+            )
+        )
+
+        // Replace the text range
+        richTextState.replaceTextRange(TextRange(0, 5), "Hi")
+
+        assertEquals("Hi", richTextState.toText())
+        assertEquals(TextRange(2), richTextState.selection)
+    }
+
+    @Test
+    fun testReplaceSelectedText() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    key = 1,
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Hello",
+                            paragraph = it,
+                        ),
+                    )
+                }
+            )
+        )
+
+        // Select the text
+        richTextState.selection = TextRange(0, 5)
+
+        // Replace the selected text
+        richTextState.replaceSelectedText("Hi")
+
+        assertEquals("Hi", richTextState.toText())
+        assertEquals(TextRange(2), richTextState.selection)
+    }
+
 }

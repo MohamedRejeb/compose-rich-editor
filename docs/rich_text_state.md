@@ -45,3 +45,27 @@ The editor's selection can be changed using the `RichTextState.selection` proper
 ```kotlin
 richTextState.selection = TextRange(0, 5)
 ```
+
+### Performing string operations on rich text
+
+The `RichTextState` class provides a set of functions to perform string operations on the rich text while preserving the styles.
+
+```kotlin
+// Insert text at custom posiotn.
+richTextState.addTextAtIndex(5, "Hello")
+
+// Insert text after the current selection.
+richTextState.addTextAfterSelection("Hello")
+
+// Remove text range.
+richTextState.removeTextRange(TextRange(0, 5))
+
+// Remove selected text.
+richTextState.removeSelectedText()
+
+// Replace text range.
+richTextState.replaceTextRange(TextRange(0, 5), "Hello")
+
+// Replace selected text.
+richTextState.replaceSelectedText("Hello")
+```

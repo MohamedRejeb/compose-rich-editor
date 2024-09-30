@@ -134,6 +134,8 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun addRichSpan-FDrldGo (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;J)V
 	public final fun addSpanStyle (Landroidx/compose/ui/text/SpanStyle;)V
 	public final fun addSpanStyle-FDrldGo (Landroidx/compose/ui/text/SpanStyle;J)V
+	public final fun addTextAfterSelection (Ljava/lang/String;)V
+	public final fun addTextAtIndex (ILjava/lang/String;)V
 	public final fun addUnorderedList ()V
 	public final fun clear ()V
 	public final fun clearRichSpans ()V
@@ -167,10 +169,13 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun removeParagraphStyle (Landroidx/compose/ui/text/ParagraphStyle;)V
 	public final fun removeRichSpan (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;)V
 	public final fun removeRichSpan-FDrldGo (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;J)V
+	public final fun removeSelectedText ()V
 	public final fun removeSpanStyle (Landroidx/compose/ui/text/SpanStyle;)V
 	public final fun removeSpanStyle-FDrldGo (Landroidx/compose/ui/text/SpanStyle;J)V
+	public final fun removeTextRange-5zc-tL8 (J)V
 	public final fun removeUnorderedList ()V
 	public final fun replaceSelectedText (Ljava/lang/String;)V
+	public final fun replaceTextRange-72CqOWE (JLjava/lang/String;)V
 	public final fun setConfig-kmsmbh4 (JLandroidx/compose/ui/text/style/TextDecoration;JJJI)V
 	public static synthetic fun setConfig-kmsmbh4$default (Lcom/mohamedrejeb/richeditor/model/RichTextState;JLandroidx/compose/ui/text/style/TextDecoration;JJJIILjava/lang/Object;)V
 	public final fun setHtml (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/model/RichTextState;

@@ -127,9 +127,15 @@ final class com.mohamedrejeb.richeditor.model/RichTextConfig { // com.mohamedrej
     final var listIndent // com.mohamedrejeb.richeditor.model/RichTextConfig.listIndent|{}listIndent[0]
         final fun <get-listIndent>(): kotlin/Int // com.mohamedrejeb.richeditor.model/RichTextConfig.listIndent.<get-listIndent>|<get-listIndent>(){}[0]
         final fun <set-listIndent>(kotlin/Int) // com.mohamedrejeb.richeditor.model/RichTextConfig.listIndent.<set-listIndent>|<set-listIndent>(kotlin.Int){}[0]
+    final var orderedListIndent // com.mohamedrejeb.richeditor.model/RichTextConfig.orderedListIndent|{}orderedListIndent[0]
+        final fun <get-orderedListIndent>(): kotlin/Int // com.mohamedrejeb.richeditor.model/RichTextConfig.orderedListIndent.<get-orderedListIndent>|<get-orderedListIndent>(){}[0]
+        final fun <set-orderedListIndent>(kotlin/Int) // com.mohamedrejeb.richeditor.model/RichTextConfig.orderedListIndent.<set-orderedListIndent>|<set-orderedListIndent>(kotlin.Int){}[0]
     final var preserveStyleOnEmptyLine // com.mohamedrejeb.richeditor.model/RichTextConfig.preserveStyleOnEmptyLine|{}preserveStyleOnEmptyLine[0]
         final fun <get-preserveStyleOnEmptyLine>(): kotlin/Boolean // com.mohamedrejeb.richeditor.model/RichTextConfig.preserveStyleOnEmptyLine.<get-preserveStyleOnEmptyLine>|<get-preserveStyleOnEmptyLine>(){}[0]
         final fun <set-preserveStyleOnEmptyLine>(kotlin/Boolean) // com.mohamedrejeb.richeditor.model/RichTextConfig.preserveStyleOnEmptyLine.<set-preserveStyleOnEmptyLine>|<set-preserveStyleOnEmptyLine>(kotlin.Boolean){}[0]
+    final var unorderedListIndent // com.mohamedrejeb.richeditor.model/RichTextConfig.unorderedListIndent|{}unorderedListIndent[0]
+        final fun <get-unorderedListIndent>(): kotlin/Int // com.mohamedrejeb.richeditor.model/RichTextConfig.unorderedListIndent.<get-unorderedListIndent>|<get-unorderedListIndent>(){}[0]
+        final fun <set-unorderedListIndent>(kotlin/Int) // com.mohamedrejeb.richeditor.model/RichTextConfig.unorderedListIndent.<set-unorderedListIndent>|<set-unorderedListIndent>(kotlin.Int){}[0]
 }
 
 final class com.mohamedrejeb.richeditor.model/RichTextState { // com.mohamedrejeb.richeditor.model/RichTextState|null[0]

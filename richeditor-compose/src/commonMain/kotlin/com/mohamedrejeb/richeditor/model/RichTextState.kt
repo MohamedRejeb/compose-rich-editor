@@ -2598,7 +2598,7 @@ public class RichTextState internal constructor(
 
                 if (
                     paragraphType.startText.isNotEmpty() &&
-                    paragraphType.startRichSpan.textRange.max < textLayoutResult.layoutInput.text.text.length
+                    paragraphType.startRichSpan.textRange.max <= textLayoutResult.layoutInput.text.text.length
                 ) {
                     val start =
                         textLayoutResult.getHorizontalPosition(

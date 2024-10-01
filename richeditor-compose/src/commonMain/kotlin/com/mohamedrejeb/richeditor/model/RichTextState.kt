@@ -1394,30 +1394,38 @@ public class RichTextState internal constructor(
         val maxParagraphStartTextLength = maxRichSpan.paragraph.type.startRichSpan.text.length
         val maxParagraphFirstChildMinIndex = maxFirstNonEmptyChild?.textRange?.min ?: maxParagraphStartTextLength
 
+        // TODO:
+        //  Check if we can remove this condition since we are already checking below
+        //  if the paragraph needs to be removed
         if (minParagraphIndex == maxParagraphIndex && !singleParagraphMode) {
-            if (minFirstNonEmptyChild == null || minFirstNonEmptyChild.text.isEmpty()) {
-                if (minRichSpan.paragraph.type.startText.isEmpty()) {
-                    // Remove the min paragraph if it's empty (and the max paragraph is the same)
-                    richParagraphList.removeAt(minParagraphIndex)
-                }
+            if (
+                (minFirstNonEmptyChild == null || minFirstNonEmptyChild.text.isEmpty()) &&
+                minRichSpan.paragraph.type.startText.isEmpty()
+            ) {
+                // Remove the min paragraph if it's empty (and the max paragraph is the same)
+                richParagraphList.removeAt(minParagraphIndex)
             }
         }
 
         // Handle Remove the min paragraph custom text
         if (minRemoveIndex < minParagraphFirstChildMinIndex) {
-            handleRemoveMinParagraphStartText(
-                removeIndex = minRemoveIndex,
-                paragraphStartTextLength = minParagraphStartTextLength,
-                paragraphFirstChildMinIndex = minParagraphFirstChildMinIndex,
-            )
+            if (minRichSpan.paragraph.type.startText.isEmpty() && minParagraphIndex != maxParagraphIndex) {
+                richParagraphList.removeAt(minParagraphIndex)
+            } else {
+                handleRemoveMinParagraphStartText(
+                    removeIndex = minRemoveIndex,
+                    paragraphStartTextLength = minParagraphStartTextLength,
+                    paragraphFirstChildMinIndex = minParagraphFirstChildMinIndex,
+                )
 
-            minRichSpan.paragraph.type = DefaultParagraph()
+                minRichSpan.paragraph.type = DefaultParagraph()
 
-            tempTextFieldValue = adjustOrderedListsNumbers(
-                startParagraphIndex = minParagraphIndex + 1,
-                startNumber = 1,
-                textFieldValue = tempTextFieldValue,
-            )
+                tempTextFieldValue = adjustOrderedListsNumbers(
+                    startParagraphIndex = minParagraphIndex + 1,
+                    startNumber = 1,
+                    textFieldValue = tempTextFieldValue,
+                )
+            }
         }
 
         // Handle Remove the max paragraph custom text

@@ -1072,4 +1072,47 @@ class RichTextStateTest {
         assertEquals(TextRange(2), richTextState.selection)
     }
 
+    @Test
+    fun testDeletingMultipleEmptyParagraphs() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    key = 1,
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Hello",
+                            paragraph = it,
+                        ),
+                    )
+                },
+                RichParagraph(
+                    key = 2,
+                ),
+                RichParagraph(
+                    key = 3,
+                ),
+                RichParagraph(
+                    key = 4,
+                ),
+                RichParagraph(
+                    key = 5,
+                ),
+            )
+        )
+
+        // Select the text
+        richTextState.selection = TextRange(9, 6)
+
+        // Remove the selected text
+        richTextState.onTextFieldValueChange(
+            TextFieldValue(
+                text = "Hello ",
+                selection = TextRange(6),
+            )
+        )
+
+        assertEquals(2, richTextState.richParagraphList.size)
+    }
+
 }

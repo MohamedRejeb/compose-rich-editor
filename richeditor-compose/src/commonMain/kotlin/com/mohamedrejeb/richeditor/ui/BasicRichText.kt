@@ -58,22 +58,20 @@ public fun BasicRichText(
             modifier = modifier
                 .drawRichSpanStyle(state)
                 .pointerHoverIcon(pointerIcon.value)
-                .pointerInput(Unit) {
+                .pointerInput(state) {
                     awaitEachGesture {
-                        while (true) {
-                            val event = awaitPointerEvent()
-                            val position = event.changes.first().position
-                            val isLink = state.isLink(position)
+                        val event = awaitPointerEvent()
+                        val position = event.changes.first().position
+                        val isLink = state.isLink(position)
 
-                            pointerIcon.value =
-                                if (isLink)
-                                    PointerIcon.Hand
-                                else
-                                    PointerIcon.Default
-                        }
+                        pointerIcon.value =
+                            if (isLink)
+                                PointerIcon.Hand
+                            else
+                                PointerIcon.Default
                     }
                 }
-                .pointerInput(Unit) {
+                .pointerInput(state) {
                     detectTapGestures(
                         onTap = { offset ->
                             state.getLinkByOffset(offset)?.let { url ->

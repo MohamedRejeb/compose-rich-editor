@@ -44,7 +44,7 @@ internal suspend fun PointerInputScope.detectTapGestures(
     onLongPress: ((Offset) -> Unit)? = null,
     onTap: ((Offset) -> Unit)? = null,
     consumeDown: (Offset) -> Boolean,
-) = coroutineScope {
+) {
     awaitEachGesture {
         val down = awaitFirstDown()
         if (!consumeDown(down.position)) return@awaitEachGesture

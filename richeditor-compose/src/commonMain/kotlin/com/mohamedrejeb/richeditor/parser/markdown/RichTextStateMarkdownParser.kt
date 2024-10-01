@@ -329,7 +329,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
             }
         }
 
-        return builder.toString()
+        return correctMarkdownText(builder.toString())
     }
 
     @OptIn(ExperimentalRichTextApi::class)
@@ -338,6 +338,9 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
         // Check if span is empty
         if (richSpan.isEmpty()) return ""
+
+        // Check if span is blank
+        val isBlank = richSpan.isBlank()
 
         // Convert span style to CSS string
         val markdownOpen = mutableListOf<String>()
@@ -364,7 +367,8 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         }
 
         // Append markdown open
-        stringBuilder.append(markdownOpen.joinToString(separator = ""))
+        if (!isBlank)
+            stringBuilder.append(markdownOpen.joinToString(separator = ""))
 
         // Apply rich span style to markdown
         val spanMarkdown = decodeMarkdownElementFromRichSpan(richSpan.text, richSpan.richSpanStyle)
@@ -378,7 +382,8 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         }
 
         // Append markdown close
-        stringBuilder.append(markdownClose.reversed().joinToString(separator = ""))
+        if (!isBlank)
+            stringBuilder.append(markdownClose.reversed().joinToString(separator = ""))
 
         return stringBuilder.toString()
     }
@@ -468,7 +473,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     }
 
     /**
-     * Decodes HTML elements from [RichSpan].
+     * Decodes Markdown elements from [RichSpan].
      */
     @OptIn(ExperimentalRichTextApi::class)
     private fun decodeMarkdownElementFromRichSpan(

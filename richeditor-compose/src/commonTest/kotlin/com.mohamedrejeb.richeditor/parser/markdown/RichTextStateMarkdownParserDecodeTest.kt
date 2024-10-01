@@ -13,6 +13,7 @@ import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+@ExperimentalRichTextApi
 class RichTextStateMarkdownParserDecodeTest {
 
     /**
@@ -171,6 +172,66 @@ class RichTextStateMarkdownParserDecodeTest {
                     World!
                 """.trimIndent(),
             actual = markdown,
+        )
+    }
+
+    @Test
+    fun testDecodeStyledTextWithSpacesInStyleEdges1() {
+        val state = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph().also {
+                    it.children.add(
+                        RichSpan(
+                            text = "  Hello  ",
+                            paragraph = it,
+                            spanStyle = SpanStyle(fontWeight = FontWeight.Bold)
+                        ),
+                    )
+
+                    it.children.add(
+                        RichSpan(
+                            text = "World!",
+                            paragraph = it,
+                        ),
+                    )
+                },
+            )
+        )
+
+        assertEquals(
+            expected = "  **Hello**  World!",
+            actual = state.toMarkdown()
+        )
+    }
+
+    @Test
+    fun testDecodeStyledTextWithSpacesInStyleEdges2() {
+        val state = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph().also {
+                    it.children.add(
+                        RichSpan(
+                            text = "  Hello  ",
+                            paragraph = it,
+                            spanStyle = SpanStyle(fontWeight = FontWeight.Bold)
+                        ).also {
+                            it.children.add(
+                                RichSpan(
+                                    text = "  World!  ",
+                                    paragraph = it.paragraph,
+                                    parent = it,
+                                    spanStyle = SpanStyle(fontStyle = FontStyle.Italic)
+                                ),
+                            )
+                        },
+                    )
+                },
+            )
+        )
+
+        assertEquals(
+            expected = "  **Hello    *World!***  ",
+            actual = state.toMarkdown()
         )
     }
 

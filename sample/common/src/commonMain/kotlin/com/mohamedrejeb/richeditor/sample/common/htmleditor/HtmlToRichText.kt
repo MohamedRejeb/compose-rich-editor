@@ -11,7 +11,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.coil3.Coil3ImageLoader
@@ -26,6 +28,16 @@ fun HtmlToRichText(
     modifier: Modifier = Modifier,
 ) {
     val richTextState = rememberRichTextState()
+
+    LaunchedEffect(Unit) {
+        richTextState.config.linkColor = Color(0xFF1d9bd1)
+        richTextState.config.linkTextDecoration = TextDecoration.None
+        richTextState.config.codeSpanColor = Color(0xFFd7882d)
+        richTextState.config.codeSpanBackgroundColor = Color.Transparent
+        richTextState.config.codeSpanStrokeColor = Color(0xFF494b4d)
+        richTextState.config.unorderedListIndent = 40
+        richTextState.config.orderedListIndent = 50
+    }
 
     LaunchedEffect(html.text) {
         richTextState.setHtml(html.text)

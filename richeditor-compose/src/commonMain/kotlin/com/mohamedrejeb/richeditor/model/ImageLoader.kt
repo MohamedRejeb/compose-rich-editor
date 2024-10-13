@@ -9,18 +9,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.unit.Density
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 
-@ExperimentalRichTextApi
 public interface ImageLoader {
 
+    @OptIn(ExperimentalRichTextApi::class)
     @Composable
     public fun load(model: Any): ImageData?
 
 }
 
-@ExperimentalRichTextApi
+@OptIn(ExperimentalRichTextApi::class)
 public val LocalImageLoader: ProvidableCompositionLocal<ImageLoader> = staticCompositionLocalOf {
     DefaultImageLoader
 }

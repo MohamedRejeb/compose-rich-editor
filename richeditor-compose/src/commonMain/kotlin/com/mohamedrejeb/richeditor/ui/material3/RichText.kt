@@ -18,8 +18,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
-import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
-import com.mohamedrejeb.richeditor.model.DefaultImageLoader
 import com.mohamedrejeb.richeditor.model.ImageLoader
 import com.mohamedrejeb.richeditor.model.LocalImageLoader
 import com.mohamedrejeb.richeditor.model.RichTextState
@@ -27,7 +25,7 @@ import com.mohamedrejeb.richeditor.ui.BasicRichText
 
 /**
  * High-level element that displays rich text and provides semantics / accessibility information.
- * [RichText] is a convenience wrapper around [Text] and [RichTextValue] to allow for rich text.
+ * [RichText] is a convenience wrapper around [Text] and [RichTextState] to allow for rich text.
  *
  * @param state [RichTextState] The rich text to be displayed.
  * @param modifier the [Modifier] to be applied to this layout node
@@ -61,7 +59,6 @@ import com.mohamedrejeb.richeditor.ui.BasicRichText
  * functionality to the text. For example, to draw selection around the text.
  * @param style style configuration for the text such as color, font, line height etc.
  */
-@OptIn(ExperimentalRichTextApi::class)
 @Composable
 public fun RichText(
     state: RichTextState,

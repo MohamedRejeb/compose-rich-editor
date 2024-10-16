@@ -2757,6 +2757,9 @@ public class RichTextState internal constructor(
         val textLayoutResult = this.textLayoutResult ?: return
         var index = 0
 
+        // Get the length of the text
+        val textLength = textLayoutResult.layoutInput.text.length
+
         // Ensure pressY is within valid bounds
         pressY = pressY.coerceIn(0f, textLayoutResult.size.height.toFloat())
 
@@ -2797,9 +2800,14 @@ public class RichTextState internal constructor(
 
             val lineParagraph = getRichParagraphByTextIndex(lineTextStartIndex) ?: return
 
-            val lineParagraphStart = lineParagraph.getFirstNonEmptyChild()?.textRange?.min ?: return
+            var lineParagraphStart = lineParagraph.getFirstNonEmptyChild()?.textRange?.min ?: return
 
-            // Get bounding box for the paragraph start, ensuring it's within valid line bounds
+            // Ensure lineParagraphStart is within valid bounds before accessing bounding box
+            if (lineParagraphStart >= textLength) {
+                // Adjust lineParagraphStart to be within valid range
+                lineParagraphStart = (textLength - 1).coerceAtLeast(0)
+            }
+
             val lineParagraphStartBounds = textLayoutResult.getBoundingBox(lineParagraphStart)
 
             if (index > 0 && lineParagraphStartBounds.top > pressY) {
@@ -2819,7 +2827,7 @@ public class RichTextState internal constructor(
         ) {
             updateTextFieldValue(
                 textFieldValue.copy(
-                    selection = TextRange(selection.min - 1, selection.min - 1)
+                    selection = TextRange((selection.min - 1).coerceAtLeast(0), (selection.min - 1).coerceAtLeast(0))
                 )
             )
         } else if (
@@ -2830,13 +2838,18 @@ public class RichTextState internal constructor(
         ) {
             updateTextFieldValue(
                 textFieldValue.copy(
-                    selection = TextRange(selection.min + 1, selection.min + 1)
+                    selection = TextRange((selection.min + 1).coerceAtMost(textLength - 1), (selection.min + 1).coerceAtMost(textLength - 1))
                 )
             )
         } else if (newSelection != null) {
+            // Ensure newSelection is within valid bounds
+            val adjustedSelection = TextRange(
+                newSelection.start.coerceIn(0, textLength),
+                newSelection.end.coerceIn(0, textLength)
+            )
             updateTextFieldValue(
                 textFieldValue.copy(
-                    selection = newSelection
+                    selection = adjustedSelection
                 )
             )
         }

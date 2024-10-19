@@ -50,4 +50,15 @@ class MarkdownUtilsTest {
         )
     }
 
+    @Test
+    fun testCorrectMarkdown5() {
+        val markdownInput = "***Bold-Italic ***normal"
+        val expectedOutput = "***Bold-Italic*** normal"
+
+        assertEquals(
+            expectedOutput,
+            correctMarkdownText(markdownInput)
+        )
+    }
+
 }

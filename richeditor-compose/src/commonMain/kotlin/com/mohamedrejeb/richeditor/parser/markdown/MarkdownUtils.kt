@@ -88,14 +88,14 @@ internal fun correctMarkdownText(text: String): String {
                 // Handle open tag
 
                 val tag =
-                    if (pendingTag.length > 2)
-                        pendingTag.substring(0, pendingTag.length - 2)
+                    if (pendingTag.length >= 3)
+                        pendingTag.substring(0, 3)
                     else
                         pendingTag
 
                 val newPendingTag =
-                    if (pendingTag.length > 2)
-                        pendingTag.substring(pendingTag.length - 2)
+                    if (pendingTag.length >= 3)
+                        pendingTag.substring(3)
                     else
                         ""
 

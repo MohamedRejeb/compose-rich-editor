@@ -176,6 +176,126 @@ class RichTextStateMarkdownParserDecodeTest {
     }
 
     @Test
+    fun testDecodeOneEmptyLine() {
+        val state = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(),
+            )
+        )
+
+        val markdown = RichTextStateMarkdownParser.decode(state)
+
+        assertEquals(
+            expected = "",
+            actual = markdown,
+        )
+    }
+
+    @Test
+    fun testDecodeTwoEmptyLines() {
+        val state = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(),
+                RichParagraph(),
+            )
+        )
+
+        val markdown = RichTextStateMarkdownParser.decode(state)
+
+        assertEquals(
+            expected = """
+                
+                <br>
+            """.trimIndent(),
+            actual = markdown,
+        )
+    }
+
+    @Test
+    fun testDecodeWithEnterLineBreakInTheMiddle() {
+        val state = RichTextState()
+        state.setMarkdown(
+            """
+                Hello
+                
+                World!
+            """.trimIndent(),
+        )
+
+        val markdown = RichTextStateMarkdownParser.decode(state)
+
+        assertEquals(
+            expected = """
+                Hello
+                
+                World!
+            """.trimIndent(),
+            actual = markdown,
+        )
+    }
+
+    @Test
+    fun testDecodeWithTwoHtmlLineBreaks() {
+        val state = RichTextState()
+        state.setMarkdown(
+            """
+                Hello
+            
+                <br>
+                
+                <br>
+                
+                World!
+            """.trimIndent(),
+        )
+
+        val markdown = RichTextStateMarkdownParser.decode(state)
+
+        assertEquals(
+            expected = """
+                Hello
+                
+                <br>
+                <br>
+                World!
+            """.trimIndent(),
+            actual = markdown,
+        )
+    }
+
+    @Test
+    fun testDecodeWithTwoHtmlLineBreaksAndTextInBetween() {
+        val state = RichTextState()
+        state.setMarkdown(
+            """
+                Hello
+            
+                <br>
+                q
+                
+                <br>
+                
+                World!
+            """.trimIndent(),
+        )
+
+        val markdown = RichTextStateMarkdownParser.decode(state)
+
+        assertEquals(
+            expected = """
+                Hello
+                
+                <br>
+                q
+                
+                <br>
+                World!
+            """.trimIndent(),
+            actual = markdown,
+        )
+    }
+
+    @Test
     fun testDecodeStyledTextWithSpacesInStyleEdges1() {
         val state = RichTextState(
             initialRichParagraphList = listOf(

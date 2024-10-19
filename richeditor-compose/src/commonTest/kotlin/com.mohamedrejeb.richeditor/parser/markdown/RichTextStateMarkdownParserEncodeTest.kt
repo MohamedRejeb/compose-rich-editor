@@ -1,11 +1,14 @@
 package com.mohamedrejeb.richeditor.parser.markdown
 
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
+import com.mohamedrejeb.richeditor.model.RichTextState
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -117,12 +120,77 @@ class RichTextStateMarkdownParserEncodeTest {
     }
 
     @Test
-    fun testEncodeLineBreak() {
+    fun testEncodeWithOneHtmlLineBreakInTheMiddle() {
+        val markdownList = listOf(
+            """
+                Hello
+                <br>
+                World!
+            """.trimIndent(),
+
+            """
+                Hello
+                <br>
+                
+                World!
+            """.trimIndent(),
+
+
+            """
+                Hello
+                
+                <br>
+                
+                World!
+            """.trimIndent(),
+        )
+
+        markdownList.forEach { markdown ->
+            val state = RichTextStateMarkdownParser.encode(markdown)
+
+            assertEquals(
+                expected = 4,
+                actual = state.richParagraphList.size,
+            )
+        }
+
+    }
+
+    @Test
+    fun testEncodeWithEnterLineBreakInTheMiddle() {
+        val markdownList = listOf(
+            """
+                Hello
+                
+                World!
+            """.trimIndent(),
+
+            """
+                Hello
+                
+    
+                
+                World!
+            """.trimIndent(),
+        )
+
+        markdownList.forEach { markdown ->
+            val state = RichTextStateMarkdownParser.encode(markdown)
+
+            assertEquals(
+                expected = 3,
+                actual = state.richParagraphList.size,
+            )
+        }
+    }
+
+    @Test
+    fun testEncodeWithTwoHtmlLineBreaks() {
         val markdown = """
             Hello
+            
             <br>
-            
-            
+            <br>
             
             World!
         """.trimIndent()
@@ -130,39 +198,58 @@ class RichTextStateMarkdownParserEncodeTest {
         val state = RichTextStateMarkdownParser.encode(markdown)
 
         assertEquals(
-            expected = 4,
+            expected = 5,
             actual = state.richParagraphList.size,
         )
+    }
 
-        state.setMarkdown(
-            """
-            Hello
-            
-            
-            
-            World!
-        """.trimIndent()
-        )
-
-        assertEquals(
-            expected = 3,
-            actual = state.richParagraphList.size,
-        )
-
-        state.setMarkdown(
-            """
+    @Test
+    fun testEncodeWithTwoHtmlLineBreaksAndTextInBetween() {
+        val markdown1 = """
             Hello
             
             <br>
+            q
             <br>
             
             World!
         """.trimIndent()
-        )
 
         assertEquals(
             expected = 5,
-            actual = state.richParagraphList.size,
+            actual = RichTextStateMarkdownParser.encode(markdown1).richParagraphList.size,
+        )
+
+        val markdown2 = """
+            Hello
+            
+            <br>
+            q
+            
+            <br>
+            
+            World!
+        """.trimIndent()
+
+        assertEquals(
+            expected = 7,
+            actual = RichTextStateMarkdownParser.encode(markdown2).richParagraphList.size,
+        )
+
+        val markdown3 = """
+            Hello
+            
+            <br>
+            
+            q
+            <br>
+            
+            World!
+        """.trimIndent()
+
+        assertEquals(
+            expected = 7,
+            actual = RichTextStateMarkdownParser.encode(markdown3).richParagraphList.size,
         )
     }
 
@@ -294,6 +381,25 @@ class RichTextStateMarkdownParserEncodeTest {
             expected = SpanStyle(),
             actual = normalRichSpan.spanStyle,
         )
+    }
+
+    // https://github.com/MohamedRejeb/compose-rich-editor/issues/385
+    @Test
+    fun testInitMarkdownWithEmptyLinesAndTypeText() {
+        val state = RichTextState()
+
+        state.setMarkdown("<br>")
+
+        assertEquals(state.richParagraphList.size, 2)
+
+        state.onTextFieldValueChange(
+            TextFieldValue(
+                text = "  d",
+                selection = TextRange(3)
+            )
+        )
+
+        assertEquals(state.richParagraphList.size, 2)
     }
 
 }

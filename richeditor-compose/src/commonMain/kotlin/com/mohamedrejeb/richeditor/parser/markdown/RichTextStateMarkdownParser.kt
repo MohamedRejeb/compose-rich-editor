@@ -17,6 +17,7 @@ import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import com.mohamedrejeb.richeditor.parser.RichTextStateParser
 import com.mohamedrejeb.richeditor.parser.html.BrElement
+import com.mohamedrejeb.richeditor.parser.html.RichTextStateHtmlParser
 import com.mohamedrejeb.richeditor.parser.html.htmlElementsSpanStyleEncodeMap
 import com.mohamedrejeb.richeditor.parser.utils.*
 import org.intellij.markdown.MarkdownElementTypes
@@ -34,24 +35,26 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         val openedNodes = mutableListOf<ASTNode>()
         val openedHtmlTags = mutableListOf<String>()
         val richParagraphList = mutableListOf(RichParagraph())
+        var brParagraphIndices = mutableListOf<Int>()
         var currentRichSpan: RichSpan? = null
         var currentRichParagraphType: ParagraphType = DefaultParagraph()
 
         fun onAddLineBreak() {
-            val newParagraph =
-                if (richParagraphList.isEmpty())
-                    RichParagraph()
-                else
-                    RichParagraph(paragraphStyle = richParagraphList.last().paragraphStyle)
-
             val lastParagraph = richParagraphList.lastOrNull()
             val beforeLastParagraph = richParagraphList.getOrNull(richParagraphList.lastIndex - 1)
+            val lastBrIndex = brParagraphIndices.lastOrNull()
+            val beforeLastBrIndex = brParagraphIndices.getOrNull(brParagraphIndices.lastIndex - 1)
 
             // We need this for line break to work fine with EOL
-            if (lastParagraph?.isEmpty() == true && beforeLastParagraph?.isEmpty() != true)
-                richParagraphList.add(newParagraph)
+            if (
+                lastParagraph?.isEmpty() != true ||
+                beforeLastParagraph?.isEmpty() != true ||
+                lastBrIndex == richParagraphList.lastIndex ||
+                beforeLastBrIndex == richParagraphList.lastIndex - 1
+            )
+                richParagraphList.add(RichParagraph())
 
-            richParagraphList.add(newParagraph)
+            brParagraphIndices.add(richParagraphList.lastIndex)
 
             currentRichSpan = null
         }
@@ -212,9 +215,14 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 if (node.type == MarkdownTokenTypes.EOL) {
                     val lastParagraph = richParagraphList.lastOrNull()
                     val beforeLastParagraph = richParagraphList.getOrNull(richParagraphList.lastIndex - 1)
+                    val lastBrParagraphIndex = brParagraphIndices.lastOrNull()
+                    val beforeLastBrParagraphIndex = brParagraphIndices.getOrNull(brParagraphIndices.lastIndex - 1)
+
                     if (
                         lastParagraph?.isNotEmpty() == true ||
-                        beforeLastParagraph?.isNotEmpty() == true
+                        beforeLastParagraph?.isNotEmpty() == true ||
+                        lastBrParagraphIndex == richParagraphList.lastIndex ||
+                        beforeLastBrParagraphIndex == richParagraphList.lastIndex - 1
                     ) {
                         richParagraphList.add(RichParagraph())
                     }
@@ -285,9 +293,39 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     onAddLineBreak()
                 }
 
+                if (html.isNotBlank())
+                    richParagraphList.addAll(RichTextStateHtmlParser.encode(html).richParagraphList)
+
                 // Todo: support HTML Block in markdown
             }
         )
+
+        val toDeleteParagraphIndices = mutableListOf<Int>()
+        var lastNonEmptyParagraphIndex = -1
+        var lastBrParagraphIndex = -1
+
+        richParagraphList.forEachIndexed { i, paragraph ->
+            val isEmpty = paragraph.isEmpty()
+            val isBr = i in brParagraphIndices
+
+            // Delete empty paragraphs between line breaks to match Markdown rendering
+            if (isBr && lastNonEmptyParagraphIndex < lastBrParagraphIndex) {
+                val range = (lastBrParagraphIndex + 1)..(i - 1)
+
+                if (!range.isEmpty())
+                    toDeleteParagraphIndices.addAll(range)
+            }
+
+            if (!isEmpty)
+                lastNonEmptyParagraphIndex = i
+
+            if (isBr)
+                lastBrParagraphIndex = i
+        }
+
+        toDeleteParagraphIndices.reversed().forEach { i ->
+            richParagraphList.removeAt(i)
+        }
 
         return RichTextState(
             initialRichParagraphList = richParagraphList,

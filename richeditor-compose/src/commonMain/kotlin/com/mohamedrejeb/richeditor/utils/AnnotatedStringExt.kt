@@ -66,13 +66,13 @@ internal fun AnnotatedString.Builder.appendRichSpan(
 
         if (
             previousRichSpan != null &&
-            previousRichSpan!!.spanStyle == richSpan.spanStyle &&
-            previousRichSpan!!.richSpanStyle == richSpan.richSpanStyle &&
-            previousRichSpan!!.children.isEmpty() &&
+            previousRichSpan.spanStyle == richSpan.spanStyle &&
+            previousRichSpan.richSpanStyle == richSpan.richSpanStyle &&
+            previousRichSpan.children.isEmpty() &&
             richSpan.children.isEmpty()
         ) {
-            previousRichSpan!!.text += richSpan.text
-            previousRichSpan!!.textRange = TextRange(previousRichSpan!!.textRange.min, richSpan.textRange.max)
+            previousRichSpan.text += richSpan.text
+            previousRichSpan.textRange = TextRange(previousRichSpan.textRange.min, richSpan.textRange.max)
             toRemoveRichSpanIndices.add(i)
         } else {
             previousRichSpan = richSpan

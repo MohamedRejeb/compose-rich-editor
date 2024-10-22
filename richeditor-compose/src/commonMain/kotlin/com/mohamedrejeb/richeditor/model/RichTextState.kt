@@ -304,19 +304,30 @@ public class RichTextState internal constructor(
         textRange: TextRange,
         text: String
     ) {
-        require(textRange.min >= 0) {
-            "The start index must be non-negative."
+        // Ensure indices are within bounds
+        val safeMin = textRange.min.coerceIn(0, textFieldValue.text.length)
+        val safeMax = textRange.max.coerceIn(0, textFieldValue.text.length)
+
+        // Optional: Log or handle cases where the range was adjusted
+        if (safeMin != textRange.min || safeMax != textRange.max) {
+            // Handle the adjustment, e.g., log a warning or take corrective action
+            println("Adjusted text range from [$textRange.min, ${textRange.max}] to [$safeMin, $safeMax]")
         }
 
-        require(textRange.max <= textFieldValue.text.length) {
-            "The end index must be within the text bounds. " +
-                    "The text length is ${textFieldValue.text.length}, " +
-                    "but the end index is ${textRange.max}."
-        }
+        // Perform the replacement using safe indices
+        val beforeText = textFieldValue.text.substring(0, safeMin)
+        val afterText = textFieldValue.text.substring(safeMax)
+        val newText = beforeText + text + afterText
 
-        removeTextRange(textRange)
-        addTextAfterSelection(text = text)
+        // Update the text field value with the new text and updated selection
+        onTextFieldValueChange(
+            newTextFieldValue = textFieldValue.copy(
+                text = newText,
+                selection = TextRange(safeMin + text.length),
+            )
+        )
     }
+
 
     /**
      * Adds the provided text to the text field at the current selection.
@@ -1741,20 +1752,29 @@ public class RichTextState internal constructor(
                     (!config.preserveStyleOnEmptyLine || richSpan.paragraph.isEmpty()) &&
                     isSelectionAtNewRichSpan
                 ) {
-                    newParagraphFirstRichSpan.spanStyle = SpanStyle()
-                    newParagraphFirstRichSpan.richSpanStyle = RichSpanStyle.Default
+                    if (newParagraphFirstRichSpan != null) {
+                        newParagraphFirstRichSpan.spanStyle = SpanStyle()
+                    }
+                    if (newParagraphFirstRichSpan != null) {
+                        newParagraphFirstRichSpan.richSpanStyle = RichSpanStyle.Default
+                    }
                 } else if (
                     config.preserveStyleOnEmptyLine &&
                     isSelectionAtNewRichSpan
                 ) {
-                    newParagraphFirstRichSpan.spanStyle = currentSpanStyle
-                    newParagraphFirstRichSpan.richSpanStyle = currentRichSpanStyle
+                    if (newParagraphFirstRichSpan != null) {
+                        newParagraphFirstRichSpan.spanStyle = currentSpanStyle
+                    }
+                    if (newParagraphFirstRichSpan != null) {
+                        newParagraphFirstRichSpan.richSpanStyle = currentRichSpanStyle
+                    }
                 }
             }
 
             // Get the text before and after the slice index
-            val beforeText = tempTextFieldValue.text.substring(0, sliceIndex + 1)
-            val afterText = tempTextFieldValue.text.substring(sliceIndex + 1)
+            val safeSliceIndex = sliceIndex.coerceAtMost(tempTextFieldValue.text.length - 1)
+            val beforeText = tempTextFieldValue.text.substring(0, safeSliceIndex + 1)
+            val afterText = tempTextFieldValue.text.substring(safeSliceIndex + 1)
 
             // Update the text field value to include the new paragraph custom start text
             tempTextFieldValue = tempTextFieldValue.copy(

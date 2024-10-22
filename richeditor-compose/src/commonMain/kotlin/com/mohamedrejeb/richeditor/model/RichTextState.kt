@@ -304,28 +304,34 @@ public class RichTextState internal constructor(
         textRange: TextRange,
         text: String
     ) {
-        // Ensure indices are within bounds
-        val safeMin = textRange.min.coerceIn(0, textFieldValue.text.length)
-        val safeMax = textRange.max.coerceIn(0, textFieldValue.text.length)
+        // Ensure that the start and end indices are within bounds
+        val start = textRange.min.coerceAtLeast(0) // Ensure the start is non-negative
+        val end = textRange.max.coerceAtMost(textFieldValue.text.length) // Ensure the end does not exceed text length
 
-        // Optional: Log or handle cases where the range was adjusted
-        if (safeMin != textRange.min || safeMax != textRange.max) {
-            // Handle the adjustment, e.g., log a warning or take corrective action
-            println("Adjusted text range from [$textRange.min, ${textRange.max}] to [$safeMin, $safeMax]")
+        require(start <= end) {
+            "The start index ($start) must be less than or equal to the end index ($end)."
         }
 
-        // Perform the replacement using safe indices
-        val beforeText = textFieldValue.text.substring(0, safeMin)
-        val afterText = textFieldValue.text.substring(safeMax)
+        // Perform the replacement with safe slicing
+        val beforeText = textFieldValue.text.safeSubstring(0, start)
+        val afterText = textFieldValue.text.safeSubstring(end)
         val newText = beforeText + text + afterText
 
-        // Update the text field value with the new text and updated selection
         onTextFieldValueChange(
             newTextFieldValue = textFieldValue.copy(
                 text = newText,
-                selection = TextRange(safeMin + text.length),
+                selection = TextRange(start + text.length), // Set cursor to the end of the inserted text
             )
         )
+    }
+
+    // A helper function to safely slice strings without throwing exceptions
+    private fun String.safeSubstring(startIndex: Int, endIndex: Int = this.length): String {
+        return if (startIndex in 0..this.length && endIndex in startIndex..this.length) {
+            this.substring(startIndex, endIndex)
+        } else {
+            "" // Return empty string if indices are out of bounds
+        }
     }
 
 

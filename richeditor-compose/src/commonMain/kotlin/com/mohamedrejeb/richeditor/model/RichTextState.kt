@@ -1363,7 +1363,7 @@ public class RichTextState internal constructor(
         val removedCharsCount = textFieldValue.text.length - tempTextFieldValue.text.length
 
         val minRemoveIndex =
-            (textFieldValue.selection.max - removedCharsCount)
+            tempTextFieldValue.selection.min
                 .coerceAtLeast(0)
 
         val maxRemoveIndex =

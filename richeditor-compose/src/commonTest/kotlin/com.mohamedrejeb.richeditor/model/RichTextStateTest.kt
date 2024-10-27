@@ -944,6 +944,51 @@ class RichTextStateTest {
     }
 
     @Test
+    fun testRemoveTextRange2() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    key = 1,
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Hello World!",
+                            paragraph = it,
+                        ),
+                    )
+                },
+                RichParagraph(
+                    key = 2,
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Rich Editor",
+                            paragraph = it,
+                        ),
+                    )
+                }
+            )
+        )
+
+        richTextState.selection = TextRange(richTextState.textFieldValue.text.length)
+
+        richTextState.richParagraphList.forEachIndexed { index, paragraph ->
+            println("Paragraph $index: $paragraph")
+        }
+
+        // Remove the text range
+        richTextState.removeTextRange(TextRange(0, 5))
+        println("---- AFTER ----")
+
+        richTextState.richParagraphList.forEachIndexed { index, paragraph ->
+            println("Paragraph $index: $paragraph")
+        }
+
+        assertEquals(" World!\nRich Editor", richTextState.toText())
+        assertEquals(TextRange(0), richTextState.selection)
+    }
+
+    @Test
     fun testRemoveSelectedText() {
         val richTextState = RichTextState(
             initialRichParagraphList = listOf(
@@ -1042,6 +1087,42 @@ class RichTextStateTest {
         richTextState.replaceTextRange(TextRange(0, 5), "Hi")
 
         assertEquals("Hi", richTextState.toText())
+        assertEquals(TextRange(2), richTextState.selection)
+    }
+
+    @Test
+    fun testReplaceTextRange2() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    key = 1,
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Hello World!",
+                            paragraph = it,
+                        ),
+                    )
+                },
+                RichParagraph(
+                    key = 2,
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Rich Editor",
+                            paragraph = it,
+                        ),
+                    )
+                }
+            )
+        )
+
+        richTextState.selection = TextRange(richTextState.textFieldValue.text.length)
+
+        // Replace the text range
+        richTextState.replaceTextRange(TextRange(0, 5), "Hi")
+
+        assertEquals("Hi World!\nRich Editor", richTextState.toText())
         assertEquals(TextRange(2), richTextState.selection)
     }
 

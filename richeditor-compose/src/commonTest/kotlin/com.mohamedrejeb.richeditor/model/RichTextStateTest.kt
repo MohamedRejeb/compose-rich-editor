@@ -1196,4 +1196,45 @@ class RichTextStateTest {
         assertEquals(2, richTextState.richParagraphList.size)
     }
 
+    fun testAutoRecognizeOrderedListUtil(number: Int) {
+        val state = RichTextState()
+        val text = "$number. "
+
+        state.onTextFieldValueChange(
+            TextFieldValue(
+                text = text,
+                selection = TextRange(text.length),
+            )
+        )
+
+        val orderedList = state.richParagraphList.first().type
+
+        assertIs<OrderedList>(orderedList)
+        assertEquals(number, orderedList.number)
+        assertTrue(state.isOrderedList)
+    }
+
+    @Test
+    fun testAutoRecognizeOrderedList() {
+        testAutoRecognizeOrderedListUtil(1)
+        testAutoRecognizeOrderedListUtil(28)
+    }
+
+    @Test
+    fun testAutoRecognizeUnorderedList() {
+        val state = RichTextState()
+
+        state.onTextFieldValueChange(
+            TextFieldValue(
+                text = "- ",
+                selection = TextRange(2),
+            )
+        )
+
+        val orderedList = state.richParagraphList.first().type
+
+        assertIs<UnorderedList>(orderedList)
+        assertTrue(state.isUnorderedList)
+    }
+
 }

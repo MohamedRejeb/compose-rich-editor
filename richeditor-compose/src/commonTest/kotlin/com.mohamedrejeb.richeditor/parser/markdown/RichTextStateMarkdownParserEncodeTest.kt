@@ -415,8 +415,6 @@ class RichTextStateMarkdownParserEncodeTest {
 
         state.setMarkdown(markdown)
 
-        state.printParagraphs()
-
         assertEquals(2, state.richParagraphList.size)
 
         val firstParagraph = state.richParagraphList[0]

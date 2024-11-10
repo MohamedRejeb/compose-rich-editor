@@ -1622,12 +1622,15 @@ public class RichTextState internal constructor(
             )
             richSpan.text = ""
         } else if (richSpan.text.matches(Regex("^\\d+\\. "))) {
-            val number = richSpan.text.first().digitToIntOrNull() ?: 1
-            richSpan.paragraph.type = OrderedList(
-                number = number,
-                initialIndent = config.orderedListIndent,
-            )
-            richSpan.text = ""
+            val dotIndex = richSpan.text.indexOf('.')
+            if (dotIndex != -1) {
+                val number = richSpan.text.substring(0, dotIndex).toIntOrNull() ?: 1
+                richSpan.paragraph.type = OrderedList(
+                    number = number,
+                    initialIndent = config.orderedListIndent,
+                )
+                richSpan.text = ""
+            }
         }
     }
 

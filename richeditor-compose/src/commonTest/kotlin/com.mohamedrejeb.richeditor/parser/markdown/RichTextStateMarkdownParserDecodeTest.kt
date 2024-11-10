@@ -355,4 +355,26 @@ class RichTextStateMarkdownParserDecodeTest {
         )
     }
 
+    @Test
+    fun testDecodeTitles() {
+        val markdown = """
+            # Prompt
+            ## Emphasis
+        """.trimIndent()
+
+        val state = RichTextState()
+
+        state.setMarkdown(markdown)
+
+        state.printParagraphs()
+
+        assertEquals(
+            """
+                # Prompt
+                ## Emphasis
+            """.trimIndent(),
+            state.toMarkdown()
+        )
+    }
+
 }

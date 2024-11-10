@@ -9,6 +9,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.parser.utils.H1SpanStyle
+import com.mohamedrejeb.richeditor.parser.utils.H2SpanStyle
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -400,6 +402,31 @@ class RichTextStateMarkdownParserEncodeTest {
         )
 
         assertEquals(state.richParagraphList.size, 2)
+    }
+
+    @Test
+    fun testEncodeTitles() {
+        val markdown = """
+            # Prompt
+            ## Emphasis
+        """.trimIndent()
+
+        val state = RichTextState()
+
+        state.setMarkdown(markdown)
+
+        state.printParagraphs()
+
+        assertEquals(2, state.richParagraphList.size)
+
+        val firstParagraph = state.richParagraphList[0]
+
+        assertEquals(H1SpanStyle, firstParagraph.getFirstNonEmptyChild()!!.spanStyle)
+
+        val secondParagraph = state.richParagraphList[1]
+        assertEquals(H2SpanStyle, secondParagraph.getFirstNonEmptyChild()!!.spanStyle)
+
+        assertEquals("Prompt\nEmphasis", state.toText())
     }
 
 }

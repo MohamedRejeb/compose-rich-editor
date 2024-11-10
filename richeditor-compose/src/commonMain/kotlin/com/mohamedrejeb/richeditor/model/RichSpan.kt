@@ -9,6 +9,7 @@ import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.utils.customMerge
 import com.mohamedrejeb.richeditor.utils.isSpecifiedFieldsEquals
+import kotlin.collections.indices
 
 /**
  * A rich span is a part of a rich paragraph.
@@ -230,6 +231,94 @@ internal class RichSpan(
             }
         }
         return null
+    }
+
+    /**
+     * Trim the start of the rich span
+     *
+     * @return True if the rich span is empty after trimming, false otherwise
+     */
+    internal fun trimStart(): Boolean {
+        if (richSpanStyle is RichSpanStyle.Image)
+            return false
+
+        if (isBlank()) {
+            text = ""
+            children.clear()
+            return true
+        }
+
+        text = text.trimStart()
+
+        if (text.isNotEmpty())
+            return false
+
+        var isEmpty = true
+        val toRemoveIndices = mutableListOf<Int>()
+
+        for (i in children.indices) {
+            val richSpan = children[i]
+
+            val isChildEmpty = richSpan.trimStart()
+
+            if (isChildEmpty) {
+                // Remove the child if it's empty
+                toRemoveIndices.add(i)
+            } else {
+                isEmpty = false
+                break
+            }
+        }
+
+        toRemoveIndices.fastForEachReversed {
+            children.removeAt(it)
+        }
+
+        return isEmpty
+    }
+
+    internal fun trimEnd(): Boolean {
+        val isImage = richSpanStyle is RichSpanStyle.Image
+
+        if (isImage)
+            return false
+
+        val isChildrenBlank = isChildrenBlank() && !isImage
+
+        if (text.isBlank() && isChildrenBlank) {
+            text = ""
+            children.clear()
+            return true
+        }
+
+        if (isChildrenBlank) {
+            children.clear()
+            text = text.trimEnd()
+            return false
+        }
+
+        var isEmpty = true
+        val toRemoveIndices = mutableListOf<Int>()
+
+        for (i in children.indices.reversed()) {
+            val richSpan = children[i]
+
+            val isChildEmpty = richSpan.trimEnd()
+
+            if (isChildEmpty) {
+                // Remove the child if it's empty
+                toRemoveIndices.add(i)
+            } else {
+                isEmpty = false
+                break
+            }
+        }
+
+        toRemoveIndices.fastForEach {
+            children.removeAt(it)
+        }
+
+        return isEmpty
     }
 
     /**
@@ -497,6 +586,6 @@ internal class RichSpan(
     )
 
     override fun toString(): String {
-        return "richSpan(text='$text', textRange=$textRange, fullTextRange=$fullTextRange), richSpanStyle=$richSpanStyle)"
+        return "richSpan(text='$text', textRange=$textRange, fullTextRange=$fullTextRange, fontSize=${spanStyle.fontSize}, fontWeight=${spanStyle.fontWeight}, richSpanStyle=$richSpanStyle)"
     }
 }

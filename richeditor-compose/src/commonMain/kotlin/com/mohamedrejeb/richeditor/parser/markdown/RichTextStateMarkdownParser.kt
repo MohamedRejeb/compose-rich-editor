@@ -305,6 +305,8 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         var lastBrParagraphIndex = -1
 
         richParagraphList.forEachIndexed { i, paragraph ->
+            paragraph.trim()
+
             val isEmpty = paragraph.isEmpty()
             val isBr = i in brParagraphIndices
 
@@ -341,16 +343,20 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
             // Append paragraph start text
             builder.appendParagraphStartText(richParagraph)
 
+            var isHeading = false
+
             richParagraph.getFirstNonEmptyChild()?.let { firstNonEmptyChild ->
                 if (firstNonEmptyChild.text.isNotEmpty()) {
                     // Append markdown line start text
-                    builder.append(getMarkdownLineStartTextFromFirstRichSpan(firstNonEmptyChild))
+                    val lineStartText = getMarkdownLineStartTextFromFirstRichSpan(firstNonEmptyChild)
+                    builder.append(lineStartText)
+                    isHeading = lineStartText.startsWith('#')
                 }
             }
 
             // Append paragraph children
             richParagraph.children.fastForEach { richSpan ->
-                builder.append(decodeRichSpanToMarkdown(richSpan))
+                builder.append(decodeRichSpanToMarkdown(richSpan, isHeading))
             }
 
             // Append line break if needed
@@ -371,7 +377,10 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     }
 
     @OptIn(ExperimentalRichTextApi::class)
-    private fun decodeRichSpanToMarkdown(richSpan: RichSpan): String {
+    private fun decodeRichSpanToMarkdown(
+        richSpan: RichSpan,
+        isHeading: Boolean,
+    ): String {
         val stringBuilder = StringBuilder()
 
         // Check if span is empty
@@ -384,7 +393,8 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         val markdownOpen = mutableListOf<String>()
         val markdownClose = mutableListOf<String>()
 
-        if ((richSpan.spanStyle.fontWeight?.weight ?: 400) > 400) {
+        // Ignore adding bold `**` for heading since it's already bold
+        if ((richSpan.spanStyle.fontWeight?.weight ?: 400) > 400 && !isHeading) {
             markdownOpen += "**"
             markdownClose += "**"
         }
@@ -405,7 +415,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         }
 
         // Append markdown open
-        if (!isBlank)
+        if (!isBlank && markdownOpen.isNotEmpty())
             stringBuilder.append(markdownOpen.joinToString(separator = ""))
 
         // Apply rich span style to markdown
@@ -416,11 +426,11 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
         // Append children
         richSpan.children.fastForEach { child ->
-            stringBuilder.append(decodeRichSpanToMarkdown(child))
+            stringBuilder.append(decodeRichSpanToMarkdown(child, isHeading))
         }
 
         // Append markdown close
-        if (!isBlank)
+        if (!isBlank && markdownClose.isNotEmpty())
             stringBuilder.append(markdownClose.reversed().joinToString(separator = ""))
 
         return stringBuilder.toString()

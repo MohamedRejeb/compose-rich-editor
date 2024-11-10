@@ -366,8 +366,6 @@ class RichTextStateMarkdownParserDecodeTest {
 
         state.setMarkdown(markdown)
 
-        state.printParagraphs()
-
         assertEquals(
             """
                 # Prompt

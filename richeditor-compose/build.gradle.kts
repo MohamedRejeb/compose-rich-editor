@@ -1,6 +1,6 @@
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -39,28 +39,22 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
 
-    sourceSets {
-        val commonMain by getting {
-            dependencies {
-                implementation(compose.runtime)
-                implementation(compose.foundation)
-                implementation(compose.material)
-                implementation(compose.material3)
+    sourceSets.commonMain.dependencies {
+        implementation(compose.runtime)
+        implementation(compose.foundation)
+        implementation(compose.material)
+        implementation(compose.material3)
 
-                // HTML parsing library
-                implementation(libs.ksoup.html)
-                implementation(libs.ksoup.entities)
+        // HTML parsing library
+        implementation(libs.ksoup.html)
+        implementation(libs.ksoup.entities)
 
-                // Markdown parsing library
-                implementation(libs.jetbrains.markdown)
-            }
-        }
+        // Markdown parsing library
+        implementation(libs.jetbrains.markdown)
+    }
 
-        val commonTest by getting {
-            dependencies {
-                implementation(kotlin("test"))
-            }
-        }
+    sourceSets.commonTest.dependencies {
+        implementation(kotlin("test"))
     }
 }
 

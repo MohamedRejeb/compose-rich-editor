@@ -1,6 +1,6 @@
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -62,32 +62,30 @@ kotlin {
         implementation(libs.ktor.client.core)
     }
 
-    sourceSets {
-        androidMain.dependencies {
-            api(libs.androidx.appcompat)
+    sourceSets.androidMain.dependencies {
+        api(libs.androidx.appcompat)
 
-            implementation(libs.kotlinx.coroutines.android)
-            implementation(libs.ktor.client.okhttp)
-        }
+        implementation(libs.kotlinx.coroutines.android)
+        implementation(libs.ktor.client.okhttp)
+    }
 
-        named("desktopMain").dependencies {
-            implementation(compose.desktop.currentOs)
+    sourceSets.named("desktopMain").dependencies {
+        implementation(compose.desktop.currentOs)
 
-            implementation(libs.kotlinx.coroutines.swing)
-            implementation(libs.ktor.client.okhttp)
-        }
+        implementation(libs.kotlinx.coroutines.swing)
+        implementation(libs.ktor.client.okhttp)
+    }
 
-        iosMain.dependencies {
-            implementation(libs.ktor.client.darwin)
-        }
+    sourceSets.iosMain.dependencies {
+        implementation(libs.ktor.client.darwin)
+    }
 
-        jsMain.dependencies {
-            implementation(libs.ktor.client.js)
-        }
+    sourceSets.jsMain.dependencies {
+        implementation(libs.ktor.client.js)
+    }
 
-        named("wasmJsMain").dependencies {
-            implementation(libs.ktor.client.wasm)
-        }
+    sourceSets.wasmJsMain.dependencies {
+        implementation(libs.ktor.client.wasm)
     }
 }
 

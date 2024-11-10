@@ -6,7 +6,7 @@ dokka = "1.9.10"
 
 ksoup = "0.4.0"
 jetbrainsMarkdown = "0.7.3"
-coil = "3.0.0-alpha10"
+coil = "3.0.1"
 
 nexus-publish = "2.0.0"
 
@@ -16,7 +16,7 @@ activity-compose = "1.9.1"
 voyager = "1.1.0-beta02"
 richeditor = "1.0.0-rc05"
 coroutines = "1.8.1"
-ktor = "3.0.0-beta-2"
+ktor = "3.0.1"
 android-minSdk = "21"
 android-compileSdk = "34"
 

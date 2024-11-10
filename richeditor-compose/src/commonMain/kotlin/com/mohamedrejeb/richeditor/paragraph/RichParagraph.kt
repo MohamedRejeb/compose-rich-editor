@@ -179,6 +179,47 @@ internal class RichParagraph(
     }
 
     /**
+     * Trim the rich paragraph
+     */
+    fun trim() {
+        val isEmpty = trimStart()
+        if (!isEmpty)
+            trimEnd()
+    }
+
+    /**
+     * Trim the start of the rich paragraph
+     *
+     * @return True if the rich paragraph is empty after trimming, false otherwise
+     */
+    fun trimStart(): Boolean {
+        children.fastForEach { richSpan ->
+            val isEmpty = richSpan.trimStart()
+
+            if (!isEmpty)
+                return false
+        }
+
+        return true
+    }
+
+    /**
+     * Trim the end of the rich paragraph
+     *
+     * @return True if the rich paragraph is empty after trimming, false otherwise
+     */
+    fun trimEnd(): Boolean {
+        children.fastForEachReversed { richSpan ->
+            val isEmpty = richSpan.trimEnd()
+
+            if (!isEmpty)
+                return false
+        }
+
+        return true
+    }
+
+    /**
      * Update the paragraph of the children recursively
      *
      * @param newParagraph The new paragraph

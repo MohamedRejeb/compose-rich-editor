@@ -12,15 +12,15 @@ import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startText
 import com.mohamedrejeb.richeditor.ui.test.getRichTextStyleTreeRepresentation
 
-class RichParagraph(
-    val key: Int = 0,
-    val children: MutableList<RichSpan> = mutableListOf(),
-    var paragraphStyle: ParagraphStyle = DefaultParagraphStyle,
-    var type: ParagraphType = DefaultParagraph(),
+public class RichParagraph(
+    internal val key: Int = 0,
+    internal val children: MutableList<RichSpan> = mutableListOf(),
+    internal var paragraphStyle: ParagraphStyle = DefaultParagraphStyle,
+    internal var type: ParagraphType = DefaultParagraph(),
 ) {
 
     @OptIn(ExperimentalRichTextApi::class)
-    fun getRichSpanByTextIndex(
+    public fun getRichSpanByTextIndex(
         paragraphIndex: Int,
         textIndex: Int,
         offset: Int = 0,
@@ -72,7 +72,7 @@ class RichParagraph(
     }
 
     @OptIn(ExperimentalRichTextApi::class)
-    fun getRichSpanListByTextRange(
+    public fun getRichSpanListByTextRange(
         paragraphIndex: Int,
         searchTextRange: TextRange,
         offset: Int = 0,
@@ -109,7 +109,7 @@ class RichParagraph(
         return index to richSpanList
     }
 
-    fun removeTextRange(
+    public fun removeTextRange(
         textRange: TextRange,
         offset: Int,
     ): RichParagraph? {
@@ -163,9 +163,9 @@ class RichParagraph(
         return true
     }
 
-    fun isNotEmpty(ignoreStartRichSpan: Boolean = true): Boolean = !isEmpty(ignoreStartRichSpan)
+    public fun isNotEmpty(ignoreStartRichSpan: Boolean = true): Boolean = !isEmpty(ignoreStartRichSpan)
 
-    fun isBlank(ignoreStartRichSpan: Boolean = true): Boolean {
+    public fun isBlank(ignoreStartRichSpan: Boolean = true): Boolean {
         if (!ignoreStartRichSpan && !type.startRichSpan.isBlank()) return false
 
         if (children.isEmpty()) return true
@@ -175,9 +175,9 @@ class RichParagraph(
         return true
     }
 
-    fun isNotBlank(ignoreStartRichSpan: Boolean = true): Boolean = !isBlank(ignoreStartRichSpan)
+    public fun isNotBlank(ignoreStartRichSpan: Boolean = true): Boolean = !isBlank(ignoreStartRichSpan)
 
-    fun getFirstNonEmptyChild(offset: Int = -1): RichSpan? {
+    public fun getFirstNonEmptyChild(offset: Int = -1): RichSpan? {
         children.fastForEach { richSpan ->
             if (richSpan.text.isNotEmpty()) {
                 if (offset != -1)
@@ -211,7 +211,7 @@ class RichParagraph(
     /**
      * Trim the rich paragraph
      */
-    fun trim() {
+    public fun trim() {
         val isEmpty = trimStart()
         if (!isEmpty)
             trimEnd()
@@ -222,7 +222,7 @@ class RichParagraph(
      *
      * @return True if the rich paragraph is empty after trimming, false otherwise
      */
-    fun trimStart(): Boolean {
+    public fun trimStart(): Boolean {
         children.fastForEach { richSpan ->
             val isEmpty = richSpan.trimStart()
 
@@ -238,7 +238,7 @@ class RichParagraph(
      *
      * @return True if the rich paragraph is empty after trimming, false otherwise
      */
-    fun trimEnd(): Boolean {
+    public fun trimEnd(): Boolean {
         children.fastForEachReversed { richSpan ->
             val isEmpty = richSpan.trimEnd()
 
@@ -254,14 +254,14 @@ class RichParagraph(
      *
      * @param newParagraph The new paragraph
      */
-    fun updateChildrenParagraph(newParagraph: RichParagraph) {
+    public fun updateChildrenParagraph(newParagraph: RichParagraph) {
         children.fastForEach { childRichSpan ->
             childRichSpan.paragraph = newParagraph
             childRichSpan.updateChildrenParagraph(newParagraph)
         }
     }
 
-    fun removeEmptyChildren() {
+    public fun removeEmptyChildren() {
         val toRemoveIndices = mutableListOf<Int>()
 
         children.fastForEachIndexed { index, richSpan ->
@@ -276,7 +276,7 @@ class RichParagraph(
         }
     }
 
-    fun copy(): RichParagraph {
+    public fun copy(): RichParagraph {
         val newParagraph = RichParagraph(
             paragraphStyle = paragraphStyle,
             type = type.copy(),
@@ -299,7 +299,7 @@ class RichParagraph(
         return stringBuilder.toString()
     }
 
-    companion object {
-        val DefaultParagraphStyle = ParagraphStyle()
+    public companion object {
+        public val DefaultParagraphStyle: ParagraphStyle = ParagraphStyle()
     }
 }

@@ -4,17 +4,17 @@ import androidx.compose.ui.text.ParagraphStyle
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichTextConfig
 
-interface ParagraphType {
+public interface ParagraphType {
 
-    fun getStyle(config: RichTextConfig): ParagraphStyle
+    public fun getStyle(config: RichTextConfig): ParagraphStyle
 
-    val startRichSpan: RichSpan
+    public val startRichSpan: RichSpan
 
-    fun getNextParagraphType(): ParagraphType
+    public fun getNextParagraphType(): ParagraphType
 
-    fun copy(): ParagraphType
+    public fun copy(): ParagraphType
 
-    companion object {
-        val ParagraphType.startText : String get() = startRichSpan.text
+    public companion object {
+        public val ParagraphType.startText : String get() = startRichSpan.text
     }
 }

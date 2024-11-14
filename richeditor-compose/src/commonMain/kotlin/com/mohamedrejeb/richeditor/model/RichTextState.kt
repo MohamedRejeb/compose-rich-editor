@@ -5,6 +5,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.isSpecified
@@ -169,7 +170,7 @@ public class RichTextState internal constructor(
                 currentAppliedRichSpanStyle
         }
 
-    internal var styledRichSpanList = mutableStateListOf<RichSpan>()
+    public var styledRichSpanList: SnapshotStateList<RichSpan> = mutableStateListOf()
         private set
 
     private var currentAppliedParagraphStyle: ParagraphStyle by mutableStateOf(

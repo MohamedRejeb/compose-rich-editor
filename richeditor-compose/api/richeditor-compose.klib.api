@@ -235,6 +235,8 @@ final class com.mohamedrejeb.richeditor.model/RichTextState { // com.mohamedreje
     final var selection // com.mohamedrejeb.richeditor.model/RichTextState.selection|{}selection[0]
         final fun <get-selection>(): androidx.compose.ui.text/TextRange // com.mohamedrejeb.richeditor.model/RichTextState.selection.<get-selection>|<get-selection>(){}[0]
         final fun <set-selection>(androidx.compose.ui.text/TextRange) // com.mohamedrejeb.richeditor.model/RichTextState.selection.<set-selection>|<set-selection>(androidx.compose.ui.text.TextRange){}[0]
+    final var styledRichSpanList // com.mohamedrejeb.richeditor.model/RichTextState.styledRichSpanList|{}styledRichSpanList[0]
+        final fun <get-styledRichSpanList>(): androidx.compose.runtime.snapshots/SnapshotStateList<com.mohamedrejeb.richeditor.model/RichSpan> // com.mohamedrejeb.richeditor.model/RichTextState.styledRichSpanList.<get-styledRichSpanList>|<get-styledRichSpanList>(){}[0]
     final var textLayoutResult // com.mohamedrejeb.richeditor.model/RichTextState.textLayoutResult|{}textLayoutResult[0]
         final fun <get-textLayoutResult>(): androidx.compose.ui.text/TextLayoutResult? // com.mohamedrejeb.richeditor.model/RichTextState.textLayoutResult.<get-textLayoutResult>|<get-textLayoutResult>(){}[0]
 

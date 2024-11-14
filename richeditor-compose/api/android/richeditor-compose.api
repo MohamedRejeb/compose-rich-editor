@@ -195,6 +195,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun getSelectedLinkUrl ()Ljava/lang/String;
 	public final fun getSelection-d9O1mEE ()J
 	public final fun getSpanStyle-5zc-tL8 (J)Landroidx/compose/ui/text/SpanStyle;
+	public final fun getStyledRichSpanList ()Landroidx/compose/runtime/snapshots/SnapshotStateList;
 	public final fun getTextLayoutResult ()Landroidx/compose/ui/text/TextLayoutResult;
 	public final fun isCode ()Z
 	public final fun isCodeSpan ()Z

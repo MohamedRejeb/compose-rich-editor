@@ -109,7 +109,7 @@ fun RichEditorContent() {
                         BasicRichTextEditor(
                             modifier = Modifier.fillMaxWidth(),
                             state = basicRichTextState,
-                            onRichSpanClick = { span ->
+                            onRichSpanClick = { span, offset ->
                                 println("clicked")
                                 if (span.richSpanStyle is SpellCheck) {
                                     println("Spell check clicked")
@@ -117,7 +117,8 @@ fun RichEditorContent() {
                                         basicRichTextState.textLayoutResult
                                             ?.multiParagraph
                                             ?.getBoundingBox(span.textRange.start)
-                                    println("Position: ${position}")
+                                    println("Position: $position")
+                                    println("Offset: $offset")
                                     spellCheckExpanded = position
                                 }
                             }

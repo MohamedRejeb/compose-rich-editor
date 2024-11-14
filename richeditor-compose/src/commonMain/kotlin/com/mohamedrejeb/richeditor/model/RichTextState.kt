@@ -55,8 +55,6 @@ public class RichTextState internal constructor(
     internal val inlineContentMap = mutableStateMapOf<String, InlineTextContent>()
     internal val usedInlineContentMapKeys = mutableSetOf<String>()
 
-    public fun getRichParagraphList(): SnapshotStateList<RichParagraph> = richParagraphList
-
     /**
      * The annotated string representing the rich text.
      */

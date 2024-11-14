@@ -229,7 +229,7 @@ public fun BasicRichTextEditor(
                 interactionSource.interactions.collect { interaction ->
                     if (interaction is PressInteraction.Press) {
                         state.getRichSpanByOffset(interaction.pressPosition)?.let { clickedSpan ->
-                            onRichSpanClick(clickedSpan)
+                            onRichSpanClick(clickedSpan, interaction.pressPosition)
                         }
                     }
                 }
@@ -341,4 +341,4 @@ internal suspend fun adjustTextIndicatorOffset(
     )
 }
 
-public typealias RichSpanClickListener = (RichSpan) -> Unit
+public typealias RichSpanClickListener = (RichSpan, Offset) -> Unit

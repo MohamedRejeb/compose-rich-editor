@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,20 +29,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.sample.common.components.RichTextStyleRow
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
+import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 
@@ -190,7 +185,7 @@ fun RichEditorContent() {
                 item {
                     Text(
                         text = "OutlinedRichTextEditor:",
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleMedium
                     )
                 }
 
@@ -206,43 +201,10 @@ fun RichEditorContent() {
                 }
 
                 item {
-                    var spellCheckWord by remember { mutableStateOf<RichSpan?>(null) }
-                    var expanded by remember { mutableStateOf(false) }
-                    var menuPosition by remember { mutableStateOf(Offset.Zero) }
-
-                    fun clearSpellCheck() {
-                        spellCheckWord = null
-                        expanded = false
-                        menuPosition = Offset.Zero
-                    }
-
-                    Box {
-                        BasicRichTextEditor(
-                            modifier = Modifier.fillMaxWidth(),
-                            state = outlinedRichTextState,
-                            textStyle = TextStyle.Default.copy(color = Color.White),
-                            cursorBrush = SolidColor(Color.White),
-                            onRichSpanClick = { span, click ->
-                                if (span.richSpanStyle is SpellCheck) {
-                                    println("On Click: $span")
-                                    spellCheckWord = span
-                                    menuPosition = click
-                                    expanded = true
-                                }
-                            }
-                        )
-
-                        SpellCheckDropdown(
-                            spellCheckWord,
-                            menuPosition,
-                            dismiss = ::clearSpellCheck,
-                            correctSpelling = { span, correction ->
-                                println("Correcting spelling to: $correction")
-                                outlinedRichTextState.replaceTextRange(span.textRange, correction)
-                                clearSpellCheck()
-                            }
-                        )
-                    }
+                    OutlinedRichTextEditor(
+                        modifier = Modifier.fillMaxWidth(),
+                        state = outlinedRichTextState,
+                    )
                 }
 
                 item {
@@ -267,32 +229,6 @@ fun RichEditorContent() {
                         state = richTextState,
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun SpellCheckDropdown(
-    word: RichSpan?,
-    position: Offset,
-    dismiss: () -> Unit,
-    correctSpelling: (RichSpan, String) -> Unit
-) {
-    Box(modifier = Modifier.offset(x = position.x.dp, y = position.y.dp)) {
-        DropdownMenu(
-            expanded = word != null,
-            onDismissRequest = dismiss,
-        ) {
-            if (word != null) {
-                DropdownMenuItem(
-                    text = { Text("Item 1 ${word.text}") },
-                    onClick = { correctSpelling(word, "One1") },
-                )
-                DropdownMenuItem(
-                    text = { Text("Item 2 ${word.text}") },
-                    onClick = { correctSpelling(word, "Two2") },
-                )
             }
         }
     }

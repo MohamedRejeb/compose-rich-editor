@@ -64,6 +64,9 @@ kotlin {
 
         // Ktor
         implementation(libs.ktor.client.core)
+
+        // Spell Check
+        implementation(libs.symspellkt)
     }
 
     sourceSets.androidMain.dependencies {

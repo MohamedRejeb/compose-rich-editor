@@ -75,7 +75,7 @@ fun SpellCheckContent() {
                 richTextState.toText().getWords().forEach { (word, range) ->
                     println("Spell Checking word: $word")
                     val suggestions = spellChecker.lookup(word)
-                    if (suggestions.isNotEmpty() && suggestions.first().term != word) {
+                    if (suggestions.spellingIsCorrect(word).not()) {
                         println("Misspelling found!")
                         richTextState.addRichSpan(SpellCheck, range)
                     }
@@ -185,7 +185,7 @@ fun SpellCheckDropdown(
         spellChecker ?: return@LaunchedEffect
 
         val suggestions = spellChecker.lookupCompound(word.text)
-        if(suggestions.firstOrNull()?.term != word.text) {
+        if(word.text.isSpelledCorrectly(suggestions).not()) {
             suggestionItems = suggestions
         }
     }

@@ -7,8 +7,14 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.LocalTextStyle
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.material.TextFieldColors
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.TextFieldDefaults.indicatorLine
+import androidx.compose.material.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -20,6 +26,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
+import com.mohamedrejeb.richeditor.ui.RichTextChangedListener
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 
 /**
@@ -98,6 +105,7 @@ public fun RichTextEditor(
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
     maxLength: Int = Int.MAX_VALUE,
+    onRichTextChangedListener: RichTextChangedListener? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape =
         MaterialTheme.shapes.small.copy(bottomEnd = ZeroCornerSize, bottomStart = ZeroCornerSize),
@@ -130,6 +138,7 @@ public fun RichTextEditor(
         maxLines = maxLines,
         minLines = minLines,
         maxLength = maxLength,
+        onRichTextChangedListener = onRichTextChangedListener,
         decorationBox = @Composable { innerTextField ->
             // places leading icon, text field with label and placeholder, trailing icon
             TextFieldDefaults.TextFieldDecorationBox(

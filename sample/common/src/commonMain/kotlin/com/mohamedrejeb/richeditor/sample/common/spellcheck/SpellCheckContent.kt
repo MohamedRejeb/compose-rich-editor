@@ -109,7 +109,7 @@ fun SpellCheckContent() {
                     // This is a very naive algorithm that just removes all spell check spans and
                     // reruns the entire spell check again
                     richTextState.textChanges.debounceUntilQuiescent(1.seconds).collect { updated ->
-                        val newTextHash = updated.toText().hashCode()
+                        val newTextHash = updated.annotatedString.hashCode()
                         if (lastTextHash != newTextHash) {
                             // Remove all existing spell checks
                             richTextState.getAllRichSpans()
@@ -206,7 +206,7 @@ fun SpellCheckContent() {
     }
 }
 
-fun String.getWords(): Sequence<Pair<String, TextRange>> {
+private fun String.getWords(): Sequence<Pair<String, TextRange>> {
     return sequence {
         var startIndex = -1
         for (i in indices) {

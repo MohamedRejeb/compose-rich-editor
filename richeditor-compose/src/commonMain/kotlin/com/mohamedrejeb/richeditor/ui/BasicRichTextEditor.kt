@@ -227,9 +227,9 @@ public fun BasicRichTextEditor(
         LaunchedEffect(interactionSource) {
             scope.launch {
                 interactionSource.interactions.collect { interaction ->
-                    if (interaction is PressInteraction.Press) {
-                        state.getRichSpanByOffset(interaction.pressPosition)?.let { clickedSpan ->
-                            onRichSpanClick(clickedSpan, interaction.pressPosition)
+                    if (interaction is PressInteraction.Release) {
+                        state.getRichSpanByOffset(interaction.press.pressPosition)?.let { clickedSpan ->
+                            onRichSpanClick(clickedSpan, interaction.press.pressPosition)
                         }
                     }
                 }

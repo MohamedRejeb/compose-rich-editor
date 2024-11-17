@@ -1,17 +1,21 @@
 package com.mohamedrejeb.richeditor.sample.common.spellcheck
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,7 +29,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -43,6 +49,13 @@ import com.mohamedrejeb.richeditor.sample.common.components.RichTextStyleRow
 import com.mohamedrejeb.richeditor.sample.common.richeditor.SpellCheck
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.launch
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,17 +80,48 @@ fun SpellCheckContent() {
         ) { paddingValue ->
 
             val richTextState = rememberRichTextState()
-            val spellChecker = rememberSpellChecker()
+            val spellChecker by rememberSpellChecker()
+            var lastTextHash = remember { -1 }
 
             fun runSpellCheck() {
-                spellChecker ?: return
+                val sp = spellChecker ?: return
+                //println("Running spell check...")
 
                 richTextState.toText().getWords().forEach { (word, range) ->
-                    println("Spell Checking word: $word")
-                    val suggestions = spellChecker.lookup(word)
+                    val suggestions = sp.lookup(word)
                     if (suggestions.spellingIsCorrect(word).not()) {
-                        println("Misspelling found!")
+                        //println("Misspelling found!")
                         richTextState.addRichSpan(SpellCheck, range)
+                    }
+                }
+            }
+
+            // Run SpellCheck as soon as it is ready
+            LaunchedEffect(spellChecker) {
+                if (spellChecker != null) {
+                    runSpellCheck()
+                }
+            }
+
+            val scope = rememberCoroutineScope()
+            LaunchedEffect(Unit) {
+                scope.launch {
+                    // This is a very naive algorithm that just removes all spell check spans and
+                    // reruns the entire spell check again
+                    richTextState.textChanges.debounceUntilQuiescent(1.seconds).collect { updated ->
+                        val newTextHash = updated.toText().hashCode()
+                        if (lastTextHash != newTextHash) {
+                            // Remove all existing spell checks
+                            richTextState.getAllRichSpans()
+                                .filter { it.richSpanStyle is SpellCheck }
+                                .forEach { span ->
+                                    richTextState.removeRichSpan(SpellCheck, span.textRange)
+                                }
+
+                            runSpellCheck()
+
+                            lastTextHash = newTextHash
+                        }
                     }
                 }
             }
@@ -107,43 +151,56 @@ fun SpellCheckContent() {
                     .fillMaxSize()
                     .padding(20.dp)
             ) {
-                Button(
-                    onClick = ::runSpellCheck,
-                    enabled = (spellChecker != null)
-                ) {
-                    Text("Run Spell Check")
-                }
                 RichTextStyleRow(
                     modifier = Modifier.fillMaxWidth(),
                     state = richTextState,
                 )
 
-                BasicRichTextEditor(
-                    modifier = Modifier.fillMaxWidth(),
-                    state = richTextState,
-                    textStyle = TextStyle.Default.copy(color = Color.White),
-                    cursorBrush = SolidColor(Color.White),
-                    onRichSpanClick = { span, click ->
-                        if (span.richSpanStyle is SpellCheck) {
-                            println("On Click: $span")
-                            spellCheckWord = span
-                            menuPosition = click
-                            expanded = true
-                        }
-                    },
-                )
+                Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                    BasicRichTextEditor(
+                        modifier = Modifier.fillMaxSize(),
+                        state = richTextState,
+                        textStyle = TextStyle.Default.copy(color = Color.White),
+                        cursorBrush = SolidColor(Color.White),
+                        onRichSpanClick = { span, click ->
+                            if (span.richSpanStyle is SpellCheck) {
+                                println("On Click: $span")
+                                spellCheckWord = span
+                                menuPosition = click
+                                expanded = true
+                            }
+                        },
+                    )
 
-                SpellCheckDropdown(
-                    spellCheckWord,
-                    menuPosition,
-                    spellChecker,
-                    dismiss = ::clearSpellCheck,
-                    correctSpelling = { span, correction ->
-                        println("Correcting spelling to: $correction")
-                        richTextState.replaceTextRange(span.textRange, correction)
-                        clearSpellCheck()
+                    SpellCheckDropdown(
+                        spellCheckWord,
+                        menuPosition,
+                        spellChecker,
+                        dismiss = ::clearSpellCheck,
+                        correctSpelling = { span, correction ->
+                            println("Correcting spelling to: $correction")
+                            richTextState.replaceTextRange(span.textRange, correction)
+                            clearSpellCheck()
+                        }
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End,
+                    ) {
+                    if (spellChecker == null) {
+                        CircularProgressIndicator(modifier = Modifier.size(25.dp))
+                        Text(" Loading Dictionary...")
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Loaded",
+                        )
+                        Text(" Spell Check Ready!")
                     }
-                )
+                }
             }
         }
     }
@@ -185,7 +242,7 @@ fun SpellCheckDropdown(
         spellChecker ?: return@LaunchedEffect
 
         val suggestions = spellChecker.lookupCompound(word.text)
-        if(word.text.isSpelledCorrectly(suggestions).not()) {
+        if (word.text.isSpelledCorrectly(suggestions).not()) {
             suggestionItems = suggestions
         }
     }
@@ -202,6 +259,18 @@ fun SpellCheckDropdown(
                     onClick = { correctSpelling(word, item.term) },
                 )
             }
+        }
+    }
+}
+
+private fun <T> Flow<T>.debounceUntilQuiescent(duration: Duration): Flow<T> = channelFlow {
+    var job: Job? = null
+    collect { value ->
+        job?.cancel()
+        job = launch {
+            delay(duration)
+            send(value)
+            job = null
         }
     }
 }

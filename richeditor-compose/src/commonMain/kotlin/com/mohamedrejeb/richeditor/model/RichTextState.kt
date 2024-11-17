@@ -1255,6 +1255,10 @@ public class RichTextState internal constructor(
         styledRichSpanList.addAll(newStyledRichSpanList)
     }
 
+    public fun getAllRichSpans(): List<RichSpan> {
+        return richParagraphList.flatMap { richParagraph -> richParagraph.children }
+    }
+
     /**
      * Handles adding characters to the text field.
      * This method will update the [richParagraphList] to reflect the new changes.

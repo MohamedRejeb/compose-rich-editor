@@ -182,6 +182,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun clearSpanStyles ()V
 	public final fun clearSpanStyles-5zc-tL8 (J)V
 	public final fun copy ()Lcom/mohamedrejeb/richeditor/model/RichTextState;
+	public final fun getAllRichSpans ()Ljava/util/List;
 	public final fun getAnnotatedString ()Landroidx/compose/ui/text/AnnotatedString;
 	public final fun getComposition-MzsxiRA ()Landroidx/compose/ui/text/TextRange;
 	public final fun getConfig ()Lcom/mohamedrejeb/richeditor/model/RichTextConfig;
@@ -196,6 +197,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun getSelection-d9O1mEE ()J
 	public final fun getSpanStyle-5zc-tL8 (J)Landroidx/compose/ui/text/SpanStyle;
 	public final fun getStyledRichSpanList ()Landroidx/compose/runtime/snapshots/SnapshotStateList;
+	public final fun getTextChanges ()Lkotlinx/coroutines/flow/SharedFlow;
 	public final fun getTextLayoutResult ()Landroidx/compose/ui/text/TextLayoutResult;
 	public final fun isCode ()Z
 	public final fun isCodeSpan ()Z

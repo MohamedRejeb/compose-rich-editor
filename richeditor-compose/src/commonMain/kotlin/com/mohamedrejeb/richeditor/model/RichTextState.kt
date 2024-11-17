@@ -27,6 +27,7 @@ import com.mohamedrejeb.richeditor.parser.html.RichTextStateHtmlParser
 import com.mohamedrejeb.richeditor.parser.markdown.RichTextStateMarkdownParser
 import com.mohamedrejeb.richeditor.utils.*
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -54,6 +55,16 @@ public class RichTextState internal constructor(
 
     internal val inlineContentMap = mutableStateMapOf<String, InlineTextContent>()
     internal val usedInlineContentMapKeys = mutableSetOf<String>()
+
+    private val _textChanges = MutableSharedFlow<RichTextState>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    public val textChanges: SharedFlow<RichTextState> = _textChanges
+
+    private fun emitTextChange() {
+        _textChanges.tryEmit(this)
+    }
 
     /**
      * The annotated string representing the rich text.
@@ -1138,6 +1149,8 @@ public class RichTextState internal constructor(
 
         // Update text field value
         updateTextFieldValue()
+
+        emitTextChange()
     }
 
     /**

@@ -165,6 +165,8 @@ final class com.mohamedrejeb.richeditor.model/RichTextState { // com.mohamedreje
         final fun <get-selectedLinkText>(): kotlin/String? // com.mohamedrejeb.richeditor.model/RichTextState.selectedLinkText.<get-selectedLinkText>|<get-selectedLinkText>(){}[0]
     final val selectedLinkUrl // com.mohamedrejeb.richeditor.model/RichTextState.selectedLinkUrl|{}selectedLinkUrl[0]
         final fun <get-selectedLinkUrl>(): kotlin/String? // com.mohamedrejeb.richeditor.model/RichTextState.selectedLinkUrl.<get-selectedLinkUrl>|<get-selectedLinkUrl>(){}[0]
+    final val textChanges // com.mohamedrejeb.richeditor.model/RichTextState.textChanges|{}textChanges[0]
+        final fun <get-textChanges>(): kotlinx.coroutines.flow/SharedFlow<com.mohamedrejeb.richeditor.model/RichTextState> // com.mohamedrejeb.richeditor.model/RichTextState.textChanges.<get-textChanges>|<get-textChanges>(){}[0]
 
     final var annotatedString // com.mohamedrejeb.richeditor.model/RichTextState.annotatedString|{}annotatedString[0]
         final fun <get-annotatedString>(): androidx.compose.ui.text/AnnotatedString // com.mohamedrejeb.richeditor.model/RichTextState.annotatedString.<get-annotatedString>|<get-annotatedString>(){}[0]

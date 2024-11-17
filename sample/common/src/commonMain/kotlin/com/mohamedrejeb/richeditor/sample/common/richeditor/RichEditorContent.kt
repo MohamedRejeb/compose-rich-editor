@@ -5,8 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -18,6 +17,7 @@ import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
+import kotlinx.coroutines.*
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -27,6 +27,18 @@ fun RichEditorContent() {
     val basicRichTextState = rememberRichTextState()
     val richTextState = rememberRichTextState()
     val outlinedRichTextState = rememberRichTextState()
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        scope.launch {
+            println("Start collecting...")
+            outlinedRichTextState.textChanges.collect { state ->
+                println("Text changed!")
+                println(state.toText())
+            }
+            println("Collection finished!")
+        }
+    }
 
     LaunchedEffect(Unit) {
         richTextState.setHtml(

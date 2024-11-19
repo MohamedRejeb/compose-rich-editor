@@ -31,12 +31,10 @@ fun RichEditorContent() {
 
     LaunchedEffect(Unit) {
         scope.launch {
-            println("Start collecting...")
             outlinedRichTextState.textChanges.collect { state ->
                 println("Text changed!")
                 println(state.toText())
             }
-            println("Collection finished!")
         }
     }
 

@@ -158,7 +158,7 @@ fun SpellCheckContent() {
 
                 Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
                     BasicRichTextEditor(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize().padding(16.dp),
                         state = richTextState,
                         textStyle = TextStyle.Default.copy(color = Color.White),
                         cursorBrush = SolidColor(Color.White),
@@ -244,6 +244,8 @@ fun SpellCheckDropdown(
         val suggestions = spellChecker.lookupCompound(word.text)
         if (word.text.isSpelledCorrectly(suggestions).not()) {
             suggestionItems = suggestions
+        } else {
+            suggestionItems = emptyList()
         }
     }
 
@@ -253,10 +255,17 @@ fun SpellCheckDropdown(
             onDismissRequest = dismiss,
         ) {
             word ?: return@DropdownMenu
-            suggestionItems.forEach { item ->
+            if(suggestionItems.isNotEmpty()) {
+                suggestionItems.forEach { item ->
+                    DropdownMenuItem(
+                        text = { Text(item.term) },
+                        onClick = { correctSpelling(word, item.term) },
+                    )
+                }
+            } else {
                 DropdownMenuItem(
-                    text = { Text(item.term) },
-                    onClick = { correctSpelling(word, item.term) },
+                    text = { Text("No suggestions") },
+                    onClick = dismiss,
                 )
             }
         }

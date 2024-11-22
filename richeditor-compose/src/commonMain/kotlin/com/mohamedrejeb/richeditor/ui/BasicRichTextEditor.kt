@@ -24,12 +24,13 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
-import com.mohamedrejeb.richeditor.model.RichSpan
+import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -229,7 +230,7 @@ public fun BasicRichTextEditor(
                 interactionSource.interactions.collect { interaction ->
                     if (interaction is PressInteraction.Press) {
                         state.getRichSpanByOffset(interaction.pressPosition)?.let { clickedSpan ->
-                            onRichSpanClick(clickedSpan, interaction.pressPosition)
+                            onRichSpanClick(clickedSpan.richSpanStyle, clickedSpan.textRange, interaction.pressPosition)
                         }
                     }
                 }
@@ -341,4 +342,4 @@ internal suspend fun adjustTextIndicatorOffset(
     )
 }
 
-public typealias RichSpanClickListener = (RichSpan, Offset) -> Unit
+public typealias RichSpanClickListener = (RichSpanStyle, TextRange, Offset) -> Unit

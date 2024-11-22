@@ -143,6 +143,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun clearSpanStyles ()V
 	public final fun clearSpanStyles-5zc-tL8 (J)V
 	public final fun copy ()Lcom/mohamedrejeb/richeditor/model/RichTextState;
+	public final fun getAllRichSpans ()Ljava/util/List;
 	public final fun getAnnotatedString ()Landroidx/compose/ui/text/AnnotatedString;
 	public final fun getComposition-MzsxiRA ()Landroidx/compose/ui/text/TextRange;
 	public final fun getConfig ()Lcom/mohamedrejeb/richeditor/model/RichTextConfig;
@@ -155,6 +156,8 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun getSelectedLinkUrl ()Ljava/lang/String;
 	public final fun getSelection-d9O1mEE ()J
 	public final fun getSpanStyle-5zc-tL8 (J)Landroidx/compose/ui/text/SpanStyle;
+	public final fun getTextChanges ()Lkotlinx/coroutines/flow/SharedFlow;
+	public final fun getWords ()Lkotlin/sequences/Sequence;
 	public final fun isCode ()Z
 	public final fun isCodeSpan ()Z
 	public final fun isLink ()Z
@@ -302,5 +305,25 @@ public final class com/mohamedrejeb/richeditor/utils/TextDecorationExtKt {
 public final class com/mohamedrejeb/richeditor/utils/TextLayoutResultExtKt {
 	public static final fun getBoundingBoxes (Landroidx/compose/ui/text/TextLayoutResult;IIZ)Ljava/util/List;
 	public static synthetic fun getBoundingBoxes$default (Landroidx/compose/ui/text/TextLayoutResult;IIZILjava/lang/Object;)Ljava/util/List;
+}
+
+public final class com/mohamedrejeb/richeditor/utils/WordSegment {
+	public static final field $stable I
+	public synthetic fun <init> (Ljava/lang/String;JLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2-d9O1mEE ()J
+	public final fun copy-FDrldGo (Ljava/lang/String;J)Lcom/mohamedrejeb/richeditor/utils/WordSegment;
+	public static synthetic fun copy-FDrldGo$default (Lcom/mohamedrejeb/richeditor/utils/WordSegment;Ljava/lang/String;JILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/utils/WordSegment;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRange-d9O1mEE ()J
+	public final fun getText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun setRange-5zc-tL8 (J)V
+	public final fun setText (Ljava/lang/String;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/utils/WordSegmentationUtilsKt {
+	public static final fun findWordSegmentContainingRange-FDrldGo (Ljava/util/List;J)Lcom/mohamedrejeb/richeditor/utils/WordSegment;
 }
 

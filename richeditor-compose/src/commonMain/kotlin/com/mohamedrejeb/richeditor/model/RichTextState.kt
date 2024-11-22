@@ -181,7 +181,7 @@ public class RichTextState internal constructor(
                 currentAppliedRichSpanStyle
         }
 
-    public var styledRichSpanList: SnapshotStateList<RichSpan> = mutableStateListOf()
+    internal var styledRichSpanList: SnapshotStateList<RichSpan> = mutableStateListOf()
         private set
 
     private var currentAppliedParagraphStyle: ParagraphStyle by mutableStateOf(
@@ -1274,14 +1274,14 @@ public class RichTextState internal constructor(
      *
      * @return A complete list of [RichSpan]
      */
-    public fun getAllRichSpans(): List<RichSpan> {
+    public fun getAllRichSpans(): List<Pair<RichSpanStyle, TextRange>> {
         return richParagraphList.flatMap { richParagraph ->
             richParagraph.children.flatMap { getAllRichSpans(it) }
         }
     }
 
-    private fun getAllRichSpans(target: RichSpan): List<RichSpan> {
-        return listOf(target) + target.children.flatMap { richSpan ->
+    private fun getAllRichSpans(target: RichSpan): List<Pair<RichSpanStyle, TextRange>> {
+        return listOf(Pair(target.richSpanStyle, target.textRange)) + target.children.flatMap { richSpan ->
             richSpan.children.flatMap { getAllRichSpans(it) }
         }
     }

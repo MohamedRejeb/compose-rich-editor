@@ -92,9 +92,9 @@ fun SpellCheckContent() {
                 richTextState.apply {
                     // Remove all existing spell checks
                     getAllRichSpans()
-                        .filter { it.richSpanStyle is SpellCheck }
+                        .filter { it.first is SpellCheck }
                         .forEach { span ->
-                            removeRichSpan(SpellCheck, span.textRange)
+                            removeRichSpan(SpellCheck, span.second)
                         }
 
                     misspelledWords.clear()
@@ -172,11 +172,11 @@ fun SpellCheckContent() {
                         state = richTextState,
                         textStyle = TextStyle.Default.copy(color = Color.White),
                         cursorBrush = SolidColor(Color.White),
-                        onRichSpanClick = { span, click ->
-                            if (span.richSpanStyle is SpellCheck) {
+                        onRichSpanClick = { span, range, click ->
+                            if (span is SpellCheck) {
                                 spellCheckWord = findWordSegmentContainingRange(
                                     misspelledWords,
-                                    span.textRange
+                                    range
                                 )
                                 menuPosition = click
                                 expanded = true

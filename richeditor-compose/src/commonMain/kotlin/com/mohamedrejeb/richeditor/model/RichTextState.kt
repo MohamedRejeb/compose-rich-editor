@@ -1268,8 +1268,22 @@ public class RichTextState internal constructor(
         styledRichSpanList.addAll(newStyledRichSpanList)
     }
 
+    /**
+     * Traverses the tree of paragraphs and spans to assemble
+     * a complete list of [RichSpan] objects.
+     *
+     * @return A complete list of [RichSpan]
+     */
     public fun getAllRichSpans(): List<RichSpan> {
-        return richParagraphList.flatMap { richParagraph -> richParagraph.children }
+        return richParagraphList.flatMap { richParagraph ->
+            richParagraph.children.flatMap { getAllRichSpans(it) }
+        }
+    }
+
+    private fun getAllRichSpans(target: RichSpan): List<RichSpan> {
+        return listOf(target) + target.children.flatMap { richSpan ->
+            richSpan.children.flatMap { getAllRichSpans(it) }
+        }
     }
 
     /**
@@ -3203,6 +3217,14 @@ public class RichTextState internal constructor(
             }
         }
     }
+
+    /**
+     * Returns a sequence of word segments. A "word" is defined as a contiguous string
+     * of letters or numbers.
+     *
+     * @return A sequence of [WordSegment]
+     */
+    public fun getWords(): Sequence<WordSegment> = richParagraphList.getWords()
 
     /**
      * Returns the [RichTextState] as a text string.

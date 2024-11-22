@@ -36,19 +36,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.darkrockstudios.symspellkt.api.SpellChecker
 import com.darkrockstudios.symspellkt.common.SuggestionItem
-import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.sample.common.components.RichTextStyleRow
 import com.mohamedrejeb.richeditor.sample.common.richeditor.SpellCheck
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
+import com.mohamedrejeb.richeditor.utils.WordSegment
+import com.mohamedrejeb.richeditor.utils.findWordSegmentContainingRange
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -82,16 +83,33 @@ fun SpellCheckContent() {
             val richTextState = rememberRichTextState()
             val spellChecker by rememberSpellChecker()
             var lastTextHash = remember { -1 }
+            val misspelledWords = remember { mutableListOf<WordSegment>() }
 
             fun runSpellCheck() {
                 val sp = spellChecker ?: return
-                //println("Running spell check...")
+                println("Running spell check...")
 
-                richTextState.toText().getWords().forEach { (word, range) ->
-                    val suggestions = sp.lookup(word)
-                    if (suggestions.spellingIsCorrect(word).not()) {
-                        //println("Misspelling found!")
-                        richTextState.addRichSpan(SpellCheck, range)
+                richTextState.apply {
+                    // Remove all existing spell checks
+                    getAllRichSpans()
+                        .filter { it.richSpanStyle is SpellCheck }
+                        .forEach { span ->
+                            removeRichSpan(SpellCheck, span.textRange)
+                        }
+
+                    misspelledWords.clear()
+                    getWords().mapNotNullTo(misspelledWords) { segment ->
+                        val suggestions = sp.lookup(segment.text)
+                        if (suggestions.spellingIsCorrect(segment.text)) {
+                            null
+                        } else {
+                            println("Misspelling found! $segment.word")
+                            segment
+                        }
+                    }
+
+                    misspelledWords.fastForEach { wordSegment ->
+                        addRichSpan(SpellCheck, wordSegment.range)
                     }
                 }
             }
@@ -111,30 +129,22 @@ fun SpellCheckContent() {
                     richTextState.textChanges.debounceUntilQuiescent(1.seconds).collect { updated ->
                         val newTextHash = updated.annotatedString.hashCode()
                         if (lastTextHash != newTextHash) {
-                            // Remove all existing spell checks
-                            richTextState.getAllRichSpans()
-                                .filter { it.richSpanStyle is SpellCheck }
-                                .forEach { span ->
-                                    richTextState.removeRichSpan(SpellCheck, span.textRange)
-                                }
-
                             runSpellCheck()
-
                             lastTextHash = newTextHash
                         }
                     }
                 }
             }
 
-            var spellCheckWord by remember { mutableStateOf<RichSpan?>(null) }
+            var spellCheckWord by remember { mutableStateOf<WordSegment?>(null) }
             var expanded by remember { mutableStateOf(false) }
             var menuPosition by remember { mutableStateOf(Offset.Zero) }
 
             LaunchedEffect(Unit) {
                 richTextState.setHtml(
                     """
-            <p><b>RichTextEditor</b> is a <i>composable</i> that allows you to edit <u>rich text</u> content.</p>
-            """.trimIndent()
+                    <p><b>RichTextEditor</b> is a <i>composable</i> that allows you to edit <u>rich text</u> content.</p>
+                    """.trimIndent()
                 )
             }
 
@@ -164,8 +174,10 @@ fun SpellCheckContent() {
                         cursorBrush = SolidColor(Color.White),
                         onRichSpanClick = { span, click ->
                             if (span.richSpanStyle is SpellCheck) {
-                                println("On Click: $span")
-                                spellCheckWord = span
+                                spellCheckWord = findWordSegmentContainingRange(
+                                    misspelledWords,
+                                    span.textRange
+                                )
                                 menuPosition = click
                                 expanded = true
                             }
@@ -177,9 +189,8 @@ fun SpellCheckContent() {
                         menuPosition,
                         spellChecker,
                         dismiss = ::clearSpellCheck,
-                        correctSpelling = { span, correction ->
-                            println("Correcting spelling to: $correction")
-                            richTextState.replaceTextRange(span.textRange, correction)
+                        correctSpelling = { segment, correction ->
+                            richTextState.replaceTextRange(segment.range, correction)
                             clearSpellCheck()
                         }
                     )
@@ -189,7 +200,7 @@ fun SpellCheckContent() {
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.End,
-                    ) {
+                ) {
                     if (spellChecker == null) {
                         CircularProgressIndicator(modifier = Modifier.size(25.dp))
                         Text(" Loading Dictionary...")
@@ -206,34 +217,13 @@ fun SpellCheckContent() {
     }
 }
 
-private fun String.getWords(): Sequence<Pair<String, TextRange>> {
-    return sequence {
-        var startIndex = -1
-        for (i in indices) {
-            if (get(i).isLetterOrDigit()) {
-                if (startIndex == -1) {
-                    startIndex = i
-                }
-            } else {
-                if (startIndex != -1) {
-                    yield(Pair(substring(startIndex, i), TextRange(startIndex, i)))
-                    startIndex = -1
-                }
-            }
-        }
-        if (startIndex != -1) {
-            yield(Pair(substring(startIndex), TextRange(startIndex, length)))
-        }
-    }
-}
-
 @Composable
 fun SpellCheckDropdown(
-    word: RichSpan?,
+    word: WordSegment?,
     position: Offset,
     spellChecker: SpellChecker?,
     dismiss: () -> Unit,
-    correctSpelling: (RichSpan, String) -> Unit
+    correctSpelling: (WordSegment, String) -> Unit
 ) {
     var suggestionItems by remember { mutableStateOf(emptyList<SuggestionItem>()) }
 
@@ -242,10 +232,18 @@ fun SpellCheckDropdown(
         spellChecker ?: return@LaunchedEffect
 
         val suggestions = spellChecker.lookupCompound(word.text)
-        if (word.text.isSpelledCorrectly(suggestions).not()) {
-            suggestionItems = suggestions
+        suggestionItems = if (word.text.isSpelledCorrectly(suggestions).not()) {
+            // If things are misspelled, see if it just needs to be broken up
+            val composition = spellChecker.wordBreakSegmentation(word.text)
+            val segmentedWord = composition.segmentedString
+            if (segmentedWord != null && suggestions.find { it.term.equals(segmentedWord, ignoreCase = true) } == null) {
+                // Add the segmented suggest as first item if it didn't already exist
+                listOf(SuggestionItem(segmentedWord, 1.0, 0.1)) + suggestions
+            } else {
+                suggestions
+            }
         } else {
-            suggestionItems = emptyList()
+            emptyList()
         }
     }
 
@@ -255,11 +253,12 @@ fun SpellCheckDropdown(
             onDismissRequest = dismiss,
         ) {
             word ?: return@DropdownMenu
-            if(suggestionItems.isNotEmpty()) {
+            if (suggestionItems.isNotEmpty()) {
                 suggestionItems.forEach { item ->
+                    val correctedWord = applyCapitalizationStrategy(word.text, item.term)
                     DropdownMenuItem(
-                        text = { Text(item.term) },
-                        onClick = { correctSpelling(word, item.term) },
+                        text = { Text(correctedWord) },
+                        onClick = { correctSpelling(word, correctedWord) },
                     )
                 }
             } else {
@@ -281,5 +280,41 @@ private fun <T> Flow<T>.debounceUntilQuiescent(duration: Duration): Flow<T> = ch
             send(value)
             job = null
         }
+    }
+}
+
+private fun applyCapitalizationStrategy(source: String, target: String): String {
+    fun isAllUpperCase(str: String): Boolean = str.all { it.isUpperCase() || !it.isLetter() }
+    fun isAllLowerCase(str: String): Boolean = str.all { it.isLowerCase() || !it.isLetter() }
+    fun isTitleCase(str: String): Boolean {
+        val words = str.split(" ")
+        return words.size > 1 && words.all {
+            it.isNotEmpty() && it[0].isUpperCase() && it.substring(1)
+                .all { char -> char.isLowerCase() }
+        }
+    }
+
+    fun isCollapsedTitleCase(str: String): Boolean {
+        return str.length > 2 && str[0].isUpperCase() && str[1].isLowerCase() && str.substring(2)
+            .any { char -> char.isUpperCase() }
+    }
+
+    fun isInitialCaps(str: String): Boolean =
+        str.isNotEmpty() && str[0].isUpperCase() && str.substring(1)
+            .all { it.isLowerCase() || !it.isLetter() }
+
+    fun makeTitleCase(target: String): String {
+        return target.split(" ").joinToString(" ") { word ->
+            if (word.isNotEmpty()) word[0].uppercase() + word.substring(1).lowercase() else word
+        }
+    }
+
+    return when {
+        isAllUpperCase(source) -> target.uppercase()
+        isAllLowerCase(source) -> target.lowercase()
+        isTitleCase(source) -> makeTitleCase(target)
+        isCollapsedTitleCase(source) -> makeTitleCase(target)
+        isInitialCaps(source) -> target.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+        else -> target
     }
 }

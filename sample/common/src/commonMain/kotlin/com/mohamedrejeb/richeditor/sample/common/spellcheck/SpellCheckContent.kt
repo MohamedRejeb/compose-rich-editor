@@ -43,6 +43,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.darkrockstudios.symspellkt.api.SpellChecker
 import com.darkrockstudios.symspellkt.common.SuggestionItem
+import com.darkrockstudios.symspellkt.common.Verbosity
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.sample.common.components.RichTextStyleRow
 import com.mohamedrejeb.richeditor.sample.common.richeditor.SpellCheck
@@ -231,7 +232,7 @@ fun SpellCheckDropdown(
         word ?: return@LaunchedEffect
         spellChecker ?: return@LaunchedEffect
 
-        val suggestions = spellChecker.lookupCompound(word.text)
+        val suggestions = spellChecker.lookup(word.text, verbosity = Verbosity.All)
         suggestionItems = if (word.text.isSpelledCorrectly(suggestions).not()) {
             // If things are misspelled, see if it just needs to be broken up
             val composition = spellChecker.wordBreakSegmentation(word.text)

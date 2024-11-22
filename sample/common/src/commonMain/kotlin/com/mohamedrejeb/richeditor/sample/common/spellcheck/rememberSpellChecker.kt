@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import com.darkrockstudios.symspellkt.api.SpellChecker
+import com.darkrockstudios.symspellkt.common.SpellCheckSettings
 import com.darkrockstudios.symspellkt.impl.SymSpell
 import com.darkrockstudios.symspellkt.impl.loadUniGramLine
 import com.mohamedrejeb.richeditor.common.generated.resources.Res
@@ -23,7 +24,7 @@ fun rememberSpellChecker(): MutableState<SpellChecker?> {
 
     LaunchedEffect(Unit) {
         scope.launch(Dispatchers.Default) {
-            val checker = SymSpell()
+            val checker = SymSpell(spellCheckSettings = SpellCheckSettings(topK = 5))
 
             Res.readBytes("files/en-80k.txt")
                 .decodeToString()

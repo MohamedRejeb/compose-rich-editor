@@ -76,7 +76,7 @@ public class RichTextState internal constructor(
 
     internal var singleParagraphMode by mutableStateOf(false)
 
-    public var textLayoutResult: TextLayoutResult? by mutableStateOf(null)
+    internal var textLayoutResult: TextLayoutResult? by mutableStateOf(null)
         private set
 
     private var lastPressPosition: Offset? by mutableStateOf(null)
@@ -1743,24 +1743,24 @@ public class RichTextState internal constructor(
 
             // If the new paragraph is empty apply style depending on the config
             if (tempTextFieldValue.selection.collapsed && newParagraph.isEmpty()) {
-                val newParagraphFirstRichSpan = newParagraph.getFirstNonEmptyChild()
+                newParagraph.getFirstNonEmptyChild()?.let { newParagraphFirstRichSpan ->
+                    val isSelectionAtNewRichSpan =
+                        newParagraphFirstRichSpan.textRange.min == tempTextFieldValue.selection.min - 1
 
-                val isSelectionAtNewRichSpan =
-                    newParagraphFirstRichSpan?.textRange?.min == tempTextFieldValue.selection.min - 1
-
-                // Check if the cursor is at the new paragraph
-                if (
-                    (!config.preserveStyleOnEmptyLine || richSpan.paragraph.isEmpty()) &&
-                    isSelectionAtNewRichSpan
-                ) {
-                    newParagraphFirstRichSpan.spanStyle = SpanStyle()
-                    newParagraphFirstRichSpan.richSpanStyle = RichSpanStyle.Default
-                } else if (
-                    config.preserveStyleOnEmptyLine &&
-                    isSelectionAtNewRichSpan
-                ) {
-                    newParagraphFirstRichSpan.spanStyle = currentSpanStyle
-                    newParagraphFirstRichSpan.richSpanStyle = currentRichSpanStyle
+                    // Check if the cursor is at the new paragraph
+                    if (
+                        (!config.preserveStyleOnEmptyLine || richSpan.paragraph.isEmpty()) &&
+                        isSelectionAtNewRichSpan
+                    ) {
+                        newParagraphFirstRichSpan.spanStyle = SpanStyle()
+                        newParagraphFirstRichSpan.richSpanStyle = RichSpanStyle.Default
+                    } else if (
+                        config.preserveStyleOnEmptyLine &&
+                        isSelectionAtNewRichSpan
+                    ) {
+                        newParagraphFirstRichSpan.spanStyle = currentSpanStyle
+                        newParagraphFirstRichSpan.richSpanStyle = currentRichSpanStyle
+                    }
                 }
             }
 
@@ -2731,7 +2731,7 @@ public class RichTextState internal constructor(
         return richSpan
     }
 
-    public fun getRichSpanByOffset(offset: Offset): RichSpan? {
+    internal fun getRichSpanByOffset(offset: Offset): RichSpan? {
         this.textLayoutResult?.let { textLayoutResult ->
             val position = textLayoutResult.getOffsetForPosition(offset)
             return getRichSpanByTextIndex(position, true)

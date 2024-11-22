@@ -13,15 +13,15 @@ import com.mohamedrejeb.richeditor.utils.isSpecifiedFieldsEquals
 /**
  * A rich span is a part of a rich paragraph.
  */
-public class RichSpan(
+internal class RichSpan(
     internal val key: Int? = null,
-    public val children: MutableList<RichSpan> = mutableListOf(),
-    public var paragraph: RichParagraph,
-    public var parent: RichSpan? = null,
-    public var text: String = "",
-    public var textRange: TextRange = TextRange(start = 0, end = 0),
-    public var spanStyle: SpanStyle = SpanStyle(),
-    public var richSpanStyle: RichSpanStyle = RichSpanStyle.Default,
+    val children: MutableList<RichSpan> = mutableListOf(),
+    var paragraph: RichParagraph,
+    var parent: RichSpan? = null,
+    var text: String = "",
+    var textRange: TextRange = TextRange(start = 0, end = 0),
+    var spanStyle: SpanStyle = SpanStyle(),
+    var richSpanStyle: RichSpanStyle = RichSpanStyle.Default,
 ) {
     /**
      * Return the full text range of the rich span.
@@ -49,7 +49,7 @@ public class RichSpan(
      *
      * @return The full span style of the rich span
      */
-    public val fullSpanStyle: SpanStyle get() {
+    val fullSpanStyle: SpanStyle get() {
         var spanStyle = this.spanStyle
         var parent = this.parent
 
@@ -61,7 +61,7 @@ public class RichSpan(
         return spanStyle
     }
 
-    public val fullStyle: RichSpanStyle get() {
+    val fullStyle: RichSpanStyle get() {
         var style = this.richSpanStyle
         var parent = this.parent
 
@@ -73,7 +73,7 @@ public class RichSpan(
         return style
     }
 
-    public val before: RichSpan? get() {
+    val before: RichSpan? get() {
         val parentChildren = parent?.children ?: paragraph.children
         val index = parentChildren.indexOf(this)
 
@@ -95,7 +95,7 @@ public class RichSpan(
      *
      * @return The next rich span or null if the rich span is the last in the paragraph
      */
-    public val after: RichSpan? get() {
+    val after: RichSpan? get() {
         if (children.isNotEmpty())
             return children.first()
 
@@ -132,7 +132,7 @@ public class RichSpan(
      *
      * @return True if the rich span is the first in the paragraph, false otherwise
      */
-    public val isFirstInParagraph: Boolean get() {
+    val isFirstInParagraph: Boolean get() {
         var current: RichSpan
         var parent: RichSpan = this
 
@@ -151,7 +151,7 @@ public class RichSpan(
      *
      * @return True if the rich span is the last in the paragraph, false otherwise
      */
-    public val isLastInParagraph: Boolean get() {
+    val isLastInParagraph: Boolean get() {
         var current: RichSpan
         var parent: RichSpan = this
 
@@ -173,7 +173,7 @@ public class RichSpan(
      *
      * @return True if the rich span is empty, false otherwise
      */
-    public fun isEmpty(): Boolean = text.isEmpty() && isChildrenEmpty() && richSpanStyle !is RichSpanStyle.Image
+    fun isEmpty(): Boolean = text.isEmpty() && isChildrenEmpty() && richSpanStyle !is RichSpanStyle.Image
 
     /**
      * Check if the rich span is blank.
@@ -181,7 +181,7 @@ public class RichSpan(
      *
      * @return True if the rich span is blank, false otherwise
      */
-    public fun isBlank(): Boolean = text.isBlank() && isChildrenBlank() && richSpanStyle !is RichSpanStyle.Image
+    fun isBlank(): Boolean = text.isBlank() && isChildrenBlank() && richSpanStyle !is RichSpanStyle.Image
 
     /**
      * Check if the rich span children are empty
@@ -346,7 +346,7 @@ public class RichSpan(
      * @return A pair of the offset and the rich span or null if the rich span is not found
      */
     @OptIn(ExperimentalRichTextApi::class)
-    public fun getRichSpanByTextIndex(
+    fun getRichSpanByTextIndex(
         textIndex: Int,
         offset: Int = 0,
         ignoreCustomFiltering: Boolean = false
@@ -400,7 +400,7 @@ public class RichSpan(
      * @param offset The offset of the text range
      * @return The rich span list
      */
-    public fun getRichSpanListByTextRange(
+    fun getRichSpanListByTextRange(
         searchTextRange: TextRange,
         offset: Int = 0,
     ): Pair<Int, List<RichSpan>> {
@@ -431,7 +431,7 @@ public class RichSpan(
     /**
      * Removes the current rich span from its parent and clears its text.
      */
-    public fun remove() {
+    fun remove() {
         text = ""
         parent?.children?.remove(this)
     }
@@ -442,7 +442,7 @@ public class RichSpan(
      * @param removeTextRange The text range to remove
      * @return The rich span with the removed text range or null if the rich span is empty
      */
-    public fun removeTextRange(
+    fun removeTextRange(
         removeTextRange: TextRange,
         offset: Int,
     ): Pair<Int, RichSpan?> {
@@ -509,7 +509,7 @@ public class RichSpan(
      * @param spanStyle The span style
      * @return The closest parent rich span or null if not found
      */
-    public fun getClosestRichSpan(spanStyle: SpanStyle, newRichSpanStyle: RichSpanStyle): RichSpan? {
+    fun getClosestRichSpan(spanStyle: SpanStyle, newRichSpanStyle: RichSpanStyle): RichSpan? {
         if (
             spanStyle.isSpecifiedFieldsEquals(this.fullSpanStyle, strict = true) &&
             newRichSpanStyle::class == richSpanStyle::class
@@ -523,14 +523,14 @@ public class RichSpan(
      *
      * @param newParagraph The new paragraph
      */
-    public fun updateChildrenParagraph(newParagraph: RichParagraph) {
+    fun updateChildrenParagraph(newParagraph: RichParagraph) {
         children.fastForEach { childRichSpan ->
             childRichSpan.paragraph = newParagraph
             childRichSpan.updateChildrenParagraph(newParagraph)
         }
     }
 
-    public fun removeEmptyChildren() {
+    fun removeEmptyChildren() {
         val toRemoveIndices = mutableListOf<Int>()
 
         children.fastForEachIndexed { i, richSpan ->
@@ -545,7 +545,7 @@ public class RichSpan(
         }
     }
 
-    public fun copy(
+    fun copy(
         newParagraph: RichParagraph = paragraph,
     ): RichSpan {
         val newSpan = RichSpan(

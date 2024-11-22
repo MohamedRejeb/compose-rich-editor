@@ -59,7 +59,12 @@ private fun RichSpan.getWords(state: WordSplitState): Sequence<WordSegment> = se
                     }
                 } else {
                     suspend fun SequenceScope<WordSegment>.returnPendingWord() {
-                        yield(WordSegment(pendingWord.toString(), TextRange(pendingStartIndex, currentOffset + i)))
+                        yield(
+                            WordSegment(
+                                pendingWord.toString(),
+                                TextRange(pendingStartIndex, currentOffset + i)
+                            )
+                        )
                         pendingWord.clear()
                         pendingStartIndex = -1
                     }
@@ -73,10 +78,15 @@ private fun RichSpan.getWords(state: WordSplitState): Sequence<WordSegment> = se
                             pendingWord.append(word)
                             returnPendingWord()
                         } else {
-                            yield(WordSegment(word, TextRange(currentOffset + localStartIndex, currentOffset + i)))
+                            yield(
+                                WordSegment(
+                                    word,
+                                    TextRange(currentOffset + localStartIndex, currentOffset + i)
+                                )
+                            )
                         }
                         localStartIndex = -1
-                    } else if(state.pendingStartIndex != -1) { // Ending a word wholly in a previous span
+                    } else if (state.pendingStartIndex != -1) { // Ending a word wholly in a previous span
                         // Word from previous span is ending, nothing in this span to append
                         if (pendingWord.isNotEmpty()) {
                             returnPendingWord()
@@ -91,7 +101,8 @@ private fun RichSpan.getWords(state: WordSplitState): Sequence<WordSegment> = se
                 if (pendingWord.isNotEmpty()) {
                     // Continue the word from the previous state
                     pendingWord.append(word)
-                    pendingStartIndex = if (pendingStartIndex == -1) currentOffset + localStartIndex else pendingStartIndex
+                    pendingStartIndex =
+                        if (pendingStartIndex == -1) currentOffset + localStartIndex else pendingStartIndex
                 } else {
                     pendingWord.append(word)
                     pendingStartIndex = currentOffset + localStartIndex
@@ -101,7 +112,7 @@ private fun RichSpan.getWords(state: WordSplitState): Sequence<WordSegment> = se
         }
 
         // Process each child recursively.
-        if(children.isNotEmpty()) {
+        if (children.isNotEmpty()) {
             for (child in children) {
                 yieldAll(child.getWords(state))
             }
@@ -114,6 +125,7 @@ private fun RichSpan.getWords(state: WordSplitState): Sequence<WordSegment> = se
  */
 private fun RichSpan.getTotalLength(): Int {
     var totalLength = text.length
+
     for (child in children) {
         totalLength += child.getTotalLength()
     }
@@ -124,14 +136,20 @@ private fun RichSpan.getTotalLength(): Int {
  * Calculate the total length of a RichParagraph, including all nested spans.
  */
 private fun RichParagraph.getTotalLength(): Int {
-    var totalLength = 0
-    for (span in children) {
-        totalLength += span.getTotalLength()
+    var totalLength = 1 // Each paragraph counts as a new line, 1 character
+    if(children.isNotEmpty()) {
+        for (span in children) {
+            totalLength += span.getTotalLength()
+        }
     }
+
     return totalLength
 }
 
-public fun findWordSegmentContainingRange(segments: List<WordSegment>, range: TextRange): WordSegment? {
+public fun findWordSegmentContainingRange(
+    segments: List<WordSegment>,
+    range: TextRange
+): WordSegment? {
     return segments.find { wordSegment ->
         val segmentRange = wordSegment.range
         range.start >= segmentRange.start && range.end <= segmentRange.end

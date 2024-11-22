@@ -236,7 +236,10 @@ fun SpellCheckDropdown(
             // If things are misspelled, see if it just needs to be broken up
             val composition = spellChecker.wordBreakSegmentation(word.text)
             val segmentedWord = composition.segmentedString
-            if (segmentedWord != null && suggestions.find { it.term.equals(segmentedWord, ignoreCase = true) } == null) {
+            if (segmentedWord != null
+                && segmentedWord.equals(word.text, ignoreCase = true).not()
+                && suggestions.find { it.term.equals(segmentedWord, ignoreCase = true) } == null
+            ) {
                 // Add the segmented suggest as first item if it didn't already exist
                 listOf(SuggestionItem(segmentedWord, 1.0, 0.1)) + suggestions
             } else {

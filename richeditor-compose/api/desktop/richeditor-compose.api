@@ -318,12 +318,6 @@ public final class com/mohamedrejeb/richeditor/utils/WordSegment {
 	public final fun getRange-d9O1mEE ()J
 	public final fun getText ()Ljava/lang/String;
 	public fun hashCode ()I
-	public final fun setRange-5zc-tL8 (J)V
-	public final fun setText (Ljava/lang/String;)V
 	public fun toString ()Ljava/lang/String;
-}
-
-public final class com/mohamedrejeb/richeditor/utils/WordSegmentationUtilsKt {
-	public static final fun findWordSegmentContainingRange-FDrldGo (Ljava/util/List;J)Lcom/mohamedrejeb/richeditor/utils/WordSegment;
 }
 

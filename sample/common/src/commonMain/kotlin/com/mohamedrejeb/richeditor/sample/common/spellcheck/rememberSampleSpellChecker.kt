@@ -11,6 +11,8 @@ import com.darkrockstudios.symspellkt.common.SpellCheckSettings
 import com.darkrockstudios.symspellkt.impl.SymSpell
 import com.darkrockstudios.symspellkt.impl.loadUniGramLine
 import com.mohamedrejeb.richeditor.common.generated.resources.Res
+import korlibs.io.compression.deflate.GZIP
+import korlibs.io.compression.uncompress
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
@@ -26,7 +28,8 @@ fun rememberSampleSpellChecker(): MutableState<SpellChecker?> {
         scope.launch(Dispatchers.Default) {
             val checker = SymSpell(spellCheckSettings = SpellCheckSettings(topK = 5))
 
-            Res.readBytes("files/en-80k.txt")
+            Res.readBytes("files/en-80k.txt.gz")
+                .uncompress(GZIP)
                 .decodeToString()
                 .lineSequence()
                 .forEach { line ->

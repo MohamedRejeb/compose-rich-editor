@@ -67,6 +67,7 @@ kotlin {
 
         // Spell Check
         implementation(libs.symspellkt)
+        implementation(libs.korge.io)
     }
 
     sourceSets.androidMain.dependencies {

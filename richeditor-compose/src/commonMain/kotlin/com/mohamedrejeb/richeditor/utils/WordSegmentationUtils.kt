@@ -5,8 +5,8 @@ import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 
 public data class WordSegment(
-    var text: String,
-    var range: TextRange,
+    val text: String,
+    val range: TextRange,
 )
 
 private data class WordSplitState(
@@ -16,18 +16,34 @@ private data class WordSplitState(
 )
 
 /**
- * Return a sequence of words and their TextRange for all words in the list of RichParagraph
- * and their nested RichSpan children.
+ * Return a sequence of [WordSegment] and their [TextRange] for all words in the list of
+ * [RichParagraph] and their nested [RichSpan] children.
+ *
+ * @receiver List<RichParagraph> The list of paragraphs to process.
+ * @return A sequence of WordSegment
  */
 internal fun List<RichParagraph>.getWords(): Sequence<WordSegment> = sequence {
     var currentOffset = 0
     for (paragraph in this@getWords) {
+        // Individual words may not cross a RichParagraph boundary,
+        // so a new WordSplitState is created for each Paragraph.
         val state = WordSplitState(currentOffset)
         yieldAll(paragraph.getWords(state))
         currentOffset += paragraph.getTotalLength()
     }
 }
 
+/**
+ * Extracts and yields [WordSegment]s from the tree of [RichSpan] objects within a [RichParagraph].
+ *
+ * @receiver [RichParagraph] The paragraph containing RichSpan children to process.
+ * @param state [WordSplitState] Tracks partial words and their starting indices across spans.
+ * @return A sequence of WordSegment objects
+ *
+ * This function iterates through the RichSpan children of the paragraph, yielding
+ * word segments from each. After processing all children, it checks for any remaining
+ * partial word in the state and yields it if present.
+ */
 private fun RichParagraph.getWords(state: WordSplitState): Sequence<WordSegment> = sequence {
     for (span in children) {
         yieldAll(span.getWords(state))
@@ -42,6 +58,18 @@ private fun RichParagraph.getWords(state: WordSplitState): Sequence<WordSegment>
     }
 }
 
+/**
+ * Extracts and yields [WordSegment]s and their [TextRange]s from this sub-tree of [RichSpan] objects.
+ *
+ * @receiver [RichSpan] The current node in the tree being processed.
+ * @param state [WordSplitState] Tracks partial words and their starting indices across spans.
+ * @return A sequence of WordSegments
+ *
+ * This function identifies word boundaries in the text of the current [RichSpan], using
+ * alphanumeric characters as word components and non-alphanumeric characters as delimiters.
+ * It handles words spanning multiple nodes by leveraging the provided state and processes
+ * child nodes recursively, yielding their results as part of the sequence.
+ */
 private fun RichSpan.getWords(state: WordSplitState): Sequence<WordSegment> = sequence {
     state.apply {
         // Process the current span's text if it's not empty.
@@ -49,15 +77,14 @@ private fun RichSpan.getWords(state: WordSplitState): Sequence<WordSegment> = se
             var localStartIndex = -1
             // Search this spans text for boundaries
             for (i in text.indices) {
-                val c = text[i]
-                //println("'$c'")
-
-                if (c.isLetterOrDigit()) {
+                if (text[i].isLetterOrDigit()) {
                     // Starting a new word
                     if (localStartIndex == -1) {
                         localStartIndex = i
                     }
                 } else {
+                    // Calculate the WordSegment TextRange, yield the segment
+                    // and then clear the pending word
                     suspend fun SequenceScope<WordSegment>.returnPendingWord() {
                         yield(
                             WordSegment(
@@ -137,21 +164,11 @@ private fun RichSpan.getTotalLength(): Int {
  */
 private fun RichParagraph.getTotalLength(): Int {
     var totalLength = 1 // Each paragraph counts as a new line, 1 character
-    if(children.isNotEmpty()) {
+    if (children.isNotEmpty()) {
         for (span in children) {
             totalLength += span.getTotalLength()
         }
     }
 
     return totalLength
-}
-
-public fun findWordSegmentContainingRange(
-    segments: List<WordSegment>,
-    range: TextRange
-): WordSegment? {
-    return segments.find { wordSegment ->
-        val segmentRange = wordSegment.range
-        range.start >= segmentRange.start && range.end <= segmentRange.end
-    }
 }

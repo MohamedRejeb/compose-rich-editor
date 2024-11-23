@@ -11,6 +11,8 @@ import com.darkrockstudios.symspellkt.common.SpellCheckSettings
 import com.darkrockstudios.symspellkt.impl.SymSpell
 import com.darkrockstudios.symspellkt.impl.loadUniGramLine
 import com.mohamedrejeb.richeditor.common.generated.resources.Res
+import korlibs.io.compression.deflate.GZIP
+import korlibs.io.compression.uncompress
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
@@ -18,7 +20,7 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
-fun rememberSpellChecker(): MutableState<SpellChecker?> {
+fun rememberSampleSpellChecker(): MutableState<SpellChecker?> {
     val scope = rememberCoroutineScope()
     val spellChecker = remember { mutableStateOf<SpellChecker?>(null) }
 
@@ -26,10 +28,11 @@ fun rememberSpellChecker(): MutableState<SpellChecker?> {
         scope.launch(Dispatchers.Default) {
             val checker = SymSpell(spellCheckSettings = SpellCheckSettings(topK = 5))
 
-            Res.readBytes("files/en-80k.txt")
+            Res.readBytes("files/en-80k.txt.gz")
+                .uncompress(GZIP)
                 .decodeToString()
                 .lineSequence()
-                .forEachAsync { line ->
+                .forEach { line ->
                     checker.dictionary.loadUniGramLine(line)
                     yield()
                 }
@@ -39,12 +42,4 @@ fun rememberSpellChecker(): MutableState<SpellChecker?> {
     }
 
     return spellChecker
-}
-
-private suspend fun <T> Sequence<T>.forEachAsync(
-    action: suspend (T) -> Unit
-) {
-    for (item in this) {
-        action(item)
-    }
 }

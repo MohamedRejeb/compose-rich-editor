@@ -1309,8 +1309,6 @@ public class RichTextState internal constructor(
                 else
                     activeRichSpan.text.substring(startIndex)
 
-            val isMentionText = typedText.startsWith(RichSpanStyle.Mention.MentionTrigger)
-
             val activeRichSpanFullSpanStyle = activeRichSpan.fullSpanStyle
             val newSpanStyle = activeRichSpanFullSpanStyle.customMerge(toAddSpanStyle).unmerge(toRemoveSpanStyle)
             val newRichSpanStyle =

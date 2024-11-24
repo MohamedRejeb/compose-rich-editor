@@ -2794,6 +2794,9 @@ public class RichTextState internal constructor(
 
             lastIndex = index
 
+            if (textLayoutResult.layoutInput.text.text.lastIndex == -1)
+                break
+
             richParagraphList.getOrNull(index)?.let { paragraph ->
                 val textRange = paragraph.getTextRange().coerceIn(
                     0, textLayoutResult.layoutInput.text.text.lastIndex
@@ -2810,6 +2813,9 @@ public class RichTextState internal constructor(
                 }
             }
         }
+
+        if (index > richParagraphList.lastIndex)
+            index = richParagraphList.lastIndex
 
         val selectedParagraph = richParagraphList.getOrNull(index) ?: return
         val nextParagraph = richParagraphList.getOrNull(index + 1)

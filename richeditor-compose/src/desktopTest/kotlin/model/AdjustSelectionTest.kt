@@ -26,6 +26,7 @@ class AdjustSelectionTest {
     @get:Rule
     val rule = createComposeRule()
 
+    // Todo: Cover mode cases and add android test
     @OptIn(ExperimentalTestApi::class, ExperimentalComposeUiApi::class, InternalComposeUiApi::class)
     @Test
     fun adjustSelectionTest() = runDesktopComposeUiTest {

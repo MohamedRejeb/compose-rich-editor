@@ -31,7 +31,7 @@ internal class RichSpan(
      *
      * @return The full text range of the rich span
      */
-    private val fullTextRange: TextRange get() {
+    internal val fullTextRange: TextRange get() {
         var textRange = this.textRange
         var lastChild: RichSpan? = this
         while (true) {

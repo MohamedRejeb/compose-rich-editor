@@ -2770,22 +2770,31 @@ public class RichTextState internal constructor(
         var pressY = pressPosition.y
         val textLayoutResult = this.textLayoutResult ?: return
         var index = 0
-        var lastIndex = 0
+
+        // Get the length of the text
+        val textLength = textLayoutResult.layoutInput.text.length
+
+        // Ensure pressY is within valid bounds
+        pressY = pressY.coerceIn(0f, textLayoutResult.size.height.toFloat())
 
         for (i in 0 until textLayoutResult.lineCount) {
             val start = textLayoutResult.getLineStart(i)
             val top = textLayoutResult.getLineTop(i)
 
             if (i == 0) {
-                if (start > 0f)
+                if (start > 0f) {
                     pressX += start
+                }
 
-                if (top > 0f)
+                if (top > 0f) {
                     pressY += top
+                }
             }
 
-            if (i == 0 && top > pressY)
+            // Make sure pressY is within the current line's top position
+            if (i == 0 && top > pressY) {
                 break
+            }
 
             if (top > pressY) {
                 index = lastIndex
@@ -2826,32 +2835,39 @@ public class RichTextState internal constructor(
                 (nextParagraph.getFirstNonEmptyChild() ?: nextParagraph.type.startRichSpan)
                     .textRange.min.minus(nextParagraph.type.startText.length)
 
+        // Handle selection adjustments
         if (
             selection.collapsed &&
             selection.min == nextParagraphStart
-        )
+        ) {
             updateTextFieldValue(
                 textFieldValue.copy(
-                    selection = TextRange(selection.min - 1, selection.min - 1)
+                    selection = TextRange((selection.min - 1).coerceAtLeast(0), (selection.min - 1).coerceAtLeast(0))
                 )
             )
-        else if (
+        } else if (
             selection.collapsed &&
             index == richParagraphList.lastIndex &&
             selectedParagraph.isEmpty() &&
             selection.min == selectedParagraph.getFirstNonEmptyChild()?.textRange?.min?.minus(1)
-        )
+        ) {
             updateTextFieldValue(
                 textFieldValue.copy(
-                    selection = TextRange(selection.min + 1, selection.min + 1)
+                    selection = TextRange((selection.min + 1).coerceAtMost(textLength - 1), (selection.min + 1).coerceAtMost(textLength - 1))
                 )
             )
-        else if (newSelection != null)
+        } else if (newSelection != null) {
+            // Ensure newSelection is within valid bounds
+            val adjustedSelection = TextRange(
+                newSelection.start.coerceIn(0, textLength),
+                newSelection.end.coerceIn(0, textLength)
+            )
             updateTextFieldValue(
                 textFieldValue.copy(
-                    selection = newSelection
+                    selection = adjustedSelection
                 )
             )
+        }
     }
 
     private var registerLastPressPositionJob: Job? = null

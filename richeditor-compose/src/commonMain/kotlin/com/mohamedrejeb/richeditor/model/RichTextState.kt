@@ -2770,6 +2770,7 @@ public class RichTextState internal constructor(
         var pressY = pressPosition.y
         val textLayoutResult = this.textLayoutResult ?: return
         var index = 0
+        var lastIndex = 0
 
         // Get the length of the text
         val textLength = textLayoutResult.layoutInput.text.length

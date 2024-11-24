@@ -25,11 +25,13 @@ internal class RichParagraph(
         textIndex: Int,
         offset: Int = 0,
         ignoreCustomFiltering: Boolean = false,
+        returnFirstIfEmpty: Boolean = false,
     ): Pair<Int, RichSpan?> {
         var index = offset
 
         // If the paragraph is not the first one, we add 1 to the index which stands for the line break
-        if (paragraphIndex > 0) index++
+        if (paragraphIndex > 0)
+            index++
 
         // Set the startRichSpan paragraph and textRange to ensure that it has the correct and latest values
         type.startRichSpan.paragraph = this
@@ -39,15 +41,17 @@ internal class RichParagraph(
         index += type.startText.length
 
         // If the paragraph is empty, we add a RichSpan to avoid skipping the paragraph when searching
-        if (children.isEmpty()) children.add(
-            RichSpan(
-                paragraph = this,
-                textRange = TextRange(index),
+        if (children.isEmpty())
+            children.add(
+                RichSpan(
+                    paragraph = this,
+                    textRange = TextRange(index),
+                )
             )
-        )
 
         // Check if the textIndex is in the startRichSpan current paragraph
-        if (index > textIndex) return index to getFirstNonEmptyChild(offset = index)
+        if (index > textIndex)
+            return index to getFirstNonEmptyChild(offset = index)
 
         children.fastForEach { richSpan ->
             val result = richSpan.getRichSpanByTextIndex(
@@ -60,6 +64,10 @@ internal class RichParagraph(
             else
                 index = result.first
         }
+
+        if (returnFirstIfEmpty && index == textIndex)
+            return index to getFirstNonEmptyChild()
+
         return index to null
     }
 
@@ -131,6 +139,20 @@ internal class RichParagraph(
         return this
     }
 
+    fun getTextRange(): TextRange {
+        var start = type.startRichSpan.textRange.min
+        var end = 0
+
+        if (type.startRichSpan.text.isNotEmpty())
+            end += type.startRichSpan.text.length
+
+        children.lastOrNull()?.let { richSpan ->
+            end = richSpan.fullTextRange.end
+        }
+
+        return TextRange(start, end)
+    }
+
     fun isEmpty(ignoreStartRichSpan: Boolean = true): Boolean {
         if (!ignoreStartRichSpan && !type.startRichSpan.isEmpty()) return false
 
@@ -160,21 +182,29 @@ internal class RichParagraph(
             if (richSpan.text.isNotEmpty()) {
                 if (offset != -1)
                     richSpan.textRange = TextRange(offset, offset + richSpan.text.length)
+
                 return richSpan
-            }
-            else {
+            } else {
                 val result = richSpan.getFirstNonEmptyChild(offset)
-                if (result != null) return result
+
+                if (result != null)
+                    return result
             }
         }
+
         val firstChild = children.firstOrNull()
+
         children.clear()
+
         if (firstChild != null) {
             firstChild.children.clear()
+
             if (offset != -1)
                 firstChild.textRange = TextRange(offset, offset + firstChild.text.length)
+
             children.add(firstChild)
         }
+
         return firstChild
     }
 

@@ -28,8 +28,8 @@ import com.mohamedrejeb.richeditor.utils.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlin.math.absoluteValue
 import kotlin.math.max
 import kotlin.reflect.KClass
 
@@ -271,8 +271,8 @@ public class RichTextState internal constructor(
 
         require(textRange.max <= textFieldValue.text.length) {
             "The end index must be within the text bounds. " +
-                "The text length is ${textFieldValue.text.length}, " +
-                "but the end index is ${textRange.max}."
+                    "The text length is ${textFieldValue.text.length}, " +
+                    "but the end index is ${textRange.max}."
         }
 
         onTextFieldValueChange(
@@ -1297,8 +1297,19 @@ public class RichTextState internal constructor(
 
             startTypeIndex = max(startTypeIndex, activeRichSpan.textRange.min)
             val startIndex = max(0, startTypeIndex - activeRichSpan.textRange.min)
-            val beforeText = activeRichSpan.text.substring(0, startIndex)
-            val afterText = activeRichSpan.text.substring(startIndex)
+            val beforeText =
+                if (activeRichSpan.text.isEmpty())
+                    ""
+                else
+                    activeRichSpan.text.substring(0, startIndex)
+
+            val afterText =
+                if (activeRichSpan.text.isEmpty())
+                    ""
+                else
+                    activeRichSpan.text.substring(startIndex)
+
+            val isMentionText = typedText.startsWith(RichSpanStyle.Mention.MentionTrigger)
 
             val activeRichSpanFullSpanStyle = activeRichSpan.fullSpanStyle
             val newSpanStyle = activeRichSpanFullSpanStyle.customMerge(toAddSpanStyle).unmerge(toRemoveSpanStyle)
@@ -2759,8 +2770,9 @@ public class RichTextState internal constructor(
         var pressY = pressPosition.y
         val textLayoutResult = this.textLayoutResult ?: return
         var index = 0
+        var lastIndex = 0
+
         for (i in 0 until textLayoutResult.lineCount) {
-            index = i
             val start = textLayoutResult.getLineStart(i)
             val top = textLayoutResult.getLineTop(i)
 
@@ -2776,36 +2788,37 @@ public class RichTextState internal constructor(
                 break
 
             if (top > pressY) {
-                index = i - 1
+                index = lastIndex
                 break
             }
-        }
 
-        if (textLayoutResult.lineCount > richParagraphList.size) {
-            val start = textLayoutResult.getLineStart(index)
-            val top = textLayoutResult.getLineTop(index)
+            lastIndex = index
 
-            val lineTextStartIndex =
-                textLayoutResult.getOffsetForPosition(
-                    position = Offset(start.toFloat(), top.toFloat())
+            richParagraphList.getOrNull(index)?.let { paragraph ->
+                val textRange = paragraph.getTextRange().coerceIn(
+                    0, textLayoutResult.layoutInput.text.text.lastIndex
                 )
 
-            val lineParagraph = getRichParagraphByTextIndex(lineTextStartIndex) ?: return
+                val pStartTop = textLayoutResult.getBoundingBox(textRange.min).top
+                val pEndTop = textLayoutResult.getBoundingBox(textRange.max).top
 
-            val lineParagraphStart = lineParagraph.getFirstNonEmptyChild()?.textRange?.min ?: return
+                val pStartEndTopDiff = (pStartTop - pEndTop).absoluteValue
+                val pEndTopLTopDiff = (pEndTop - top).absoluteValue
 
-            index = richParagraphList.indexOf(lineParagraph)
-
-            val lineParagraphStartBounds = textLayoutResult.getBoundingBox(lineParagraphStart)
-
-            if (index > 0 && lineParagraphStartBounds.top > pressY)
-                index--
+                if (pStartEndTopDiff < 2f || pEndTopLTopDiff < 2f || pEndTop < top) {
+                    index++
+                }
+            }
         }
 
         val selectedParagraph = richParagraphList.getOrNull(index) ?: return
         val nextParagraph = richParagraphList.getOrNull(index + 1)
         val nextParagraphStart =
-            nextParagraph?.getFirstNonEmptyChild()?.textRange?.min?.minus(nextParagraph.type.startText.length)
+            if (nextParagraph == null)
+                    null
+            else
+                (nextParagraph.getFirstNonEmptyChild() ?: nextParagraph.type.startRichSpan)
+                    .textRange.min.minus(nextParagraph.type.startText.length)
 
         if (
             selection.collapsed &&
@@ -2852,9 +2865,11 @@ public class RichTextState internal constructor(
      * @param textIndex The text index to search for.
      * @return The [RichParagraph] that contains the given [textIndex], or null if no such [RichParagraph] exists.
      */
-    private fun getRichParagraphByTextIndex(textIndex: Int): RichParagraph? {
-        if (singleParagraphMode) return richParagraphList.firstOrNull()
-        if (textIndex < 0) return richParagraphList.firstOrNull()
+    private fun getRichParagraphByTextIndex(
+        textIndex: Int,
+    ): RichParagraph? {
+        if (singleParagraphMode || textIndex < 0)
+            return richParagraphList.firstOrNull()
 
         var index = 0
         var paragraphIndex = -1

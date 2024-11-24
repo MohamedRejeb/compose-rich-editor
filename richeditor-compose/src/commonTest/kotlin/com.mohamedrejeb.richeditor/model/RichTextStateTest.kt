@@ -1237,4 +1237,28 @@ class RichTextStateTest {
         assertTrue(state.isUnorderedList)
     }
 
+    @Test
+    fun testAddingTwoConsecutiveLineBreaks() {
+        val state = RichTextState()
+
+        state.setText("Hello")
+
+        state.onTextFieldValueChange(
+            TextFieldValue(
+                text = "Hello\n",
+                selection = TextRange(6),
+            )
+        )
+
+        state.onTextFieldValueChange(
+            TextFieldValue(
+                text = "Hello \n",
+                selection = TextRange(7),
+            )
+        )
+
+        assertEquals(3, state.richParagraphList.size)
+        assertEquals("Hello\n\n", state.toText())
+    }
+
 }

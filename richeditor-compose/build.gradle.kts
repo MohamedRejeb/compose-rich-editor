@@ -1,3 +1,4 @@
+import org.jetbrains.compose.ExperimentalComposeLibrary
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -22,8 +23,13 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_1_8)
         }
     }
-    jvmToolchain(11)
-    jvm("desktop")
+
+    jvm("desktop") {
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_11)
+        }
+    }
 
     js(IR).browser()
     @OptIn(ExperimentalWasmDsl::class)
@@ -55,6 +61,13 @@ kotlin {
 
     sourceSets.commonTest.dependencies {
         implementation(kotlin("test"))
+        @OptIn(ExperimentalComposeLibrary::class)
+        implementation(compose.uiTest)
+    }
+
+    sourceSets.named("desktopTest").dependencies {
+        implementation(compose.desktop.uiTestJUnit4)
+        implementation(compose.desktop.currentOs)
     }
 }
 
@@ -70,9 +83,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
-    }
-    kotlin {
-        jvmToolchain(8)
     }
 }
 

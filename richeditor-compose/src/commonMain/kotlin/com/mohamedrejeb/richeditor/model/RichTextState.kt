@@ -1744,8 +1744,9 @@ public class RichTextState internal constructor(
             // If the new paragraph is empty apply style depending on the config
             if (tempTextFieldValue.selection.collapsed && newParagraph.isEmpty()) {
                 val newParagraphFirstRichSpan = newParagraph.getFirstNonEmptyChild()
+
                 val isSelectionAtNewRichSpan =
-                    newParagraphFirstRichSpan.textRange.min == tempTextFieldValue.selection.min - 1
+                    newParagraphFirstRichSpan?.textRange?.min == tempTextFieldValue.selection.min - 1
 
                 // Check if the cursor is at the new paragraph
                 if (

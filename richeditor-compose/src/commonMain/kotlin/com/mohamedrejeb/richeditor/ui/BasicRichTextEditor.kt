@@ -229,7 +229,11 @@ public fun BasicRichTextEditor(
             scope.launch {
                 interactionSource.interactions.collect { interaction ->
                     if (interaction is PressInteraction.Press) {
-                        state.getRichSpanByOffset(interaction.pressPosition)?.let { clickedSpan ->
+                        val topPadding = with(density) { contentPadding.calculateTopPadding().toPx() }
+                        val startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() }
+                        val localPosition = interaction.pressPosition - Offset(x = startPadding, y = topPadding)
+
+                        state.getRichSpanByOffset(localPosition)?.let { clickedSpan ->
                             onRichSpanClick(clickedSpan.richSpanStyle, clickedSpan.textRange, interaction.pressPosition)
                         }
                     }

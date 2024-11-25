@@ -15,6 +15,6 @@ internal interface ParagraphType {
     fun copy(): ParagraphType
 
     companion object {
-        public val ParagraphType.startText : String get() = startRichSpan.text
+        val ParagraphType.startText : String get() = startRichSpan.text
     }
 }

@@ -180,7 +180,15 @@ fun RichEditorContent() {
                         state = outlinedRichTextState,
                         onRichTextChangedListener = {
                             println("Rich text changed!")
-                        }
+                        },
+                        onRichSpanClick = { span, range, offset ->
+                            println("clicked")
+                            if (span is SpellCheck) {
+                                println("Spell check clicked")
+                                println("Range: $range")
+                                println("Offset: $offset")
+                            }
+                        },
                     )
                 }
 

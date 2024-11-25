@@ -1743,24 +1743,23 @@ public class RichTextState internal constructor(
 
             // If the new paragraph is empty apply style depending on the config
             if (tempTextFieldValue.selection.collapsed && newParagraph.isEmpty()) {
-                newParagraph.getFirstNonEmptyChild()?.let { newParagraphFirstRichSpan ->
-                    val isSelectionAtNewRichSpan =
-                        newParagraphFirstRichSpan.textRange.min == tempTextFieldValue.selection.min - 1
+                val newParagraphFirstRichSpan = newParagraph.getFirstNonEmptyChild()
+                val isSelectionAtNewRichSpan =
+                    newParagraphFirstRichSpan.textRange.min == tempTextFieldValue.selection.min - 1
 
-                    // Check if the cursor is at the new paragraph
-                    if (
-                        (!config.preserveStyleOnEmptyLine || richSpan.paragraph.isEmpty()) &&
-                        isSelectionAtNewRichSpan
-                    ) {
-                        newParagraphFirstRichSpan.spanStyle = SpanStyle()
-                        newParagraphFirstRichSpan.richSpanStyle = RichSpanStyle.Default
-                    } else if (
-                        config.preserveStyleOnEmptyLine &&
-                        isSelectionAtNewRichSpan
-                    ) {
-                        newParagraphFirstRichSpan.spanStyle = currentSpanStyle
-                        newParagraphFirstRichSpan.richSpanStyle = currentRichSpanStyle
-                    }
+                // Check if the cursor is at the new paragraph
+                if (
+                    (!config.preserveStyleOnEmptyLine || richSpan.paragraph.isEmpty()) &&
+                    isSelectionAtNewRichSpan
+                ) {
+                    newParagraphFirstRichSpan.spanStyle = SpanStyle()
+                    newParagraphFirstRichSpan.richSpanStyle = RichSpanStyle.Default
+                } else if (
+                    config.preserveStyleOnEmptyLine &&
+                    isSelectionAtNewRichSpan
+                ) {
+                    newParagraphFirstRichSpan.spanStyle = currentSpanStyle
+                    newParagraphFirstRichSpan.richSpanStyle = currentRichSpanStyle
                 }
             }
 

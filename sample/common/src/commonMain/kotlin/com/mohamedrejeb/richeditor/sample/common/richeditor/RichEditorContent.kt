@@ -16,6 +16,7 @@ import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.sample.common.components.RichTextStyleRow
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
+import com.mohamedrejeb.richeditor.ui.InteractionType
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
@@ -87,13 +88,20 @@ fun RichEditorContent() {
                         BasicRichTextEditor(
                             modifier = Modifier.fillMaxWidth(),
                             state = basicRichTextState,
-                            onRichSpanClick = { span, range, offset ->
-                                println("clicked")
-                                if (span is SpellCheck) {
-                                    println("Spell check clicked")
-                                    println("Range: $range")
-                                    println("Offset: $offset")
-                                    spellCheckExpanded = offset
+                            onRichSpanClick = { span, range, offset, type ->
+                                println("clicked: $type")
+                                if (type == InteractionType.PrimaryClick || type == InteractionType.DoubleTap) {
+                                    if (span is SpellCheck) {
+                                        println("Spell check clicked")
+                                        println("Range: $range")
+                                        println("Offset: $offset")
+                                        spellCheckExpanded = offset
+                                        true
+                                    } else {
+                                        false
+                                    }
+                                } else {
+                                    false
                                 }
                             }
                         )
@@ -178,12 +186,15 @@ fun RichEditorContent() {
                     OutlinedRichTextEditor(
                         modifier = Modifier.fillMaxWidth(),
                         state = outlinedRichTextState,
-                        onRichSpanClick = { span, range, offset ->
-                            println("clicked")
+                        onRichSpanClick = { span, range, offset, type ->
+                            println("clicked: $type")
                             if (span is SpellCheck) {
                                 println("Spell check clicked")
                                 println("Range: $range")
                                 println("Offset: $offset")
+                                true
+                            } else {
+                                false
                             }
                         }
                     )

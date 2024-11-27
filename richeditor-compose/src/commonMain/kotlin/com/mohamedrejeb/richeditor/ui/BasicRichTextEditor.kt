@@ -1,5 +1,6 @@
 package com.mohamedrejeb.richeditor.ui
 
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -11,11 +12,16 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
@@ -28,6 +34,8 @@ import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlin.time.Duration.Companion.milliseconds
 
 
 /**
@@ -217,25 +225,6 @@ public fun BasicRichTextEditor(
         state.singleParagraphMode = singleParagraph
     }
 
-    if(onRichSpanClick != null) {
-        // Start listening for rich span clicks
-        LaunchedEffect(interactionSource) {
-            scope.launch {
-                interactionSource.interactions.collect { interaction ->
-                    if (interaction is PressInteraction.Press) {
-                        val topPadding = with(density) { contentPadding.calculateTopPadding().toPx() }
-                        val startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() }
-                        val localPosition = interaction.pressPosition - Offset(x = startPadding, y = topPadding)
-
-                        state.getRichSpanByOffset(localPosition)?.let { clickedSpan ->
-                            onRichSpanClick(clickedSpan.richSpanStyle, clickedSpan.textRange, interaction.pressPosition)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     if (!singleParagraph) {
         // Workaround for Android to fix a bug in BasicTextField where it doesn't select the correct text
         // when the text contains multiple paragraphs.
@@ -244,7 +233,9 @@ public fun BasicRichTextEditor(
                 if (interaction is PressInteraction.Press) {
                     val pressPosition = interaction.pressPosition
                     val topPadding = with(density) { contentPadding.calculateTopPadding().toPx() }
-                    val startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() }
+                    val startPadding = with(density) {
+                        contentPadding.calculateStartPadding(layoutDirection).toPx()
+                    }
 
                     adjustTextIndicatorOffset(
                         pressPosition = pressPosition,
@@ -272,6 +263,20 @@ public fun BasicRichTextEditor(
                     topPadding = with(density) { contentPadding.calculateTopPadding().toPx() },
                     startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() },
                 )
+                .handleInteractions(onRichSpanClick != null) { type, offset ->
+                    val topPadding = with(density) { contentPadding.calculateTopPadding().toPx() }
+                    val startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() }
+                    val localPosition = offset - Offset(x = startPadding, y = topPadding)
+
+                    state.getRichSpanByOffset(localPosition)?.let { clickedSpan ->
+                        onRichSpanClick?.invoke(
+                            clickedSpan.richSpanStyle,
+                            clickedSpan.textRange,
+                            offset,
+                            type
+                        )
+                    } ?: false
+                }
                 .then(
                     if (!readOnly)
                         Modifier
@@ -340,4 +345,71 @@ internal suspend fun adjustTextIndicatorOffset(
     )
 }
 
-public typealias RichSpanClickListener = (RichSpanStyle, TextRange, Offset) -> Unit
+public enum class InteractionType { PrimaryClick, PrimaryDoubleClick, SecondaryClick, Tap, DoubleTap }
+public typealias RichSpanClickListener = (RichSpanStyle, TextRange, Offset, InteractionType) -> Boolean
+
+/**
+ * Provide a unified callback for listening for different types of interactions
+ */
+private fun Modifier.handleInteractions(
+    enabled: Boolean = true,
+    onInteraction: ((InteractionType, Offset) -> Boolean)? = null
+): Modifier = composed {
+    this
+        .pointerInput(enabled) {
+        awaitPointerEventScope {
+            while (true) {
+                val event = awaitPointerEvent(PointerEventPass.Main)
+                if (!enabled) continue
+
+                if (event.type == PointerEventType.Press) {
+                    val position = event.changes.first().position
+
+                    if (event.buttons.isSecondaryPressed) {
+                        val consumed = onInteraction?.invoke(InteractionType.SecondaryClick, position) ?: false
+                        if (consumed) {
+                            event.changes.forEach { it.consume() }
+                        }
+                    } else {
+                        val timeoutEnd = Clock.System.now() + 300.milliseconds
+                        var secondPress: Boolean = false
+
+                        while (Clock.System.now() < timeoutEnd && !secondPress) {
+                            val nextEvent = awaitPointerEvent(PointerEventPass.Main)
+                            if (nextEvent.type == PointerEventType.Press) {
+                                secondPress = true
+                                val consumed = onInteraction?.invoke(InteractionType.PrimaryDoubleClick, position) ?: false
+                                if (consumed) {
+                                    nextEvent.changes.forEach { it.consume() }
+                                }
+                                break
+                            }
+                        }
+
+                        if (!secondPress) {
+                            val consumed = onInteraction?.invoke(InteractionType.PrimaryClick, position) ?: false
+                            if (consumed) {
+                                event.changes.forEach { it.consume() }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+        // Handle touch interactions
+        .pointerInput(enabled) {
+            detectTapGestures(
+                onTap = { offset ->
+                    if (enabled) {
+                        onInteraction?.invoke(InteractionType.Tap, offset)
+                    }
+                },
+                onDoubleTap = { offset ->
+                    if (enabled) {
+                        onInteraction?.invoke(InteractionType.DoubleTap, offset)
+                    }
+                }
+            )
+        }
+}

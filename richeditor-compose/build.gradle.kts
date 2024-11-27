@@ -51,6 +51,8 @@ kotlin {
         implementation(compose.material)
         implementation(compose.material3)
 
+        implementation(libs.kotlinx.datetime)
+
         // HTML parsing library
         implementation(libs.ksoup.html)
         implementation(libs.ksoup.entities)

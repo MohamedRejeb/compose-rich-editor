@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
+import com.mohamedrejeb.richeditor.ui.InteractionType
 import com.mohamedrejeb.richeditor.ui.RichSpanClickListener
 import com.mohamedrejeb.richeditor.utils.WordSegment
 
@@ -66,15 +67,19 @@ fun SpellCheckedRichTextEditor(
             state = spellCheckState.richTextState,
             cursorBrush = cursorBrush,
             onRichSpanClick = { span, range, click, type ->
-                val correction = spellCheckState.handleSpanClick(span, range, click)
-                return@BasicRichTextEditor if (correction != null) {
-                    spellCheckWord = correction
-                    menuPosition = click
-                    expanded = true
+                return@BasicRichTextEditor if (type == InteractionType.PrimaryClick) {
+                    val correction = spellCheckState.handleSpanClick(span, range, click)
+                    if (correction != null) {
+                        spellCheckWord = correction
+                        menuPosition = click
+                        expanded = true
 
-                    true
+                        true
+                    } else {
+                        onRichSpanClick?.invoke(span, range, click, type) ?: false
+                    }
                 } else {
-                    onRichSpanClick?.invoke(span, range, click, type) ?: false
+                    false
                 }
             },
             decorationBox = decorationBox,

@@ -65,14 +65,16 @@ fun SpellCheckedRichTextEditor(
             interactionSource = interactionSource,
             state = spellCheckState.richTextState,
             cursorBrush = cursorBrush,
-            onRichSpanClick = { span, range, click ->
+            onRichSpanClick = { span, range, click, type ->
                 val correction = spellCheckState.handleSpanClick(span, range, click)
-                if (correction != null) {
+                return@BasicRichTextEditor if (correction != null) {
                     spellCheckWord = correction
                     menuPosition = click
                     expanded = true
+
+                    true
                 } else {
-                    onRichSpanClick?.invoke(span, range, click)
+                    onRichSpanClick?.invoke(span, range, click, type) ?: false
                 }
             },
             decorationBox = decorationBox,

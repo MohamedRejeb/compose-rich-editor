@@ -361,43 +361,48 @@ private fun Modifier.handleInteractions(
 ): Modifier = composed {
     this
         .pointerInput(enabled) {
-        awaitPointerEventScope {
-            while (true) {
-                val event = awaitPointerEvent(PointerEventPass.Main)
-                if (!enabled) continue
+            awaitPointerEventScope {
+                while (true) {
+                    val event = awaitPointerEvent(PointerEventPass.Main)
+                    if (!enabled) continue
 
-                if (event.type == PointerEventType.Press) {
-                    val position = event.changes.first().position
+                    if (event.type == PointerEventType.Press) {
+                        val position = event.changes.first().position
 
-                    if (event.buttons.isPrimaryPressed) {
-                        val consumed = onInteraction?.invoke(InteractionType.PrimaryClick, position) ?: false
-                        if (consumed) {
-                            event.changes.forEach { it.consume() }
-                        }
-                    }
-                    else if (event.buttons.isSecondaryPressed) {
-                        val consumed = onInteraction?.invoke(InteractionType.SecondaryClick, position) ?: false
-                        if (consumed) {
-                            event.changes.forEach { it.consume() }
+                        when (event.changes.first().type) {
+                            PointerType.Touch -> {
+                                onInteraction?.invoke(
+                                    InteractionType.Tap,
+                                    event.changes.first().position
+                                )
+                            }
+
+                            PointerType.Mouse -> {
+                                if (event.buttons.isPrimaryPressed) {
+                                    val consumed =
+                                        onInteraction?.invoke(
+                                            InteractionType.PrimaryClick,
+                                            position
+                                        )
+                                            ?: false
+                                    if (consumed) {
+                                        event.changes.forEach { it.consume() }
+                                    }
+                                } else if (event.buttons.isSecondaryPressed) {
+                                    val consumed =
+                                        onInteraction?.invoke(
+                                            InteractionType.SecondaryClick,
+                                            position
+                                        )
+                                            ?: false
+                                    if (consumed) {
+                                        event.changes.forEach { it.consume() }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
-        }
-    }
-        // Handle touch interactions
-        .pointerInput(enabled) {
-            detectTapGestures(
-                onTap = { offset ->
-                    if (enabled) {
-                        onInteraction?.invoke(InteractionType.Tap, offset)
-                    }
-                },
-                onDoubleTap = { offset ->
-                    if (enabled) {
-                        onInteraction?.invoke(InteractionType.DoubleTap, offset)
-                    }
-                }
-            )
         }
 }

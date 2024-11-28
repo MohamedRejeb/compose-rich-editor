@@ -13,9 +13,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntOffset
 import com.darkrockstudios.symspellkt.common.SuggestionItem
 import com.mohamedrejeb.richeditor.utils.WordSegment
+import kotlin.math.roundToInt
 
 @Composable
 fun SpellCheckDropdown(
@@ -32,7 +33,7 @@ fun SpellCheckDropdown(
         suggestionItems = spellCheckState.getSuggestions(word.text)
     }
 
-    Box(modifier = Modifier.offset(x = position.x.dp, y = position.y.dp)) {
+    Box(modifier = Modifier.offset { IntOffset(position.x.roundToInt(), position.y.roundToInt())}) {
         DropdownMenu(
             expanded = word != null,
             onDismissRequest = dismiss,

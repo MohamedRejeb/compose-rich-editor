@@ -28,7 +28,7 @@ fun rememberSampleSpellChecker(): MutableState<SpellChecker?> {
         scope.launch(Dispatchers.Default) {
             val checker = SymSpell(spellCheckSettings = SpellCheckSettings(topK = 5))
 
-            Res.readBytes("files/en-80k.txt.gz")
+            Res.readBytes("files/en80k")
                 .uncompress(GZIP)
                 .decodeToString()
                 .lineSequence()

@@ -1,7 +1,6 @@
 package com.mohamedrejeb.richeditor.sample.common.spellcheck
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -9,18 +8,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
+import com.mohamedrejeb.richeditor.spellcheck.SpellCheckMenuState
+import com.mohamedrejeb.richeditor.spellcheck.SpellCheckTextContextMenuProvider
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
 import com.mohamedrejeb.richeditor.ui.InteractionType
 import com.mohamedrejeb.richeditor.ui.RichSpanClickListener
-import com.mohamedrejeb.richeditor.utils.WordSegment
 
 @Composable
 fun SpellCheckedRichTextEditor(
@@ -41,17 +39,12 @@ fun SpellCheckedRichTextEditor(
     decorationBox: @Composable (innerTextField: @Composable () -> Unit) -> Unit =
         @Composable { innerTextField -> innerTextField() },
 ) {
-    var spellCheckWord by remember { mutableStateOf<WordSegment?>(null) }
-    var expanded by remember { mutableStateOf(false) }
-    var menuPosition by remember { mutableStateOf(Offset.Zero) }
+    val menuState by remember(spellCheckState) { mutableStateOf(SpellCheckMenuState(spellCheckState)) }
 
-    fun clearSpellCheck() {
-        spellCheckWord = null
-        expanded = false
-        menuPosition = Offset.Zero
-    }
-
-    Box(modifier = modifier) {
+    SpellCheckTextContextMenuProvider(
+        modifier = modifier,
+        spellCheckMenuState = menuState,
+    ) {
         BasicRichTextEditor(
             modifier = Modifier.fillMaxSize(),
             enabled = enabled,
@@ -67,13 +60,10 @@ fun SpellCheckedRichTextEditor(
             state = spellCheckState.richTextState,
             cursorBrush = cursorBrush,
             onRichSpanClick = { span, range, click, type ->
-                return@BasicRichTextEditor if (type == InteractionType.PrimaryClick) {
+                return@BasicRichTextEditor if (type == InteractionType.SecondaryClick || type == InteractionType.Tap) {
                     val correction = spellCheckState.handleSpanClick(span, range, click)
                     if (correction != null) {
-                        spellCheckWord = correction
-                        menuPosition = click
-                        expanded = true
-
+                        menuState.missSpelling.value = SpellCheckMenuState.MissSpelling(correction, click)
                         true
                     } else {
                         onRichSpanClick?.invoke(span, range, click, type) ?: false
@@ -83,17 +73,6 @@ fun SpellCheckedRichTextEditor(
                 }
             },
             decorationBox = decorationBox,
-        )
-
-        SpellCheckDropdown(
-            spellCheckWord,
-            menuPosition,
-            spellCheckState,
-            dismiss = ::clearSpellCheck,
-            correctSpelling = { segment, correction ->
-                spellCheckState.correctSpelling(segment, correction)
-                clearSpellCheck()
-            }
         )
     }
 }

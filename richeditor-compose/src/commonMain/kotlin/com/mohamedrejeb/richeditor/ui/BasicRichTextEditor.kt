@@ -1,6 +1,5 @@
 package com.mohamedrejeb.richeditor.ui
 
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -20,7 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.isPressed
+import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.isPrimaryPressed
 import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.pointerInput
@@ -35,9 +34,6 @@ import androidx.compose.ui.unit.LayoutDirection
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
-import kotlin.time.Duration.Companion.milliseconds
 
 
 /**
@@ -359,43 +355,48 @@ private fun Modifier.handleInteractions(
 ): Modifier = composed {
     this
         .pointerInput(enabled) {
-        awaitPointerEventScope {
-            while (true) {
-                val event = awaitPointerEvent(PointerEventPass.Main)
-                if (!enabled) continue
+            awaitPointerEventScope {
+                while (true) {
+                    val event = awaitPointerEvent(PointerEventPass.Main)
+                    if (!enabled) continue
 
-                if (event.type == PointerEventType.Press) {
-                    val position = event.changes.first().position
+                    if (event.type == PointerEventType.Press) {
+                        val position = event.changes.first().position
 
-                    if (event.buttons.isPrimaryPressed) {
-                        val consumed = onInteraction?.invoke(InteractionType.PrimaryClick, position) ?: false
-                        if (consumed) {
-                            event.changes.forEach { it.consume() }
-                        }
-                    }
-                    else if (event.buttons.isSecondaryPressed) {
-                        val consumed = onInteraction?.invoke(InteractionType.SecondaryClick, position) ?: false
-                        if (consumed) {
-                            event.changes.forEach { it.consume() }
+                        when (event.changes.first().type) {
+                            PointerType.Touch -> {
+                                onInteraction?.invoke(
+                                    InteractionType.Tap,
+                                    event.changes.first().position
+                                )
+                            }
+
+                            PointerType.Mouse -> {
+                                if (event.buttons.isPrimaryPressed) {
+                                    val consumed =
+                                        onInteraction?.invoke(
+                                            InteractionType.PrimaryClick,
+                                            position
+                                        )
+                                            ?: false
+                                    if (consumed) {
+                                        event.changes.forEach { it.consume() }
+                                    }
+                                } else if (event.buttons.isSecondaryPressed) {
+                                    val consumed =
+                                        onInteraction?.invoke(
+                                            InteractionType.SecondaryClick,
+                                            position
+                                        )
+                                            ?: false
+                                    if (consumed) {
+                                        event.changes.forEach { it.consume() }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
-        }
-    }
-        // Handle touch interactions
-        .pointerInput(enabled) {
-            detectTapGestures(
-                onTap = { offset ->
-                    if (enabled) {
-                        onInteraction?.invoke(InteractionType.Tap, offset)
-                    }
-                },
-                onDoubleTap = { offset ->
-                    if (enabled) {
-                        onInteraction?.invoke(InteractionType.DoubleTap, offset)
-                    }
-                }
-            )
         }
 }

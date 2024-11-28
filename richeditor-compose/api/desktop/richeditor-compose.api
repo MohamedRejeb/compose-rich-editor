@@ -239,7 +239,6 @@ public final class com/mohamedrejeb/richeditor/ui/ComposableSingletons$BasicRich
 public final class com/mohamedrejeb/richeditor/ui/InteractionType : java/lang/Enum {
 	public static final field DoubleTap Lcom/mohamedrejeb/richeditor/ui/InteractionType;
 	public static final field PrimaryClick Lcom/mohamedrejeb/richeditor/ui/InteractionType;
-	public static final field PrimaryDoubleClick Lcom/mohamedrejeb/richeditor/ui/InteractionType;
 	public static final field SecondaryClick Lcom/mohamedrejeb/richeditor/ui/InteractionType;
 	public static final field Tap Lcom/mohamedrejeb/richeditor/ui/InteractionType;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;

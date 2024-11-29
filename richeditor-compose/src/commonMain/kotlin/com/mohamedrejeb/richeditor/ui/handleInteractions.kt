@@ -27,13 +27,14 @@ internal fun Modifier.handleInteractions(
                     if (!enabled) continue
 
                     if (event.type == PointerEventType.Press) {
-                        val position = event.changes.first().position
+                        val eventChange = event.changes.first()
+                        val position = eventChange.position
 
-                        when (event.changes.first().type) {
+                        when (eventChange.type) {
                             PointerType.Touch -> {
                                 onInteraction?.invoke(
                                     InteractionType.Tap,
-                                    event.changes.first().position
+                                    eventChange.position
                                 )
                             }
 

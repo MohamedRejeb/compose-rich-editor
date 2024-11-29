@@ -207,7 +207,6 @@ public fun BasicRichTextEditor(
         @Composable { innerTextField -> innerTextField() },
     contentPadding: PaddingValues
 ) {
-    val scope = rememberCoroutineScope()
     val density = LocalDensity.current
     val localTextStyle = LocalTextStyle.current
     val layoutDirection = LocalLayoutDirection.current

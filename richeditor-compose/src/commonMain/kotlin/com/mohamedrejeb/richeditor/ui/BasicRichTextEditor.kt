@@ -1,6 +1,5 @@
 package com.mohamedrejeb.richeditor.ui
 
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -37,9 +36,6 @@ import androidx.compose.ui.unit.LayoutDirection
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
-import kotlin.time.Duration.Companion.milliseconds
 
 
 /**
@@ -348,60 +344,4 @@ internal suspend fun adjustTextIndicatorOffset(
     )
 }
 
-public enum class InteractionType { PrimaryClick, SecondaryClick, Tap, DoubleTap }
 public typealias RichSpanClickListener = (RichSpanStyle, TextRange, Offset, InteractionType) -> Boolean
-
-/**
- * Provide a unified callback for listening for different types of interactions
- */
-private fun Modifier.handleInteractions(
-    enabled: Boolean = true,
-    onInteraction: ((InteractionType, Offset) -> Boolean)? = null
-): Modifier = composed {
-    this
-        .pointerInput(enabled) {
-            awaitPointerEventScope {
-                while (true) {
-                    val event = awaitPointerEvent(PointerEventPass.Main)
-                    if (!enabled) continue
-
-                    if (event.type == PointerEventType.Press) {
-                        val position = event.changes.first().position
-
-                        when (event.changes.first().type) {
-                            PointerType.Touch -> {
-                                onInteraction?.invoke(
-                                    InteractionType.Tap,
-                                    event.changes.first().position
-                                )
-                            }
-
-                            PointerType.Mouse -> {
-                                if (event.buttons.isPrimaryPressed) {
-                                    val consumed =
-                                        onInteraction?.invoke(
-                                            InteractionType.PrimaryClick,
-                                            position
-                                        )
-                                            ?: false
-                                    if (consumed) {
-                                        event.changes.forEach { it.consume() }
-                                    }
-                                } else if (event.buttons.isSecondaryPressed) {
-                                    val consumed =
-                                        onInteraction?.invoke(
-                                            InteractionType.SecondaryClick,
-                                            position
-                                        )
-                                            ?: false
-                                    if (consumed) {
-                                        event.changes.forEach { it.consume() }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-}

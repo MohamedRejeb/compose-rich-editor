@@ -4,7 +4,6 @@ kotlin = "2.0.21"
 compose = "1.7.1"
 dokka = "1.9.10"
 
-kotlinxDatetime = "0.6.1"
 ksoup = "0.4.0"
 jetbrainsMarkdown = "0.7.3"
 coil = "3.0.1"
@@ -24,7 +23,6 @@ android-minSdk = "26"
 android-compileSdk = "34"
 
 [libraries]
-kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 ksoup-html = { module = "com.mohamedrejeb.ksoup:ksoup-html", version.ref = "ksoup" }
 ksoup-entities = { module = "com.mohamedrejeb.ksoup:ksoup-entities", version.ref = "ksoup" }
 jetbrains-markdown = { module = "org.jetbrains:markdown", version.ref = "jetbrainsMarkdown" }

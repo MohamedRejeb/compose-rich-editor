@@ -17,7 +17,6 @@ open annotation class com.mohamedrejeb.richeditor.annotation/InternalRichTextApi
 final enum class com.mohamedrejeb.richeditor.ui/InteractionType : kotlin/Enum<com.mohamedrejeb.richeditor.ui/InteractionType> { // com.mohamedrejeb.richeditor.ui/InteractionType|null[0]
     enum entry DoubleTap // com.mohamedrejeb.richeditor.ui/InteractionType.DoubleTap|null[0]
     enum entry PrimaryClick // com.mohamedrejeb.richeditor.ui/InteractionType.PrimaryClick|null[0]
-    enum entry PrimaryDoubleClick // com.mohamedrejeb.richeditor.ui/InteractionType.PrimaryDoubleClick|null[0]
     enum entry SecondaryClick // com.mohamedrejeb.richeditor.ui/InteractionType.SecondaryClick|null[0]
     enum entry Tap // com.mohamedrejeb.richeditor.ui/InteractionType.Tap|null[0]
 

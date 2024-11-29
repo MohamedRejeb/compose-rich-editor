@@ -54,7 +54,7 @@ kotlin {
         implementation(compose.material3)
 
         // Spell Check
-        implementation(libs.symspellkt)
+        api(libs.symspellkt)
     }
 
     sourceSets.commonTest.dependencies {

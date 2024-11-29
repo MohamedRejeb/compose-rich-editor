@@ -67,7 +67,6 @@ kotlin {
 
         // Spell Check
         implementation(projects.richeditorComposeSpellcheck)
-        implementation(libs.symspellkt)
         implementation(libs.korge.io)
     }
 

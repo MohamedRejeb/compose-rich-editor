@@ -66,9 +66,11 @@ fun SpellCheckedRichTextEditor(
                         menuState.missSpelling.value = SpellCheckMenuState.MissSpelling(correction, click)
                         true
                     } else {
+                        menuState.missSpelling.value = null
                         onRichSpanClick?.invoke(span, range, click, type) ?: false
                     }
                 } else {
+                    menuState.missSpelling.value = null
                     false
                 }
             },

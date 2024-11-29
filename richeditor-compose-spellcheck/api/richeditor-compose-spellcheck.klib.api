@@ -1,0 +1,81 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, wasmJs]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.mohamedrejeb.richeditor:richeditor-compose-spellcheck>
+final class com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState { // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState|null[0]
+    constructor <init>(com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckState) // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.<init>|<init>(com.mohamedrejeb.richeditor.compose.spellcheck.SpellCheckState){}[0]
+
+    final val missSpelling // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.missSpelling|{}missSpelling[0]
+        final fun <get-missSpelling>(): androidx.compose.runtime/MutableState<com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.MissSpelling?> // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.missSpelling.<get-missSpelling>|<get-missSpelling>(){}[0]
+    final val spellCheckState // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.spellCheckState|{}spellCheckState[0]
+        final fun <get-spellCheckState>(): com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckState // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.spellCheckState.<get-spellCheckState>|<get-spellCheckState>(){}[0]
+
+    final fun clearSpellCheck() // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.clearSpellCheck|clearSpellCheck(){}[0]
+    final fun component1(): com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckState // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.component1|component1(){}[0]
+    final fun copy(com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckState = ...): com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.copy|copy(com.mohamedrejeb.richeditor.compose.spellcheck.SpellCheckState){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.hashCode|hashCode(){}[0]
+    final fun performCorrection(com.mohamedrejeb.richeditor.utils/WordSegment, kotlin/String) // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.performCorrection|performCorrection(com.mohamedrejeb.richeditor.utils.WordSegment;kotlin.String){}[0]
+    final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.toString|toString(){}[0]
+
+    final class MissSpelling { // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.MissSpelling|null[0]
+        constructor <init>(com.mohamedrejeb.richeditor.utils/WordSegment, androidx.compose.ui.geometry/Offset) // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.MissSpelling.<init>|<init>(com.mohamedrejeb.richeditor.utils.WordSegment;androidx.compose.ui.geometry.Offset){}[0]
+
+        final val menuPosition // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.MissSpelling.menuPosition|{}menuPosition[0]
+            final fun <get-menuPosition>(): androidx.compose.ui.geometry/Offset // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.MissSpelling.menuPosition.<get-menuPosition>|<get-menuPosition>(){}[0]
+        final val wordSegment // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.MissSpelling.wordSegment|{}wordSegment[0]
+            final fun <get-wordSegment>(): com.mohamedrejeb.richeditor.utils/WordSegment // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.MissSpelling.wordSegment.<get-wordSegment>|<get-wordSegment>(){}[0]
+
+        final fun component1(): com.mohamedrejeb.richeditor.utils/WordSegment // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.MissSpelling.component1|component1(){}[0]
+        final fun component2(): androidx.compose.ui.geometry/Offset // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.MissSpelling.component2|component2(){}[0]
+        final fun copy(com.mohamedrejeb.richeditor.utils/WordSegment = ..., androidx.compose.ui.geometry/Offset = ...): com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.MissSpelling // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.MissSpelling.copy|copy(com.mohamedrejeb.richeditor.utils.WordSegment;androidx.compose.ui.geometry.Offset){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.MissSpelling.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.MissSpelling.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState.MissSpelling.toString|toString(){}[0]
+    }
+}
+
+final class com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckState { // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckState|null[0]
+    constructor <init>(com.mohamedrejeb.richeditor.model/RichTextState, com.darkrockstudios.symspellkt.api/SpellChecker?) // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckState.<init>|<init>(com.mohamedrejeb.richeditor.model.RichTextState;com.darkrockstudios.symspellkt.api.SpellChecker?){}[0]
+
+    final val richTextState // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckState.richTextState|{}richTextState[0]
+        final fun <get-richTextState>(): com.mohamedrejeb.richeditor.model/RichTextState // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckState.richTextState.<get-richTextState>|<get-richTextState>(){}[0]
+
+    final var spellChecker // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckState.spellChecker|{}spellChecker[0]
+        final fun <get-spellChecker>(): com.darkrockstudios.symspellkt.api/SpellChecker? // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckState.spellChecker.<get-spellChecker>|<get-spellChecker>(){}[0]
+        final fun <set-spellChecker>(com.darkrockstudios.symspellkt.api/SpellChecker?) // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckState.spellChecker.<set-spellChecker>|<set-spellChecker>(com.darkrockstudios.symspellkt.api.SpellChecker?){}[0]
+
+    final fun correctSpelling(com.mohamedrejeb.richeditor.utils/WordSegment, kotlin/String) // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckState.correctSpelling|correctSpelling(com.mohamedrejeb.richeditor.utils.WordSegment;kotlin.String){}[0]
+    final fun getSuggestions(kotlin/String): kotlin.collections/List<com.darkrockstudios.symspellkt.common/SuggestionItem> // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckState.getSuggestions|getSuggestions(kotlin.String){}[0]
+    final fun handleSpanClick(com.mohamedrejeb.richeditor.model/RichSpanStyle, androidx.compose.ui.text/TextRange, androidx.compose.ui.geometry/Offset): com.mohamedrejeb.richeditor.utils/WordSegment? // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckState.handleSpanClick|handleSpanClick(com.mohamedrejeb.richeditor.model.RichSpanStyle;androidx.compose.ui.text.TextRange;androidx.compose.ui.geometry.Offset){}[0]
+    final fun onTextChange(com.mohamedrejeb.richeditor.model/RichTextState) // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckState.onTextChange|onTextChange(com.mohamedrejeb.richeditor.model.RichTextState){}[0]
+    final fun runSpellCheck() // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckState.runSpellCheck|runSpellCheck(){}[0]
+}
+
+final object com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheck : com.mohamedrejeb.richeditor.model/RichSpanStyle { // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheck|null[0]
+    final val acceptNewTextInTheEdges // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheck.acceptNewTextInTheEdges|{}acceptNewTextInTheEdges[0]
+        final fun <get-acceptNewTextInTheEdges>(): kotlin/Boolean // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheck.acceptNewTextInTheEdges.<get-acceptNewTextInTheEdges>|<get-acceptNewTextInTheEdges>(){}[0]
+    final val spanStyle // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheck.spanStyle|{}spanStyle[0]
+        final fun <get-spanStyle>(): kotlin/Function1<com.mohamedrejeb.richeditor.model/RichTextConfig, androidx.compose.ui.text/SpanStyle> // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheck.spanStyle.<get-spanStyle>|<get-spanStyle>(){}[0]
+
+    final fun (androidx.compose.ui.graphics.drawscope/DrawScope).drawCustomStyle(androidx.compose.ui.text/TextLayoutResult, androidx.compose.ui.text/TextRange, com.mohamedrejeb.richeditor.model/RichTextConfig, kotlin/Float, kotlin/Float) // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheck.drawCustomStyle|drawCustomStyle@androidx.compose.ui.graphics.drawscope.DrawScope(androidx.compose.ui.text.TextLayoutResult;androidx.compose.ui.text.TextRange;com.mohamedrejeb.richeditor.model.RichTextConfig;kotlin.Float;kotlin.Float){}[0]
+}
+
+final val com.mohamedrejeb.richeditor.compose.spellcheck/com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheck$stableprop // com.mohamedrejeb.richeditor.compose.spellcheck/com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheck$stableprop|#static{}com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheck$stableprop[0]
+final val com.mohamedrejeb.richeditor.compose.spellcheck/com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheckMenuState$stableprop // com.mohamedrejeb.richeditor.compose.spellcheck/com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheckMenuState$stableprop|#static{}com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheckMenuState$stableprop[0]
+final val com.mohamedrejeb.richeditor.compose.spellcheck/com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheckMenuState_MissSpelling$stableprop // com.mohamedrejeb.richeditor.compose.spellcheck/com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheckMenuState_MissSpelling$stableprop|#static{}com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheckMenuState_MissSpelling$stableprop[0]
+final val com.mohamedrejeb.richeditor.compose.spellcheck/com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheckState$stableprop // com.mohamedrejeb.richeditor.compose.spellcheck/com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheckState$stableprop|#static{}com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheckState$stableprop[0]
+
+final fun (kotlin.collections/List<com.darkrockstudios.symspellkt.common/SuggestionItem>).com.mohamedrejeb.richeditor.compose.spellcheck.utils/spellingIsCorrect(kotlin/String): kotlin/Boolean // com.mohamedrejeb.richeditor.compose.spellcheck.utils/spellingIsCorrect|spellingIsCorrect@kotlin.collections.List<com.darkrockstudios.symspellkt.common.SuggestionItem>(kotlin.String){}[0]
+final fun (kotlin/String).com.mohamedrejeb.richeditor.compose.spellcheck.utils/isSpelledCorrectly(kotlin.collections/List<com.darkrockstudios.symspellkt.common/SuggestionItem>): kotlin/Boolean // com.mohamedrejeb.richeditor.compose.spellcheck.utils/isSpelledCorrectly|isSpelledCorrectly@kotlin.String(kotlin.collections.List<com.darkrockstudios.symspellkt.common.SuggestionItem>){}[0]
+final fun com.mohamedrejeb.richeditor.compose.spellcheck.ui/SpellCheckedRichTextEditor(androidx.compose.ui/Modifier?, kotlin/Boolean, androidx.compose.ui.text/TextStyle?, androidx.compose.foundation.text/KeyboardOptions?, androidx.compose.foundation.text/KeyboardActions?, kotlin/Boolean, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Function4<com.mohamedrejeb.richeditor.model/RichSpanStyle, androidx.compose.ui.text/TextRange, androidx.compose.ui.geometry/Offset, com.mohamedrejeb.richeditor.ui/InteractionType, kotlin/Boolean>?, kotlin/Function1<androidx.compose.ui.text/TextLayoutResult, kotlin/Unit>?, androidx.compose.foundation.interaction/MutableInteractionSource?, androidx.compose.ui.graphics/Brush?, com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckState?, kotlin/Function3<kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.mohamedrejeb.richeditor.compose.spellcheck.ui/SpellCheckedRichTextEditor|SpellCheckedRichTextEditor(androidx.compose.ui.Modifier?;kotlin.Boolean;androidx.compose.ui.text.TextStyle?;androidx.compose.foundation.text.KeyboardOptions?;androidx.compose.foundation.text.KeyboardActions?;kotlin.Boolean;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Function4<com.mohamedrejeb.richeditor.model.RichSpanStyle,androidx.compose.ui.text.TextRange,androidx.compose.ui.geometry.Offset,com.mohamedrejeb.richeditor.ui.InteractionType,kotlin.Boolean>?;kotlin.Function1<androidx.compose.ui.text.TextLayoutResult,kotlin.Unit>?;androidx.compose.foundation.interaction.MutableInteractionSource?;androidx.compose.ui.graphics.Brush?;com.mohamedrejeb.richeditor.compose.spellcheck.SpellCheckState?;kotlin.Function3<kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+final fun com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckTextContextMenuProvider(androidx.compose.ui/Modifier, com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckMenuState, kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int) // com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckTextContextMenuProvider|SpellCheckTextContextMenuProvider(androidx.compose.ui.Modifier;com.mohamedrejeb.richeditor.compose.spellcheck.SpellCheckMenuState;kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+final fun com.mohamedrejeb.richeditor.compose.spellcheck/com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheck$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.compose.spellcheck/com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheck$stableprop_getter|com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheck$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.compose.spellcheck/com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheckMenuState$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.compose.spellcheck/com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheckMenuState$stableprop_getter|com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheckMenuState$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.compose.spellcheck/com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheckMenuState_MissSpelling$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.compose.spellcheck/com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheckMenuState_MissSpelling$stableprop_getter|com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheckMenuState_MissSpelling$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.compose.spellcheck/com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheckState$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.compose.spellcheck/com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheckState$stableprop_getter|com_mohamedrejeb_richeditor_compose_spellcheck_SpellCheckState$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.compose.spellcheck/rememberSpellCheckState(com.darkrockstudios.symspellkt.api/SpellChecker?, androidx.compose.runtime/Composer?, kotlin/Int): com.mohamedrejeb.richeditor.compose.spellcheck/SpellCheckState // com.mohamedrejeb.richeditor.compose.spellcheck/rememberSpellCheckState|rememberSpellCheckState(com.darkrockstudios.symspellkt.api.SpellChecker?;androidx.compose.runtime.Composer?;kotlin.Int){}[0]

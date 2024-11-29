@@ -31,6 +31,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.mohamedrejeb.richeditor.compose.spellcheck.SpellCheckState
+import com.mohamedrejeb.richeditor.compose.spellcheck.ui.SpellCheckedRichTextEditor
+import com.mohamedrejeb.richeditor.compose.spellcheck.rememberSpellCheckState
 import com.mohamedrejeb.richeditor.sample.common.components.RichTextStyleRow
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
 

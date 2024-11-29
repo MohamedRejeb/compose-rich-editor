@@ -66,6 +66,7 @@ kotlin {
         implementation(libs.ktor.client.core)
 
         // Spell Check
+        implementation(projects.richeditorComposeSpellcheck)
         implementation(libs.symspellkt)
         implementation(libs.korge.io)
     }

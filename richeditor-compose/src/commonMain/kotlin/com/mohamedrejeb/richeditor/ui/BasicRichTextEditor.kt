@@ -105,6 +105,7 @@ public fun BasicRichTextEditor(
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
     maxLength: Int = Int.MAX_VALUE,
+    onRichTextChangedListener: RichTextChangedListener? = null,
     onRichSpanClick: RichSpanClickListener? = null,
     onTextLayout: (TextLayoutResult) -> Unit = {},
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
@@ -124,6 +125,7 @@ public fun BasicRichTextEditor(
         maxLines = maxLines,
         minLines = minLines,
         maxLength = maxLength,
+        onRichTextChangedListener = onRichTextChangedListener,
         onRichSpanClick = onRichSpanClick,
         onTextLayout = onTextLayout,
         interactionSource = interactionSource,
@@ -201,6 +203,7 @@ public fun BasicRichTextEditor(
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
     maxLength: Int = Int.MAX_VALUE,
+    onRichTextChangedListener: RichTextChangedListener? = null,
     onRichSpanClick: RichSpanClickListener? = null,
     onTextLayout: (TextLayoutResult) -> Unit = {},
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
@@ -255,6 +258,8 @@ public fun BasicRichTextEditor(
                 if (it.text.length > maxLength) return@BasicTextField
 
                 state.onTextFieldValueChange(it)
+
+                onRichTextChangedListener?.invoke(state)
             },
             modifier = modifier
                 .drawRichSpanStyle(
@@ -344,4 +349,5 @@ internal suspend fun adjustTextIndicatorOffset(
     )
 }
 
+public typealias RichTextChangedListener = (RichTextState) -> Unit
 public typealias RichSpanClickListener = (RichSpanStyle, TextRange, Offset, InteractionType) -> Boolean

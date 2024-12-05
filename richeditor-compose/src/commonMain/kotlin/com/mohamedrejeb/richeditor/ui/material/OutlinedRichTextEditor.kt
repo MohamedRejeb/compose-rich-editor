@@ -21,6 +21,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
+import com.mohamedrejeb.richeditor.ui.RichTextChangedListener
 import com.mohamedrejeb.richeditor.ui.RichSpanClickListener
 
 /**
@@ -66,6 +67,8 @@ import com.mohamedrejeb.richeditor.ui.RichSpanClickListener
  * that 1 <= [minLines] <= [maxLines]. This parameter is ignored when [singleLine] is true.
  * @param minLines the minimum height in terms of minimum number of visible lines. It is required
  * that 1 <= [minLines] <= [maxLines]. This parameter is ignored when [singleLine] is true.
+
+ * @param onRichTextChangedListener A callback when the RichTextState changes.
  * @param onRichSpanClick A callback to allow handling of click on RichSpans.
  * @param interactionSource the [MutableInteractionSource] representing the stream of
  * [Interaction]s for this OutlinedTextField. You can create and pass in your own remembered
@@ -94,6 +97,7 @@ public fun OutlinedRichTextEditor(
     maxLines: Int = Int.MAX_VALUE,
     minLines: Int = 1,
     maxLength: Int = Int.MAX_VALUE,
+    onRichTextChangedListener: RichTextChangedListener? = null,
     onRichSpanClick: RichSpanClickListener? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape = MaterialTheme.shapes.small,
@@ -133,6 +137,7 @@ public fun OutlinedRichTextEditor(
         maxLines = maxLines,
         minLines = minLines,
         maxLength = maxLength,
+        onRichTextChangedListener = onRichTextChangedListener,
         onRichSpanClick = onRichSpanClick,
         decorationBox = @Composable { innerTextField ->
             TextFieldDefaults.OutlinedTextFieldDecorationBox(

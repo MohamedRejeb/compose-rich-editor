@@ -206,6 +206,9 @@ fun RichEditorContent() {
                     OutlinedRichTextEditor(
                         modifier = Modifier.fillMaxWidth(),
                         state = outlinedRichTextState,
+                        onRichTextChangedListener = {
+                            println("Rich text changed!")
+                        },
                         onRichSpanClick = { span, range, offset, type ->
                             println("clicked: $type")
                             if (span is SpellCheck) {

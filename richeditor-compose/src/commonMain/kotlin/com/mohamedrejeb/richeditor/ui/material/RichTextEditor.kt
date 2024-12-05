@@ -20,6 +20,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
+import com.mohamedrejeb.richeditor.ui.RichTextChangedListener
 import com.mohamedrejeb.richeditor.ui.RichSpanClickListener
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 
@@ -100,6 +101,7 @@ public fun RichTextEditor(
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
     maxLength: Int = Int.MAX_VALUE,
+    onRichTextChangedListener: RichTextChangedListener? = null,
     onRichSpanClick: RichSpanClickListener? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape =
@@ -133,6 +135,7 @@ public fun RichTextEditor(
         maxLines = maxLines,
         minLines = minLines,
         maxLength = maxLength,
+        onRichTextChangedListener = onRichTextChangedListener,
         onRichSpanClick = onRichSpanClick,
         decorationBox = @Composable { innerTextField ->
             // places leading icon, text field with label and placeholder, trailing icon

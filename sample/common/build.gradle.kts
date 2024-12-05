@@ -67,7 +67,7 @@ kotlin {
 
         // Spell Check
         implementation(projects.richeditorComposeSpellcheck)
-        implementation(libs.korge.io)
+        implementation(libs.symspellkt.fdic)
     }
 
     sourceSets.androidMain.dependencies {

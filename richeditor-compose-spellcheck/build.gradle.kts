@@ -55,7 +55,6 @@ kotlin {
 
         // Spell Check
         api(libs.symspellkt)
-        api(libs.symspellkt.fdic)
     }
 
     sourceSets.commonTest.dependencies {

@@ -6,9 +6,9 @@ import androidx.compose.ui.util.fastForEach
 import com.darkrockstudios.symspellkt.api.SpellChecker
 import com.darkrockstudios.symspellkt.common.SuggestionItem
 import com.darkrockstudios.symspellkt.common.Verbosity
+import com.darkrockstudios.symspellkt.common.isSpelledCorrectly
+import com.darkrockstudios.symspellkt.common.spellingIsCorrect
 import com.mohamedrejeb.richeditor.compose.spellcheck.utils.applyCapitalizationStrategy
-import com.mohamedrejeb.richeditor.compose.spellcheck.utils.isSpelledCorrectly
-import com.mohamedrejeb.richeditor.compose.spellcheck.utils.spellingIsCorrect
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.utils.WordSegment

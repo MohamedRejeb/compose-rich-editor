@@ -92,7 +92,7 @@ public class SpellCheckState(
     public fun getSuggestions(word: String): List<SuggestionItem> {
         val sp = spellChecker ?: return emptyList()
 
-        val suggestions = sp.lookup(word, verbosity = Verbosity.All)
+        val suggestions = sp.lookup(word, verbosity = Verbosity.Closest)
         val proposedSuggestions = if (word.isSpelledCorrectly(suggestions).not()) {
             // If things are misspelled, see if it just needs to be broken up
             val composition = sp.wordBreakSegmentation(word)

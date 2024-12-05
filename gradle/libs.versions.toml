@@ -13,7 +13,7 @@ nexus-publish = "2.0.0"
 # For sample
 androidx-appcompat = "1.7.0"
 activity-compose = "1.9.3"
-symspellkt = "2.1.1"
+symspellkt = "3.0.9"
 korge-io = "5.4.0"
 voyager = "1.1.0-beta03"
 richeditor = "1.0.0-rc10"
@@ -35,6 +35,7 @@ nexus-publish = { module = "io.github.gradle-nexus.publish-plugin:io.github.grad
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity-compose" }
 symspellkt = { module = "com.darkrockstudios:symspellkt", version.ref = "symspellkt" }
+symspellkt-fdic = { module = "com.darkrockstudios:symspellktfdic", version.ref = "symspellkt" }
 korge-io = { module = "com.soywiz.korge:korge-core", version.ref = "korge-io" }
 voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
 richeditor-compose = { module = "com.mohamedrejeb.richeditor:richeditor-compose", version.ref = "richeditor" }

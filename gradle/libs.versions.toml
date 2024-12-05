@@ -13,7 +13,7 @@ nexus-publish = "2.0.0"
 # For sample
 androidx-appcompat = "1.7.0"
 activity-compose = "1.9.3"
-symspellkt = "3.0.9"
+symspellkt = "3.1.0"
 voyager = "1.1.0-beta03"
 richeditor = "1.0.0-rc10"
 coroutines = "1.9.0"

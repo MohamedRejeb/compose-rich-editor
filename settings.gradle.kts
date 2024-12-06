@@ -28,6 +28,7 @@ plugins {
 include(
     ":richeditor-compose",
     ":richeditor-compose-coil3",
+    ":richeditor-compose-spellcheck",
 
     ":sample:android",
     ":sample:desktop",

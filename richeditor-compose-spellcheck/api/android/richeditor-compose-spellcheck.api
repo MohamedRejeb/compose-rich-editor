@@ -1,0 +1,82 @@
+public final class com/mohamedrejeb/richeditor/compose/spellcheck/RememberSpellCheckStateKt {
+	public static final fun rememberSpellCheckState (Lcom/darkrockstudios/symspellkt/api/SpellChecker;Landroidx/compose/runtime/Composer;I)Lcom/mohamedrejeb/richeditor/compose/spellcheck/SpellCheckState;
+}
+
+public final class com/mohamedrejeb/richeditor/compose/spellcheck/SpellCheck : com/mohamedrejeb/richeditor/model/RichSpanStyle {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/mohamedrejeb/richeditor/compose/spellcheck/SpellCheck;
+	public fun appendCustomContent (Landroidx/compose/ui/text/AnnotatedString$Builder;Lcom/mohamedrejeb/richeditor/model/RichTextState;)Landroidx/compose/ui/text/AnnotatedString$Builder;
+	public fun drawCustomStyle-zdrCDHg (Landroidx/compose/ui/graphics/drawscope/DrawScope;Landroidx/compose/ui/text/TextLayoutResult;JLcom/mohamedrejeb/richeditor/model/RichTextConfig;FF)V
+	public fun getAcceptNewTextInTheEdges ()Z
+	public fun getSpanStyle ()Lkotlin/jvm/functions/Function1;
+}
+
+public final class com/mohamedrejeb/richeditor/compose/spellcheck/SpellCheckMenuState {
+	public static final field $stable I
+	public fun <init> (Lcom/mohamedrejeb/richeditor/compose/spellcheck/SpellCheckState;)V
+	public final fun clearSpellCheck ()V
+	public final fun component1 ()Lcom/mohamedrejeb/richeditor/compose/spellcheck/SpellCheckState;
+	public final fun copy (Lcom/mohamedrejeb/richeditor/compose/spellcheck/SpellCheckState;)Lcom/mohamedrejeb/richeditor/compose/spellcheck/SpellCheckMenuState;
+	public static synthetic fun copy$default (Lcom/mohamedrejeb/richeditor/compose/spellcheck/SpellCheckMenuState;Lcom/mohamedrejeb/richeditor/compose/spellcheck/SpellCheckState;ILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/compose/spellcheck/SpellCheckMenuState;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMissSpelling ()Landroidx/compose/runtime/MutableState;
+	public final fun getSpellCheckState ()Lcom/mohamedrejeb/richeditor/compose/spellcheck/SpellCheckState;
+	public fun hashCode ()I
+	public final fun performCorrection (Lcom/mohamedrejeb/richeditor/utils/WordSegment;Ljava/lang/String;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/compose/spellcheck/SpellCheckMenuState$MissSpelling {
+	public static final field $stable I
+	public synthetic fun <init> (Lcom/mohamedrejeb/richeditor/utils/WordSegment;JLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/mohamedrejeb/richeditor/utils/WordSegment;
+	public final fun component2-F1C5BW0 ()J
+	public final fun copy-Uv8p0NA (Lcom/mohamedrejeb/richeditor/utils/WordSegment;J)Lcom/mohamedrejeb/richeditor/compose/spellcheck/SpellCheckMenuState$MissSpelling;
+	public static synthetic fun copy-Uv8p0NA$default (Lcom/mohamedrejeb/richeditor/compose/spellcheck/SpellCheckMenuState$MissSpelling;Lcom/mohamedrejeb/richeditor/utils/WordSegment;JILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/compose/spellcheck/SpellCheckMenuState$MissSpelling;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMenuPosition-F1C5BW0 ()J
+	public final fun getWordSegment ()Lcom/mohamedrejeb/richeditor/utils/WordSegment;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/compose/spellcheck/SpellCheckState {
+	public static final field $stable I
+	public fun <init> (Lcom/mohamedrejeb/richeditor/model/RichTextState;Lcom/darkrockstudios/symspellkt/api/SpellChecker;)V
+	public final fun correctSpelling (Lcom/mohamedrejeb/richeditor/utils/WordSegment;Ljava/lang/String;)V
+	public final fun getRichTextState ()Lcom/mohamedrejeb/richeditor/model/RichTextState;
+	public final fun getSpellChecker ()Lcom/darkrockstudios/symspellkt/api/SpellChecker;
+	public final fun getSuggestions (Ljava/lang/String;)Ljava/util/List;
+	public final fun handleSpanClick-AXecNCo (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;JJ)Lcom/mohamedrejeb/richeditor/utils/WordSegment;
+	public final fun onTextChange (Lcom/mohamedrejeb/richeditor/model/RichTextState;)V
+	public final fun runSpellCheck ()V
+	public final fun setSpellChecker (Lcom/darkrockstudios/symspellkt/api/SpellChecker;)V
+}
+
+public final class com/mohamedrejeb/richeditor/compose/spellcheck/SpellCheckTextContextMenuProvider_androidKt {
+	public static final fun SpellCheckTextContextMenuProvider (Landroidx/compose/ui/Modifier;Lcom/mohamedrejeb/richeditor/compose/spellcheck/SpellCheckMenuState;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;I)V
+}
+
+public final class com/mohamedrejeb/richeditor/compose/spellcheck/ui/ComposableSingletons$SpellCheckDropdownKt {
+	public static final field INSTANCE Lcom/mohamedrejeb/richeditor/compose/spellcheck/ui/ComposableSingletons$SpellCheckDropdownKt;
+	public static field lambda-1 Lkotlin/jvm/functions/Function2;
+	public fun <init> ()V
+	public final fun getLambda-1$richeditor_compose_spellcheck_release ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/mohamedrejeb/richeditor/compose/spellcheck/ui/ComposableSingletons$SpellCheckedRichTextEditorKt {
+	public static final field INSTANCE Lcom/mohamedrejeb/richeditor/compose/spellcheck/ui/ComposableSingletons$SpellCheckedRichTextEditorKt;
+	public static field lambda-1 Lkotlin/jvm/functions/Function3;
+	public fun <init> ()V
+	public final fun getLambda-1$richeditor_compose_spellcheck_release ()Lkotlin/jvm/functions/Function3;
+}
+
+public final class com/mohamedrejeb/richeditor/compose/spellcheck/ui/SpellCheckedRichTextEditorKt {
+	public static final fun SpellCheckedRichTextEditor (Landroidx/compose/ui/Modifier;ZLandroidx/compose/ui/text/TextStyle;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;ZIIILkotlin/jvm/functions/Function4;Lkotlin/jvm/functions/Function1;Landroidx/compose/foundation/interaction/MutableInteractionSource;Landroidx/compose/ui/graphics/Brush;Lcom/mohamedrejeb/richeditor/compose/spellcheck/SpellCheckState;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V
+}
+
+public final class com/mohamedrejeb/richeditor/compose/spellcheck/utils/SpellCheckUtilsKt {
+	public static final fun isSpelledCorrectly (Ljava/lang/String;Ljava/util/List;)Z
+	public static final fun spellingIsCorrect (Ljava/util/List;Ljava/lang/String;)Z
+}
+

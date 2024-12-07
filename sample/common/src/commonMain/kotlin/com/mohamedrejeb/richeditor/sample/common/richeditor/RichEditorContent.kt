@@ -168,40 +168,7 @@ very little use without my shoulders.  Oh, how I wish
 I could shut up like a telescope!  I think I could, if I only
 know how to begin.'  For, you see, so many out-of-the-way things
 had happened lately, that Alice had begun to think that very few
-things indeed were really impossible.
-
-  There seemed to be no use in waiting by the little door, so she
-went back to the table, half hoping she might find another key on
-it, or at any rate a book of rules for shutting people up like
-telescopes:  this time she found a little bottle on it, (`which
-certainly was not here before,' said Alice,) and round the neck
-of the bottle was a paper label, with the words `DRINK ME'
-beautifully printed on it in large letters.
-
-  It was all very well to say `Drink me,' but the wise little
-Alice was not going to do THAT in a hurry.  `No, I'll look
-first,' she said, `and see whether it's marked "poison" or not';
-for she had read several nice little histories about children who
-had got burnt, and eaten up by wild beasts and other unpleasant
-things, all because they WOULD not remember the simple rules
-their friends had taught them:  such as, that a red-hot poker
-will burn you if you hold it too long; and that if you cut your
-finger VERY deeply with a knife, it usually bleeds; and she had
-never forgotten that, if you drink much from a bottle marked
-`poison,' it is almost certain to disagree with you, sooner or
-later.
-
-  However, this bottle was NOT marked `poison,' so Alice ventured
-to taste it, and finding it very nice, (it had, in fact, a sort
-of mixed flavour of cherry-tart, custard, pine-apple, roast
-turkey, toffee, and hot buttered toast,) she very soon finished
-it off.
-
-                                               
-
-                                            
-
-                                               """.trimIndent())
+things indeed were really impossible.""".trimIndent())
     }
 
     ComposeRichEditorTheme {

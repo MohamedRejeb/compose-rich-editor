@@ -187,6 +187,23 @@ class RichTextStateMarkdownParserEncodeTest {
     }
 
     @Test
+    fun testEncodeWithLeadingSpaces() {
+        val markdown = """First line
+
+    indented line"""
+
+        val state = RichTextStateMarkdownParser.encode(markdown)
+
+        val parsedString = state.annotatedString.toString()
+
+        assertEquals(
+            expected = markdown,
+            actual = parsedString
+        )
+    }
+
+
+    @Test
     fun testEncodeWithTwoHtmlLineBreaks() {
         val markdown = """
             Hello

@@ -447,4 +447,30 @@ class RichTextStateMarkdownParserEncodeTest {
         )
     }
 
+    @Test
+    fun testEncodeInlineCodeInDifferentLines() {
+        val markdown =
+            """
+                Hello `World!
+                Kotlin` MP
+            """.trimIndent()
+
+        val state = RichTextStateMarkdownParser.encode(markdown)
+
+        val parsedString = state.toText()
+
+        assertEquals(
+            expected =
+                """
+                    Hello World! Kotlin MP
+                """.trimIndent(),
+            actual = parsedString,
+        )
+
+        assertEquals(
+            expected = 1,
+            actual = state.richParagraphList.size,
+        )
+    }
+
 }

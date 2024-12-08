@@ -183,7 +183,10 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                         newRichSpan.text = "$".repeat(node.endOffset - node.startOffset)
                 }
 
-                if (node.type == GFMTokenTypes.GFM_AUTOLINK) {
+                if (
+                    node.type == GFMTokenTypes.GFM_AUTOLINK ||
+                    node.type == MarkdownTokenTypes.CODE_LINE
+                ) {
                     onText(node.getTextInNode(input).toString())
                 }
             },

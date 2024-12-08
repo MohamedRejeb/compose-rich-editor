@@ -60,6 +60,8 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         }
 
         fun onText(text: String) {
+            val text = text.replace('\n', ' ')
+
             if (text.isEmpty()) return
 
             if (richParagraphList.isEmpty())

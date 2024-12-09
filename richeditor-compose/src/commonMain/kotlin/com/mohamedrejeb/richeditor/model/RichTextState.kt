@@ -5,6 +5,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.isSpecified
@@ -26,8 +27,11 @@ import com.mohamedrejeb.richeditor.parser.html.RichTextStateHtmlParser
 import com.mohamedrejeb.richeditor.parser.markdown.RichTextStateMarkdownParser
 import com.mohamedrejeb.richeditor.utils.*
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import kotlin.math.max
@@ -169,7 +173,7 @@ public class RichTextState internal constructor(
                 currentAppliedRichSpanStyle
         }
 
-    internal var styledRichSpanList = mutableStateListOf<RichSpan>()
+    internal var styledRichSpanList: SnapshotStateList<RichSpan> = mutableStateListOf()
         private set
 
     private var currentAppliedParagraphStyle: ParagraphStyle by mutableStateOf(
@@ -1255,6 +1259,24 @@ public class RichTextState internal constructor(
     }
 
     /**
+     * Traverses the tree of paragraphs and spans to assemble
+     * a complete list of [RichSpan] objects.
+     *
+     * @return A complete list of [RichSpan]
+     */
+    public fun getAllRichSpans(): List<Pair<RichSpanStyle, TextRange>> {
+        return richParagraphList.flatMap { richParagraph ->
+            richParagraph.children.flatMap { getAllRichSpans(it) }
+        }
+    }
+
+    private fun getAllRichSpans(target: RichSpan): List<Pair<RichSpanStyle, TextRange>> {
+        return listOf(Pair(target.richSpanStyle, target.textRange)) + target.children.flatMap { richSpan ->
+            richSpan.children.flatMap { getAllRichSpans(it) }
+        }
+    }
+
+    /**
      * Handles adding characters to the text field.
      * This method will update the [richParagraphList] to reflect the new changes.
      * This method will use the [tempTextFieldValue] to get the new characters.
@@ -1743,24 +1765,24 @@ public class RichTextState internal constructor(
 
             // If the new paragraph is empty apply style depending on the config
             if (tempTextFieldValue.selection.collapsed && newParagraph.isEmpty()) {
-                val newParagraphFirstRichSpan = newParagraph.getFirstNonEmptyChild()
+                newParagraph.getFirstNonEmptyChild()?.let { newParagraphFirstRichSpan ->
+                    val isSelectionAtNewRichSpan =
+                        newParagraphFirstRichSpan.textRange.min == tempTextFieldValue.selection.min - 1
 
-                val isSelectionAtNewRichSpan =
-                    newParagraphFirstRichSpan?.textRange?.min == tempTextFieldValue.selection.min - 1
-
-                // Check if the cursor is at the new paragraph
-                if (
-                    (!config.preserveStyleOnEmptyLine || richSpan.paragraph.isEmpty()) &&
-                    isSelectionAtNewRichSpan
-                ) {
-                    newParagraphFirstRichSpan.spanStyle = SpanStyle()
-                    newParagraphFirstRichSpan.richSpanStyle = RichSpanStyle.Default
-                } else if (
-                    config.preserveStyleOnEmptyLine &&
-                    isSelectionAtNewRichSpan
-                ) {
-                    newParagraphFirstRichSpan.spanStyle = currentSpanStyle
-                    newParagraphFirstRichSpan.richSpanStyle = currentRichSpanStyle
+                    // Check if the cursor is at the new paragraph
+                    if (
+                        (!config.preserveStyleOnEmptyLine || richSpan.paragraph.isEmpty()) &&
+                        isSelectionAtNewRichSpan
+                    ) {
+                        newParagraphFirstRichSpan.spanStyle = SpanStyle()
+                        newParagraphFirstRichSpan.richSpanStyle = RichSpanStyle.Default
+                    } else if (
+                        config.preserveStyleOnEmptyLine &&
+                        isSelectionAtNewRichSpan
+                    ) {
+                        newParagraphFirstRichSpan.spanStyle = currentSpanStyle
+                        newParagraphFirstRichSpan.richSpanStyle = currentRichSpanStyle
+                    }
                 }
             }
 
@@ -2731,7 +2753,7 @@ public class RichTextState internal constructor(
         return richSpan
     }
 
-    private fun getRichSpanByOffset(offset: Offset): RichSpan? {
+    internal fun getRichSpanByOffset(offset: Offset): RichSpan? {
         this.textLayoutResult?.let { textLayoutResult ->
             val position = textLayoutResult.getOffsetForPosition(offset)
             return getRichSpanByTextIndex(position, true)
@@ -3183,6 +3205,14 @@ public class RichTextState internal constructor(
             }
         }
     }
+
+    /**
+     * Returns a sequence of word segments. A "word" is defined as a contiguous string
+     * of letters or numbers.
+     *
+     * @return A sequence of [WordSegment]
+     */
+    public fun getWords(): Sequence<WordSegment> = richParagraphList.getWords()
 
     /**
      * Returns the [RichTextState] as a text string.

@@ -9,20 +9,31 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.LocalTextStyle
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.platform.*
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
+import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import kotlinx.coroutines.CoroutineScope
 
@@ -62,6 +73,7 @@ import kotlinx.coroutines.CoroutineScope
  * that 1 <= [minLines] <= [maxLines]. This parameter is ignored when [singleLine] is true.
  * @param maxLength the maximum length of the text field. If the text is longer than this value,
  * it will be ignored. The default value of this parameter is [Int.MAX_VALUE].
+ * @param onRichSpanClick A callback to allow handling of click on RichSpans.
  * @param onTextLayout Callback that is executed when a new text layout is calculated. A
  * [TextLayoutResult] object that callback provides contains paragraph information, size of the
  * text, baselines and other details. The callback can be used to add additional decoration or
@@ -94,6 +106,7 @@ public fun BasicRichTextEditor(
     minLines: Int = 1,
     maxLength: Int = Int.MAX_VALUE,
     onRichTextChangedListener: RichTextChangedListener? = null,
+    onRichSpanClick: RichSpanClickListener? = null,
     onTextLayout: (TextLayoutResult) -> Unit = {},
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     cursorBrush: Brush = SolidColor(Color.Black),
@@ -113,6 +126,7 @@ public fun BasicRichTextEditor(
         minLines = minLines,
         maxLength = maxLength,
         onRichTextChangedListener = onRichTextChangedListener,
+        onRichSpanClick = onRichSpanClick,
         onTextLayout = onTextLayout,
         interactionSource = interactionSource,
         cursorBrush = cursorBrush,
@@ -156,6 +170,7 @@ public fun BasicRichTextEditor(
  * that 1 <= [minLines] <= [maxLines]. This parameter is ignored when [singleLine] is true.
  * @param maxLength the maximum length of the text field. If the text is longer than this value,
  * it will be ignored. The default value of this parameter is [Int.MAX_VALUE].
+ * @param onRichSpanClick A callback to allow handling of click on RichSpans.
  * @param onTextLayout Callback that is executed when a new text layout is calculated. A
  * [TextLayoutResult] object that callback provides contains paragraph information, size of the
  * text, baselines and other details. The callback can be used to add additional decoration or
@@ -189,6 +204,7 @@ public fun BasicRichTextEditor(
     minLines: Int = 1,
     maxLength: Int = Int.MAX_VALUE,
     onRichTextChangedListener: RichTextChangedListener? = null,
+    onRichSpanClick: RichSpanClickListener? = null,
     onTextLayout: (TextLayoutResult) -> Unit = {},
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     cursorBrush: Brush = SolidColor(Color.Black),
@@ -219,7 +235,9 @@ public fun BasicRichTextEditor(
                 if (interaction is PressInteraction.Press) {
                     val pressPosition = interaction.pressPosition
                     val topPadding = with(density) { contentPadding.calculateTopPadding().toPx() }
-                    val startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() }
+                    val startPadding = with(density) {
+                        contentPadding.calculateStartPadding(layoutDirection).toPx()
+                    }
 
                     adjustTextIndicatorOffset(
                         pressPosition = pressPosition,
@@ -249,6 +267,20 @@ public fun BasicRichTextEditor(
                     topPadding = with(density) { contentPadding.calculateTopPadding().toPx() },
                     startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() },
                 )
+                .handleInteractions(onRichSpanClick != null) { type, offset ->
+                    val topPadding = with(density) { contentPadding.calculateTopPadding().toPx() }
+                    val startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() }
+                    val localPosition = offset - Offset(x = startPadding, y = topPadding)
+
+                    state.getRichSpanByOffset(localPosition)?.let { clickedSpan ->
+                        onRichSpanClick?.invoke(
+                            clickedSpan.richSpanStyle,
+                            clickedSpan.textRange,
+                            offset,
+                            type
+                        )
+                    } ?: false
+                }
                 .then(
                     if (!readOnly)
                         Modifier
@@ -318,3 +350,4 @@ internal suspend fun adjustTextIndicatorOffset(
 }
 
 public typealias RichTextChangedListener = (RichTextState) -> Unit
+public typealias RichSpanClickListener = (RichSpanStyle, TextRange, Offset, InteractionType) -> Boolean

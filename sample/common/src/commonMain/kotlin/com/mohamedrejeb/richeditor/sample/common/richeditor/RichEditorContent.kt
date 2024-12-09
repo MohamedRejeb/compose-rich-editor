@@ -1,25 +1,50 @@
 package com.mohamedrejeb.richeditor.sample.common.richeditor
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.mohamedrejeb.richeditor.compose.spellcheck.SpellCheck
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.sample.common.components.RichTextStyleRow
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.ComposeRichEditorTheme
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
+import com.mohamedrejeb.richeditor.ui.InteractionType
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RichEditorContent() {
     val navigator = LocalNavigator.currentOrThrow
@@ -50,8 +75,7 @@ fun RichEditorContent() {
                     }
                 )
             },
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = Modifier.fillMaxSize()
         ) { paddingValue ->
             LazyColumn(
                 contentPadding = paddingValue,
@@ -81,10 +105,50 @@ fun RichEditorContent() {
                 }
 
                 item {
-                    BasicRichTextEditor(
-                        modifier = Modifier.fillMaxWidth(),
-                        state = basicRichTextState,
-                    )
+                    Box {
+                        var spellCheckExpanded by remember { mutableStateOf<Offset?>(null) }
+
+                        BasicRichTextEditor(
+                            modifier = Modifier.fillMaxWidth(),
+                            state = basicRichTextState,
+                            onRichSpanClick = { span, range, offset, type ->
+                                println("clicked: $type")
+                                if (type == InteractionType.PrimaryClick || type == InteractionType.DoubleTap) {
+                                    if (span is SpellCheck) {
+                                        println("Spell check clicked")
+                                        println("Range: $range")
+                                        println("Offset: $offset")
+                                        spellCheckExpanded = offset
+                                        true
+                                    } else {
+                                        false
+                                    }
+                                } else {
+                                    false
+                                }
+                            }
+                        )
+
+                        DropdownMenu(
+                            expanded = spellCheckExpanded != null,
+                            onDismissRequest = { spellCheckExpanded = null },
+                            offset = DpOffset(
+                                x = spellCheckExpanded?.x?.dp ?: 0.dp,
+                                y = spellCheckExpanded?.y?.dp ?: 0.dp,
+                            ),
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Spelling") },
+                                onClick = {}
+                            )
+
+                            DropdownMenuItem(
+                                text = { Text("Spelling") },
+                                onClick = {}
+                            )
+                        }
+
+                    }
                 }
 
                 item {
@@ -147,6 +211,17 @@ fun RichEditorContent() {
                         state = outlinedRichTextState,
                         onRichTextChangedListener = {
                             println("Rich text changed!")
+                        },
+                        onRichSpanClick = { span, range, offset, type ->
+                            println("clicked: $type")
+                            if (span is SpellCheck) {
+                                println("Spell check clicked")
+                                println("Range: $range")
+                                println("Offset: $offset")
+                                true
+                            } else {
+                                false
+                            }
                         }
                     )
                 }

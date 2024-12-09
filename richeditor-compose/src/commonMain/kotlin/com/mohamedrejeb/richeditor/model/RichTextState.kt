@@ -2731,7 +2731,7 @@ public class RichTextState internal constructor(
         return richSpan
     }
 
-    private fun getRichSpanByOffset(offset: Offset): RichSpan? {
+    internal fun getRichSpanByOffset(offset: Offset): RichSpan? {
         this.textLayoutResult?.let { textLayoutResult ->
             val position = textLayoutResult.getOffsetForPosition(offset)
             return getRichSpanByTextIndex(position, true)

@@ -21,6 +21,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
 import com.mohamedrejeb.richeditor.ui.RichTextChangedListener
+import com.mohamedrejeb.richeditor.ui.RichSpanClickListener
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 
 /**
@@ -65,6 +66,7 @@ import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
  * that 1 <= [minLines] <= [maxLines]. This parameter is ignored when [singleLine] is true.
  * @param minLines the minimum height in terms of minimum number of visible lines. It is required
  * that 1 <= [minLines] <= [maxLines]. This parameter is ignored when [singleLine] is true.
+ * @param onRichSpanClick A callback to allow handling of click on RichSpans.
  * @param interactionSource the [MutableInteractionSource] representing the stream of
  * [Interaction]s for this TextField. You can create and pass in your own remembered
  * [MutableInteractionSource] if you want to observe [Interaction]s and customize the
@@ -100,6 +102,7 @@ public fun RichTextEditor(
     minLines: Int = 1,
     maxLength: Int = Int.MAX_VALUE,
     onRichTextChangedListener: RichTextChangedListener? = null,
+    onRichSpanClick: RichSpanClickListener? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape =
         MaterialTheme.shapes.small.copy(bottomEnd = ZeroCornerSize, bottomStart = ZeroCornerSize),
@@ -133,6 +136,7 @@ public fun RichTextEditor(
         minLines = minLines,
         maxLength = maxLength,
         onRichTextChangedListener = onRichTextChangedListener,
+        onRichSpanClick = onRichSpanClick,
         decorationBox = @Composable { innerTextField ->
             // places leading icon, text field with label and placeholder, trailing icon
             TextFieldDefaults.TextFieldDecorationBox(

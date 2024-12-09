@@ -63,11 +63,12 @@ fun SpellCheckContent() {
             val spellCheckState: SpellCheckState = rememberSpellCheckState(spellChecker)
 
             LaunchedEffect(Unit) {
-                spellCheckState.richTextState.setHtml(
-                    """
-                    <p><b>RichTextEditor</b> is a <i>composable</i> that allows you to edit <u>rich text</u> content.</p>
-                    """.trimIndent()
-                )
+//                spellCheckState.richTextState.setHtml(
+//                    """
+//                    <p><b>RichTextEditor</b> is a <i>composable</i> that allows you to edit <u>rich text</u> content.</p>
+//                    """.trimIndent()
+//                )
+                spellCheckState.richTextState.setMarkdown(MobyDick)
             }
 
             Column(

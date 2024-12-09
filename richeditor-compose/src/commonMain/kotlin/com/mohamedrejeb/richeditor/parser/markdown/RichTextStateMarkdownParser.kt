@@ -60,6 +60,8 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         }
 
         fun onText(text: String) {
+            val text = text.replace('\n', ' ')
+
             if (text.isEmpty()) return
 
             if (richParagraphList.isEmpty())
@@ -183,7 +185,10 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                         newRichSpan.text = "$".repeat(node.endOffset - node.startOffset)
                 }
 
-                if (node.type == GFMTokenTypes.GFM_AUTOLINK) {
+                if (
+                    node.type == GFMTokenTypes.GFM_AUTOLINK ||
+                    node.type == MarkdownTokenTypes.CODE_LINE
+                ) {
                     onText(node.getTextInNode(input).toString())
                 }
             },

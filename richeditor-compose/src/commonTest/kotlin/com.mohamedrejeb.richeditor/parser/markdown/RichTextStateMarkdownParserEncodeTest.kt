@@ -427,4 +427,50 @@ class RichTextStateMarkdownParserEncodeTest {
         assertEquals("Prompt\nEmphasis", state.toText())
     }
 
+    @Test
+    fun testEncodeWithLeadingSpaces() {
+        val markdown = """First line
+            
+    indented line"""
+
+        val state = RichTextStateMarkdownParser.encode(markdown)
+
+        val parsedString = state.toText()
+
+        assertEquals(
+            expected = """
+                First line
+                
+                indented line
+            """.trimIndent(),
+            actual = parsedString
+        )
+    }
+
+    @Test
+    fun testEncodeInlineCodeInDifferentLines() {
+        val markdown =
+            """
+                Hello `World!
+                Kotlin` MP
+            """.trimIndent()
+
+        val state = RichTextStateMarkdownParser.encode(markdown)
+
+        val parsedString = state.toText()
+
+        assertEquals(
+            expected =
+                """
+                    Hello World! Kotlin MP
+                """.trimIndent(),
+            actual = parsedString,
+        )
+
+        assertEquals(
+            expected = 1,
+            actual = state.richParagraphList.size,
+        )
+    }
+
 }

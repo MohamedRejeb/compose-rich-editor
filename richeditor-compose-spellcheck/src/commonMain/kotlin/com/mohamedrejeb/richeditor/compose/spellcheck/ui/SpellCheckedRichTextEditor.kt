@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -18,9 +20,14 @@ import com.mohamedrejeb.richeditor.compose.spellcheck.SpellCheckMenuState
 import com.mohamedrejeb.richeditor.compose.spellcheck.SpellCheckState
 import com.mohamedrejeb.richeditor.compose.spellcheck.SpellCheckTextContextMenuProvider
 import com.mohamedrejeb.richeditor.compose.spellcheck.rememberSpellCheckState
+import com.mohamedrejeb.richeditor.compose.spellcheck.utils.debounceUntilQuiescent
+import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
 import com.mohamedrejeb.richeditor.ui.InteractionType
 import com.mohamedrejeb.richeditor.ui.RichSpanClickListener
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 public fun SpellCheckedRichTextEditor(
@@ -43,6 +50,16 @@ public fun SpellCheckedRichTextEditor(
 ) {
     val menuState by remember(spellCheckState) { mutableStateOf(SpellCheckMenuState(spellCheckState)) }
 
+    val changesFlow = MutableStateFlow(RichTextState())
+    val scope = rememberCoroutineScope()
+    LaunchedEffect(Unit) {
+        scope.launch {
+            changesFlow.debounceUntilQuiescent(1.seconds).collect { richTextState ->
+                spellCheckState.onTextChange(richTextState)
+            }
+        }
+    }
+
     SpellCheckTextContextMenuProvider(
         modifier = modifier,
         spellCheckMenuState = menuState,
@@ -61,6 +78,7 @@ public fun SpellCheckedRichTextEditor(
             interactionSource = interactionSource,
             state = spellCheckState.richTextState,
             cursorBrush = cursorBrush,
+            onRichTextChangedListener = { changesFlow.tryEmit(it) },
             onRichSpanClick = { span, range, click, type ->
                 return@BasicRichTextEditor if (type == InteractionType.SecondaryClick || type == InteractionType.Tap) {
                     val correction = spellCheckState.handleSpanClick(span, range, click)

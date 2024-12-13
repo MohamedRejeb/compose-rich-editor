@@ -216,7 +216,7 @@ To convert `RichTextState` to Markdown, use `RichTextState.toMarkdown` method:
 val markdown = richTextState.toMarkdown()
 ```
 
-Check out Compose Rich Editor's [full documentation](https://mohamedrejeb.github.io/Compose-Rich-Editor/) for more details.
+Check out Compose Rich Editor's [full documentation](https://mohamedrejeb.github.io/compose-rich-editor/) for more details.
 
 ## Web live demo
 You can try out the web demo [here](https://compose-richeditor.netlify.app/).

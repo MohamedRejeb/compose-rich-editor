@@ -1,7 +1,9 @@
-package com.mohamedrejeb.richeditor.sample.common.richeditor
+package com.mohamedrejeb.richeditor.compose.spellcheck
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.SpanStyle
@@ -13,9 +15,15 @@ import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextConfig
 import com.mohamedrejeb.richeditor.utils.getBoundingBoxes
+import kotlin.math.PI
+import kotlin.math.sin
 
+/**
+ * RichSpanStyle that draws a Spell Check style red squiggle below the Spanned text.
+ */
 @OptIn(ExperimentalRichTextApi::class)
-object SpellCheck: RichSpanStyle {
+public object SpellCheck: RichSpanStyle {
+
     override val spanStyle: (RichTextConfig) -> SpanStyle = {
         SpanStyle()
     }
@@ -35,15 +43,32 @@ object SpellCheck: RichSpanStyle {
             flattenForFullParagraphs = true,
         )
 
+        val amplitude = 1.5.dp.toPx() // Height of the wave
+        val frequency = 0.15f // Controls how many waves appear
+
         boxes.fastForEach { box ->
             path.moveTo(box.left + startPadding, box.bottom + topPadding)
-            path.lineTo(box.right + startPadding, box.bottom + topPadding)
+
+            // Create the sine wave path
+            for (x in 0..box.width.toInt()) {
+                val xPos = box.left + startPadding + x
+                val yPos = box.bottom + topPadding +
+                        (amplitude * sin(x * frequency * 2 * PI)).toFloat()
+
+                if (x == 0) {
+                    path.moveTo(xPos, yPos)
+                } else {
+                    path.lineTo(xPos, yPos)
+                }
+            }
 
             drawPath(
                 path = path,
                 color = strokeColor,
                 style = Stroke(
-                    width = 2.dp.toPx(),
+                    width = 1.dp.toPx(),
+                    cap = StrokeCap.Round,
+                    join = StrokeJoin.Round
                 )
             )
         }

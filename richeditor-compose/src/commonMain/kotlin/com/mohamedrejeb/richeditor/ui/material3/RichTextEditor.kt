@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.layout.*
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -104,6 +105,7 @@ public fun RichTextEditor(
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
     maxLength: Int = Int.MAX_VALUE,
+    onTextLayout: (TextLayoutResult) -> Unit = {},
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape = RichTextEditorDefaults.filledShape,
     colors: RichTextEditorColors = RichTextEditorDefaults.richTextEditorColors(),
@@ -137,6 +139,7 @@ public fun RichTextEditor(
             maxLines = maxLines,
             minLines = minLines,
             maxLength = maxLength,
+            onTextLayout = onTextLayout,
             interactionSource = interactionSource,
             cursorBrush = SolidColor(colors.cursorColor(isError).value),
             decorationBox = @Composable { innerTextField ->

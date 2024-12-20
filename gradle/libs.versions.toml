@@ -55,4 +55,4 @@ kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref =
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
-bcv = "org.jetbrains.kotlinx.binary-compatibility-validator:0.16.2"
+bcv = "org.jetbrains.kotlinx.binary-compatibility-validator:0.17.0"

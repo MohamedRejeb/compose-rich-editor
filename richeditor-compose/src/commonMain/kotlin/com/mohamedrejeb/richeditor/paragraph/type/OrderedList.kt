@@ -16,7 +16,8 @@ internal class OrderedList(
     number: Int,
     initialIndent: Int = DefaultListIndent,
     startTextSpanStyle: SpanStyle = SpanStyle(),
-    startTextWidth: TextUnit = 0.sp
+    startTextWidth: TextUnit = 0.sp,
+    initialNestedLevel: ListNestedLevel = ListNestedLevel.LEVEL_1
 ) : ParagraphType, ConfigurableStartTextWidth {
 
     var number = number
@@ -39,6 +40,12 @@ internal class OrderedList(
 
     private var indent = initialIndent
 
+    var nestedLevel = initialNestedLevel
+        set(value) {
+            field = value
+            startRichSpan = getNewStartRichSpan(startRichSpan.textRange)
+        }
+
     private var style: ParagraphStyle =
         getNewParagraphStyle()
 
@@ -54,8 +61,8 @@ internal class OrderedList(
     private fun getNewParagraphStyle() =
         ParagraphStyle(
             textIndent = TextIndent(
-                firstLine = (indent - startTextWidth.value).sp,
-                restLine = indent.sp
+                firstLine = ((indent * nestedLevel.indentMultiplier) - startTextWidth.value).sp,
+                restLine = (indent * nestedLevel.indentMultiplier).sp
             )
         )
 
@@ -77,12 +84,13 @@ internal class OrderedList(
         )
     }
 
-    override fun getNextParagraphType(): ParagraphType =
+    override fun getNextParagraphType(nestedLevel: ListNestedLevel?): ParagraphType =
         OrderedList(
             number = number + 1,
             initialIndent = indent,
             startTextSpanStyle = startTextSpanStyle,
-            startTextWidth = startTextWidth
+            startTextWidth = startTextWidth,
+            initialNestedLevel = nestedLevel ?: this.nestedLevel
         )
 
     override fun copy(): ParagraphType =
@@ -90,7 +98,8 @@ internal class OrderedList(
             number = number,
             initialIndent = indent,
             startTextSpanStyle = startTextSpanStyle,
-            startTextWidth = startTextWidth
+            startTextWidth = startTextWidth,
+            initialNestedLevel = nestedLevel
         )
 
     override fun equals(other: Any?): Boolean {

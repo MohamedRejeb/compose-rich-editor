@@ -33,6 +33,7 @@ public fun BasicRichText(
     minLines: Int = 1,
     inlineContent: Map<String, InlineTextContent> = mapOf(),
     imageLoader: ImageLoader = LocalImageLoader.current,
+    onUriClick: ((String) -> Unit)? = null,
 ) {
     val density = LocalDensity.current
     val uriHandler = LocalUriHandler.current
@@ -73,7 +74,7 @@ public fun BasicRichText(
                         onTap = { offset ->
                             state.getLinkByOffset(offset)?.let { url ->
                                 try {
-                                    uriHandler.openUri(url)
+                                    onUriClick?.let { it(url) } ?: uriHandler.openUri(url)
                                 } catch (e: Exception) {
                                     e.printStackTrace()
                                 }

@@ -79,6 +79,7 @@ public fun RichText(
     onTextLayout: (TextLayoutResult) -> Unit = {},
     style: TextStyle = LocalTextStyle.current,
     imageLoader: ImageLoader = LocalImageLoader.current,
+    onUriClick: ((String) -> Unit)? = null,
 ) {
     val textColor = color.takeOrElse {
         style.color.takeOrElse {
@@ -110,5 +111,6 @@ public fun RichText(
         maxLines = maxLines,
         inlineContent = inlineContent,
         imageLoader = imageLoader,
+        onUriClick = onUriClick
     )
 }

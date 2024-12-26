@@ -932,17 +932,8 @@ class RichTextStateTest {
 
         richTextState.selection = TextRange(richTextState.textFieldValue.text.length)
 
-        richTextState.richParagraphList.forEachIndexed { index, paragraph ->
-            println("Paragraph $index: $paragraph")
-        }
-
         // Remove the text range
         richTextState.removeTextRange(TextRange(0, 5))
-        println("---- AFTER ----")
-
-        richTextState.richParagraphList.forEachIndexed { index, paragraph ->
-            println("Paragraph $index: $paragraph")
-        }
 
         assertEquals(" World!\nRich Editor", richTextState.toText())
         assertEquals(TextRange(0), richTextState.selection)

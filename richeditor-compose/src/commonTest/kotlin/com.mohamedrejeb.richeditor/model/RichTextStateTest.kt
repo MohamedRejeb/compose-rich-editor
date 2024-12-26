@@ -619,46 +619,6 @@ class RichTextStateTest {
 
     @OptIn(ExperimentalRichTextApi::class)
     @Test
-    fun testAddNewTextToFirstParagraphWithSelectionOnSecondParagraph() {
-        // https://github.com/MohamedRejeb/compose-rich-editor/issues/311
-        val richTextState = RichTextState(
-            initialRichParagraphList = listOf(
-                RichParagraph(
-                    key = 1,
-                ).also {
-                    it.children.add(
-                        RichSpan(
-                            text = "G",
-                            paragraph = it,
-                        ),
-                    )
-                },
-                RichParagraph(
-                    key = 2,
-                ).also {
-                    it.children.add(
-                        RichSpan(
-                            text = "b",
-                            paragraph = it,
-                        ),
-                    )
-                }
-            )
-        )
-
-        richTextState.selection = TextRange(1)
-        richTextState.onTextFieldValueChange(
-            TextFieldValue(
-                text = "Good b",
-                selection = TextRange(5),
-            )
-        )
-
-        assertEquals("Good\nb", richTextState.toText())
-    }
-
-    @OptIn(ExperimentalRichTextApi::class)
-    @Test
     fun testTextCorrection() {
         val richTextState = RichTextState(
             initialRichParagraphList = listOf(

@@ -1271,6 +1271,29 @@ public class RichTextState internal constructor(
         val activeRichSpan = getOrCreateRichSpanByTextIndex(previousIndex)
 
         if (activeRichSpan != null) {
+            val isAndroidSuggestion =
+                activeRichSpan.isLastInParagraph &&
+                activeRichSpan.textRange.max == startTypeIndex &&
+                tempTextFieldValue.selection.max == startTypeIndex + typedCharsCount + 1
+
+            val typedText =
+                if (isAndroidSuggestion)
+                    "$typedText "
+                else
+                    typedText
+
+            if (isAndroidSuggestion) {
+                val beforeText =
+                    tempTextFieldValue.text.substring(0, startTypeIndex + typedCharsCount)
+
+                val afterText =
+                    tempTextFieldValue.text.substring(startTypeIndex + typedCharsCount)
+
+                tempTextFieldValue = tempTextFieldValue.copy(
+                    text = "$beforeText $afterText",
+                )
+            }
+
             if (startTypeIndex < activeRichSpan.textRange.min) {
                 val indexDiff = activeRichSpan.textRange.min - startTypeIndex
                 val beforeTypedText = tempTextFieldValue.text.substring(

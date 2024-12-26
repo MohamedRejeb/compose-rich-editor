@@ -1261,4 +1261,42 @@ class RichTextStateTest {
         assertEquals("Hello\n\n", state.toText())
     }
 
+    /**
+     * Test to mimic the behavior of the Android suggestion.
+     * Can only reproduced on real device.
+     *
+     * [420](https://github.com/MohamedRejeb/compose-rich-editor/issues/420)
+     */
+    @Test
+    fun testMimicAndroidSuggestion() {
+        val richTextState = RichTextState()
+
+        richTextState.setHtml(
+            """
+                <p>Hi </p>
+                <p>World! </p>
+            """.trimIndent()
+        )
+
+        richTextState.printParagraphs()
+
+        // Select the text
+        richTextState.selection = TextRange(3)
+
+        // Add text after selection
+        // What's happening is that the space added after "Kotlin" from the suggestion is being removed.
+        // It's been considered as the trailing space for the paragraph.
+        // Which will lead to the selection being at the start of the next paragraph.
+        // To fix this we need to add a space after the selection.
+        richTextState.onTextFieldValueChange(
+            TextFieldValue(
+                text = "Hi Kotlin World! ",
+                selection = TextRange(10)
+            )
+        )
+
+        assertEquals(TextRange(10), richTextState.selection)
+        assertEquals("Hi Kotlin  World! ", richTextState.annotatedString.text)
+    }
+
 }

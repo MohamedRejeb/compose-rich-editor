@@ -1278,8 +1278,6 @@ class RichTextStateTest {
             """.trimIndent()
         )
 
-        richTextState.printParagraphs()
-
         // Select the text
         richTextState.selection = TextRange(3)
 

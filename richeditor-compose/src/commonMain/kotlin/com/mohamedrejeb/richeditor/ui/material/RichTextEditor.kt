@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.takeOrElse
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -100,6 +101,7 @@ public fun RichTextEditor(
     minLines: Int = 1,
     maxLength: Int = Int.MAX_VALUE,
     onRichTextChangedListener: RichTextChangedListener? = null,
+    onTextLayout: (TextLayoutResult) -> Unit = {},
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape =
         MaterialTheme.shapes.small.copy(bottomEnd = ZeroCornerSize, bottomStart = ZeroCornerSize),
@@ -127,6 +129,7 @@ public fun RichTextEditor(
         cursorBrush = SolidColor(colors.cursorColor(isError).value),
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
+        onTextLayout = onTextLayout,
         interactionSource = interactionSource,
         singleLine = singleLine,
         maxLines = maxLines,

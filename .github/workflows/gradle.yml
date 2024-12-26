@@ -29,7 +29,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
       - name: Run tests
         run: ./gradlew apiCheck
 
@@ -40,7 +40,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v3
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.konan
@@ -52,7 +52,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Run tests
         run: ./gradlew allTests
@@ -70,7 +70,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Deploy snapshot
         env:

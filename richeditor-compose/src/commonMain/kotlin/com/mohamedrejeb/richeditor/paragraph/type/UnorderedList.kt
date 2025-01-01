@@ -13,6 +13,7 @@ import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 internal class UnorderedList(
     initialIndent: Int = DefaultListIndent,
     startTextWidth: TextUnit = 0.sp,
+    initialNestedLevel: ListNestedLevel = ListNestedLevel.LEVEL_1
 ): ParagraphType, ConfigurableStartTextWidth {
 
     override var startTextWidth: TextUnit = startTextWidth
@@ -22,6 +23,8 @@ internal class UnorderedList(
         }
 
     private var indent = initialIndent
+
+    public var nestedLevel = initialNestedLevel
 
     private var style: ParagraphStyle =
         getParagraphStyle()
@@ -38,8 +41,8 @@ internal class UnorderedList(
     private fun getParagraphStyle() =
         ParagraphStyle(
             textIndent = TextIndent(
-                firstLine = indent.sp,
-                restLine = (indent + startTextWidth.value).sp
+                firstLine = (indent * nestedLevel.indentMultiplier).sp,
+                restLine = ((indent * nestedLevel.indentMultiplier) + startTextWidth.value).sp
             )
         )
 
@@ -50,16 +53,18 @@ internal class UnorderedList(
             text = "• ",
         )
 
-    override fun getNextParagraphType(): ParagraphType =
+    override fun getNextParagraphType(nestedLevel: ListNestedLevel?): ParagraphType =
         UnorderedList(
             initialIndent = indent,
-            startTextWidth = startTextWidth
+            startTextWidth = startTextWidth,
+            initialNestedLevel = nestedLevel ?: this.nestedLevel
         )
 
     override fun copy(): ParagraphType =
         UnorderedList(
             initialIndent = indent,
-            startTextWidth = startTextWidth
+            startTextWidth = startTextWidth,
+            initialNestedLevel = nestedLevel
         )
 
     override fun equals(other: Any?): Boolean {

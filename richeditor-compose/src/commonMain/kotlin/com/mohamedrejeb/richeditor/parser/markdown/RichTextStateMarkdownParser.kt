@@ -12,6 +12,7 @@ import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
+import com.mohamedrejeb.richeditor.paragraph.type.ListNestedLevel
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
@@ -38,6 +39,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         var brParagraphIndices = mutableListOf<Int>()
         var currentRichSpan: RichSpan? = null
         var currentRichParagraphType: ParagraphType = DefaultParagraph()
+        var currentListNestedLevel = 0
 
         fun onAddLineBreak() {
             val lastParagraph = richParagraphList.lastOrNull()
@@ -114,6 +116,10 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
             onOpenNode = { node ->
                 openedNodes.add(node)
 
+                if (node.type == MarkdownElementTypes.UNORDERED_LIST || node.type == MarkdownElementTypes.ORDERED_LIST) {
+                    currentListNestedLevel++
+                }
+
                 val tagSpanStyle = markdownElementsSpanStyleEncodeMap[node.type]
 
                 if (node.type in markdownBlockElements) {
@@ -127,7 +133,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
                     // Set paragraph type if an element is a list item
                     if (node.type == MarkdownElementTypes.LIST_ITEM) {
-                        currentRichParagraph.type = currentRichParagraphType.getNextParagraphType()
+                        currentRichParagraph.type = currentRichParagraphType.getNextParagraphType(ListNestedLevel.getByNumber(currentListNestedLevel))
                     }
 
                     val newRichSpan = RichSpan(paragraph = currentRichParagraph)
@@ -194,6 +200,10 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
             },
             onCloseNode = { node ->
                 openedNodes.removeLastOrNull()
+
+                if (node.type == MarkdownElementTypes.UNORDERED_LIST || node.type == MarkdownElementTypes.ORDERED_LIST) {
+                    currentListNestedLevel--
+                }
 
                 // Remove empty spans
                 if (currentRichSpan?.isEmpty() == true) {
@@ -444,10 +454,10 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     private fun StringBuilder.appendParagraphStartText(paragraph: RichParagraph) {
         when (val type = paragraph.type) {
             is OrderedList ->
-                append("${type.number}. ")
+                append("  ".repeat(type.nestedLevel.number -1) + "${type.number}. ")
 
             is UnorderedList ->
-                append("- ")
+                append("  ".repeat(type.nestedLevel.number -1) + "- ")
 
             else ->
                 Unit

@@ -3050,6 +3050,15 @@ public class RichTextState internal constructor(
     }
 
     /**
+     * Internal helper for testing
+     */
+    internal fun printParagraphs() {
+        richParagraphList.fastForEachIndexed { i, richParagraph ->
+            println("Paragraph $i: $richParagraph")
+        }
+    }
+
+    /**
      * Returns a copy of this [RichTextState].
      * It can be used to create a snapshot of the current state.
      *

@@ -459,6 +459,22 @@ public class RichTextState internal constructor(
     }
 
     /**
+     * Clear color [SpanStyle]s for current selection.
+     */
+    public fun clearSelectionColorSpans() {
+        annotatedString
+            .subSequence(selection)
+            .spanStyles
+            .filter { it.item.color.isSpecified }
+            .forEach {
+                val spanStyle = SpanStyle(color = it.item.color)
+                toRemoveSpanStyle = toRemoveSpanStyle.customMerge(spanStyle)
+                toAddSpanStyle = toAddSpanStyle.unmerge(spanStyle)
+                if (!selection.collapsed) applyRichSpanStyleToSelectedText()
+            }
+    }
+
+    /**
      * Add new [SpanStyle] to the [currentSpanStyle]
      *
      * Example: You can add Bold FontWeight by passing:

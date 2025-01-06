@@ -105,7 +105,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     val paragraphType = encodeHtmlElementToRichParagraphType(lastOpenedTag)
                     currentRichParagraph.type = paragraphType
 
-                    val cssParagraphStyle = CssEncoder.parseCssStyleMapToParagraphStyle(cssStyleMap)
+                    val cssParagraphStyle = CssEncoder.parseCssStyleMapToParagraphStyle(cssStyleMap,attributes)
                     currentRichParagraph.paragraphStyle = currentRichParagraph.paragraphStyle.merge(cssParagraphStyle)
                 }
 
@@ -120,7 +120,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     if (name == "li" && lastOpenedTag != null) {
                         paragraphType = encodeHtmlElementToRichParagraphType(lastOpenedTag)
                     }
-                    val cssParagraphStyle = CssEncoder.parseCssStyleMapToParagraphStyle(cssStyleMap)
+                    val cssParagraphStyle = CssEncoder.parseCssStyleMapToParagraphStyle(cssStyleMap,attributes)
 
                     newRichParagraph.paragraphStyle = newRichParagraph.paragraphStyle.merge(cssParagraphStyle)
                     newRichParagraph.type = paragraphType

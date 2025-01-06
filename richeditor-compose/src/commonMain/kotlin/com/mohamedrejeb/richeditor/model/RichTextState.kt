@@ -446,10 +446,16 @@ public class RichTextState internal constructor(
      * @see [removeSpanStyle]
      */
     public fun toggleSpanStyle(spanStyle: SpanStyle) {
-        if (currentSpanStyle.isSpecifiedFieldsEquals(spanStyle))
-            removeSpanStyle(spanStyle)
-        else
-            addSpanStyle(spanStyle)
+        if (spanStyle.isUnspecifiedColorSpan()) {
+            val modifiedSpan = currentSpanStyle.copy(color = Color.Unspecified)
+            removeSpanStyle(currentSpanStyle)
+            addSpanStyle(modifiedSpan)
+        } else {
+            if (currentSpanStyle.isSpecifiedFieldsEquals(spanStyle))
+                removeSpanStyle(spanStyle)
+            else
+                addSpanStyle(spanStyle)
+        }
     }
 
     /**
@@ -3276,4 +3282,8 @@ public class RichTextState internal constructor(
             }
         )
     }
+}
+
+private fun SpanStyle.isUnspecifiedColorSpan(): Boolean {
+    return this == SpanStyle(color = Color.Unspecified)
 }

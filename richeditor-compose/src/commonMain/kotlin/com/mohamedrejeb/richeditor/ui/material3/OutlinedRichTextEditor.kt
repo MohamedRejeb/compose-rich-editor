@@ -115,7 +115,7 @@ public fun OutlinedRichTextEditor(
 ) {
     // If color is not provided via the text style, use content color as a default
     val textColor = textStyle.color.takeOrElse {
-        colors.textColor(enabled).value
+        colors.textColor().value
     }
     val mergedTextStyle = textStyle.merge(TextStyle(color = textColor))
 

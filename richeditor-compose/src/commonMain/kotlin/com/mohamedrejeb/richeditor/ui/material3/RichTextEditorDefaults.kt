@@ -816,8 +816,8 @@ public class RichTextEditorColors internal constructor(
     }
 
     @Composable
-    internal fun textColor(enabled: Boolean): State<Color> {
-        return rememberUpdatedState(if (enabled) textColor else disabledTextColor)
+    internal fun textColor(): State<Color> {
+        return rememberUpdatedState(textColor)
     }
 
     @Composable

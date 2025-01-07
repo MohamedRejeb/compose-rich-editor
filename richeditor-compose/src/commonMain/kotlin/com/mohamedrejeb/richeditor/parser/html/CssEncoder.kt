@@ -140,7 +140,10 @@ internal object CssEncoder {
      * @param cssStyleMap the CSS style map to convert.
      * @return the converted [ParagraphStyle].
      */
-    internal fun parseCssStyleMapToParagraphStyle(cssStyleMap: Map<String, String>,attributes: Map<String,String>): ParagraphStyle {
+    internal fun parseCssStyleMapToParagraphStyle(
+        cssStyleMap: Map<String, String>,
+        attributes: Map<String,String>
+    ): ParagraphStyle {
         val direction = cssStyleMap["direction"] ?: attributes["dir"]
         return ParagraphStyle(
             textAlign = cssStyleMap["text-align"]?.let { parseCssTextAlign(it) } ?: TextAlign.Unspecified,

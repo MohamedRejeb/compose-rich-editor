@@ -1189,6 +1189,1097 @@ class RichTextStateTest {
     }
 
     @Test
+    fun testRemoveCharactersWithNestedLevel() {
+        val state = RichTextState(
+            listOf(
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 1,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "A",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "B",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 2,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "CD",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 2,
+                        initialNestedLevel = 1,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "D",
+                            paragraph = it,
+                        )
+                    )
+                }
+            )
+        )
+
+        state.selection = TextRange(state.textFieldValue.text.length - 5)
+        val before = state.textFieldValue.text.substring(0, state.textFieldValue.text.length - 6)
+        val after = state.textFieldValue.text.substring(state.textFieldValue.text.length - 5)
+        state.onTextFieldValueChange(
+            TextFieldValue(
+                text = before + after,
+                selection = TextRange(state.textFieldValue.text.length - 6),
+            )
+        )
+
+        val firstParagraph = state.richParagraphList[0]
+        val secondParagraph = state.richParagraphList[1]
+        val thirdParagraph = state.richParagraphList[2]
+        val fourthParagraph = state.richParagraphList[3]
+
+        val firstParagraphType = firstParagraph.type
+        val secondParagraphType = secondParagraph.type
+        val thirdParagraphType = thirdParagraph.type
+        val fourthParagraphType = fourthParagraph.type
+
+        assertIs<OrderedList>(firstParagraphType)
+        assertEquals(1, firstParagraphType.nestedLevel)
+
+        assertIs<OrderedList>(secondParagraphType)
+        assertEquals(1, secondParagraphType.number)
+        assertEquals(2, secondParagraphType.nestedLevel)
+
+        assertIs<OrderedList>(thirdParagraphType)
+        assertEquals(2, thirdParagraphType.nestedLevel)
+        assertEquals(2, thirdParagraphType.nestedLevel)
+
+        assertIs<OrderedList>(fourthParagraphType)
+        assertEquals(2, fourthParagraphType.number)
+        assertEquals(1, fourthParagraphType.nestedLevel)
+    }
+
+    @Test
+    fun testAddOrderedListWithNestedLevel1() {
+        val state = RichTextState(
+            listOf(
+                RichParagraph(
+                    type = UnorderedList(
+                        initialNestedLevel = 1,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "A",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "B",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = UnorderedList(
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "C",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 1,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "D",
+                            paragraph = it,
+                        )
+                    )
+                }
+            )
+        )
+
+        state.selection = TextRange(state.textFieldValue.text.length - 5)
+        state.toggleOrderedList()
+
+        val firstParagraph = state.richParagraphList[0]
+        val secondParagraph = state.richParagraphList[1]
+        val thirdParagraph = state.richParagraphList[2]
+        val fourthParagraph = state.richParagraphList[3]
+
+        val firstParagraphType = firstParagraph.type
+        val secondParagraphType = secondParagraph.type
+        val thirdParagraphType = thirdParagraph.type
+        val fourthParagraphType = fourthParagraph.type
+
+        assertIs<UnorderedList>(firstParagraphType)
+        assertEquals(1, firstParagraphType.nestedLevel)
+
+        assertIs<OrderedList>(secondParagraphType)
+        assertEquals(1, secondParagraphType.number)
+        assertEquals(2, secondParagraphType.nestedLevel)
+
+        assertIs<OrderedList>(thirdParagraphType)
+        assertEquals(2, thirdParagraphType.number)
+        assertEquals(2, thirdParagraphType.nestedLevel)
+
+        assertIs<OrderedList>(fourthParagraphType)
+        assertEquals(1, fourthParagraphType.number)
+        assertEquals(1, fourthParagraphType.nestedLevel)
+    }
+
+    @Test
+    fun testAddOrderedListWithNestedLevel2() {
+        val state = RichTextState(
+            listOf(
+                RichParagraph(
+                    type = UnorderedList(
+                        initialNestedLevel = 1,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "A",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "B",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = UnorderedList(
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "C",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "D",
+                            paragraph = it,
+                        )
+                    )
+                }
+            )
+        )
+
+        state.selection = TextRange(state.textFieldValue.text.length - 5)
+        state.toggleOrderedList()
+
+        val firstParagraph = state.richParagraphList[0]
+        val secondParagraph = state.richParagraphList[1]
+        val thirdParagraph = state.richParagraphList[2]
+        val fourthParagraph = state.richParagraphList[3]
+
+        val firstParagraphType = firstParagraph.type
+        val secondParagraphType = secondParagraph.type
+        val thirdParagraphType = thirdParagraph.type
+        val fourthParagraphType = fourthParagraph.type
+
+        assertIs<UnorderedList>(firstParagraphType)
+        assertEquals(1, firstParagraphType.nestedLevel)
+
+        assertIs<OrderedList>(secondParagraphType)
+        assertEquals(1, secondParagraphType.number)
+        assertEquals(2, secondParagraphType.nestedLevel)
+
+        assertIs<OrderedList>(thirdParagraphType)
+        assertEquals(2, thirdParagraphType.number)
+        assertEquals(2, thirdParagraphType.nestedLevel)
+
+        assertIs<OrderedList>(fourthParagraphType)
+        assertEquals(3, fourthParagraphType.number)
+        assertEquals(2, fourthParagraphType.nestedLevel)
+    }
+
+    @Test
+    fun testAddUnorderedListWithNestedLevel1() {
+        val state = RichTextState(
+            listOf(
+                RichParagraph(
+                    type = UnorderedList(
+                        initialNestedLevel = 1,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "A",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "B",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 2,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "C",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 3,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "D",
+                            paragraph = it,
+                        )
+                    )
+                }
+            )
+        )
+
+        state.selection = TextRange(state.textFieldValue.text.length - 5)
+        state.toggleUnorderedList()
+
+        val firstParagraph = state.richParagraphList[0]
+        val secondParagraph = state.richParagraphList[1]
+        val thirdParagraph = state.richParagraphList[2]
+        val fourthParagraph = state.richParagraphList[3]
+
+        val firstParagraphType = firstParagraph.type
+        val secondParagraphType = secondParagraph.type
+        val thirdParagraphType = thirdParagraph.type
+        val fourthParagraphType = fourthParagraph.type
+
+        assertIs<UnorderedList>(firstParagraphType)
+        assertEquals(1, firstParagraphType.nestedLevel)
+
+        assertIs<OrderedList>(secondParagraphType)
+        assertEquals(1, secondParagraphType.number)
+        assertEquals(2, secondParagraphType.nestedLevel)
+
+        assertIs<UnorderedList>(thirdParagraphType)
+        assertEquals(2, thirdParagraphType.nestedLevel)
+
+        assertIs<OrderedList>(fourthParagraphType)
+        assertEquals(1, fourthParagraphType.number)
+        assertEquals(2, fourthParagraphType.nestedLevel)
+    }
+
+    @Test
+    fun testIncreaseListNestedLevelSimple1() {
+        val state = RichTextState(
+            listOf(
+                RichParagraph(
+                    type = UnorderedList(
+                        initialNestedLevel = 1,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "A",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "B",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = UnorderedList(
+                        initialNestedLevel = 3,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "C",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 1,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "D",
+                            paragraph = it,
+                        )
+                    )
+                }
+            )
+        )
+
+        state.increaseListNestedLevel()
+
+        val firstParagraph = state.richParagraphList[0]
+        val secondParagraph = state.richParagraphList[1]
+        val thirdParagraph = state.richParagraphList[2]
+        val fourthParagraph = state.richParagraphList[3]
+
+        val firstParagraphType = firstParagraph.type
+        val secondParagraphType = secondParagraph.type
+        val thirdParagraphType = thirdParagraph.type
+        val fourthParagraphType = fourthParagraph.type
+
+        assertIs<UnorderedList>(firstParagraphType)
+        assertEquals(1, firstParagraphType.nestedLevel)
+
+        assertIs<OrderedList>(secondParagraphType)
+        assertEquals(1, secondParagraphType.number)
+        assertEquals(2, secondParagraphType.nestedLevel)
+
+        assertIs<UnorderedList>(thirdParagraphType)
+        assertEquals(3, thirdParagraphType.nestedLevel)
+
+        assertIs<OrderedList>(fourthParagraphType)
+        assertEquals(2, fourthParagraphType.number)
+        assertEquals(2, fourthParagraphType.nestedLevel)
+    }
+
+    @Test
+    fun testIncreaseListNestedLevelSimple2() {
+        val state = RichTextState()
+
+        state.onTextFieldValueChange(
+            TextFieldValue(
+                text = "1.",
+                selection = TextRange(2),
+            )
+        )
+
+        state.onTextFieldValueChange(
+            TextFieldValue(
+                text = "1. ",
+                selection = TextRange(3),
+            )
+        )
+
+        state.onTextFieldValueChange(
+            TextFieldValue(
+                text = "1. Hello",
+                selection = TextRange(8),
+            )
+        )
+
+        state.onTextFieldValueChange(
+            TextFieldValue(
+                text = "1. Hello \n",
+                selection = TextRange(10),
+            )
+        )
+
+        state.onTextFieldValueChange(
+            TextFieldValue(
+                text = "1. Hello 2. World",
+                selection = TextRange(17),
+            )
+        )
+
+        state.increaseListNestedLevel()
+
+        val firstParagraph = state.richParagraphList[0]
+        val secondParagraph = state.richParagraphList[1]
+
+        val firstParagraphType = firstParagraph.type
+        val secondParagraphType = secondParagraph.type
+
+        assertIs<OrderedList>(firstParagraphType)
+        assertIs<OrderedList>(secondParagraphType)
+        assertEquals(1, firstParagraphType.number)
+        assertEquals(1, firstParagraphType.nestedLevel)
+        assertEquals(1, secondParagraphType.number)
+        assertEquals(2, secondParagraphType.nestedLevel)
+    }
+
+    @Test
+    fun testIncreaseListNestedLevelComplex() {
+        /**
+         * Initial:
+         * 1. A
+         * 2. A
+         *     1. A
+         *         1. A
+         * 1. A
+         *
+         * Expected:
+         * 1. A
+         *    1. A
+         *      1. A
+         *          1. A
+         * 2. A
+         */
+        val state = RichTextState(
+            listOf(
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 1,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "A",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 2,
+                        initialNestedLevel = 1,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "A",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "A",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 3,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "A",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 3,
+                        initialNestedLevel = 1,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "A",
+                            paragraph = it,
+                        )
+                    )
+                },
+            )
+        )
+
+        state.selection = TextRange(6, 12)
+        state.increaseListNestedLevel()
+
+        val pOne = state.richParagraphList[0].type
+        val pTwo = state.richParagraphList[1].type
+        val pThree = state.richParagraphList[2].type
+        val pFour = state.richParagraphList[3].type
+        val pFive = state.richParagraphList[4].type
+
+        assertIs<OrderedList>(pOne)
+        assertEquals(1, pOne.number)
+        assertEquals(1, pOne.nestedLevel)
+
+        assertIs<OrderedList>(pTwo)
+        assertEquals(1, pTwo.number)
+        assertEquals(2, pTwo.nestedLevel)
+
+        assertIs<OrderedList>(pThree)
+        assertEquals(1, pThree.number)
+        assertEquals(3, pThree.nestedLevel)
+
+        assertIs<OrderedList>(pFour)
+        assertEquals(1, pFour.number)
+        assertEquals(4, pFour.nestedLevel)
+
+        assertIs<OrderedList>(pFive)
+        assertEquals(2, pFive.number)
+        assertEquals(1, pFive.nestedLevel)
+    }
+
+    @Test
+    fun testCanIncreaseListNestedLevelCollapsed() {
+        val state = RichTextState(
+            listOf(
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 1,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Hello",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "World",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 2,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "A",
+                            paragraph = it,
+                        )
+                    )
+                }
+            )
+        )
+
+        state.selection = TextRange(6)
+        val selectedParagraphs1 = state.getRichParagraphListByTextRange(state.selection)
+        assertFalse(state.canIncreaseListNestedLevel(selectedParagraphs1))
+
+        state.selection = TextRange(9)
+        val selectedParagraphs2 = state.getRichParagraphListByTextRange(state.selection)
+        assertFalse(state.canIncreaseListNestedLevel(selectedParagraphs2))
+        assertFalse(state.canIncreaseListNestedLevel)
+
+        state.selection = TextRange(20)
+        val selectedParagraphs3 = state.getRichParagraphListByTextRange(state.selection)
+        assertTrue(state.canIncreaseListNestedLevel(selectedParagraphs3))
+        assertTrue(state.canIncreaseListNestedLevel)
+    }
+
+    @Test
+    fun testCanIncreaseListNestedLevelNonCollapsed() {
+        val state = RichTextState(
+            listOf(
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 1,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Hello",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "World",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 2,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "A",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 3,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "B",
+                            paragraph = it,
+                        )
+                    )
+                }
+            )
+        )
+
+        state.selection = TextRange(6, 15)
+        val selectedParagraphs1 = state.getRichParagraphListByTextRange(state.selection)
+        assertFalse(state.canIncreaseListNestedLevel(selectedParagraphs1))
+        assertFalse(state.canIncreaseListNestedLevel)
+
+        state.selection = TextRange(18, 23)
+        val selectedParagraphs2 = state.getRichParagraphListByTextRange(state.selection)
+        assertTrue(state.canIncreaseListNestedLevel(selectedParagraphs2))
+        assertTrue(state.canIncreaseListNestedLevel)
+    }
+
+    @Test
+    fun testDecreaseListNestedLevelSimple1() {
+        val state = RichTextState(
+            listOf(
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 1,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Hello",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "World",
+                            paragraph = it,
+                        )
+                    )
+                }
+            )
+        )
+
+        state.selection = TextRange(9)
+
+        state.decreaseListNestedLevel()
+
+        val firstParagraph = state.richParagraphList[0]
+        val secondParagraph = state.richParagraphList[1]
+
+        val firstParagraphType = firstParagraph.type
+        val secondParagraphType = secondParagraph.type
+
+        assertIs<OrderedList>(firstParagraphType)
+        assertIs<OrderedList>(secondParagraphType)
+        assertEquals(1, firstParagraphType.number)
+        assertEquals(1, firstParagraphType.nestedLevel)
+        assertEquals(2, secondParagraphType.number)
+        assertEquals(1, secondParagraphType.nestedLevel)
+    }
+
+    @Test
+    fun testDecreaseListNestedLevelSimple2() {
+        val state = RichTextState(
+            listOf(
+                RichParagraph(
+                    type = UnorderedList(
+                        initialNestedLevel = 1,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "A",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "B",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 2,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "C",
+                            paragraph = it,
+                        )
+                    )
+                }
+            )
+        )
+
+        state.selection = TextRange(state.textFieldValue.text.length - 5)
+
+        state.decreaseListNestedLevel()
+
+        val firstParagraph = state.richParagraphList[0]
+        val secondParagraph = state.richParagraphList[1]
+        val thirdParagraph = state.richParagraphList[2]
+
+        val firstParagraphType = firstParagraph.type
+        val secondParagraphType = secondParagraph.type
+        val thirdParagraphType = thirdParagraph.type
+
+        assertIs<UnorderedList>(firstParagraphType)
+        assertEquals(1, firstParagraphType.nestedLevel)
+
+        assertIs<OrderedList>(secondParagraphType)
+        assertEquals(1, secondParagraphType.number)
+        assertEquals(1, secondParagraphType.nestedLevel)
+
+        assertIs<OrderedList>(thirdParagraphType)
+        assertEquals(1, thirdParagraphType.number)
+        assertEquals(2, thirdParagraphType.nestedLevel)
+    }
+
+    @Test
+    fun testDecreaseListNestedLevelComplex() {
+        /**
+         * Initial:
+         * 1. A
+         *    1. A
+         *      1. A
+         *          1. A
+         *  2. A
+         *
+         * Expected:
+         * 1. A
+         * 2. A
+         *    1. A
+         *      1. A
+         *  3. A
+         */
+        val state = RichTextState(
+            listOf(
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 1,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "A",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "A",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 3,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "A",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 4,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "A",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 2,
+                        initialNestedLevel = 1,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "A",
+                            paragraph = it,
+                        )
+                    )
+                },
+            )
+        )
+
+        state.selection = TextRange(5, 12)
+        state.decreaseListNestedLevel()
+
+        val pOne = state.richParagraphList[0].type
+        val pTwo = state.richParagraphList[1].type
+        val pThree = state.richParagraphList[2].type
+        val pFour = state.richParagraphList[3].type
+        val pFive = state.richParagraphList[4].type
+
+        assertIs<OrderedList>(pOne)
+        assertEquals(1, pOne.number)
+        assertEquals(1, pOne.nestedLevel)
+
+        assertIs<OrderedList>(pTwo)
+        assertEquals(2, pTwo.number)
+        assertEquals(1, pTwo.nestedLevel)
+
+        assertIs<OrderedList>(pThree)
+        assertEquals(1, pThree.number)
+        assertEquals(2, pThree.nestedLevel)
+
+        assertIs<OrderedList>(pFour)
+        assertEquals(1, pFour.number)
+        assertEquals(3, pFour.nestedLevel)
+
+        assertIs<OrderedList>(pFive)
+        assertEquals(3, pFive.number)
+        assertEquals(1, pFive.nestedLevel)
+    }
+
+    @Test
+    fun testCanDecreaseListNestedLevelCollapsed() {
+        val state = RichTextState(
+            listOf(
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 1,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Hello",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "World",
+                            paragraph = it,
+                        )
+                    )
+                }
+            )
+        )
+
+        state.selection = TextRange(6)
+        val selectedParagraphs1 = state.getRichParagraphListByTextRange(state.selection)
+        assertFalse(state.canDecreaseListNestedLevel(selectedParagraphs1))
+        assertFalse(state.canDecreaseListNestedLevel)
+
+        state.selection = TextRange(9)
+        val selectedParagraphs2 = state.getRichParagraphListByTextRange(state.selection)
+        assertTrue(state.canDecreaseListNestedLevel(selectedParagraphs2))
+        assertTrue(state.canDecreaseListNestedLevel)
+    }
+
+    @Test
+    fun testCanDecreaseListNestedLevelNonCollapsed() {
+        val state = RichTextState(
+            listOf(
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 1,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Hello",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "World",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 2,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "A",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 3,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "B",
+                            paragraph = it,
+                        )
+                    )
+                },
+            )
+        )
+
+        state.selection = TextRange(9, 6)
+        val selectedParagraphs1 = state.getRichParagraphListByTextRange(state.selection)
+        assertFalse(state.canDecreaseListNestedLevel(selectedParagraphs1))
+        assertFalse(state.canDecreaseListNestedLevel)
+
+        state.selection = TextRange(9, 16)
+        val selectedParagraphs2 = state.getRichParagraphListByTextRange(state.selection)
+        assertTrue(state.canDecreaseListNestedLevel(selectedParagraphs2))
+        assertTrue(state.canDecreaseListNestedLevel)
+    }
+
+    @Test
     fun testAddingTwoConsecutiveLineBreaks() {
         val state = RichTextState()
 
@@ -1246,6 +2337,420 @@ class RichTextStateTest {
 
         assertEquals(TextRange(10), richTextState.selection)
         assertEquals("Hi Kotlin  World! ", richTextState.annotatedString.text)
+    }
+
+    @Test
+    fun testIsUnorderedListStateWithSingleParagraph() {
+        val richTextState = RichTextState()
+
+        assertFalse(richTextState.isUnorderedList)
+
+        richTextState.onTextFieldValueChange(
+            TextFieldValue(
+                text = "- ",
+                selection = TextRange(2),
+            )
+        )
+
+        assertTrue(richTextState.isUnorderedList)
+
+        richTextState.onTextFieldValueChange(
+            TextFieldValue(
+                text = "",
+                selection = TextRange(0),
+            )
+        )
+
+        assertFalse(richTextState.isUnorderedList)
+    }
+
+    @Test
+    fun testIsUnorderedListStateWithMultipleParagraphs() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    type = UnorderedList(),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "aaa",
+                            paragraph = it,
+                        ),
+                    )
+                },
+                RichParagraph(
+                    type = UnorderedList(),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "bbb",
+                            paragraph = it,
+                        ),
+                    )
+                },
+                RichParagraph(
+                    type = DefaultParagraph(),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "ccc",
+                            paragraph = it,
+                        ),
+                    )
+                }
+            )
+        )
+
+        // Selecting single unordered list paragraph
+        richTextState.selection = TextRange(6)
+
+        assertTrue(richTextState.isUnorderedList)
+
+        // Selecting single default paragraph
+        richTextState.selection = TextRange(12)
+
+        assertFalse(richTextState.isUnorderedList)
+
+        // Selecting multiple unordered list paragraphs
+        richTextState.selection = TextRange(2, 8)
+
+        assertTrue(richTextState.isUnorderedList)
+    }
+
+    @Test
+    fun testIsOrderedListStateWithSingleParagraph() {
+        val richTextState = RichTextState()
+
+        assertFalse(richTextState.isOrderedList)
+
+        richTextState.onTextFieldValueChange(
+            TextFieldValue(
+                text = "1. ",
+                selection = TextRange(3),
+            )
+        )
+
+        assertTrue(richTextState.isOrderedList)
+
+        richTextState.onTextFieldValueChange(
+            TextFieldValue(
+                text = "",
+                selection = TextRange(0),
+            )
+        )
+
+        assertFalse(richTextState.isOrderedList)
+    }
+
+    @Test
+    fun testIsOrderedListStateWithMultipleParagraphs() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    type = OrderedList(1),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "aaa",
+                            paragraph = it,
+                        ),
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(2),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "bbb",
+                            paragraph = it,
+                        ),
+                    )
+                },
+                RichParagraph(
+                    type = DefaultParagraph(),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "ccc",
+                            paragraph = it,
+                        ),
+                    )
+                }
+            )
+        )
+
+        // Selecting single ordered list paragraph
+        richTextState.selection = TextRange(6)
+
+        assertTrue(richTextState.isOrderedList)
+
+        // Selecting single default paragraph
+        richTextState.selection = TextRange(14)
+
+        assertFalse(richTextState.isOrderedList)
+
+        // Selecting multiple ordered list paragraphs
+        richTextState.selection = TextRange(2, 10)
+
+        assertTrue(richTextState.isOrderedList)
+    }
+
+    @Test
+    fun testIsListStateWithMultipleParagraphs() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    type = OrderedList(1),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "aaa",
+                            paragraph = it,
+                        ),
+                    )
+                },
+                RichParagraph(
+                    type = UnorderedList(),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "bbb",
+                            paragraph = it,
+                        ),
+                    )
+                },
+                RichParagraph(
+                    type = DefaultParagraph(),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "ccc",
+                            paragraph = it,
+                        ),
+                    )
+                }
+            )
+        )
+
+        // Selecting single ordered list paragraph
+        richTextState.selection = TextRange(5)
+
+        assertTrue(richTextState.isList)
+
+        // Selecting single unordered list paragraph
+        richTextState.selection = TextRange(10)
+
+        assertTrue(richTextState.isList)
+
+        // Selecting single default paragraph
+        richTextState.selection = TextRange(14)
+
+        assertFalse(richTextState.isList)
+
+        // Selecting multiple unordered list paragraphs
+        richTextState.selection = TextRange(2, 10)
+
+        assertTrue(richTextState.isList)
+    }
+
+    @Test
+    fun testKeepNestedLevelOnChangingUnorderedListItemToOrdered() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    type = UnorderedList(
+                        initialNestedLevel = 1
+                    ),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "aaa",
+                            paragraph = it,
+                        ),
+                    )
+                },
+                RichParagraph(
+                    type = UnorderedList(
+                        initialNestedLevel = 2
+                    ),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "bbb",
+                            paragraph = it,
+                        ),
+                    )
+                }
+            )
+        )
+
+        richTextState.selection = TextRange(6)
+
+        richTextState.toggleOrderedList()
+
+        val firstParagraph = richTextState.richParagraphList[0]
+        val secondParagraph = richTextState.richParagraphList[1]
+
+        val firstParagraphType = firstParagraph.type
+        val secondParagraphType = secondParagraph.type
+
+        assertIs<UnorderedList>(firstParagraphType)
+        assertIs<OrderedList>(secondParagraphType)
+        assertEquals(1, firstParagraphType.nestedLevel)
+        assertEquals(1, secondParagraphType.number)
+        assertEquals(2, secondParagraphType.nestedLevel)
+    }
+
+    @Test
+    fun testKeepNestedLevelOnChangingOrderedListItemToUnordered() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 1
+                    ),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "aaa",
+                            paragraph = it,
+                        ),
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 2
+                    ),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "bbb",
+                            paragraph = it,
+                        ),
+                    )
+                }
+            )
+        )
+
+        richTextState.selection = TextRange(9)
+
+        richTextState.toggleUnorderedList()
+
+        val firstParagraph = richTextState.richParagraphList[0]
+        val secondParagraph = richTextState.richParagraphList[1]
+
+        val firstParagraphType = firstParagraph.type
+        val secondParagraphType = secondParagraph.type
+
+        assertIs<OrderedList>(firstParagraphType)
+        assertIs<UnorderedList>(secondParagraphType)
+        assertEquals(1, firstParagraphType.number)
+        assertEquals(1, firstParagraphType.nestedLevel)
+        assertEquals(2, secondParagraphType.nestedLevel)
+    }
+
+    @Test
+    fun testRemoveSelectionFromEndEdges() {
+        // This was causing a crash when trying to remove text from the end edges of the two paragraphs.
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 1
+                    ),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "A",
+                            paragraph = it,
+                        ),
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 2
+                    ),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "B",
+                            paragraph = it,
+                        ),
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 2,
+                        initialNestedLevel = 2
+                    ),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "C",
+                            paragraph = it,
+                        ),
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 2,
+                        initialNestedLevel = 1
+                    ),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "D",
+                            paragraph = it,
+                        ),
+                    )
+                },
+            )
+        )
+
+        richTextState.selection = TextRange(4, 14)
+        richTextState.removeSelectedText()
+
+        assertEquals(2, richTextState.richParagraphList.size)
+    }
+
+    @Test
+    fun testGetRichSpanByTextIndexOnPargraphEnd() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                    ),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "A",
+                            paragraph = it,
+                        ),
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                    ),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "B",
+                            paragraph = it,
+                        ),
+                    )
+                },
+            )
+        )
+
+        val richSpan = richTextState.getRichSpanByTextIndex(4, true)
+
+        assertEquals("A", richSpan?.text)
     }
 
 }

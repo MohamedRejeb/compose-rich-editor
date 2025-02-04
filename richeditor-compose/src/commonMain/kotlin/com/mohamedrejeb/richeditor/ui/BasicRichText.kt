@@ -56,16 +56,20 @@ public fun BasicRichText(
                 .drawRichSpanStyle(state)
                 .pointerHoverIcon(pointerIcon.value)
                 .pointerInput(state) {
-                    awaitEachGesture {
-                        val event = awaitPointerEvent()
-                        val position = event.changes.first().position
-                        val isLink = state.isLink(position)
+                    try {
+                        awaitEachGesture {
+                            val event = awaitPointerEvent()
+                            val position = event.changes.first().position
+                            val isLink = state.isLink(position)
 
-                        pointerIcon.value =
-                            if (isLink)
-                                PointerIcon.Hand
-                            else
-                                PointerIcon.Default
+                            pointerIcon.value =
+                                if (isLink)
+                                    PointerIcon.Hand
+                                else
+                                    PointerIcon.Default
+                        }
+                    } catch (_: Exception) {
+
                     }
                 }
                 .pointerInput(state) {

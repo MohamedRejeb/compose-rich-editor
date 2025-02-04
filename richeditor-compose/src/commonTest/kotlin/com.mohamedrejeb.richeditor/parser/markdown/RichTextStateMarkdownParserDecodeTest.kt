@@ -10,6 +10,9 @@ import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
+import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
+import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
+import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -373,6 +376,138 @@ class RichTextStateMarkdownParserDecodeTest {
             """.trimIndent(),
             state.toMarkdown()
         )
+    }
+
+    @Test
+    fun testDecodeListsWithDifferentNestedLevels() {
+        val expectedMarkdown = """
+            1. F
+                1. FFO
+                2. FSO
+                - FFU
+                - FSU
+                    - FSU3
+            - FFU
+                1. FFO
+            Last
+        """.trimIndent()
+
+        val richTextState = RichTextState(
+            listOf(
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 1,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "F",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "FFO",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 2,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "FSO",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = UnorderedList(
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "FFU",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = UnorderedList(
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "FSU",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = UnorderedList(
+                        initialNestedLevel = 3,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "FSU3",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = UnorderedList(
+                        initialNestedLevel = 1
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "FFU",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = OrderedList(
+                        number = 1,
+                        initialNestedLevel = 2,
+                    )
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "FFO",
+                            paragraph = it,
+                        )
+                    )
+                },
+                RichParagraph(
+                    type = DefaultParagraph()
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Last",
+                            paragraph = it,
+                        )
+                    )
+                }
+            )
+        )
+
+        assertEquals(expectedMarkdown, richTextState.toMarkdown())
     }
 
 }

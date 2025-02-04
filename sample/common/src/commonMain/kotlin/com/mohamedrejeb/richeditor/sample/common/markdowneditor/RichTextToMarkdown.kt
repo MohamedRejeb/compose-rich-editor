@@ -3,6 +3,7 @@ package com.mohamedrejeb.richeditor.sample.common.markdowneditor
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -84,12 +85,17 @@ fun RichTextToMarkdown(
                     .padding(vertical = 12.dp, horizontal = 12.dp)
             ) {
                 item {
-                    Text(
-                        text = markdown,
+                    SelectionContainer(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
-                    )
+                    ) {
+                        Text(
+                            text = markdown,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        )
+                    }
                 }
             }
         }

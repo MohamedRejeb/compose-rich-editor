@@ -13,8 +13,8 @@ import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 internal class UnorderedList(
     initialIndent: Int = DefaultListIndent,
     startTextWidth: TextUnit = 0.sp,
-    initialNestedLevel: ListNestedLevel = ListNestedLevel.LEVEL_1
-): ParagraphType, ConfigurableStartTextWidth {
+    initialNestedLevel: Int = 1,
+): ParagraphType, ConfigurableStartTextWidth, ConfigurableNestedLevel {
 
     override var startTextWidth: TextUnit = startTextWidth
         set(value) {
@@ -24,7 +24,11 @@ internal class UnorderedList(
 
     private var indent = initialIndent
 
-    public var nestedLevel = initialNestedLevel
+    override var nestedLevel = initialNestedLevel
+        set(value) {
+            field = value
+            style = getParagraphStyle()
+        }
 
     private var style: ParagraphStyle =
         getParagraphStyle()
@@ -41,8 +45,8 @@ internal class UnorderedList(
     private fun getParagraphStyle() =
         ParagraphStyle(
             textIndent = TextIndent(
-                firstLine = (indent * nestedLevel.indentMultiplier).sp,
-                restLine = ((indent * nestedLevel.indentMultiplier) + startTextWidth.value).sp
+                firstLine = (indent * nestedLevel).sp,
+                restLine = ((indent * nestedLevel) + startTextWidth.value).sp
             )
         )
 
@@ -53,18 +57,18 @@ internal class UnorderedList(
             text = "• ",
         )
 
-    override fun getNextParagraphType(nestedLevel: ListNestedLevel?): ParagraphType =
+    override fun getNextParagraphType(): ParagraphType =
         UnorderedList(
             initialIndent = indent,
             startTextWidth = startTextWidth,
-            initialNestedLevel = nestedLevel ?: this.nestedLevel
+            initialNestedLevel = nestedLevel,
         )
 
     override fun copy(): ParagraphType =
         UnorderedList(
             initialIndent = indent,
             startTextWidth = startTextWidth,
-            initialNestedLevel = nestedLevel
+            initialNestedLevel = nestedLevel,
         )
 
     override fun equals(other: Any?): Boolean {
@@ -72,11 +76,16 @@ internal class UnorderedList(
         if (other !is UnorderedList) return false
 
         if (indent != other.indent) return false
+        if (startTextWidth != other.startTextWidth) return false
+        if (nestedLevel != other.nestedLevel) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        return indent
+        var result = indent
+        result = 31 * result + startTextWidth.hashCode()
+        result = 31 * result + nestedLevel
+        return result
     }
 }

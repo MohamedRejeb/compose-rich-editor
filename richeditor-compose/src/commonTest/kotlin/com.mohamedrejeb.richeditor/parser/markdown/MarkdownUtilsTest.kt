@@ -61,4 +61,25 @@ class MarkdownUtilsTest {
         )
     }
 
+    @Test
+    fun testCorrectMarkdownListIndentation() {
+        val markdownInput = """
+            - *Hey All * **HHH**
+              - Item 2
+                - ***Bold-Italic ***normal
+            Hey
+        """.trimIndent()
+        val expectedOutput = """
+            - *Hey All*  **HHH**
+                - Item 2
+                    - ***Bold-Italic*** normal
+            Hey
+        """.trimIndent()
+
+        assertEquals(
+            expectedOutput,
+            correctMarkdownText(markdownInput)
+        )
+    }
+
 }

@@ -17,8 +17,8 @@ internal class OrderedList(
     initialIndent: Int = DefaultListIndent,
     startTextSpanStyle: SpanStyle = SpanStyle(),
     startTextWidth: TextUnit = 0.sp,
-    initialNestedLevel: ListNestedLevel = ListNestedLevel.LEVEL_1
-) : ParagraphType, ConfigurableStartTextWidth {
+    initialNestedLevel: Int = 1,
+) : ParagraphType, ConfigurableStartTextWidth, ConfigurableNestedLevel {
 
     var number = number
         set(value) {
@@ -40,10 +40,10 @@ internal class OrderedList(
 
     private var indent = initialIndent
 
-    var nestedLevel = initialNestedLevel
+    override var nestedLevel = initialNestedLevel
         set(value) {
             field = value
-            startRichSpan = getNewStartRichSpan(startRichSpan.textRange)
+            style = getNewParagraphStyle()
         }
 
     private var style: ParagraphStyle =
@@ -61,8 +61,8 @@ internal class OrderedList(
     private fun getNewParagraphStyle() =
         ParagraphStyle(
             textIndent = TextIndent(
-                firstLine = ((indent * nestedLevel.indentMultiplier) - startTextWidth.value).sp,
-                restLine = (indent * nestedLevel.indentMultiplier).sp
+                firstLine = ((indent * nestedLevel) - startTextWidth.value).sp,
+                restLine = (indent * nestedLevel).sp
             )
         )
 
@@ -84,13 +84,13 @@ internal class OrderedList(
         )
     }
 
-    override fun getNextParagraphType(nestedLevel: ListNestedLevel?): ParagraphType =
+    override fun getNextParagraphType(): ParagraphType =
         OrderedList(
             number = number + 1,
             initialIndent = indent,
             startTextSpanStyle = startTextSpanStyle,
             startTextWidth = startTextWidth,
-            initialNestedLevel = nestedLevel ?: this.nestedLevel
+            initialNestedLevel = nestedLevel,
         )
 
     override fun copy(): ParagraphType =
@@ -99,19 +99,29 @@ internal class OrderedList(
             initialIndent = indent,
             startTextSpanStyle = startTextSpanStyle,
             startTextWidth = startTextWidth,
-            initialNestedLevel = nestedLevel
+            initialNestedLevel = nestedLevel,
         )
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is OrderedList) return false
 
+        if (number != other.number) return false
         if (indent != other.indent) return false
+        if (startTextSpanStyle != other.startTextSpanStyle) return false
+        if (startTextWidth != other.startTextWidth) return false
+        if (nestedLevel != other.nestedLevel) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        return indent
+        var result = indent
+        result = 31 * result + number
+        result = 31 * result + indent
+        result = 31 * result + startTextSpanStyle.hashCode()
+        result = 31 * result + startTextWidth.hashCode()
+        result = 31 * result + nestedLevel
+        return result
     }
 }

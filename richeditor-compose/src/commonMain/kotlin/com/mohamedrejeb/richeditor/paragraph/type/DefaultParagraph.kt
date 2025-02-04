@@ -18,7 +18,7 @@ internal class DefaultParagraph : ParagraphType {
     override val startRichSpan: RichSpan =
         RichSpan(paragraph = RichParagraph(type = this))
 
-    override fun getNextParagraphType(nestedLevel: ListNestedLevel?): ParagraphType =
+    override fun getNextParagraphType(): ParagraphType =
         DefaultParagraph()
 
     override fun copy(): ParagraphType =

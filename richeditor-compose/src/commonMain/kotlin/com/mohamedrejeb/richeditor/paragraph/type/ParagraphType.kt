@@ -10,7 +10,7 @@ internal interface ParagraphType {
 
     val startRichSpan: RichSpan
 
-    fun getNextParagraphType(nestedLevel: ListNestedLevel? = null): ParagraphType
+    fun getNextParagraphType(): ParagraphType
 
     fun copy(): ParagraphType
 

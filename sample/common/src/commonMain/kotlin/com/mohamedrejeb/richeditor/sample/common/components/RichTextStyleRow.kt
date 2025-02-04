@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.sample.common.richeditor.SpellCheck
+import com.mohamedrejeb.richeditor.sample.common.slack.SlackDemoPanelButton
 
 @OptIn(ExperimentalRichTextApi::class)
 @Composable
@@ -205,6 +206,26 @@ fun RichTextStyleRow(
                 },
                 isSelected = state.isOrderedList,
                 icon = Icons.Outlined.FormatListNumbered,
+            )
+        }
+
+        item {
+            SlackDemoPanelButton(
+                onClick = {
+                    state.increaseListNestedLevel()
+                },
+                enabled = state.canIncreaseListNestedLevel,
+                icon = Icons.Outlined.TextIncrease,
+            )
+        }
+
+        item {
+            SlackDemoPanelButton(
+                onClick = {
+                    state.decreaseListNestedLevel()
+                },
+                enabled = state.canDecreaseListNestedLevel,
+                icon = Icons.Outlined.TextDecrease,
             )
         }
 

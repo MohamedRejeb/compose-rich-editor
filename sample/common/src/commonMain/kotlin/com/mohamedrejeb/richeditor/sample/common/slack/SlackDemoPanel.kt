@@ -247,6 +247,26 @@ fun SlackDemoPanel(
         }
 
         item {
+            SlackDemoPanelButton(
+                onClick = {
+                    state.increaseListNestedLevel()
+                },
+                enabled = state.canIncreaseListNestedLevel,
+                icon = Icons.Outlined.TextIncrease,
+            )
+        }
+
+        item {
+            SlackDemoPanelButton(
+                onClick = {
+                    state.decreaseListNestedLevel()
+                },
+                enabled = state.canDecreaseListNestedLevel,
+                icon = Icons.Outlined.TextDecrease,
+            )
+        }
+
+        item {
             Box(
                 Modifier
                     .height(24.dp)

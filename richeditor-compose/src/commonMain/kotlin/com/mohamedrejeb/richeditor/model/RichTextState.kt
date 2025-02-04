@@ -91,9 +91,6 @@ public class RichTextState internal constructor(
             ?: RichSpanStyle.Default
     )
 
-    public var currentListNestedLevel: ListNestedLevel by mutableStateOf(ListNestedLevel.LEVEL_1)
-        private set
-
     /**
      * Returns whether the current selected text is a link.
      */
@@ -130,7 +127,9 @@ public class RichTextState internal constructor(
     private var toRemoveSpanStyle: SpanStyle by mutableStateOf(SpanStyle())
 
     private var toAddRichSpanStyle: RichSpanStyle by mutableStateOf(RichSpanStyle.Default)
-    private var toRemoveRichSpanStyleKClass: KClass<out RichSpanStyle> by mutableStateOf(RichSpanStyle.Default::class)
+    private var toRemoveRichSpanStyleKClass: KClass<out RichSpanStyle> by mutableStateOf(
+        RichSpanStyle.Default::class
+    )
 
     @Deprecated(
         message = "Use isRichSpan with T or KClass instead",
@@ -190,16 +189,25 @@ public class RichTextState internal constructor(
      * If the selection is not collapsed, the paragraph style is the style of the selection.
      */
     public val currentParagraphStyle: ParagraphStyle
-        get() = currentAppliedParagraphStyle.merge(toAddParagraphStyle).unmerge(toRemoveParagraphStyle)
+        get() = currentAppliedParagraphStyle
+            .merge(toAddParagraphStyle)
+            .unmerge(toRemoveParagraphStyle)
 
     private var currentRichParagraphType: ParagraphType by mutableStateOf(
         getRichParagraphByTextIndex(textIndex = selection.min - 1)?.type
             ?: DefaultParagraph()
     )
 
-    public val isUnorderedList: Boolean get() = currentRichParagraphType is UnorderedList
-    public val isOrderedList: Boolean get() = currentRichParagraphType is OrderedList
-    public val isList: Boolean get() = isUnorderedList || isOrderedList
+    public var isUnorderedList: Boolean by mutableStateOf(currentRichParagraphType is UnorderedList)
+        private set
+    public var isOrderedList: Boolean by mutableStateOf(currentRichParagraphType is OrderedList)
+        private set
+    public var isList: Boolean by mutableStateOf(isUnorderedList || isOrderedList)
+        private set
+    public var canIncreaseListNestedLevel: Boolean by mutableStateOf(false)
+        private set
+    public var canDecreaseListNestedLevel: Boolean by mutableStateOf(false)
+        private set
 
     public val config: RichTextConfig = RichTextConfig(
         updateText = {
@@ -856,7 +864,9 @@ public class RichTextState internal constructor(
             else {
                 val paragraphs = getRichParagraphListByTextRange(selection)
                 if (paragraphs.isEmpty()) return
-                paragraphs.fastForEach { it.paragraphStyle = it.paragraphStyle.merge(paragraphStyle) }
+                paragraphs.fastForEach {
+                    it.paragraphStyle = it.paragraphStyle.merge(paragraphStyle)
+                }
             }
             // We update the annotated string to reflect the changes
             updateAnnotatedString()
@@ -890,7 +900,9 @@ public class RichTextState internal constructor(
             else {
                 val paragraphs = getRichParagraphListByTextRange(selection)
                 if (paragraphs.isEmpty()) return
-                paragraphs.fastForEach { it.paragraphStyle = it.paragraphStyle.unmerge(paragraphStyle) }
+                paragraphs.fastForEach {
+                    it.paragraphStyle = it.paragraphStyle.unmerge(paragraphStyle)
+                }
             }
             // We update the annotated string to reflect the changes
             updateAnnotatedString()
@@ -901,22 +913,21 @@ public class RichTextState internal constructor(
 
     public fun toggleUnorderedList() {
         val paragraphs = getRichParagraphListByTextRange(selection)
-        if (paragraphs.isEmpty()) return
-        currentListNestedLevel = ListNestedLevel.LEVEL_1
-        val removeUnorderedList = paragraphs.first().type is UnorderedList
-        paragraphs.forEach { paragraph ->
-            if (removeUnorderedList) {
+        if (paragraphs.isEmpty())
+            return
+        val isFirstParagraphUnorderedList = paragraphs.first().type is UnorderedList
+        paragraphs.fastForEach { paragraph ->
+            if (isFirstParagraphUnorderedList)
                 removeUnorderedList(paragraph)
-            } else {
+            else
                 addUnorderedList(paragraph)
-            }
         }
     }
 
     public fun addUnorderedList() {
         val paragraphs = getRichParagraphListByTextRange(selection)
 
-        paragraphs.forEach { paragraph ->
+        paragraphs.fastForEach { paragraph ->
             addUnorderedList(paragraph)
         }
     }
@@ -924,18 +935,18 @@ public class RichTextState internal constructor(
     public fun removeUnorderedList() {
         val paragraphs = getRichParagraphListByTextRange(selection)
 
-        paragraphs.forEach { paragraph ->
+        paragraphs.fastForEach { paragraph ->
             removeUnorderedList(paragraph)
         }
     }
 
     public fun toggleOrderedList() {
         val paragraphs = getRichParagraphListByTextRange(selection)
-        if (paragraphs.isEmpty()) return
-        currentListNestedLevel = ListNestedLevel.LEVEL_1
-        val removeOrderedList = paragraphs.first().type is OrderedList
-        paragraphs.forEach { paragraph ->
-            if (removeOrderedList) {
+        if (paragraphs.isEmpty())
+            return
+        val isFirstParagraphOrderedList = paragraphs.first().type is OrderedList
+        paragraphs.fastForEach { paragraph ->
+            if (isFirstParagraphOrderedList) {
                 removeOrderedList(paragraph)
             } else {
                 addOrderedList(paragraph)
@@ -946,7 +957,7 @@ public class RichTextState internal constructor(
     public fun addOrderedList() {
         val paragraphs = getRichParagraphListByTextRange(selection)
 
-        paragraphs.forEach { paragraph ->
+        paragraphs.fastForEach { paragraph ->
             addOrderedList(paragraph)
         }
     }
@@ -954,33 +965,228 @@ public class RichTextState internal constructor(
     public fun removeOrderedList() {
         val paragraphs = getRichParagraphListByTextRange(selection)
 
-        paragraphs.forEach { paragraph ->
+        paragraphs.fastForEach { paragraph ->
             removeOrderedList(paragraph)
         }
     }
 
+    /**
+     * Increase the nested level of the current selected lists.
+     *
+     * If the current selection is not a list, this method does nothing.
+     *
+     * If multiple paragraphs are selected, they all must be lists.
+     */
     public fun increaseListNestedLevel() {
-        if (!isList) return
-        currentListNestedLevel = currentListNestedLevel.getNextOrMax()
-        updateList()
-    }
+        if (!isList)
+            return
 
-    public fun decreaseListNestedLevel() {
-        if (!isList) return
-        currentListNestedLevel = currentListNestedLevel.getPreviousOrMin()
-        updateList()
-    }
-
-    private fun updateList() {
         val paragraphs = getRichParagraphListByTextRange(selection)
-        if (paragraphs.isEmpty()) return
-        paragraphs.forEach { paragraph ->
-            if (paragraph.type is OrderedList) {
-                updateOrderedList(paragraph)
-            } else if (paragraph.type is UnorderedList) {
-                updateUnorderedList(paragraph)
+
+        if (paragraphs.isEmpty())
+            return
+
+        if (!canIncreaseListNestedLevel(paragraphs))
+            return
+
+        // Increase list nested level
+        val levelNumberMap = mutableMapOf<Int, Int>()
+        var minParagraphNestedLevel = Int.MAX_VALUE
+        var minParagraphNestedLevelOrderedListNumber = -1
+        var startParagraphIndex = -1
+        var startParagraphNestedLevel = -1
+        var endParagraphIndex = -1
+        var processedParagraphCount = 0
+
+        val firstSelectedParagraph = paragraphs.first()
+
+        for (i in richParagraphList.indices) {
+            val paragraph = richParagraphList[i]
+            val type = paragraph.type
+
+            // Skip paragraphs before the selected paragraphs
+            if (startParagraphIndex == -1) {
+                if (paragraph == firstSelectedParagraph) {
+                    startParagraphIndex = i
+                    startParagraphNestedLevel =
+                        if (type is ConfigurableNestedLevel)
+                            type.nestedLevel
+                        else
+                            0
+                } else {
+                    if (type is ConfigurableNestedLevel) {
+                        levelNumberMap.keys.toList().fastForEach { level ->
+                            if (level > type.nestedLevel)
+                                levelNumberMap.remove(level)
+                        }
+
+                        if (type is OrderedList)
+                            levelNumberMap[type.nestedLevel] = type.number
+
+                        if (type is UnorderedList)
+                            levelNumberMap.remove(type.nestedLevel)
+                    } else {
+                        levelNumberMap.clear()
+                    }
+
+                    continue
+                }
             }
+
+            if (processedParagraphCount >= paragraphs.size) {
+                if (
+                    type !is ConfigurableNestedLevel ||
+                    type.nestedLevel <= minParagraphNestedLevel
+                ) {
+                    endParagraphIndex = i - 1
+                    break
+                }
+            }
+
+            if (type is ConfigurableNestedLevel) {
+                if (type.nestedLevel <= minParagraphNestedLevel) {
+                    minParagraphNestedLevel = type.nestedLevel
+                    minParagraphNestedLevelOrderedListNumber =
+                        if (type is OrderedList)
+                            type.number - 1
+                        else
+                            -1
+                }
+
+                type.nestedLevel++
+            } else {
+                if (minParagraphNestedLevel != Int.MAX_VALUE && minParagraphNestedLevelOrderedListNumber != -1)
+                    levelNumberMap[minParagraphNestedLevel] = minParagraphNestedLevelOrderedListNumber
+
+                minParagraphNestedLevel = Int.MAX_VALUE
+                minParagraphNestedLevelOrderedListNumber = -1
+            }
+
+            processedParagraphCount++
         }
+
+        if (minParagraphNestedLevel != Int.MAX_VALUE && minParagraphNestedLevelOrderedListNumber != -1)
+            levelNumberMap[minParagraphNestedLevel] = minParagraphNestedLevelOrderedListNumber
+
+        // Adjust ordered list numbers
+        val newTextFieldValue = adjustOrderedListsNumbers(
+            startParagraphIndex = startParagraphIndex,
+            startNumber = levelNumberMap[startParagraphNestedLevel + 1]?.plus(1) ?: 1,
+            textFieldValue = textFieldValue,
+            initialLevelNumberMap = levelNumberMap,
+        )
+
+        updateTextFieldValue(
+            newTextFieldValue = newTextFieldValue,
+        )
+    }
+
+    /**
+     * Decrease the nested level of the current selected lists.
+     *
+     * If the current selection is not a list, this method does nothing.
+     *
+     * If multiple paragraphs are selected, they all must be lists.
+     */
+    public fun decreaseListNestedLevel() {
+        if (!isList)
+            return
+
+        val paragraphs = getRichParagraphListByTextRange(selection)
+
+        if (paragraphs.isEmpty())
+            return
+
+        if (!canDecreaseListNestedLevel(paragraphs))
+            return
+
+        // Decrease list nested level
+        val levelNumberMap = mutableMapOf<Int, Int>()
+        var minParagraphNestedLevel = Int.MAX_VALUE
+        var minParagraphNestedLevelOrderedListNumber = -1
+        var startParagraphIndex = -1
+        var endParagraphIndex = -1
+        var startParagraphNestedLevel = -1
+        var processedParagraphCount = 0
+
+        val firstSelectedParagraph = paragraphs.first()
+
+        for (i in richParagraphList.indices) {
+            val paragraph = richParagraphList[i]
+            val type = paragraph.type
+
+            // Skip paragraphs before the selected paragraphs
+            if (startParagraphIndex == -1) {
+                if (paragraph == firstSelectedParagraph) {
+                    startParagraphIndex = i
+                    startParagraphNestedLevel =
+                        if (type is ConfigurableNestedLevel)
+                            type.nestedLevel
+                        else
+                            0
+                } else {
+                    if (type is ConfigurableNestedLevel) {
+                        levelNumberMap.keys.toList().fastForEach { level ->
+                            if (level > type.nestedLevel)
+                                levelNumberMap.remove(level)
+                        }
+
+                        if (type is OrderedList)
+                            levelNumberMap[type.nestedLevel] = type.number
+
+                        if (type is UnorderedList)
+                            levelNumberMap.remove(type.nestedLevel)
+                    } else {
+                        levelNumberMap.clear()
+                    }
+
+                    continue
+                }
+            }
+
+            if (processedParagraphCount >= paragraphs.size) {
+                if (
+                    type !is ConfigurableNestedLevel ||
+                    type.nestedLevel <= minParagraphNestedLevel
+                ) {
+                    endParagraphIndex = i - 1
+                    break
+                }
+            }
+
+            if (type is ConfigurableNestedLevel) {
+                if (type.nestedLevel <= minParagraphNestedLevel) {
+                    minParagraphNestedLevel = type.nestedLevel
+                    minParagraphNestedLevelOrderedListNumber =
+                        if (type is OrderedList)
+                            type.number - 1
+                        else
+                            -1
+                }
+
+                type.nestedLevel = (type.nestedLevel - 1).coerceAtLeast(1)
+            } else {
+                minParagraphNestedLevel = Int.MAX_VALUE
+                minParagraphNestedLevelOrderedListNumber = -1
+            }
+
+            processedParagraphCount++
+        }
+
+        println("levelNumberMap: $levelNumberMap")
+        println("startNumber: ${levelNumberMap[startParagraphNestedLevel - 1]}")
+
+        // Adjust ordered list numbers
+        val newTextFieldValue = adjustOrderedListsNumbers(
+            startParagraphIndex = startParagraphIndex,
+            startNumber = levelNumberMap[startParagraphNestedLevel - 1]?.plus(1) ?: 1,
+            textFieldValue = textFieldValue,
+            initialLevelNumberMap = levelNumberMap,
+        )
+
+        updateTextFieldValue(
+            newTextFieldValue = newTextFieldValue,
+        )
     }
 
     /**
@@ -1016,52 +1222,87 @@ public class RichTextState internal constructor(
     }
 
     private fun addUnorderedList(paragraph: RichParagraph) {
-        if (paragraph.type is UnorderedList) return
+        val paragraphType = paragraph.type
+        if (paragraphType is UnorderedList)
+            return
+
+        val index = richParagraphList.indexOf(paragraph)
+
+        if (index == -1)
+            return
+
+        val nestedLevel =
+            if (paragraphType is ConfigurableNestedLevel)
+                paragraphType.nestedLevel
+            else
+                1
 
         val newType = UnorderedList(
             initialIndent = config.unorderedListIndent,
-            initialNestedLevel = currentListNestedLevel
+            initialNestedLevel = nestedLevel,
         )
 
-        updateParagraphType(
-            paragraph = paragraph,
-            newType = newType,
+        val newTextFieldValue = adjustOrderedListsNumbers(
+            startParagraphIndex = index,
+            startNumber = 1,
+            textFieldValue = updateParagraphType(
+                paragraph = paragraph,
+                newType = newType,
+                textFieldValue = textFieldValue,
+            ),
+        )
+
+        updateTextFieldValue(
+            newTextFieldValue = newTextFieldValue
         )
     }
 
     private fun removeUnorderedList(paragraph: RichParagraph) {
-        if (paragraph.type !is UnorderedList) return
+        if (paragraph.type !is UnorderedList)
+            return
 
         resetParagraphType(paragraph = paragraph)
     }
 
-
-    private fun updateUnorderedList(paragraph: RichParagraph) {
-        if (paragraph.type !is UnorderedList) return
-
-        val newType = UnorderedList(
-            initialIndent = config.unorderedListIndent,
-            initialNestedLevel = currentListNestedLevel
-        )
-
-        updateParagraphType(
-            paragraph = paragraph,
-            newType = newType,
-        )
-    }
-
     private fun addOrderedList(paragraph: RichParagraph) {
-        if (paragraph.type is OrderedList) return
+        val paragraphType = paragraph.type
+
+        if (paragraphType is OrderedList)
+            return
+
         val index = richParagraphList.indexOf(paragraph)
-        if (index == -1) return
 
-        val orderedListNumber = getCurrentOrderedListNumber(index - 1, currentListNestedLevel)
+        if (index == -1)
+            return
 
-        val newTextFieldValue = adjustOrderedListsNumbers(
-            startParagraphIndex = index + 1,
-            startNumber = orderedListNumber + 1,
-            textFieldValue = textFieldValue,
-        )
+        var orderedListNumber = 1
+
+        val nestedLevel =
+            if (paragraphType is ConfigurableNestedLevel)
+                paragraphType.nestedLevel
+            else
+                1
+
+        for (i in (index - 1) downTo 0) {
+            val prevParagraph = richParagraphList[i]
+            val prevParagraphType = prevParagraph.type
+
+            if (prevParagraphType is ConfigurableNestedLevel && prevParagraphType.nestedLevel < nestedLevel)
+                break
+
+            if (prevParagraphType is ConfigurableNestedLevel && prevParagraphType !is OrderedList)
+                continue
+
+            if (prevParagraphType !is OrderedList)
+                break
+
+            if (prevParagraphType.nestedLevel > nestedLevel)
+                continue
+
+            orderedListNumber = prevParagraphType.number + 1
+
+            break
+        }
 
         val firstRichSpan = paragraph.getFirstNonEmptyChild()
 
@@ -1069,13 +1310,21 @@ public class RichTextState internal constructor(
             number = orderedListNumber,
             initialIndent = config.orderedListIndent,
             startTextSpanStyle = firstRichSpan?.spanStyle ?: SpanStyle(),
+            initialNestedLevel = nestedLevel,
         )
-        updateTextFieldValue(
-            newTextFieldValue = updateParagraphType(
+
+        val newTextFieldValue = adjustOrderedListsNumbers(
+            startParagraphIndex = index,
+            startNumber = orderedListNumber,
+            textFieldValue = updateParagraphType(
                 paragraph = paragraph,
                 newType = newType,
-                textFieldValue = newTextFieldValue,
+                textFieldValue = textFieldValue,
             ),
+        )
+
+        updateTextFieldValue(
+            newTextFieldValue = newTextFieldValue,
         )
     }
 
@@ -1093,77 +1342,74 @@ public class RichTextState internal constructor(
         resetParagraphType(paragraph = paragraph)
     }
 
+    /**
+     * Checks weather the list nested level can be increased or not.
+     *
+     * @param paragraphs the list of paragraphs to check.
+     * @return true if the list nested level can be increased, false otherwise.
+     */
+    internal fun canIncreaseListNestedLevel(paragraphs: List<RichParagraph>): Boolean {
+        if (paragraphs.isEmpty())
+            return false
 
-    private fun updateOrderedList(paragraph: RichParagraph) {
-        if (paragraph.type !is OrderedList) return
-        val index = richParagraphList.indexOf(paragraph)
-        if (index == -1) return
+        val firstParagraph = paragraphs.first()
+        val firstParagraphType = firstParagraph.type
+        val firstParagraphIndex = richParagraphList.indexOf(firstParagraph)
 
-        val orderedListNumber = getCurrentOrderedListNumber(index - 1, currentListNestedLevel)
+        if (firstParagraphIndex == -1 || firstParagraphType !is ConfigurableNestedLevel)
+            return false
 
-        val newTextFieldValue = adjustOrderedListsNumbers(
-            startParagraphIndex = index + 1,
-            startNumber = orderedListNumber + 1,
-            textFieldValue = textFieldValue,
-        )
+        val previousParagraph = richParagraphList.getOrNull(firstParagraphIndex - 1)
+        val previousParagraphType = previousParagraph?.type
 
-        val firstRichSpan = paragraph.getFirstNonEmptyChild()
+        // The previous paragraph must be a list, otherwise we can't increase the nested level
+        if (previousParagraph == null || previousParagraphType !is ConfigurableNestedLevel)
+            return false
 
-        val newType = OrderedList(
-            number = orderedListNumber,
-            initialIndent = config.orderedListIndent,
-            startTextSpanStyle = firstRichSpan?.spanStyle ?: SpanStyle(),
-            initialNestedLevel = currentListNestedLevel
-        )
-        updateTextFieldValue(
-            newTextFieldValue = updateParagraphType(
-                paragraph = paragraph,
-                newType = newType,
-                textFieldValue = newTextFieldValue,
-            ),
-        )
-    }
+        // The first paragraph must have the same or lower nested level than the previous one
+        if (firstParagraphType.nestedLevel > previousParagraphType.nestedLevel)
+            return false
 
-    private fun getCurrentOrderedListNumber(fromIndex: Int, newNestedLevel: ListNestedLevel): Int {
-        // the resulting list is in reverse order (e.g. last paragraph is first item)
-        val previousOrderedListParagraphs = mutableListOf<OrderedList>()
+        paragraphs.fastForEach { paragraph ->
+            val paragraphType = paragraph.type
 
-        for (i in fromIndex downTo 0) {
-            val prevParagraph = richParagraphList[i]
-            if (prevParagraph.type is UnorderedList) continue
-            if (prevParagraph.type !is OrderedList) break
+            // All paragraphs must be ConfigurableNestedLevel
+            if (paragraphType !is ConfigurableNestedLevel)
+                return false
 
-            val orderedListType = prevParagraph.type as OrderedList
-            previousOrderedListParagraphs.add(orderedListType)
-
-            // Stop as soon as we encounter a LEVEL_1 OrderedList
-            if (orderedListType.nestedLevel == ListNestedLevel.LEVEL_1) break
+            // TODO: Maybe in the future we can remove this condition
+            // The paragraph must have the same or higher nested level than the first paragraph
+            if (paragraphType.nestedLevel < firstParagraphType.nestedLevel)
+                return false
         }
 
-        // If no preceding OrderedList paragraphs exist, start numbering from 1
-        if (previousOrderedListParagraphs.isEmpty()) return 1
-
-        val lastParagraph = previousOrderedListParagraphs.first()
-        val lastLevel2Paragraph = previousOrderedListParagraphs.find { it.nestedLevel == ListNestedLevel.LEVEL_2 }
-        val lastLevel1Paragraph = previousOrderedListParagraphs.find { it.nestedLevel == ListNestedLevel.LEVEL_1 }
-
-        return when {
-            // If the last paragraph has the same nesting level, increment its number
-            lastParagraph.nestedLevel == newNestedLevel -> lastParagraph.number + 1
-
-            // If the last paragraph has a lower nesting level, restart numbering
-            lastParagraph.nestedLevel.number < newNestedLevel.number -> 1
-
-            // If we're in LEVEL_2, continue numbering from the last LEVEL_2 paragraph
-            newNestedLevel == ListNestedLevel.LEVEL_2 && lastLevel2Paragraph != null -> lastLevel2Paragraph.number + 1
-
-            // If we're in LEVEL_1, continue numbering from the last LEVEL_1 paragraph
-            newNestedLevel == ListNestedLevel.LEVEL_1 && lastLevel1Paragraph != null -> lastLevel1Paragraph.number + 1
-
-            else -> 1
-        }
+        return true
     }
 
+    /**
+     * Checks weather the list nested level can be decreased or not.
+     *
+     * @param paragraphs the list of paragraphs to check.
+     * @return true if the list nested level can be decreased, false otherwise.
+     */
+    internal fun canDecreaseListNestedLevel(paragraphs: List<RichParagraph>): Boolean {
+        if (paragraphs.isEmpty())
+            return false
+
+        paragraphs.fastForEach { paragraph ->
+            val paragraphType = paragraph.type
+
+            // All paragraphs must be ConfigurableNestedLevel
+            if (paragraphType !is ConfigurableNestedLevel)
+                return false
+
+            // The paragraph nested level must be at least 2
+            if (paragraphType.nestedLevel < 2)
+                return false
+        }
+
+        return true
+    }
 
     private fun updateParagraphType(
         paragraph: RichParagraph,
@@ -1187,17 +1433,23 @@ public class RichTextState internal constructor(
         val paragraphOldStartTextLength = paragraph.type.startText.length
         val textFieldValueDiff = this.textFieldValue.text.length - textFieldValue.text.length
         val firstNonEmptyChildIndex = paragraph.getFirstNonEmptyChild()?.textRange?.min?.let {
-            if (it >= selection.min) it - textFieldValueDiff
-            else it
+            if (it >= selection.min)
+                it - textFieldValueDiff
+            else
+                it
         }
         val paragraphFirstChildStartIndex = firstNonEmptyChildIndex ?: selection.min
 
         paragraph.type = newType
 
         // If the paragraph type start text length didn't change, we don't need to update the text field value
-        if (paragraphOldStartTextLength == newType.startText.length) return textFieldValue
+        if (paragraphOldStartTextLength == newType.startText.length)
+            return textFieldValue
 
-        val beforeText = textFieldValue.text.substring(0, paragraphFirstChildStartIndex - paragraphOldStartTextLength)
+        val beforeText = textFieldValue.text.substring(
+            0,
+            paragraphFirstChildStartIndex - paragraphOldStartTextLength
+        )
         val afterText = textFieldValue.text.substring(paragraphFirstChildStartIndex)
 
         val newSelectionMin =
@@ -1325,7 +1577,8 @@ public class RichTextState internal constructor(
                 withStyle(richParagraph.paragraphStyle.merge(richParagraph.type.getStyle(config))) {
                     append(richParagraph.type.startText)
                     val richParagraphStartTextLength = richParagraph.type.startText.length
-                    richParagraph.type.startRichSpan.textRange = TextRange(index, index + richParagraphStartTextLength)
+                    richParagraph.type.startRichSpan.textRange =
+                        TextRange(index, index + richParagraphStartTextLength)
                     index += richParagraphStartTextLength
                     withStyle(RichSpanStyle.DefaultSpanStyle) {
                         index = append(
@@ -1388,8 +1641,8 @@ public class RichTextState internal constructor(
         if (activeRichSpan != null) {
             val isAndroidSuggestion =
                 activeRichSpan.isLastInParagraph &&
-                activeRichSpan.textRange.max == startTypeIndex &&
-                tempTextFieldValue.selection.max == startTypeIndex + typedCharsCount + 1
+                        activeRichSpan.textRange.max == startTypeIndex &&
+                        tempTextFieldValue.selection.max == startTypeIndex + typedCharsCount + 1
 
             val typedText =
                 if (isAndroidSuggestion)
@@ -1448,7 +1701,8 @@ public class RichTextState internal constructor(
                     activeRichSpan.text.substring(startIndex)
 
             val activeRichSpanFullSpanStyle = activeRichSpan.fullSpanStyle
-            val newSpanStyle = activeRichSpanFullSpanStyle.customMerge(toAddSpanStyle).unmerge(toRemoveSpanStyle)
+            val newSpanStyle =
+                activeRichSpanFullSpanStyle.customMerge(toAddSpanStyle).unmerge(toRemoveSpanStyle)
             val newRichSpanStyle =
                 when {
                     toAddRichSpanStyle !is RichSpanStyle.Default ->
@@ -1519,6 +1773,8 @@ public class RichTextState internal constructor(
 
         val removeRange = TextRange(minRemoveIndex, maxRemoveIndex)
 
+        println("minRemoveIndex: $minRemoveIndex")
+
         val minRichSpan = getRichSpanByTextIndex(textIndex = minRemoveIndex, true) ?: return
         val maxRichSpan = getRichSpanByTextIndex(textIndex = maxRemoveIndex - 1, true) ?: return
 
@@ -1534,12 +1790,14 @@ public class RichTextState internal constructor(
         // Get the first non-empty child of the min paragraph
         val minFirstNonEmptyChild = minRichSpan.paragraph.getFirstNonEmptyChild()
         val minParagraphStartTextLength = minRichSpan.paragraph.type.startRichSpan.text.length
-        val minParagraphFirstChildMinIndex = minFirstNonEmptyChild?.textRange?.min ?: minParagraphStartTextLength
+        val minParagraphFirstChildMinIndex =
+            minFirstNonEmptyChild?.textRange?.min ?: minParagraphStartTextLength
 
         // Get the first non-empty child of the max paragraph
         val maxFirstNonEmptyChild = maxRichSpan.paragraph.getFirstNonEmptyChild()
         val maxParagraphStartTextLength = maxRichSpan.paragraph.type.startRichSpan.text.length
-        val maxParagraphFirstChildMinIndex = maxFirstNonEmptyChild?.textRange?.min ?: maxParagraphStartTextLength
+        val maxParagraphFirstChildMinIndex =
+            maxFirstNonEmptyChild?.textRange?.min ?: maxParagraphStartTextLength
 
         // TODO:
         //  Check if we can remove this condition since we are already checking below
@@ -1558,7 +1816,6 @@ public class RichTextState internal constructor(
         if (minRemoveIndex < minParagraphFirstChildMinIndex) {
             if (minRichSpan.paragraph.type.startText.isEmpty() && minParagraphIndex != maxParagraphIndex) {
                 richParagraphList.removeAt(minParagraphIndex)
-                if (isList) currentListNestedLevel = ListNestedLevel.LEVEL_1
             } else {
                 handleRemoveMinParagraphStartText(
                     removeIndex = minRemoveIndex,
@@ -1595,17 +1852,19 @@ public class RichTextState internal constructor(
         }
 
         // Remove spans from the max paragraph
-        maxRichSpan.paragraph.removeTextRange(removeRange, maxParagraphFirstChildMinIndex)
+        val isMaxParagraphEmpty =
+            maxRichSpan.paragraph.removeTextRange(removeRange, maxParagraphFirstChildMinIndex) == null
 
         if (!singleParagraphMode) {
             if (maxParagraphIndex != minParagraphIndex) {
                 // Remove spans from the min paragraph
-                minRichSpan.paragraph.removeTextRange(removeRange, minParagraphFirstChildMinIndex)
+                val isMinParagraphEmpty =
+                    minRichSpan.paragraph.removeTextRange(removeRange, minParagraphFirstChildMinIndex) == null
 
-                if (maxRichSpan.paragraph.getFirstNonEmptyChild() == null) {
+                if (isMaxParagraphEmpty) {
                     // Remove the max paragraph if it's empty
                     richParagraphList.remove(maxRichSpan.paragraph)
-                } else if (minRichSpan.paragraph.getFirstNonEmptyChild() == null) {
+                } else if (isMinParagraphEmpty) {
                     // Set the min paragraph type to the max paragraph type
                     // Since the max paragraph is going to take the min paragraph's place
                     maxRichSpan.paragraph.type = minRichSpan.paragraph.type
@@ -1738,7 +1997,8 @@ public class RichTextState internal constructor(
                         endIndex = minRemoveIndex,
                     )
 
-            val afterTextStartIndex = minRemoveIndex + (paragraphFirstChildMinIndex - maxRemoveIndex)
+            val afterTextStartIndex =
+                minRemoveIndex + (paragraphFirstChildMinIndex - maxRemoveIndex)
 
             val afterText =
                 if (tempTextFieldValue.text.length <= afterTextStartIndex)
@@ -1782,32 +2042,69 @@ public class RichTextState internal constructor(
         }
     }
 
+    /**
+     * Checks the ordered lists numbers and adjusts them if needed.
+     *
+     * @param startParagraphIndex the start paragraph index to start checking from.
+     * @param startNumber the start number to start from.
+     * @param textFieldValue the text field value to update.
+     * @return the updated text field value.
+     */
     private fun adjustOrderedListsNumbers(
         startParagraphIndex: Int,
         startNumber: Int,
         textFieldValue: TextFieldValue,
+        initialLevelNumberMap: Map<Int, Int> = emptyMap(),
     ): TextFieldValue {
         var newTextFieldValue = textFieldValue
-        var number = startNumber
+        // The map to store the list number of each nested level, level -> number
+        val levelNumberMap = mutableMapOf<Int, Int>()
+        levelNumberMap.putAll(initialLevelNumberMap)
+
         // Update the paragraph type of the paragraphs after the new paragraph
         for (i in (startParagraphIndex)..(richParagraphList.lastIndex)) {
             val currentParagraph = richParagraphList[i]
             val currentParagraphType = currentParagraph.type
-            if (currentParagraphType is OrderedList) {
-                newTextFieldValue = updateParagraphType(
-                    paragraph = currentParagraph,
-                    newType = OrderedList(
-                        number = number,
-                        initialIndent = config.orderedListIndent,
-                        startTextSpanStyle = currentParagraphType.startTextSpanStyle,
-                        startTextWidth = currentParagraphType.startTextWidth,
-                        initialNestedLevel = currentParagraphType.nestedLevel
-                    ),
-                    textFieldValue = newTextFieldValue,
-                )
-            } else break
-            number++
+
+            if (currentParagraphType !is ConfigurableNestedLevel)
+                break
+
+            levelNumberMap.keys.toList().fastForEach { level ->
+                if (level > currentParagraphType.nestedLevel)
+                    levelNumberMap.remove(level)
+            }
+
+            if (currentParagraphType is UnorderedList) {
+                levelNumberMap[currentParagraphType.nestedLevel] = 0
+                continue
+            }
+
+            if (currentParagraphType !is OrderedList)
+                break
+
+            val currentNumber =
+                if (i == startParagraphIndex)
+                    startNumber
+                else
+                    levelNumberMap[currentParagraphType.nestedLevel]
+                        ?.plus(1)
+                        ?: currentParagraphType.number
+
+            levelNumberMap[currentParagraphType.nestedLevel] = currentNumber
+
+            newTextFieldValue = updateParagraphType(
+                paragraph = currentParagraph,
+                newType = OrderedList(
+                    number = currentNumber,
+                    initialIndent = config.orderedListIndent,
+                    startTextSpanStyle = currentParagraphType.startTextSpanStyle,
+                    startTextWidth = currentParagraphType.startTextWidth,
+                    initialNestedLevel = currentParagraphType.nestedLevel
+                ),
+                textFieldValue = newTextFieldValue,
+            )
         }
+
         return newTextFieldValue
     }
 
@@ -1815,13 +2112,40 @@ public class RichTextState internal constructor(
         startParagraphIndex: Int,
         endParagraphIndex: Int,
     ) {
+        // The map to store the list number of each nested level, level -> number
+        val levelNumberMap = mutableMapOf<Int, Int>()
+        val startParagraph = richParagraphList.getOrNull(startParagraphIndex)
+        val startParagraphType = startParagraph?.type
+        if (startParagraphType is OrderedList)
+            levelNumberMap[startParagraphType.nestedLevel] = startParagraphType.number
+
         // Update the paragraph type of the paragraphs after the new paragraph
         for (i in (startParagraphIndex + 1)..richParagraphList.lastIndex) {
             val currentParagraph = richParagraphList[i]
             val currentParagraphType = currentParagraph.type
+
+            if (currentParagraphType is ConfigurableNestedLevel) {
+                // Clear the completed nested levels
+                levelNumberMap.keys.toList().fastForEach { level ->
+                    if (level > currentParagraphType.nestedLevel)
+                        levelNumberMap.remove(level)
+                }
+            } else {
+                // Clear the map if the current paragraph is not a list
+                levelNumberMap.clear()
+            }
+
+            // Remove current nested level from map if the current paragraph is an unordered list
+            if (currentParagraphType is UnorderedList)
+                levelNumberMap.remove(currentParagraphType.nestedLevel)
+
             if (currentParagraphType is OrderedList) {
-                val selectionNestedLevel = currentParagraphType.nestedLevel
-                val number = getCurrentOrderedListNumber(i - 1, selectionNestedLevel)
+                val number =
+                    levelNumberMap[currentParagraphType.nestedLevel]
+                        ?.plus(1)
+                        ?: currentParagraphType.number
+
+                levelNumberMap[currentParagraphType.nestedLevel] = number
 
                 tempTextFieldValue = updateParagraphType(
                     paragraph = currentParagraph,
@@ -1834,7 +2158,10 @@ public class RichTextState internal constructor(
                     ),
                     textFieldValue = tempTextFieldValue,
                 )
-            } else if (i >= endParagraphIndex)
+            }
+
+            // Break if we reach the end paragraph index
+            if (i >= endParagraphIndex)
                 break
         }
     }
@@ -1976,7 +2303,8 @@ public class RichTextState internal constructor(
                     ""
 
             val richSpanFullSpanStyle = richSpan.fullSpanStyle
-            val newSpanStyle = richSpanFullSpanStyle.customMerge(toAddSpanStyle).unmerge(toRemoveSpanStyle)
+            val newSpanStyle =
+                richSpanFullSpanStyle.customMerge(toAddSpanStyle).unmerge(toRemoveSpanStyle)
 
             val startApplyStyleIndex = maxOf(startSelectionIndex, richSpan.textRange.start)
 
@@ -2011,7 +2339,8 @@ public class RichTextState internal constructor(
         afterText: String,
         startIndex: Int,
         richSpanFullSpanStyle: SpanStyle = richSpan.fullSpanStyle,
-        newSpanStyle: SpanStyle = richSpanFullSpanStyle.customMerge(toAddSpanStyle).unmerge(toRemoveSpanStyle),
+        newSpanStyle: SpanStyle = richSpanFullSpanStyle.customMerge(toAddSpanStyle)
+            .unmerge(toRemoveSpanStyle),
         newRichSpanStyle: RichSpanStyle =
             when {
                 toAddRichSpanStyle !is RichSpanStyle.Default ->
@@ -2027,7 +2356,9 @@ public class RichTextState internal constructor(
         if (richSpanFullSpanStyle == newSpanStyle && newRichSpanStyle::class == richSpan.richSpanStyle::class) return
 
         if (
-            (toRemoveSpanStyle == SpanStyle() || !richSpanFullSpanStyle.isSpecifiedFieldsEquals(toRemoveSpanStyle)) &&
+            (toRemoveSpanStyle == SpanStyle() || !richSpanFullSpanStyle.isSpecifiedFieldsEquals(
+                toRemoveSpanStyle
+            )) &&
             (toRemoveRichSpanStyleKClass == RichSpanStyle.Default::class || newRichSpanStyle::class == richSpan.richSpanStyle::class)
         ) {
             applyStyleToRichSpan(
@@ -2098,12 +2429,14 @@ public class RichTextState internal constructor(
                     startIndex,
                     startIndex + middleText.length
                 ),
-                spanStyle = SpanStyle(textDecoration = fullSpanStyle.textDecoration).customMerge(toAddSpanStyle),
+                spanStyle = SpanStyle(textDecoration = fullSpanStyle.textDecoration).customMerge(
+                    toAddSpanStyle
+                ),
                 richSpanStyle =
-                if (toAddRichSpanStyle !is RichSpanStyle.Default)
-                    toAddRichSpanStyle
-                else
-                    richSpan.richSpanStyle,
+                    if (toAddRichSpanStyle !is RichSpanStyle.Default)
+                        toAddRichSpanStyle
+                    else
+                        richSpan.richSpanStyle,
             )
 
         val parent = richSpan.parent
@@ -2169,7 +2502,8 @@ public class RichTextState internal constructor(
                 afterRichSpan.parent = richSpan.parent
 
                 if (!isRichSpanStylingEmpty) {
-                    afterRichSpan.spanStyle = richSpan.spanStyle.customMerge(afterRichSpan.spanStyle)
+                    afterRichSpan.spanStyle =
+                        richSpan.spanStyle.customMerge(afterRichSpan.spanStyle)
                     if (richSpan.richSpanStyle !is RichSpanStyle.Default && afterRichSpan.richSpanStyle is RichSpanStyle.Default)
                         afterRichSpan.richSpanStyle = richSpan.richSpanStyle
                 }
@@ -2297,7 +2631,8 @@ public class RichTextState internal constructor(
                         }
 
                         // Merge RichSpan span style with parent RichSpan span style.
-                        childRichSpan.spanStyle = currentRichSpanFullSpanStyle.merge(childRichSpan.spanStyle)
+                        childRichSpan.spanStyle =
+                            currentRichSpanFullSpanStyle.merge(childRichSpan.spanStyle)
 
                         // Lookup for RichSpan with the same span style and merge them to optimize the RichSpan tree.
                         val lastChild = toShiftRichSpanList.lastOrNull()
@@ -2448,7 +2783,8 @@ public class RichTextState internal constructor(
                 richSpan.size == 1
             ) {
                 activeRichSpan.text = firstRichSpan.text
-                activeRichSpan.spanStyle = richSpan.first().spanStyle.customMerge(firstRichSpan.spanStyle)
+                activeRichSpan.spanStyle =
+                    richSpan.first().spanStyle.customMerge(firstRichSpan.spanStyle)
                 activeRichSpan.children.clear()
                 activeRichSpan.children.addAll(firstRichSpan.children)
             }
@@ -2612,7 +2948,8 @@ public class RichTextState internal constructor(
         var currentRichSpan: RichSpan = richSpan
 
         val textStartIndex = startIndex - richSpan.textRange.min
-        val beforeText = if (textStartIndex > 0) richSpan.text.substring(0, textStartIndex) else "" // + ' '
+        val beforeText =
+            if (textStartIndex > 0) richSpan.text.substring(0, textStartIndex) else "" // + ' '
         val afterText = richSpan.text.substring(textStartIndex + 1)
 
         richSpan.text = beforeText
@@ -2775,6 +3112,11 @@ public class RichTextState internal constructor(
             currentAppliedParagraphStyle = richParagraph?.paragraphStyle
                 ?: richParagraphList.firstOrNull()?.paragraphStyle
                         ?: RichParagraph.DefaultParagraphStyle
+            isUnorderedList = richParagraph?.type is UnorderedList
+            isOrderedList = richParagraph?.type is OrderedList
+            isList = isUnorderedList || isOrderedList
+            canIncreaseListNestedLevel = richParagraph?.let { canIncreaseListNestedLevel(listOf(it)) } == true
+            canDecreaseListNestedLevel = richParagraph?.let { canDecreaseListNestedLevel(listOf(it)) } == true
         } else {
             val richParagraphList = getRichParagraphListByTextRange(selection)
 
@@ -2784,6 +3126,11 @@ public class RichTextState internal constructor(
             currentAppliedParagraphStyle = richParagraphList
                 .getCommonStyle()
                 ?: ParagraphStyle()
+            isUnorderedList = richParagraphList.all { it.type is UnorderedList }
+            isOrderedList = richParagraphList.all { it.type is OrderedList }
+            isList = richParagraphList.all { it.type is UnorderedList || it.type is OrderedList }
+            canIncreaseListNestedLevel = canIncreaseListNestedLevel(richParagraphList)
+            canDecreaseListNestedLevel = canDecreaseListNestedLevel(richParagraphList)
         }
     }
 
@@ -2964,7 +3311,7 @@ public class RichTextState internal constructor(
         val nextParagraph = richParagraphList.getOrNull(index + 1)
         val nextParagraphStart =
             if (nextParagraph == null)
-                    null
+                null
             else
                 (nextParagraph.getFirstNonEmptyChild() ?: nextParagraph.type.startRichSpan)
                     .textRange.min.minus(nextParagraph.type.startText.length)
@@ -2976,7 +3323,10 @@ public class RichTextState internal constructor(
         ) {
             updateTextFieldValue(
                 textFieldValue.copy(
-                    selection = TextRange((selection.min - 1).coerceAtLeast(0), (selection.min - 1).coerceAtLeast(0))
+                    selection = TextRange(
+                        (selection.min - 1).coerceAtLeast(0),
+                        (selection.min - 1).coerceAtLeast(0)
+                    )
                 )
             )
         } else if (
@@ -2987,7 +3337,10 @@ public class RichTextState internal constructor(
         ) {
             updateTextFieldValue(
                 textFieldValue.copy(
-                    selection = TextRange((selection.min + 1).coerceAtMost(textLength - 1), (selection.min + 1).coerceAtMost(textLength - 1))
+                    selection = TextRange(
+                        (selection.min + 1).coerceAtMost(textLength - 1),
+                        (selection.min + 1).coerceAtMost(textLength - 1)
+                    )
                 )
             )
         } else if (newSelection != null) {
@@ -3049,7 +3402,7 @@ public class RichTextState internal constructor(
      * @return A list of [RichParagraph]s that contains a part of the given [searchTextRange],
      * or an empty list if no such [RichParagraph] exists.
      */
-    private fun getRichParagraphListByTextRange(searchTextRange: TextRange): List<RichParagraph> {
+    internal fun getRichParagraphListByTextRange(searchTextRange: TextRange): List<RichParagraph> {
         if (singleParagraphMode) return richParagraphList.toList()
 
         var index = 0
@@ -3113,7 +3466,7 @@ public class RichTextState internal constructor(
      * @param textIndex The text index to search for.
      * @return The [RichSpan] that contains the given [textIndex], or null if no such [RichSpan] exists.
      */
-    private fun getRichSpanByTextIndex(
+    internal fun getRichSpanByTextIndex(
         textIndex: Int,
         ignoreCustomFiltering: Boolean = false,
     ): RichSpan? {
@@ -3256,7 +3609,8 @@ public class RichTextState internal constructor(
                 withStyle(richParagraph.paragraphStyle.merge(richParagraph.type.getStyle(config))) {
                     append(richParagraph.type.startText)
                     val richParagraphStartTextLength = richParagraph.type.startText.length
-                    richParagraph.type.startRichSpan.textRange = TextRange(index, index + richParagraphStartTextLength)
+                    richParagraph.type.startRichSpan.textRange =
+                        TextRange(index, index + richParagraphStartTextLength)
                     index += richParagraphStartTextLength
                     withStyle(RichSpanStyle.DefaultSpanStyle) {
                         index = append(
@@ -3309,14 +3663,54 @@ public class RichTextState internal constructor(
     }
 
     private fun checkParagraphsType() {
+        tempTextFieldValue = textFieldValue
+
+        // Todo: It's not the best way to set start text span style, try to set it from parser
         var orderedListStartTextSpanStyle = SpanStyle()
-        richParagraphList.forEachIndexed { index,  richParagraph ->
+
+        val levelNumberMap = hashMapOf<Int, Int>()
+
+        richParagraphList.fastForEachIndexed { index, richParagraph ->
             val type = richParagraph.type
+
+            if (type is ConfigurableNestedLevel) {
+                // Clear the completed nested levels
+                levelNumberMap.keys.toList().fastForEach { level ->
+                    if (level > type.nestedLevel)
+                        levelNumberMap.remove(level)
+                }
+            } else {
+                // Clear the map if the current paragraph is not a list
+                levelNumberMap.clear()
+            }
+
+            // Remove current nested level from map if the current paragraph is an unordered list
+            if (type is UnorderedList)
+                levelNumberMap.remove(type.nestedLevel)
+
             if (type is OrderedList) {
-                val orderedListNumber = getCurrentOrderedListNumber(index - 1, type.nestedLevel)
+                val orderedListNumber =
+                    levelNumberMap[type.nestedLevel]
+                        ?.plus(1)
+                        ?: 1
+
+                levelNumberMap[type.nestedLevel] = orderedListNumber
 
                 if (orderedListNumber == 1)
-                    orderedListStartTextSpanStyle = richParagraph.getFirstNonEmptyChild()?.spanStyle ?: SpanStyle()
+                    orderedListStartTextSpanStyle =
+                        richParagraph.getFirstNonEmptyChild()?.spanStyle ?: SpanStyle()
+
+                tempTextFieldValue = updateParagraphType(
+                    paragraph = richParagraph,
+                    newType = OrderedList(
+                        number = orderedListNumber,
+                        initialIndent = config.orderedListIndent,
+                        startTextSpanStyle = orderedListStartTextSpanStyle,
+                        startTextWidth = type.startTextWidth,
+                        initialNestedLevel = type.nestedLevel
+                    ),
+                    textFieldValue = tempTextFieldValue,
+                )
 
                 type.number = orderedListNumber
                 type.startTextSpanStyle = orderedListStartTextSpanStyle
@@ -3324,6 +3718,8 @@ public class RichTextState internal constructor(
                 orderedListStartTextSpanStyle = SpanStyle()
             }
         }
+
+        updateTextFieldValue()
     }
 
     /**

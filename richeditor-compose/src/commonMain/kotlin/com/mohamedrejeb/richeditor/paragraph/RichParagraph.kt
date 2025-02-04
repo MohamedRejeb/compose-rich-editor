@@ -25,7 +25,6 @@ internal class RichParagraph(
         textIndex: Int,
         offset: Int = 0,
         ignoreCustomFiltering: Boolean = false,
-        returnFirstIfEmpty: Boolean = false,
     ): Pair<Int, RichSpan?> {
         var index = offset
 
@@ -65,8 +64,8 @@ internal class RichParagraph(
                 index = result.first
         }
 
-        if (returnFirstIfEmpty && index == textIndex)
-            return index to getFirstNonEmptyChild()
+//        if (index == textIndex)
+//            return index to getLastNonEmptyChild()
 
         return index to null
     }
@@ -206,6 +205,20 @@ internal class RichParagraph(
         }
 
         return firstChild
+    }
+
+    fun getLastNonEmptyChild(): RichSpan? {
+        for (i in children.lastIndex downTo 0) {
+            val richSpan = children[i]
+            if (richSpan.text.isNotEmpty())
+                return richSpan
+
+            val result = richSpan.getLastNonEmptyChild()
+            if (result != null)
+                return result
+        }
+
+        return null
     }
 
     /**

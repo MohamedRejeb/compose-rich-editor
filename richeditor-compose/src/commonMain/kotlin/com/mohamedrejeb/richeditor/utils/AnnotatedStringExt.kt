@@ -86,11 +86,19 @@ internal fun AnnotatedString.Builder.appendRichSpan(
     if (
         parent != null &&
         parent.text.isEmpty() &&
-        richSpanList.size == 1
+        richSpanList.size == 1 &&
+        (parent.richSpanStyle is RichSpanStyle.Default || richSpanList.first().richSpanStyle is RichSpanStyle.Default)
     ) {
         val firstChild = richSpanList.first()
+
+        val richSpanStyle =
+            if (firstChild.richSpanStyle !is RichSpanStyle.Default)
+                firstChild.richSpanStyle
+            else
+                parent.richSpanStyle
+
         parent.spanStyle = parent.spanStyle.merge(firstChild.spanStyle)
-        parent.richSpanStyle = firstChild.richSpanStyle
+        parent.richSpanStyle = richSpanStyle
         parent.text = firstChild.text
         parent.textRange = firstChild.textRange
         parent.children.clear()

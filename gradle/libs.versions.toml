@@ -16,7 +16,7 @@ activity-compose = "1.10.0"
 voyager = "1.1.0-beta03"
 richeditor = "1.0.0-rc10"
 coroutines = "1.10.1"
-ktor = "3.0.3"
+ktor = "3.1.0"
 android-minSdk = "21"
 android-compileSdk = "34"
 

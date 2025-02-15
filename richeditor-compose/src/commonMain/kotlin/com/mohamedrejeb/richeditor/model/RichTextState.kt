@@ -31,6 +31,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.reflect.KClass
 
 @Composable
@@ -1173,9 +1174,6 @@ public class RichTextState internal constructor(
             processedParagraphCount++
         }
 
-        println("levelNumberMap: $levelNumberMap")
-        println("startNumber: ${levelNumberMap[startParagraphNestedLevel - 1]}")
-
         // Adjust ordered list numbers
         val newTextFieldValue = adjustOrderedListsNumbers(
             startParagraphIndex = startParagraphIndex,
@@ -1773,8 +1771,6 @@ public class RichTextState internal constructor(
 
         val removeRange = TextRange(minRemoveIndex, maxRemoveIndex)
 
-        println("minRemoveIndex: $minRemoveIndex")
-
         val minRichSpan = getRichSpanByTextIndex(textIndex = minRemoveIndex, true) ?: return
         val maxRichSpan = getRichSpanByTextIndex(textIndex = maxRemoveIndex - 1, true) ?: return
 
@@ -1864,14 +1860,18 @@ public class RichTextState internal constructor(
                 if (isMaxParagraphEmpty) {
                     // Remove the max paragraph if it's empty
                     richParagraphList.remove(maxRichSpan.paragraph)
-                } else if (isMinParagraphEmpty) {
+                }
+
+                if (isMinParagraphEmpty) {
                     // Set the min paragraph type to the max paragraph type
                     // Since the max paragraph is going to take the min paragraph's place
                     maxRichSpan.paragraph.type = minRichSpan.paragraph.type
 
                     // Remove the min paragraph if it's empty
                     richParagraphList.remove(minRichSpan.paragraph)
-                } else {
+                }
+
+                if (!isMinParagraphEmpty && !isMaxParagraphEmpty) {
                     // Merge the two paragraphs if they are not empty
                     mergeTwoRichParagraphs(
                         firstParagraph = minRichSpan.paragraph,
@@ -2088,7 +2088,12 @@ public class RichTextState internal constructor(
                 else
                     levelNumberMap[currentParagraphType.nestedLevel]
                         ?.plus(1)
-                        ?: currentParagraphType.number
+                        ?: run {
+                            if (levelNumberMap.containsKey(currentParagraphType.nestedLevel - 1))
+                                1
+                            else
+                                currentParagraphType.number
+                        }
 
             levelNumberMap[currentParagraphType.nestedLevel] = currentNumber
 

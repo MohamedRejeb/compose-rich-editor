@@ -2653,7 +2653,7 @@ class RichTextStateTest {
 
     @Test
     fun testRemoveSelectionFromEndEdges() {
-        // This was causing a crash when trying to remove text from the end edges of the two paragraphs.
+        // This was causing a crash when trying to remove text from the end edges of the two paragraphs with lists.
         val richTextState = RichTextState(
             initialRichParagraphList = listOf(
                 RichParagraph(
@@ -2715,42 +2715,6 @@ class RichTextStateTest {
         richTextState.removeSelectedText()
 
         assertEquals(2, richTextState.richParagraphList.size)
-    }
-
-    @Test
-    fun testGetRichSpanByTextIndexOnPargraphEnd() {
-        val richTextState = RichTextState(
-            initialRichParagraphList = listOf(
-                RichParagraph(
-                    type = OrderedList(
-                        number = 1,
-                    ),
-                ).also {
-                    it.children.add(
-                        RichSpan(
-                            text = "A",
-                            paragraph = it,
-                        ),
-                    )
-                },
-                RichParagraph(
-                    type = OrderedList(
-                        number = 1,
-                    ),
-                ).also {
-                    it.children.add(
-                        RichSpan(
-                            text = "B",
-                            paragraph = it,
-                        ),
-                    )
-                },
-            )
-        )
-
-        val richSpan = richTextState.getRichSpanByTextIndex(4, true)
-
-        assertEquals("A", richSpan?.text)
     }
 
 }

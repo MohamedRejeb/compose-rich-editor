@@ -47,8 +47,33 @@ public interface OrderedListStyleType {
     /**
      * Default decimal numbers style (1, 2, 3, ...)
      */
-    public object Decimal: OrderedListStyleType {
+    public object Decimal : OrderedListStyleType {
         override fun format(number: Int, listLevel: Int): String = number.toString()
+    }
+
+    /**
+     * Arabic-Indic numbers style (٠, ١, ٢, ...)
+     */
+    public object ArabicIndic : OrderedListStyleType {
+        override fun format(number: Int, listLevel: Int): String =
+            number
+                .toString()
+                .map { ch ->
+                    when (ch) {
+                        '0' -> '٠'
+                        '1' -> '١'
+                        '2' -> '٢'
+                        '3' -> '٣'
+                        '4' -> '٤'
+                        '5' -> '٥'
+                        '6' -> '٦'
+                        '7' -> '٧'
+                        '8' -> '٨'
+                        '9' -> '٩'
+                        else -> ch
+                    }
+                }
+                .joinToString("")
     }
 
     /**
@@ -65,7 +90,7 @@ public interface OrderedListStyleType {
     /**
      * Uppercase letters style (A, B, C, ...)
      */
-    public object UpperAlpha: OrderedListStyleType {
+    public object UpperAlpha : OrderedListStyleType {
         override fun format(number: Int, listLevel: Int): String =
             formatToAlpha(
                 number = number,
@@ -76,7 +101,7 @@ public interface OrderedListStyleType {
     /**
      * Lowercase Roman numerals style (i, ii, iii, ...)
      */
-    public object LowerRoman: OrderedListStyleType {
+    public object LowerRoman : OrderedListStyleType {
         private val romanNumerals = arrayOf(
             "m" to 1000,
             "cm" to 900,
@@ -104,7 +129,7 @@ public interface OrderedListStyleType {
     /**
      * Uppercase Roman numerals style (I, II, III, ...)
      */
-    public object UpperRoman: OrderedListStyleType {
+    public object UpperRoman : OrderedListStyleType {
         private val romanNumerals = arrayOf(
             "M" to 1000,
             "CM" to 900,

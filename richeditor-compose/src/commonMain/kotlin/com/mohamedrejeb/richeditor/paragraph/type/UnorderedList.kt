@@ -1,7 +1,6 @@
 package com.mohamedrejeb.richeditor.paragraph.type
 
 import androidx.compose.ui.text.ParagraphStyle
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.TextUnit
@@ -16,23 +15,23 @@ import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 internal class UnorderedList private constructor(
     initialIndent: Int = DefaultListIndent,
     startTextWidth: TextUnit = 0.sp,
-    initialNestedLevel: Int = 1,
+    initialLevel: Int = 1,
     initialStyleType: UnorderedListStyleType = DefaultUnorderedListStyleType,
-): ParagraphType, ConfigurableStartTextWidth, ConfigurableNestedLevel {
+): ParagraphType, ConfigurableStartTextWidth, ConfigurableListLevel {
 
     constructor(
-        initialNestedLevel: Int = 1,
+        initialLevel: Int = 1,
     ): this(
         initialIndent = DefaultListIndent,
-        initialNestedLevel = initialNestedLevel,
+        initialLevel = initialLevel,
     )
 
     constructor(
         config: RichTextConfig,
-        initialNestedLevel: Int = 1,
+        initialLevel: Int = 1,
     ): this(
         initialIndent = config.unorderedListIndent,
-        initialNestedLevel = initialNestedLevel,
+        initialLevel = initialLevel,
         initialStyleType = config.unorderedListStyleType,
     )
 
@@ -48,7 +47,7 @@ internal class UnorderedList private constructor(
             style = getNewParagraphStyle()
         }
 
-    override var nestedLevel = initialNestedLevel
+    override var level = initialLevel
         set(value) {
             field = value
             style = getNewParagraphStyle()
@@ -79,8 +78,8 @@ internal class UnorderedList private constructor(
     private fun getNewParagraphStyle() =
         ParagraphStyle(
             textIndent = TextIndent(
-                firstLine = (indent * nestedLevel).sp,
-                restLine = ((indent * nestedLevel) + startTextWidth.value).sp
+                firstLine = (indent * level).sp,
+                restLine = ((indent * level) + startTextWidth.value).sp
             )
         )
 
@@ -91,7 +90,7 @@ internal class UnorderedList private constructor(
     @OptIn(ExperimentalRichTextApi::class)
     private fun getNewStartRichSpan(textRange: TextRange = TextRange(0)): RichSpan {
         val prefixIndex =
-            (nestedLevel - 1).coerceIn(styleType.prefixes.indices)
+            (level - 1).coerceIn(styleType.prefixes.indices)
 
         val prefix = styleType.prefixes
             .getOrNull(prefixIndex)
@@ -113,7 +112,7 @@ internal class UnorderedList private constructor(
         UnorderedList(
             initialIndent = indent,
             startTextWidth = startTextWidth,
-            initialNestedLevel = nestedLevel,
+            initialLevel = level,
             initialStyleType = styleType,
         )
 
@@ -121,7 +120,7 @@ internal class UnorderedList private constructor(
         UnorderedList(
             initialIndent = indent,
             startTextWidth = startTextWidth,
-            initialNestedLevel = nestedLevel,
+            initialLevel = level,
             initialStyleType = styleType,
         )
 
@@ -131,7 +130,7 @@ internal class UnorderedList private constructor(
 
         if (indent != other.indent) return false
         if (startTextWidth != other.startTextWidth) return false
-        if (nestedLevel != other.nestedLevel) return false
+        if (level != other.level) return false
         if (styleType != other.styleType) return false
 
         return true
@@ -140,7 +139,7 @@ internal class UnorderedList private constructor(
     override fun hashCode(): Int {
         var result = indent
         result = 31 * result + startTextWidth.hashCode()
-        result = 31 * result + nestedLevel
+        result = 31 * result + level
         result = 31 * result + styleType.hashCode()
         return result
     }

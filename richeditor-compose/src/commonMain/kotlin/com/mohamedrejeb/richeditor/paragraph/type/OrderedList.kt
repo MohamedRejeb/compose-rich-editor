@@ -1,7 +1,6 @@
 package com.mohamedrejeb.richeditor.paragraph.type
 
 import androidx.compose.ui.text.ParagraphStyle
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.TextUnit
@@ -17,29 +16,29 @@ internal class OrderedList private constructor(
     number: Int,
     initialIndent: Int = DefaultListIndent,
     startTextWidth: TextUnit = 0.sp,
-    initialNestedLevel: Int = 1,
+    initialLevel: Int = 1,
     initialStyleType: OrderedListStyleType = DefaultOrderedListStyleType,
-) : ParagraphType, ConfigurableStartTextWidth, ConfigurableNestedLevel {
+) : ParagraphType, ConfigurableStartTextWidth, ConfigurableListLevel {
 
     constructor(
         number: Int,
-        initialNestedLevel: Int = 1,
+        initialLevel: Int = 1,
     ) : this(
         number = number,
         initialIndent = DefaultListIndent,
-        initialNestedLevel = initialNestedLevel,
+        initialLevel = initialLevel,
     )
 
     constructor(
         number: Int,
         config: RichTextConfig,
         startTextWidth: TextUnit = 0.sp,
-        initialNestedLevel: Int = 1,
+        initialLevel: Int = 1,
     ) : this(
         number = number,
         initialIndent = config.orderedListIndent,
         startTextWidth = startTextWidth,
-        initialNestedLevel = initialNestedLevel,
+        initialLevel = initialLevel,
         initialStyleType = config.orderedListStyleType,
     )
 
@@ -61,7 +60,7 @@ internal class OrderedList private constructor(
             style = getNewParagraphStyle()
         }
 
-    override var nestedLevel = initialNestedLevel
+    override var level = initialLevel
         set(value) {
             field = value
             style = getNewParagraphStyle()
@@ -91,8 +90,8 @@ internal class OrderedList private constructor(
     private fun getNewParagraphStyle() =
         ParagraphStyle(
             textIndent = TextIndent(
-                firstLine = ((indent * nestedLevel) - startTextWidth.value).sp,
-                restLine = (indent * nestedLevel).sp
+                firstLine = ((indent * level) - startTextWidth.value).sp,
+                restLine = (indent * level).sp
             )
         )
 
@@ -101,7 +100,7 @@ internal class OrderedList private constructor(
 
     @OptIn(ExperimentalRichTextApi::class)
     private fun getNewStartRichSpan(textRange: TextRange = TextRange(0)): RichSpan {
-        val text = styleType.format(number, nestedLevel) + styleType.getSuffix(nestedLevel)
+        val text = styleType.format(number, level) + styleType.getSuffix(level)
 
         return RichSpan(
             paragraph = RichParagraph(type = this),
@@ -118,7 +117,7 @@ internal class OrderedList private constructor(
             number = number + 1,
             initialIndent = indent,
             startTextWidth = startTextWidth,
-            initialNestedLevel = nestedLevel,
+            initialLevel = level,
             initialStyleType = styleType,
         )
 
@@ -127,7 +126,7 @@ internal class OrderedList private constructor(
             number = number,
             initialIndent = indent,
             startTextWidth = startTextWidth,
-            initialNestedLevel = nestedLevel,
+            initialLevel = level,
             initialStyleType = styleType,
         )
 
@@ -138,7 +137,7 @@ internal class OrderedList private constructor(
         if (number != other.number) return false
         if (indent != other.indent) return false
         if (startTextWidth != other.startTextWidth) return false
-        if (nestedLevel != other.nestedLevel) return false
+        if (level != other.level) return false
         if (styleType != other.styleType) return false
 
         return true
@@ -149,7 +148,7 @@ internal class OrderedList private constructor(
         result = 31 * result + number
         result = 31 * result + indent
         result = 31 * result + startTextWidth.hashCode()
-        result = 31 * result + nestedLevel
+        result = 31 * result + level
         result = 31 * result + styleType.hashCode()
         return result
     }

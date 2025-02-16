@@ -249,9 +249,9 @@ fun SlackDemoPanel(
         item {
             SlackDemoPanelButton(
                 onClick = {
-                    state.increaseListNestedLevel()
+                    state.increaseListLevel()
                 },
-                enabled = state.canIncreaseListNestedLevel,
+                enabled = state.canIncreaseListLevel,
                 icon = Icons.Outlined.TextIncrease,
             )
         }
@@ -259,9 +259,9 @@ fun SlackDemoPanel(
         item {
             SlackDemoPanelButton(
                 onClick = {
-                    state.decreaseListNestedLevel()
+                    state.decreaseListLevel()
                 },
-                enabled = state.canDecreaseListNestedLevel,
+                enabled = state.canDecreaseListLevel,
                 icon = Icons.Outlined.TextDecrease,
             )
         }

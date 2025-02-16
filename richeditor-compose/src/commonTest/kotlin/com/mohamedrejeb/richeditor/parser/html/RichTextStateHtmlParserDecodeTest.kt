@@ -348,7 +348,7 @@ class RichTextStateHtmlParserDecodeTest {
     }
 
     @Test
-    fun testDecodeListsWithDifferentNestedLevels() {
+    fun testDecodeListsWithDifferentLevels() {
         val expectedHtml = """
             <ol>
                 <li>F</li>
@@ -373,7 +373,7 @@ class RichTextStateHtmlParserDecodeTest {
                 RichParagraph(
                     type = OrderedList(
                         number = 1,
-                        initialNestedLevel = 1,
+                        initialLevel = 1,
                     )
                 ).also {
                     it.children.add(
@@ -386,7 +386,7 @@ class RichTextStateHtmlParserDecodeTest {
                 RichParagraph(
                     type = OrderedList(
                         number = 1,
-                        initialNestedLevel = 2,
+                        initialLevel = 2,
                     )
                 ).also {
                     it.children.add(
@@ -399,7 +399,7 @@ class RichTextStateHtmlParserDecodeTest {
                 RichParagraph(
                     type = OrderedList(
                         number = 2,
-                        initialNestedLevel = 2,
+                        initialLevel = 2,
                     )
                 ).also {
                     it.children.add(
@@ -411,7 +411,7 @@ class RichTextStateHtmlParserDecodeTest {
                 },
                 RichParagraph(
                     type = UnorderedList(
-                        initialNestedLevel = 2,
+                        initialLevel = 2,
                     )
                 ).also {
                     it.children.add(
@@ -423,7 +423,7 @@ class RichTextStateHtmlParserDecodeTest {
                 },
                 RichParagraph(
                     type = UnorderedList(
-                        initialNestedLevel = 2,
+                        initialLevel = 2,
                     )
                 ).also {
                     it.children.add(
@@ -435,7 +435,7 @@ class RichTextStateHtmlParserDecodeTest {
                 },
                 RichParagraph(
                     type = UnorderedList(
-                        initialNestedLevel = 3,
+                        initialLevel = 3,
                     )
                 ).also {
                     it.children.add(
@@ -447,7 +447,7 @@ class RichTextStateHtmlParserDecodeTest {
                 },
                 RichParagraph(
                     type = UnorderedList(
-                        initialNestedLevel = 1
+                        initialLevel = 1
                     )
                 ).also {
                     it.children.add(
@@ -460,7 +460,7 @@ class RichTextStateHtmlParserDecodeTest {
                 RichParagraph(
                     type = OrderedList(
                         number = 1,
-                        initialNestedLevel = 2,
+                        initialLevel = 2,
                     )
                 ).also {
                     it.children.add(

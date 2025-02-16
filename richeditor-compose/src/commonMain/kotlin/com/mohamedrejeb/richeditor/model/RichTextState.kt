@@ -40,7 +40,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import kotlin.math.max
-import kotlin.math.min
 import kotlin.reflect.KClass
 
 @Composable
@@ -214,9 +213,9 @@ public class RichTextState internal constructor(
         private set
     public var isList: Boolean by mutableStateOf(isUnorderedList || isOrderedList)
         private set
-    public var canIncreaseListNestedLevel: Boolean by mutableStateOf(false)
+    public var canIncreaseListLevel: Boolean by mutableStateOf(false)
         private set
-    public var canDecreaseListNestedLevel: Boolean by mutableStateOf(false)
+    public var canDecreaseListLevel: Boolean by mutableStateOf(false)
         private set
 
     public val config: RichTextConfig = RichTextConfig(
@@ -981,13 +980,13 @@ public class RichTextState internal constructor(
     }
 
     /**
-     * Increase the nested level of the current selected lists.
+     * Increase the level of the current selected lists.
      *
      * If the current selection is not a list, this method does nothing.
      *
      * If multiple paragraphs are selected, they all must be lists.
      */
-    public fun increaseListNestedLevel() {
+    public fun increaseListLevel() {
         if (!isList)
             return
 
@@ -996,15 +995,15 @@ public class RichTextState internal constructor(
         if (paragraphs.isEmpty())
             return
 
-        if (!canIncreaseListNestedLevel(paragraphs))
+        if (!canIncreaseListLevel(paragraphs))
             return
 
-        // Increase list nested level
+        // Increase list level
         val levelNumberMap = mutableMapOf<Int, Int>()
-        var minParagraphNestedLevel = Int.MAX_VALUE
-        var minParagraphNestedLevelOrderedListNumber = -1
+        var minParagraphLevel = Int.MAX_VALUE
+        var minParagraphLevelOrderedListNumber = -1
         var startParagraphIndex = -1
-        var startParagraphNestedLevel = -1
+        var startParagraphLevel = -1
         var endParagraphIndex = -1
         var processedParagraphCount = 0
 
@@ -1018,23 +1017,23 @@ public class RichTextState internal constructor(
             if (startParagraphIndex == -1) {
                 if (paragraph == firstSelectedParagraph) {
                     startParagraphIndex = i
-                    startParagraphNestedLevel =
-                        if (type is ConfigurableNestedLevel)
-                            type.nestedLevel
+                    startParagraphLevel =
+                        if (type is ConfigurableListLevel)
+                            type.level
                         else
                             0
                 } else {
-                    if (type is ConfigurableNestedLevel) {
+                    if (type is ConfigurableListLevel) {
                         levelNumberMap.keys.toList().fastForEach { level ->
-                            if (level > type.nestedLevel)
+                            if (level > type.level)
                                 levelNumberMap.remove(level)
                         }
 
                         if (type is OrderedList)
-                            levelNumberMap[type.nestedLevel] = type.number
+                            levelNumberMap[type.level] = type.number
 
                         if (type is UnorderedList)
-                            levelNumberMap.remove(type.nestedLevel)
+                            levelNumberMap.remove(type.level)
                     } else {
                         levelNumberMap.clear()
                     }
@@ -1045,43 +1044,43 @@ public class RichTextState internal constructor(
 
             if (processedParagraphCount >= paragraphs.size) {
                 if (
-                    type !is ConfigurableNestedLevel ||
-                    type.nestedLevel <= minParagraphNestedLevel
+                    type !is ConfigurableListLevel ||
+                    type.level <= minParagraphLevel
                 ) {
                     endParagraphIndex = i - 1
                     break
                 }
             }
 
-            if (type is ConfigurableNestedLevel) {
-                if (type.nestedLevel <= minParagraphNestedLevel) {
-                    minParagraphNestedLevel = type.nestedLevel
-                    minParagraphNestedLevelOrderedListNumber =
+            if (type is ConfigurableListLevel) {
+                if (type.level <= minParagraphLevel) {
+                    minParagraphLevel = type.level
+                    minParagraphLevelOrderedListNumber =
                         if (type is OrderedList)
                             type.number - 1
                         else
                             -1
                 }
 
-                type.nestedLevel++
+                type.level++
             } else {
-                if (minParagraphNestedLevel != Int.MAX_VALUE && minParagraphNestedLevelOrderedListNumber != -1)
-                    levelNumberMap[minParagraphNestedLevel] = minParagraphNestedLevelOrderedListNumber
+                if (minParagraphLevel != Int.MAX_VALUE && minParagraphLevelOrderedListNumber != -1)
+                    levelNumberMap[minParagraphLevel] = minParagraphLevelOrderedListNumber
 
-                minParagraphNestedLevel = Int.MAX_VALUE
-                minParagraphNestedLevelOrderedListNumber = -1
+                minParagraphLevel = Int.MAX_VALUE
+                minParagraphLevelOrderedListNumber = -1
             }
 
             processedParagraphCount++
         }
 
-        if (minParagraphNestedLevel != Int.MAX_VALUE && minParagraphNestedLevelOrderedListNumber != -1)
-            levelNumberMap[minParagraphNestedLevel] = minParagraphNestedLevelOrderedListNumber
+        if (minParagraphLevel != Int.MAX_VALUE && minParagraphLevelOrderedListNumber != -1)
+            levelNumberMap[minParagraphLevel] = minParagraphLevelOrderedListNumber
 
         // Adjust ordered list numbers
         val newTextFieldValue = adjustOrderedListsNumbers(
             startParagraphIndex = startParagraphIndex,
-            startNumber = levelNumberMap[startParagraphNestedLevel + 1]?.plus(1) ?: 1,
+            startNumber = levelNumberMap[startParagraphLevel + 1]?.plus(1) ?: 1,
             textFieldValue = textFieldValue,
             initialLevelNumberMap = levelNumberMap,
         )
@@ -1092,13 +1091,13 @@ public class RichTextState internal constructor(
     }
 
     /**
-     * Decrease the nested level of the current selected lists.
+     * Decrease the level of the current selected lists.
      *
      * If the current selection is not a list, this method does nothing.
      *
      * If multiple paragraphs are selected, they all must be lists.
      */
-    public fun decreaseListNestedLevel() {
+    public fun decreaseListLevel() {
         if (!isList)
             return
 
@@ -1107,16 +1106,16 @@ public class RichTextState internal constructor(
         if (paragraphs.isEmpty())
             return
 
-        if (!canDecreaseListNestedLevel(paragraphs))
+        if (!canDecreaseListLevel(paragraphs))
             return
 
-        // Decrease list nested level
+        // Decrease list level
         val levelNumberMap = mutableMapOf<Int, Int>()
-        var minParagraphNestedLevel = Int.MAX_VALUE
-        var minParagraphNestedLevelOrderedListNumber = -1
+        var minParagraphLevel = Int.MAX_VALUE
+        var minParagraphLevelOrderedListNumber = -1
         var startParagraphIndex = -1
         var endParagraphIndex = -1
-        var startParagraphNestedLevel = -1
+        var startParagraphLevel = -1
         var processedParagraphCount = 0
 
         val firstSelectedParagraph = paragraphs.first()
@@ -1129,23 +1128,23 @@ public class RichTextState internal constructor(
             if (startParagraphIndex == -1) {
                 if (paragraph == firstSelectedParagraph) {
                     startParagraphIndex = i
-                    startParagraphNestedLevel =
-                        if (type is ConfigurableNestedLevel)
-                            type.nestedLevel
+                    startParagraphLevel =
+                        if (type is ConfigurableListLevel)
+                            type.level
                         else
                             0
                 } else {
-                    if (type is ConfigurableNestedLevel) {
+                    if (type is ConfigurableListLevel) {
                         levelNumberMap.keys.toList().fastForEach { level ->
-                            if (level > type.nestedLevel)
+                            if (level > type.level)
                                 levelNumberMap.remove(level)
                         }
 
                         if (type is OrderedList)
-                            levelNumberMap[type.nestedLevel] = type.number
+                            levelNumberMap[type.level] = type.number
 
                         if (type is UnorderedList)
-                            levelNumberMap.remove(type.nestedLevel)
+                            levelNumberMap.remove(type.level)
                     } else {
                         levelNumberMap.clear()
                     }
@@ -1156,28 +1155,28 @@ public class RichTextState internal constructor(
 
             if (processedParagraphCount >= paragraphs.size) {
                 if (
-                    type !is ConfigurableNestedLevel ||
-                    type.nestedLevel <= minParagraphNestedLevel
+                    type !is ConfigurableListLevel ||
+                    type.level <= minParagraphLevel
                 ) {
                     endParagraphIndex = i - 1
                     break
                 }
             }
 
-            if (type is ConfigurableNestedLevel) {
-                if (type.nestedLevel <= minParagraphNestedLevel) {
-                    minParagraphNestedLevel = type.nestedLevel
-                    minParagraphNestedLevelOrderedListNumber =
+            if (type is ConfigurableListLevel) {
+                if (type.level <= minParagraphLevel) {
+                    minParagraphLevel = type.level
+                    minParagraphLevelOrderedListNumber =
                         if (type is OrderedList)
                             type.number - 1
                         else
                             -1
                 }
 
-                type.nestedLevel = (type.nestedLevel - 1).coerceAtLeast(1)
+                type.level = (type.level - 1).coerceAtLeast(1)
             } else {
-                minParagraphNestedLevel = Int.MAX_VALUE
-                minParagraphNestedLevelOrderedListNumber = -1
+                minParagraphLevel = Int.MAX_VALUE
+                minParagraphLevelOrderedListNumber = -1
             }
 
             processedParagraphCount++
@@ -1186,7 +1185,7 @@ public class RichTextState internal constructor(
         // Adjust ordered list numbers
         val newTextFieldValue = adjustOrderedListsNumbers(
             startParagraphIndex = startParagraphIndex,
-            startNumber = levelNumberMap[startParagraphNestedLevel - 1]?.plus(1) ?: 1,
+            startNumber = levelNumberMap[startParagraphLevel - 1]?.plus(1) ?: 1,
             textFieldValue = textFieldValue,
             initialLevelNumberMap = levelNumberMap,
         )
@@ -1238,15 +1237,15 @@ public class RichTextState internal constructor(
         if (index == -1)
             return
 
-        val nestedLevel =
-            if (paragraphType is ConfigurableNestedLevel)
-                paragraphType.nestedLevel
+        val listLevel =
+            if (paragraphType is ConfigurableListLevel)
+                paragraphType.level
             else
                 1
 
         val newType = UnorderedList(
             config = config,
-            initialNestedLevel = nestedLevel,
+            initialLevel = listLevel,
         )
 
         val newTextFieldValue = adjustOrderedListsNumbers(
@@ -1284,9 +1283,9 @@ public class RichTextState internal constructor(
 
         var orderedListNumber = 1
 
-        val nestedLevel =
-            if (paragraphType is ConfigurableNestedLevel)
-                paragraphType.nestedLevel
+        val listLevel =
+            if (paragraphType is ConfigurableListLevel)
+                paragraphType.level
             else
                 1
 
@@ -1294,16 +1293,16 @@ public class RichTextState internal constructor(
             val prevParagraph = richParagraphList[i]
             val prevParagraphType = prevParagraph.type
 
-            if (prevParagraphType is ConfigurableNestedLevel && prevParagraphType.nestedLevel < nestedLevel)
+            if (prevParagraphType is ConfigurableListLevel && prevParagraphType.level < listLevel)
                 break
 
-            if (prevParagraphType is ConfigurableNestedLevel && prevParagraphType !is OrderedList)
+            if (prevParagraphType is ConfigurableListLevel && prevParagraphType !is OrderedList)
                 continue
 
             if (prevParagraphType !is OrderedList)
                 break
 
-            if (prevParagraphType.nestedLevel > nestedLevel)
+            if (prevParagraphType.level > listLevel)
                 continue
 
             orderedListNumber = prevParagraphType.number + 1
@@ -1316,7 +1315,7 @@ public class RichTextState internal constructor(
         val newType = OrderedList(
             number = orderedListNumber,
             config = config,
-            initialNestedLevel = nestedLevel,
+            initialLevel = listLevel,
         )
 
         val newTextFieldValue = adjustOrderedListsNumbers(
@@ -1349,10 +1348,10 @@ public class RichTextState internal constructor(
     }
 
     /**
-     * Increases and decreases the nested level of the current selected lists when the Tab key is pressed.
+     * Increases and decreases the list level of the current selected lists when the Tab key is pressed.
      *
      * @param event the key event.
-     * @return true if the nested level was increased or decreased, false otherwise.
+     * @return true if the list level was increased or decreased, false otherwise.
      */
     internal fun onPreviewKeyEvent(event: KeyEvent): Boolean {
         if (event.type != KeyEventType.KeyDown)
@@ -1371,10 +1370,10 @@ public class RichTextState internal constructor(
         if (!isList)
             return false
 
-        if (event.isShiftPressed && canDecreaseListNestedLevel())
-            decreaseListNestedLevel()
-        else if (!event.isShiftPressed && canIncreaseListNestedLevel())
-            increaseListNestedLevel()
+        if (event.isShiftPressed && canDecreaseListLevel())
+            decreaseListLevel()
+        else if (!event.isShiftPressed && canIncreaseListLevel())
+            increaseListLevel()
         else
             return false
 
@@ -1382,12 +1381,12 @@ public class RichTextState internal constructor(
     }
 
     /**
-     * Checks weather the list nested level can be increased or not.
+     * Checks weather the list level can be increased or not.
      *
      * @param paragraphs the list of paragraphs to check.
-     * @return true if the list nested level can be increased, false otherwise.
+     * @return true if the list level can be increased, false otherwise.
      */
-    internal fun canIncreaseListNestedLevel(
+    internal fun canIncreaseListLevel(
         paragraphs: List<RichParagraph> = getRichParagraphListByTextRange(selection),
     ): Boolean {
         if (paragraphs.isEmpty())
@@ -1397,30 +1396,30 @@ public class RichTextState internal constructor(
         val firstParagraphType = firstParagraph.type
         val firstParagraphIndex = richParagraphList.indexOf(firstParagraph)
 
-        if (firstParagraphIndex == -1 || firstParagraphType !is ConfigurableNestedLevel)
+        if (firstParagraphIndex == -1 || firstParagraphType !is ConfigurableListLevel)
             return false
 
         val previousParagraph = richParagraphList.getOrNull(firstParagraphIndex - 1)
         val previousParagraphType = previousParagraph?.type
 
-        // The previous paragraph must be a list, otherwise we can't increase the nested level
-        if (previousParagraph == null || previousParagraphType !is ConfigurableNestedLevel)
+        // The previous paragraph must be a list, otherwise we can't increase the list level
+        if (previousParagraph == null || previousParagraphType !is ConfigurableListLevel)
             return false
 
-        // The first paragraph must have the same or lower nested level than the previous one
-        if (firstParagraphType.nestedLevel > previousParagraphType.nestedLevel)
+        // The first paragraph must have the same or lower list level than the previous one
+        if (firstParagraphType.level > previousParagraphType.level)
             return false
 
         paragraphs.fastForEach { paragraph ->
             val paragraphType = paragraph.type
 
-            // All paragraphs must be ConfigurableNestedLevel
-            if (paragraphType !is ConfigurableNestedLevel)
+            // All paragraphs must be ConfigurableListLevel
+            if (paragraphType !is ConfigurableListLevel)
                 return false
 
             // TODO: Maybe in the future we can remove this condition
-            // The paragraph must have the same or higher nested level than the first paragraph
-            if (paragraphType.nestedLevel < firstParagraphType.nestedLevel)
+            // The paragraph must have the same or higher list level than the first paragraph
+            if (paragraphType.level < firstParagraphType.level)
                 return false
         }
 
@@ -1428,12 +1427,12 @@ public class RichTextState internal constructor(
     }
 
     /**
-     * Checks weather the list nested level can be decreased or not.
+     * Checks weather the list level can be decreased or not.
      *
      * @param paragraphs the list of paragraphs to check.
-     * @return true if the list nested level can be decreased, false otherwise.
+     * @return true if the list level can be decreased, false otherwise.
      */
-    internal fun canDecreaseListNestedLevel(
+    internal fun canDecreaseListLevel(
         paragraphs: List<RichParagraph> = getRichParagraphListByTextRange(selection),
     ): Boolean {
         if (paragraphs.isEmpty())
@@ -1442,12 +1441,12 @@ public class RichTextState internal constructor(
         paragraphs.fastForEach { paragraph ->
             val paragraphType = paragraph.type
 
-            // All paragraphs must be ConfigurableNestedLevel
-            if (paragraphType !is ConfigurableNestedLevel)
+            // All paragraphs must be ConfigurableListLevel
+            if (paragraphType !is ConfigurableListLevel)
                 return false
 
-            // The paragraph nested level must be at least 2
-            if (paragraphType.nestedLevel < 2)
+            // The paragraph list level must be at least 2
+            if (paragraphType.level < 2)
                 return false
         }
 
@@ -2099,7 +2098,7 @@ public class RichTextState internal constructor(
         initialLevelNumberMap: Map<Int, Int> = emptyMap(),
     ): TextFieldValue {
         var newTextFieldValue = textFieldValue
-        // The map to store the list number of each nested level, level -> number
+        // The map to store the list number of each list level, level -> number
         val levelNumberMap = mutableMapOf<Int, Int>()
         levelNumberMap.putAll(initialLevelNumberMap)
 
@@ -2108,16 +2107,16 @@ public class RichTextState internal constructor(
             val currentParagraph = richParagraphList[i]
             val currentParagraphType = currentParagraph.type
 
-            if (currentParagraphType !is ConfigurableNestedLevel)
+            if (currentParagraphType !is ConfigurableListLevel)
                 break
 
             levelNumberMap.keys.toList().fastForEach { level ->
-                if (level > currentParagraphType.nestedLevel)
+                if (level > currentParagraphType.level)
                     levelNumberMap.remove(level)
             }
 
             if (currentParagraphType is UnorderedList) {
-                levelNumberMap[currentParagraphType.nestedLevel] = 0
+                levelNumberMap[currentParagraphType.level] = 0
                 continue
             }
 
@@ -2128,16 +2127,16 @@ public class RichTextState internal constructor(
                 if (i == startParagraphIndex)
                     startNumber
                 else
-                    levelNumberMap[currentParagraphType.nestedLevel]
+                    levelNumberMap[currentParagraphType.level]
                         ?.plus(1)
                         ?: run {
-                            if (levelNumberMap.containsKey(currentParagraphType.nestedLevel - 1))
+                            if (levelNumberMap.containsKey(currentParagraphType.level - 1))
                                 1
                             else
                                 currentParagraphType.number
                         }
 
-            levelNumberMap[currentParagraphType.nestedLevel] = currentNumber
+            levelNumberMap[currentParagraphType.level] = currentNumber
 
             newTextFieldValue = updateParagraphType(
                 paragraph = currentParagraph,
@@ -2145,7 +2144,7 @@ public class RichTextState internal constructor(
                     number = currentNumber,
                     config = config,
                     startTextWidth = currentParagraphType.startTextWidth,
-                    initialNestedLevel = currentParagraphType.nestedLevel
+                    initialLevel = currentParagraphType.level
                 ),
                 textFieldValue = newTextFieldValue,
             )
@@ -2158,22 +2157,22 @@ public class RichTextState internal constructor(
         startParagraphIndex: Int,
         endParagraphIndex: Int,
     ) {
-        // The map to store the list number of each nested level, level -> number
+        // The map to store the list number of each list level, level -> number
         val levelNumberMap = mutableMapOf<Int, Int>()
         val startParagraph = richParagraphList.getOrNull(startParagraphIndex)
         val startParagraphType = startParagraph?.type
         if (startParagraphType is OrderedList)
-            levelNumberMap[startParagraphType.nestedLevel] = startParagraphType.number
+            levelNumberMap[startParagraphType.level] = startParagraphType.number
 
         // Update the paragraph type of the paragraphs after the new paragraph
         for (i in (startParagraphIndex + 1)..richParagraphList.lastIndex) {
             val currentParagraph = richParagraphList[i]
             val currentParagraphType = currentParagraph.type
 
-            if (currentParagraphType is ConfigurableNestedLevel) {
-                // Clear the completed nested levels
+            if (currentParagraphType is ConfigurableListLevel) {
+                // Clear the completed list levels
                 levelNumberMap.keys.toList().fastForEach { level ->
-                    if (level > currentParagraphType.nestedLevel)
+                    if (level > currentParagraphType.level)
                         levelNumberMap.remove(level)
                 }
             } else {
@@ -2181,17 +2180,17 @@ public class RichTextState internal constructor(
                 levelNumberMap.clear()
             }
 
-            // Remove current nested level from map if the current paragraph is an unordered list
+            // Remove current list level from map if the current paragraph is an unordered list
             if (currentParagraphType is UnorderedList)
-                levelNumberMap.remove(currentParagraphType.nestedLevel)
+                levelNumberMap.remove(currentParagraphType.level)
 
             if (currentParagraphType is OrderedList) {
                 val number =
-                    levelNumberMap[currentParagraphType.nestedLevel]
+                    levelNumberMap[currentParagraphType.level]
                         ?.plus(1)
                         ?: currentParagraphType.number
 
-                levelNumberMap[currentParagraphType.nestedLevel] = number
+                levelNumberMap[currentParagraphType.level] = number
 
                 tempTextFieldValue = updateParagraphType(
                     paragraph = currentParagraph,
@@ -2199,7 +2198,7 @@ public class RichTextState internal constructor(
                         number = number,
                         config = config,
                         startTextWidth = currentParagraphType.startTextWidth,
-                        initialNestedLevel = currentParagraphType.nestedLevel
+                        initialLevel = currentParagraphType.level
                     ),
                     textFieldValue = tempTextFieldValue,
                 )
@@ -3160,8 +3159,8 @@ public class RichTextState internal constructor(
             isUnorderedList = richParagraph?.type is UnorderedList
             isOrderedList = richParagraph?.type is OrderedList
             isList = isUnorderedList || isOrderedList
-            canIncreaseListNestedLevel = richParagraph?.let { canIncreaseListNestedLevel(listOf(it)) } == true
-            canDecreaseListNestedLevel = richParagraph?.let { canDecreaseListNestedLevel(listOf(it)) } == true
+            canIncreaseListLevel = richParagraph?.let { canIncreaseListLevel(listOf(it)) } == true
+            canDecreaseListLevel = richParagraph?.let { canDecreaseListLevel(listOf(it)) } == true
         } else {
             val richParagraphList = getRichParagraphListByTextRange(selection)
 
@@ -3174,8 +3173,8 @@ public class RichTextState internal constructor(
             isUnorderedList = richParagraphList.all { it.type is UnorderedList }
             isOrderedList = richParagraphList.all { it.type is OrderedList }
             isList = richParagraphList.all { it.type is UnorderedList || it.type is OrderedList }
-            canIncreaseListNestedLevel = canIncreaseListNestedLevel(richParagraphList)
-            canDecreaseListNestedLevel = canDecreaseListNestedLevel(richParagraphList)
+            canIncreaseListLevel = canIncreaseListLevel(richParagraphList)
+            canDecreaseListLevel = canDecreaseListLevel(richParagraphList)
         }
     }
 
@@ -3722,10 +3721,10 @@ public class RichTextState internal constructor(
         richParagraphList.fastForEachIndexed { index, richParagraph ->
             val type = richParagraph.type
 
-            if (type is ConfigurableNestedLevel) {
-                // Clear the completed nested levels
+            if (type is ConfigurableListLevel) {
+                // Clear the completed list levels
                 levelNumberMap.keys.toList().fastForEach { level ->
-                    if (level > type.nestedLevel)
+                    if (level > type.level)
                         levelNumberMap.remove(level)
                 }
             } else {
@@ -3733,17 +3732,17 @@ public class RichTextState internal constructor(
                 levelNumberMap.clear()
             }
 
-            // Remove current nested level from map if the current paragraph is an unordered list
+            // Remove current list level from map if the current paragraph is an unordered list
             if (type is UnorderedList)
-                levelNumberMap.remove(type.nestedLevel)
+                levelNumberMap.remove(type.level)
 
             if (type is OrderedList) {
                 val orderedListNumber =
-                    levelNumberMap[type.nestedLevel]
+                    levelNumberMap[type.level]
                         ?.plus(1)
                         ?: 1
 
-                levelNumberMap[type.nestedLevel] = orderedListNumber
+                levelNumberMap[type.level] = orderedListNumber
 
                 if (orderedListNumber == 1)
                     orderedListStartTextSpanStyle =
@@ -3755,7 +3754,7 @@ public class RichTextState internal constructor(
                         number = orderedListNumber,
                         config = config,
                         startTextWidth = type.startTextWidth,
-                        initialNestedLevel = type.nestedLevel
+                        initialLevel = type.level
                     ),
                     textFieldValue = tempTextFieldValue,
                 )

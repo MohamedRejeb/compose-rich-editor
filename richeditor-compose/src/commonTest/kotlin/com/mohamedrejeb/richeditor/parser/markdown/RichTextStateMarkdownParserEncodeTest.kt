@@ -11,7 +11,6 @@ import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
-import com.mohamedrejeb.richeditor.parser.html.RichTextStateHtmlParser
 import com.mohamedrejeb.richeditor.parser.utils.H1SpanStyle
 import com.mohamedrejeb.richeditor.parser.utils.H2SpanStyle
 import kotlin.test.Test
@@ -531,9 +530,9 @@ class RichTextStateMarkdownParserEncodeTest {
                 i == 1 ||
                 i == 4
             )
-                assertEquals(1, type.nestedLevel)
+                assertEquals(1, type.level)
             else
-                assertEquals(2, type.nestedLevel)
+                assertEquals(2, type.level)
         }
 
         assertEquals("Item1", firstItem.text)

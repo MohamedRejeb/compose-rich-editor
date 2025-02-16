@@ -117,7 +117,7 @@ class OrderedListStyleTypeTest {
     }
 
     @Test
-    fun testMultipleStylesNestedLevelBounds() {
+    fun testMultipleStylesListLevelBounds() {
         val styleType = OrderedListStyleType.Multiple(
             OrderedListStyleType.UpperAlpha,
             OrderedListStyleType.LowerAlpha

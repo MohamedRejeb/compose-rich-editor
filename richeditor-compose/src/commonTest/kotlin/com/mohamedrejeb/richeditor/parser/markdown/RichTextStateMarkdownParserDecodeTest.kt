@@ -379,7 +379,7 @@ class RichTextStateMarkdownParserDecodeTest {
     }
 
     @Test
-    fun testDecodeListsWithDifferentNestedLevels() {
+    fun testDecodeListsWithDifferentLevels() {
         val expectedMarkdown = """
             1. F
                 1. FFO
@@ -397,7 +397,7 @@ class RichTextStateMarkdownParserDecodeTest {
                 RichParagraph(
                     type = OrderedList(
                         number = 1,
-                        initialNestedLevel = 1,
+                        initialLevel = 1,
                     )
                 ).also {
                     it.children.add(
@@ -410,7 +410,7 @@ class RichTextStateMarkdownParserDecodeTest {
                 RichParagraph(
                     type = OrderedList(
                         number = 1,
-                        initialNestedLevel = 2,
+                        initialLevel = 2,
                     )
                 ).also {
                     it.children.add(
@@ -423,7 +423,7 @@ class RichTextStateMarkdownParserDecodeTest {
                 RichParagraph(
                     type = OrderedList(
                         number = 2,
-                        initialNestedLevel = 2,
+                        initialLevel = 2,
                     )
                 ).also {
                     it.children.add(
@@ -435,7 +435,7 @@ class RichTextStateMarkdownParserDecodeTest {
                 },
                 RichParagraph(
                     type = UnorderedList(
-                        initialNestedLevel = 2,
+                        initialLevel = 2,
                     )
                 ).also {
                     it.children.add(
@@ -447,7 +447,7 @@ class RichTextStateMarkdownParserDecodeTest {
                 },
                 RichParagraph(
                     type = UnorderedList(
-                        initialNestedLevel = 2,
+                        initialLevel = 2,
                     )
                 ).also {
                     it.children.add(
@@ -459,7 +459,7 @@ class RichTextStateMarkdownParserDecodeTest {
                 },
                 RichParagraph(
                     type = UnorderedList(
-                        initialNestedLevel = 3,
+                        initialLevel = 3,
                     )
                 ).also {
                     it.children.add(
@@ -471,7 +471,7 @@ class RichTextStateMarkdownParserDecodeTest {
                 },
                 RichParagraph(
                     type = UnorderedList(
-                        initialNestedLevel = 1
+                        initialLevel = 1
                     )
                 ).also {
                     it.children.add(
@@ -484,7 +484,7 @@ class RichTextStateMarkdownParserDecodeTest {
                 RichParagraph(
                     type = OrderedList(
                         number = 1,
-                        initialNestedLevel = 2,
+                        initialLevel = 2,
                     )
                 ).also {
                     it.children.add(

@@ -35,12 +35,12 @@ class RichTextStateUnorderedListTest {
     }
 
     @Test
-    fun testNestedLevelsWithDifferentStyleType() {
+    fun testLevelsWithDifferentStyleType() {
         val richTextState = RichTextState(
             initialRichParagraphList = listOf(
                 RichParagraph(
                     type = UnorderedList(
-                        initialNestedLevel = 1
+                        initialLevel = 1
                     ),
                 ).also {
                     it.children.add(
@@ -52,7 +52,7 @@ class RichTextStateUnorderedListTest {
                 },
                 RichParagraph(
                     type = UnorderedList(
-                        initialNestedLevel = 2
+                        initialLevel = 2
                     ),
                 ).also {
                     it.children.add(
@@ -64,7 +64,7 @@ class RichTextStateUnorderedListTest {
                 },
                 RichParagraph(
                     type = UnorderedList(
-                        initialNestedLevel = 3
+                        initialLevel = 3
                     ),
                 ).also {
                     it.children.add(
@@ -93,7 +93,7 @@ class RichTextStateUnorderedListTest {
             initialRichParagraphList = listOf(
                 RichParagraph(
                     type = UnorderedList(
-                        initialNestedLevel = 1
+                        initialLevel = 1
                     ),
                 ).also {
                     it.children.add(
@@ -105,7 +105,7 @@ class RichTextStateUnorderedListTest {
                 },
                 RichParagraph(
                     type = UnorderedList(
-                        initialNestedLevel = 2
+                        initialLevel = 2
                     ),
                 ).also {
                     it.children.add(
@@ -117,7 +117,7 @@ class RichTextStateUnorderedListTest {
                 },
                 RichParagraph(
                     type = UnorderedList(
-                        initialNestedLevel = 3
+                        initialLevel = 3
                     ),
                 ).also {
                     it.children.add(
@@ -129,7 +129,7 @@ class RichTextStateUnorderedListTest {
                 },
                 RichParagraph(
                     type = UnorderedList(
-                        initialNestedLevel = 4 // Beyond the default prefix list length
+                        initialLevel = 4 // Beyond the default prefix list length
                     ),
                 ).also {
                     it.children.add(
@@ -154,7 +154,7 @@ class RichTextStateUnorderedListTest {
 
         val paragraph = RichParagraph(
             type = UnorderedList(
-                initialNestedLevel = 1
+                initialLevel = 1
             ),
         ).also {
             it.children.add(

@@ -19,7 +19,6 @@ import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class, ExperimentalComposeUiApi::class, InternalComposeUiApi::class)
 class RichTextStateKeyEventTest {
@@ -33,7 +32,7 @@ class RichTextStateKeyEventTest {
                 RichParagraph(
                     type = OrderedList(
                         number = 1,
-                        initialNestedLevel = 1
+                        initialLevel = 1
                     ),
                 ).also {
                     it.children.add(
@@ -46,7 +45,7 @@ class RichTextStateKeyEventTest {
                 RichParagraph(
                     type = OrderedList(
                         number = 2,
-                        initialNestedLevel = 1
+                        initialLevel = 1
                     ),
                 ).also {
                     it.children.add(
@@ -87,7 +86,7 @@ class RichTextStateKeyEventTest {
 
         val secondParagraphType = state.richParagraphList[1].type as OrderedList
         assertEquals(1, secondParagraphType.number)
-        assertEquals(2, secondParagraphType.nestedLevel)
+        assertEquals(2, secondParagraphType.level)
     }
 
     @Test
@@ -97,7 +96,7 @@ class RichTextStateKeyEventTest {
                 RichParagraph(
                     type = OrderedList(
                         number = 1,
-                        initialNestedLevel = 1
+                        initialLevel = 1
                     ),
                 ).also {
                     it.children.add(
@@ -110,7 +109,7 @@ class RichTextStateKeyEventTest {
                 RichParagraph(
                     type = OrderedList(
                         number = 1,
-                        initialNestedLevel = 2
+                        initialLevel = 2
                     ),
                 ).also {
                     it.children.add(
@@ -153,7 +152,7 @@ class RichTextStateKeyEventTest {
 
         val paragraphType = state.richParagraphList[1].type as OrderedList
         assertEquals(2, paragraphType.number)
-        assertEquals(1, paragraphType.nestedLevel)
+        assertEquals(1, paragraphType.level)
     }
 
     @Test

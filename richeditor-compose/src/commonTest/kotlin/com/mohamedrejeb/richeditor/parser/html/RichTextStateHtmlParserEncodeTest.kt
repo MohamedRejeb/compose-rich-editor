@@ -243,9 +243,9 @@ class RichTextStateHtmlParserEncodeTest {
                 i == 1 ||
                 i == 4
             )
-                assertEquals(1, type.nestedLevel)
+                assertEquals(1, type.level)
             else
-                assertEquals(2, type.nestedLevel)
+                assertEquals(2, type.level)
         }
 
         assertEquals("Item1", firstItem.text)
@@ -319,9 +319,9 @@ class RichTextStateHtmlParserEncodeTest {
                 i == 1 ||
                 i == 4
             )
-                assertEquals(1, type.nestedLevel)
+                assertEquals(1, type.level)
             else
-                assertEquals(2, type.nestedLevel)
+                assertEquals(2, type.level)
         }
 
         assertEquals("Item1", firstItem.text)

@@ -30,31 +30,32 @@ public interface OrderedListStyleType {
      * Format the number into a string representation.
      *
      * @param number The number to format (1-based index)
-     * @param nestedLevel The nested level of the list item (1-based index)
+     * @param listLevel The level of the list item (1-based index)
      * @return The formatted string representation of the number
      */
-    public fun format(number: Int, nestedLevel: Int): String = number.toString()
+    public fun format(number: Int, listLevel: Int): String = number.toString()
 
     /**
      * Get the suffix to append after the formatted number.
      * Default implementation returns ". " (dot with space).
      *
+     * @param listLevel The level of the list item (1-based index)
      * @return The suffix string to append after the formatted number
      */
-    public fun getSuffix(nestedLevel: Int): String = ". "
+    public fun getSuffix(listLevel: Int): String = ". "
 
     /**
      * Default decimal numbers style (1, 2, 3, ...)
      */
     public object Decimal: OrderedListStyleType {
-        override fun format(number: Int, nestedLevel: Int): String = number.toString()
+        override fun format(number: Int, listLevel: Int): String = number.toString()
     }
 
     /**
      * Lowercase letters style (a, b, c, ...)
      */
     public object LowerAlpha : OrderedListStyleType {
-        override fun format(number: Int, nestedLevel: Int): String =
+        override fun format(number: Int, listLevel: Int): String =
             formatToAlpha(
                 number = number,
                 base = 'a'
@@ -65,7 +66,7 @@ public interface OrderedListStyleType {
      * Uppercase letters style (A, B, C, ...)
      */
     public object UpperAlpha: OrderedListStyleType {
-        override fun format(number: Int, nestedLevel: Int): String =
+        override fun format(number: Int, listLevel: Int): String =
             formatToAlpha(
                 number = number,
                 base = 'A'
@@ -92,7 +93,7 @@ public interface OrderedListStyleType {
             "i" to 1
         )
 
-        override fun format(number: Int, nestedLevel: Int): String =
+        override fun format(number: Int, listLevel: Int): String =
             formatToRomanNumber(
                 number = number,
                 romanNumerals = romanNumerals,
@@ -120,7 +121,7 @@ public interface OrderedListStyleType {
             "I" to 1
         )
 
-        override fun format(number: Int, nestedLevel: Int): String =
+        override fun format(number: Int, listLevel: Int): String =
             formatToRomanNumber(
                 number = number,
                 romanNumerals = romanNumerals,
@@ -131,20 +132,20 @@ public interface OrderedListStyleType {
     public class Multiple(
         public vararg val styles: OrderedListStyleType,
     ) : OrderedListStyleType {
-        override fun format(number: Int, nestedLevel: Int): String {
+        override fun format(number: Int, listLevel: Int): String {
             if (styles.isEmpty())
-                return Decimal.format(number, nestedLevel)
+                return Decimal.format(number, listLevel)
 
-            val style = styles[(nestedLevel - 1).coerceIn(styles.indices)]
-            return style.format(number, nestedLevel)
+            val style = styles[(listLevel - 1).coerceIn(styles.indices)]
+            return style.format(number, listLevel)
         }
 
-        override fun getSuffix(nestedLevel: Int): String {
+        override fun getSuffix(listLevel: Int): String {
             if (styles.isEmpty())
-                return Decimal.getSuffix(nestedLevel)
+                return Decimal.getSuffix(listLevel)
 
-            val style = styles[(nestedLevel - 1).coerceIn(styles.indices)]
-            return style.getSuffix(nestedLevel)
+            val style = styles[(listLevel - 1).coerceIn(styles.indices)]
+            return style.getSuffix(listLevel)
         }
     }
 

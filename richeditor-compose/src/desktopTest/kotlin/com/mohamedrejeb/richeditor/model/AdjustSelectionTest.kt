@@ -1,9 +1,14 @@
-package model
+package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
-import androidx.compose.runtime.*
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.InternalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -15,7 +20,6 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.runDesktopComposeUiTest
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.dp
-import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
 import kotlinx.coroutines.delay
 import org.junit.Rule
@@ -37,7 +41,7 @@ class AdjustSelectionTest {
             val state = rememberRichTextState()
 
             var clickPosition by remember {
-                mutableStateOf(Offset.Zero)
+                mutableStateOf(Offset.Companion.Zero)
             }
             val clickPositionState by rememberUpdatedState(clickPosition)
 
@@ -55,7 +59,7 @@ class AdjustSelectionTest {
             }
 
             Box(
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .width(200.dp)
             ) {
                 BasicRichTextEditor(
@@ -70,7 +74,7 @@ class AdjustSelectionTest {
                             y = top + height / 2f
                         )
                     },
-                    modifier = Modifier
+                    modifier = Modifier.Companion
                         .testTag("editor")
                         .fillMaxWidth()
                 )
@@ -80,22 +84,22 @@ class AdjustSelectionTest {
                 delay(1000)
 
                 scene.sendPointerEvent(
-                    eventType = PointerEventType.Press,
+                    eventType = PointerEventType.Companion.Press,
                     position = clickPositionState,
                 )
                 scene.sendPointerEvent(
-                    eventType = PointerEventType.Release,
+                    eventType = PointerEventType.Companion.Release,
                     position = clickPositionState,
                 )
 
                 delay(1000)
 
                 scene.sendPointerEvent(
-                    eventType = PointerEventType.Press,
+                    eventType = PointerEventType.Companion.Press,
                     position = clickPositionState,
                 )
                 scene.sendPointerEvent(
-                    eventType = PointerEventType.Release,
+                    eventType = PointerEventType.Companion.Release,
                     position = clickPositionState,
                 )
 

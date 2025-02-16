@@ -80,6 +80,11 @@ public interface OrderedListStyleType {
      * Arabic letters style (ا, ب, ج, ...)
      */
     public object Arabic: OrderedListStyleType {
+        internal val arabicLetters = charArrayOf(
+            'أ', 'ب', 'ج', 'د', 'ه', 'و', 'ز', 'ح', 'ط', 'ي', 'ك', 'ل', 'م',
+            'ن', 'س', 'ع', 'ف', 'ص', 'ق', 'ر', 'ش', 'ت', 'ث', 'خ', 'ذ', 'ض', 'ظ', 'غ'
+        )
+
         override fun format(number: Int, listLevel: Int): String =
             formatToArabic(
                 number = number,
@@ -189,19 +194,14 @@ public interface OrderedListStyleType {
         private fun formatToArabic(
             number: Int,
         ): String {
-            val arabicLetters = arrayOf(
-                'أ', 'ب', 'ج', 'د', 'ه', 'و', 'ز', 'ح', 'ط', 'ي', 'ك', 'ل', 'م',
-                'ن', 'س', 'ع', 'ف', 'ص', 'ق', 'ر', 'ش', 'ت', 'ث', 'خ', 'ذ', 'ض', 'ظ', 'غ'
-            )
-
             if (number <= 0)
-                return arabicLetters.first().toString()
+                return Arabic.arabicLetters.first().toString()
 
             val result = StringBuilder()
             var n = number
             while (n > 0) {
                 val remainder = (n - 1) % 28
-                result.insert(0, arabicLetters[remainder])
+                result.insert(0, Arabic.arabicLetters[remainder])
                 n = (n - 1) / 28
             }
             return result.toString()

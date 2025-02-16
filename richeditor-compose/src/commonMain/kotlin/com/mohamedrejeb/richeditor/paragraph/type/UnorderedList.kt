@@ -30,9 +30,11 @@ internal class UnorderedList private constructor(
 
     constructor(
         config: RichTextConfig,
+        startTextSpanStyle: SpanStyle = SpanStyle(),
         initialNestedLevel: Int = 1,
     ): this(
         initialIndent = config.unorderedListIndent,
+        startTextSpanStyle = startTextSpanStyle,
         initialNestedLevel = initialNestedLevel,
         initialStyleType = config.unorderedListStyleType,
     )
@@ -40,7 +42,7 @@ internal class UnorderedList private constructor(
     var startTextSpanStyle = startTextSpanStyle
         set(value) {
             field = value
-            style = getNewParagraphStyle()
+            startRichSpan = getNewStartRichSpan(startRichSpan.textRange)
         }
 
     override var startTextWidth: TextUnit = startTextWidth
@@ -130,6 +132,7 @@ internal class UnorderedList private constructor(
             initialIndent = indent,
             startTextWidth = startTextWidth,
             initialNestedLevel = nestedLevel,
+            initialStyleType = styleType,
         )
 
     override fun equals(other: Any?): Boolean {
@@ -137,16 +140,20 @@ internal class UnorderedList private constructor(
         if (other !is UnorderedList) return false
 
         if (indent != other.indent) return false
+        if (startTextSpanStyle != other.startTextSpanStyle) return false
         if (startTextWidth != other.startTextWidth) return false
         if (nestedLevel != other.nestedLevel) return false
+        if (styleType != other.styleType) return false
 
         return true
     }
 
     override fun hashCode(): Int {
         var result = indent
+        result = 31 * result + startTextSpanStyle.hashCode()
         result = 31 * result + startTextWidth.hashCode()
         result = 31 * result + nestedLevel
+        result = 31 * result + styleType.hashCode()
         return result
     }
 }

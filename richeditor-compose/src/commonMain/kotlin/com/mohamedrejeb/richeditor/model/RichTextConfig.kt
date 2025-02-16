@@ -2,6 +2,7 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextDecoration
+import com.mohamedrejeb.richeditor.paragraph.type.OrderedListStyleType
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedListStyleType
 
 public class RichTextConfig internal constructor(
@@ -91,6 +92,12 @@ public class RichTextConfig internal constructor(
             updateText()
         }
 
+    public var orderedListStyleType: OrderedListStyleType = DefaultOrderedListStyleType
+        set(value) {
+            field = value
+            updateText()
+        }
+
     /**
      * Whether to preserve the style when the line is empty.
      * The line can be empty when the user deletes all the characters
@@ -103,4 +110,12 @@ public class RichTextConfig internal constructor(
 
 internal const val DefaultListIndent = 38
 
-internal val DefaultUnorderedListStyleType = UnorderedListStyleType.from("•", "◦", "▪")
+internal val DefaultUnorderedListStyleType =
+    UnorderedListStyleType.from("•", "◦", "▪")
+
+internal val DefaultOrderedListStyleType: OrderedListStyleType =
+    OrderedListStyleType.Multiple(
+        OrderedListStyleType.Decimal,
+        OrderedListStyleType.LowerRoman,
+        OrderedListStyleType.LowerAlpha,
+    )

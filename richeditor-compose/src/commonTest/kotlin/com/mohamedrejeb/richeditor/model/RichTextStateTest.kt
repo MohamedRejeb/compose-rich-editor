@@ -1513,13 +1513,13 @@ class RichTextStateTest {
             )
         )
 
-        state.selection = TextRange(state.textFieldValue.text.length - 5)
-        state.toggleUnorderedList()
-
         val firstParagraph = state.richParagraphList[0]
         val secondParagraph = state.richParagraphList[1]
         val thirdParagraph = state.richParagraphList[2]
         val fourthParagraph = state.richParagraphList[3]
+
+        state.selection = TextRange(thirdParagraph.getFirstNonEmptyChild()!!.fullTextRange.min)
+        state.toggleUnorderedList()
 
         val firstParagraphType = firstParagraph.type
         val secondParagraphType = secondParagraph.type
@@ -2024,13 +2024,13 @@ class RichTextStateTest {
             )
         )
 
-        state.selection = TextRange(state.textFieldValue.text.length - 5)
-
-        state.decreaseListNestedLevel()
-
         val firstParagraph = state.richParagraphList[0]
         val secondParagraph = state.richParagraphList[1]
         val thirdParagraph = state.richParagraphList[2]
+
+        state.selection = TextRange(secondParagraph.getFirstNonEmptyChild()!!.fullTextRange.min)
+
+        state.decreaseListNestedLevel()
 
         val firstParagraphType = firstParagraph.type
         val secondParagraphType = secondParagraph.type

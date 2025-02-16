@@ -1246,6 +1246,7 @@ public class RichTextState internal constructor(
 
         val newType = UnorderedList(
             config = config,
+            startTextSpanStyle = paragraph.getFirstNonEmptyChild()?.spanStyle ?: SpanStyle(),
             initialNestedLevel = nestedLevel,
         )
 
@@ -1315,7 +1316,7 @@ public class RichTextState internal constructor(
 
         val newType = OrderedList(
             number = orderedListNumber,
-            initialIndent = config.orderedListIndent,
+            config = config,
             startTextSpanStyle = firstRichSpan?.spanStyle ?: SpanStyle(),
             initialNestedLevel = nestedLevel,
         )
@@ -1857,7 +1858,8 @@ public class RichTextState internal constructor(
         // Handle Remove the min paragraph custom text
         if (minRemoveIndex < minParagraphFirstChildMinIndex) {
             if (minRichSpan.paragraph.type.startText.isEmpty() && minParagraphIndex != maxParagraphIndex) {
-                richParagraphList.removeAt(minParagraphIndex)
+                minRichSpan.paragraph.children.clear()
+                richParagraphList.remove(minRichSpan.paragraph)
             } else {
                 handleRemoveMinParagraphStartText(
                     removeIndex = minRemoveIndex,
@@ -1866,12 +1868,6 @@ public class RichTextState internal constructor(
                 )
 
                 minRichSpan.paragraph.type = DefaultParagraph()
-
-                tempTextFieldValue = adjustOrderedListsNumbers(
-                    startParagraphIndex = minParagraphIndex + 1,
-                    startNumber = 1,
-                    textFieldValue = tempTextFieldValue,
-                )
             }
         }
 
@@ -2073,6 +2069,7 @@ public class RichTextState internal constructor(
         if (richSpan.text == "- " || richSpan.text == "* ") {
             richSpan.paragraph.type = UnorderedList(
                 config = config,
+                startTextSpanStyle = richSpan.spanStyle,
             )
             richSpan.text = ""
         } else if (richSpan.text.matches(Regex("^\\d+\\. "))) {
@@ -2081,7 +2078,8 @@ public class RichTextState internal constructor(
                 val number = richSpan.text.substring(0, dotIndex).toIntOrNull() ?: 1
                 richSpan.paragraph.type = OrderedList(
                     number = number,
-                    initialIndent = config.orderedListIndent,
+                    config = config,
+                    startTextSpanStyle = richSpan.spanStyle,
                 )
                 richSpan.text = ""
             }
@@ -2147,7 +2145,7 @@ public class RichTextState internal constructor(
                 paragraph = currentParagraph,
                 newType = OrderedList(
                     number = currentNumber,
-                    initialIndent = config.orderedListIndent,
+                    config = config,
                     startTextSpanStyle = currentParagraphType.startTextSpanStyle,
                     startTextWidth = currentParagraphType.startTextWidth,
                     initialNestedLevel = currentParagraphType.nestedLevel
@@ -2202,7 +2200,7 @@ public class RichTextState internal constructor(
                     paragraph = currentParagraph,
                     newType = OrderedList(
                         number = number,
-                        initialIndent = config.orderedListIndent,
+                        config = config,
                         startTextSpanStyle = currentParagraphType.startTextSpanStyle,
                         startTextWidth = currentParagraphType.startTextWidth,
                         initialNestedLevel = currentParagraphType.nestedLevel
@@ -3756,7 +3754,7 @@ public class RichTextState internal constructor(
                     paragraph = richParagraph,
                     newType = OrderedList(
                         number = orderedListNumber,
-                        initialIndent = config.orderedListIndent,
+                        config = config,
                         startTextSpanStyle = orderedListStartTextSpanStyle,
                         startTextWidth = type.startTextWidth,
                         initialNestedLevel = type.nestedLevel

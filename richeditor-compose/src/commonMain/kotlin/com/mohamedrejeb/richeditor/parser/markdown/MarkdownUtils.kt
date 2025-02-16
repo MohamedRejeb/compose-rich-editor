@@ -182,9 +182,7 @@ internal fun correctMarkdownText(text: String): String {
     onTag()
     addPendingSpaces()
 
-    return newText.toString().also {
-        println(it)
-    }
+    return newText.toString()
 }
 
 private fun encodeMarkdownNodeToRichText(

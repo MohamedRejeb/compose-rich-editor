@@ -8,17 +8,43 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.DefaultListIndent
+import com.mohamedrejeb.richeditor.model.DefaultOrderedListStyleType
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichTextConfig
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 
-internal class OrderedList(
+internal class OrderedList private constructor(
     number: Int,
     initialIndent: Int = DefaultListIndent,
     startTextSpanStyle: SpanStyle = SpanStyle(),
     startTextWidth: TextUnit = 0.sp,
     initialNestedLevel: Int = 1,
+    initialStyleType: OrderedListStyleType = DefaultOrderedListStyleType,
 ) : ParagraphType, ConfigurableStartTextWidth, ConfigurableNestedLevel {
+
+    constructor(
+        number: Int,
+        initialNestedLevel: Int = 1,
+    ) : this(
+        number = number,
+        initialIndent = DefaultListIndent,
+        initialNestedLevel = initialNestedLevel,
+    )
+
+    constructor(
+        number: Int,
+        config: RichTextConfig,
+        startTextSpanStyle: SpanStyle,
+        startTextWidth: TextUnit = 0.sp,
+        initialNestedLevel: Int = 1,
+    ) : this(
+        number = number,
+        initialIndent = config.orderedListIndent,
+        startTextSpanStyle = startTextSpanStyle,
+        startTextWidth = startTextWidth,
+        initialNestedLevel = initialNestedLevel,
+        initialStyleType = config.orderedListStyleType,
+    )
 
     var number = number
         set(value) {
@@ -29,7 +55,7 @@ internal class OrderedList(
     var startTextSpanStyle = startTextSpanStyle
         set(value) {
             field = value
-            style = getNewParagraphStyle()
+            startRichSpan = getNewStartRichSpan(startRichSpan.textRange)
         }
 
     override var startTextWidth: TextUnit = startTextWidth
@@ -39,11 +65,21 @@ internal class OrderedList(
         }
 
     private var indent = initialIndent
+        set(value) {
+            field = value
+            style = getNewParagraphStyle()
+        }
 
     override var nestedLevel = initialNestedLevel
         set(value) {
             field = value
             style = getNewParagraphStyle()
+        }
+
+    private var styleType = initialStyleType
+        set(value) {
+            field = value
+            startRichSpan = getNewStartRichSpan(startRichSpan.textRange)
         }
 
     private var style: ParagraphStyle =
@@ -52,7 +88,10 @@ internal class OrderedList(
     override fun getStyle(config: RichTextConfig): ParagraphStyle {
         if (config.orderedListIndent != indent) {
             indent = config.orderedListIndent
-            style = getNewParagraphStyle()
+        }
+
+        if (config.orderedListStyleType != styleType) {
+            styleType = config.orderedListStyleType
         }
 
         return style
@@ -71,7 +110,7 @@ internal class OrderedList(
 
     @OptIn(ExperimentalRichTextApi::class)
     private fun getNewStartRichSpan(textRange: TextRange = TextRange(0)): RichSpan {
-        val text = "$number. "
+        val text = styleType.format(number, nestedLevel) + styleType.getSuffix(nestedLevel)
 
         return RichSpan(
             paragraph = RichParagraph(type = this),
@@ -91,6 +130,7 @@ internal class OrderedList(
             startTextSpanStyle = startTextSpanStyle,
             startTextWidth = startTextWidth,
             initialNestedLevel = nestedLevel,
+            initialStyleType = styleType,
         )
 
     override fun copy(): ParagraphType =
@@ -100,6 +140,7 @@ internal class OrderedList(
             startTextSpanStyle = startTextSpanStyle,
             startTextWidth = startTextWidth,
             initialNestedLevel = nestedLevel,
+            initialStyleType = styleType,
         )
 
     override fun equals(other: Any?): Boolean {
@@ -111,6 +152,7 @@ internal class OrderedList(
         if (startTextSpanStyle != other.startTextSpanStyle) return false
         if (startTextWidth != other.startTextWidth) return false
         if (nestedLevel != other.nestedLevel) return false
+        if (styleType != other.styleType) return false
 
         return true
     }
@@ -122,6 +164,7 @@ internal class OrderedList(
         result = 31 * result + startTextSpanStyle.hashCode()
         result = 31 * result + startTextWidth.hashCode()
         result = 31 * result + nestedLevel
+        result = 31 * result + styleType.hashCode()
         return result
     }
 }

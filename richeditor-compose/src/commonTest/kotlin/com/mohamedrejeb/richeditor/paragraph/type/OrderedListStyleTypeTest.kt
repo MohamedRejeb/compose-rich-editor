@@ -15,6 +15,16 @@ class OrderedListStyleTypeTest {
     }
 
     @Test
+    fun testArabicIndicFormat() {
+        val styleType = OrderedListStyleType.ArabicIndic
+        assertEquals("١", styleType.format(1, 1))
+        assertEquals("١٠", styleType.format(10, 1))
+        assertEquals("١٠٠", styleType.format(100, 1))
+        assertEquals("٠", styleType.format(0, 1))
+        assertEquals("-١", styleType.format(-1, 1))
+    }
+
+    @Test
     fun testLowerAlphaFormat() {
         val styleType = OrderedListStyleType.LowerAlpha
         assertEquals("a", styleType.format(1, 1))

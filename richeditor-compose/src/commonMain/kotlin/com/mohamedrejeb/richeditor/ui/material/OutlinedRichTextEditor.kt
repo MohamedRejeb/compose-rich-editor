@@ -67,7 +67,6 @@ import com.mohamedrejeb.richeditor.ui.RichTextChangedListener
  * @param minLines the minimum height in terms of minimum number of visible lines. It is required
  * that 1 <= [minLines] <= [maxLines]. This parameter is ignored when [singleLine] is true.
 
- * @param onRichTextChangedListener A callback when the RichTextState changes.
  * @param interactionSource the [MutableInteractionSource] representing the stream of
  * [Interaction]s for this OutlinedTextField. You can create and pass in your own remembered
  * [MutableInteractionSource] if you want to observe [Interaction]s and customize the
@@ -95,7 +94,6 @@ public fun OutlinedRichTextEditor(
     maxLines: Int = Int.MAX_VALUE,
     minLines: Int = 1,
     maxLength: Int = Int.MAX_VALUE,
-    onRichTextChangedListener: RichTextChangedListener? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape = MaterialTheme.shapes.small,
     colors: TextFieldColors = TextFieldDefaults.outlinedTextFieldColors()
@@ -134,7 +132,6 @@ public fun OutlinedRichTextEditor(
         maxLines = maxLines,
         minLines = minLines,
         maxLength = maxLength,
-        onRichTextChangedListener = onRichTextChangedListener,
         decorationBox = @Composable { innerTextField ->
             TextFieldDefaults.OutlinedTextFieldDecorationBox(
                 value = state.textFieldValue.text,

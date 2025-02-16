@@ -1,48 +1,89 @@
 package com.mohamedrejeb.richeditor.paragraph.type
 
 import androidx.compose.ui.text.ParagraphStyle
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.DefaultListIndent
+import com.mohamedrejeb.richeditor.model.DefaultUnorderedListStyleType
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichTextConfig
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 
-internal class UnorderedList(
+internal class UnorderedList private constructor(
     initialIndent: Int = DefaultListIndent,
+    startTextSpanStyle: SpanStyle = SpanStyle(),
     startTextWidth: TextUnit = 0.sp,
     initialNestedLevel: Int = 1,
+    initialStyleType: UnorderedListStyleType = DefaultUnorderedListStyleType,
 ): ParagraphType, ConfigurableStartTextWidth, ConfigurableNestedLevel {
+
+    constructor(
+        initialNestedLevel: Int = 1,
+    ): this(
+        initialIndent = DefaultListIndent,
+        initialNestedLevel = initialNestedLevel,
+    )
+
+    constructor(
+        config: RichTextConfig,
+        initialNestedLevel: Int = 1,
+    ): this(
+        initialIndent = config.unorderedListIndent,
+        initialNestedLevel = initialNestedLevel,
+        initialStyleType = config.unorderedListStyleType,
+    )
+
+    var startTextSpanStyle = startTextSpanStyle
+        set(value) {
+            field = value
+            style = getNewParagraphStyle()
+        }
 
     override var startTextWidth: TextUnit = startTextWidth
         set(value) {
             field = value
-            style = getParagraphStyle()
+            style = getNewParagraphStyle()
         }
 
     private var indent = initialIndent
+        set(value) {
+            field = value
+            style = getNewParagraphStyle()
+        }
 
     override var nestedLevel = initialNestedLevel
         set(value) {
             field = value
-            style = getParagraphStyle()
+            style = getNewParagraphStyle()
+            startRichSpan = getNewStartRichSpan()
+        }
+
+    private var styleType = initialStyleType
+        set(value) {
+            field = value
+            startRichSpan = getNewStartRichSpan()
         }
 
     private var style: ParagraphStyle =
-        getParagraphStyle()
+        getNewParagraphStyle()
 
     override fun getStyle(config: RichTextConfig): ParagraphStyle {
         if (config.unorderedListIndent != indent) {
             indent = config.unorderedListIndent
-            style = getParagraphStyle()
+        }
+
+        if (config.unorderedListStyleType != styleType) {
+            styleType = config.unorderedListStyleType
         }
 
         return style
     }
 
-    private fun getParagraphStyle() =
+    private fun getNewParagraphStyle() =
         ParagraphStyle(
             textIndent = TextIndent(
                 firstLine = (indent * nestedLevel).sp,
@@ -52,16 +93,36 @@ internal class UnorderedList(
 
     @OptIn(ExperimentalRichTextApi::class)
     override var startRichSpan: RichSpan =
-        RichSpan(
+        getNewStartRichSpan()
+
+    @OptIn(ExperimentalRichTextApi::class)
+    private fun getNewStartRichSpan(textRange: TextRange = TextRange(0)): RichSpan {
+        val prefixIndex =
+            (nestedLevel - 1).coerceIn(styleType.prefixes.indices)
+
+        val prefix = styleType.prefixes
+            .getOrNull(prefixIndex)
+            ?: "•"
+
+        val text = "$prefix "
+
+        return RichSpan(
             paragraph = RichParagraph(type = this),
-            text = "• ",
+            text = text,
+            spanStyle = startTextSpanStyle,
+            textRange = TextRange(
+                textRange.min,
+                textRange.min + text.length
+            )
         )
+    }
 
     override fun getNextParagraphType(): ParagraphType =
         UnorderedList(
             initialIndent = indent,
             startTextWidth = startTextWidth,
             initialNestedLevel = nestedLevel,
+            initialStyleType = styleType,
         )
 
     override fun copy(): ParagraphType =

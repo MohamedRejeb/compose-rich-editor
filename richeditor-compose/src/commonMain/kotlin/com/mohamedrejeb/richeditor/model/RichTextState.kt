@@ -1245,7 +1245,7 @@ public class RichTextState internal constructor(
                 1
 
         val newType = UnorderedList(
-            initialIndent = config.unorderedListIndent,
+            config = config,
             initialNestedLevel = nestedLevel,
         )
 
@@ -2072,7 +2072,7 @@ public class RichTextState internal constructor(
 
         if (richSpan.text == "- " || richSpan.text == "* ") {
             richSpan.paragraph.type = UnorderedList(
-                initialIndent = config.unorderedListIndent,
+                config = config,
             )
             richSpan.text = ""
         } else if (richSpan.text.matches(Regex("^\\d+\\. "))) {

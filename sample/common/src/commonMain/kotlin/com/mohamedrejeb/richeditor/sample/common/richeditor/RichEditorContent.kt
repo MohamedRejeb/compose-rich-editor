@@ -145,9 +145,6 @@ fun RichEditorContent() {
                     OutlinedRichTextEditor(
                         modifier = Modifier.fillMaxWidth(),
                         state = outlinedRichTextState,
-                        onRichTextChangedListener = {
-                            println("Rich text changed!")
-                        }
                     )
                 }
 

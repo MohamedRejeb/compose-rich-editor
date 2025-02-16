@@ -100,7 +100,6 @@ public fun RichTextEditor(
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
     maxLength: Int = Int.MAX_VALUE,
-    onRichTextChangedListener: RichTextChangedListener? = null,
     onTextLayout: (TextLayoutResult) -> Unit = {},
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape =
@@ -135,7 +134,6 @@ public fun RichTextEditor(
         maxLines = maxLines,
         minLines = minLines,
         maxLength = maxLength,
-        onRichTextChangedListener = onRichTextChangedListener,
         decorationBox = @Composable { innerTextField ->
             // places leading icon, text field with label and placeholder, trailing icon
             TextFieldDefaults.TextFieldDecorationBox(

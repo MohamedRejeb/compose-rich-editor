@@ -232,6 +232,20 @@ public abstract interface class com/mohamedrejeb/richeditor/paragraph/type/Order
 	public abstract fun getSuffix (I)Ljava/lang/String;
 }
 
+public final class com/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType$Arabic : com/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType$Arabic;
+	public fun format (II)Ljava/lang/String;
+	public fun getSuffix (I)Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType$ArabicIndic : com/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType$ArabicIndic;
+	public fun format (II)Ljava/lang/String;
+	public fun getSuffix (I)Ljava/lang/String;
+}
+
 public final class com/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType$Decimal : com/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType {
 	public static final field $stable I
 	public static final field INSTANCE Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType$Decimal;

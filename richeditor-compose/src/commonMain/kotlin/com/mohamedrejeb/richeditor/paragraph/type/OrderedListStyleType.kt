@@ -77,7 +77,22 @@ public interface OrderedListStyleType {
     }
 
     /**
-     * Lowercase letters style (a, b, c, ...)
+     * Arabic letters style (ا, ب, ج, ...)
+     */
+    public object Arabic: OrderedListStyleType {
+        internal val arabicLetters = charArrayOf(
+            'أ', 'ب', 'ج', 'د', 'ه', 'و', 'ز', 'ح', 'ط', 'ي', 'ك', 'ل', 'م',
+            'ن', 'س', 'ع', 'ف', 'ص', 'ق', 'ر', 'ش', 'ت', 'ث', 'خ', 'ذ', 'ض', 'ظ', 'غ'
+        )
+
+        override fun format(number: Int, listLevel: Int): String =
+            formatToArabic(
+                number = number,
+            )
+    }
+
+    /**
+     * Lowercase latin letters style (a, b, c, ...)
      */
     public object LowerAlpha : OrderedListStyleType {
         override fun format(number: Int, listLevel: Int): String =
@@ -88,7 +103,7 @@ public interface OrderedListStyleType {
     }
 
     /**
-     * Uppercase letters style (A, B, C, ...)
+     * Uppercase latin letters style (A, B, C, ...)
      */
     public object UpperAlpha : OrderedListStyleType {
         override fun format(number: Int, listLevel: Int): String =
@@ -175,6 +190,22 @@ public interface OrderedListStyleType {
     }
 
     private companion object {
+
+        private fun formatToArabic(
+            number: Int,
+        ): String {
+            if (number <= 0)
+                return Arabic.arabicLetters.first().toString()
+
+            val result = StringBuilder()
+            var n = number
+            while (n > 0) {
+                val remainder = (n - 1) % 28
+                result.insert(0, Arabic.arabicLetters[remainder])
+                n = (n - 1) / 28
+            }
+            return result.toString()
+        }
 
         private fun formatToAlpha(
             number: Int,

@@ -382,4 +382,15 @@ class CssEncoderTest {
             CssEncoder.parseCssTextIndent(textIndent4),
         )
     }
+
+    @Test
+    fun testParseCssStyleMapToParagraphStyle() {
+        val paragraphStyle = CssEncoder.parseCssStyleMapToParagraphStyle(
+            cssStyleMap = mapOf("direction" to "ltr"),
+            attributes = mapOf("dir" to "rtl")
+        )
+
+        assertEquals(TextDirection.Ltr, paragraphStyle.textDirection)
+    }
+
 }

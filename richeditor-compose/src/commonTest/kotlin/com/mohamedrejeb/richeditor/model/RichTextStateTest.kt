@@ -7,6 +7,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
@@ -2715,6 +2716,26 @@ class RichTextStateTest {
         richTextState.removeSelectedText()
 
         assertEquals(2, richTextState.richParagraphList.size)
+    }
+
+    @OptIn(ExperimentalRichTextApi::class)
+    @Test
+    fun testLooseLinksAfterChangingConfig() {
+        val html = """
+            <a href="https://www.google.com"><b>Google</b></a>
+        """.trimIndent()
+
+        val richTextState = RichTextState()
+        richTextState.setHtml(html)
+        richTextState.config.linkTextDecoration = TextDecoration.None
+
+        val link = richTextState.richParagraphList[0].children.first()
+
+        assertEquals(1, richTextState.richParagraphList.size)
+        assertEquals(0, link.children.size)
+        assertIs<RichSpanStyle.Link>(link.richSpanStyle)
+        assertEquals("Google", link.text)
+        assertEquals(FontWeight.Bold, link.spanStyle.fontWeight)
     }
 
 }

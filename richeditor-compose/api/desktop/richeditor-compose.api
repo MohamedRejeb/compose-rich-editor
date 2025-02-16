@@ -106,8 +106,10 @@ public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public final fun getLinkTextDecoration ()Landroidx/compose/ui/text/style/TextDecoration;
 	public final fun getListIndent ()I
 	public final fun getOrderedListIndent ()I
+	public final fun getOrderedListStyleType ()Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType;
 	public final fun getPreserveStyleOnEmptyLine ()Z
 	public final fun getUnorderedListIndent ()I
+	public final fun getUnorderedListStyleType ()Lcom/mohamedrejeb/richeditor/paragraph/type/UnorderedListStyleType;
 	public final fun setCodeSpanBackgroundColor-8_81llA (J)V
 	public final fun setCodeSpanColor-8_81llA (J)V
 	public final fun setCodeSpanStrokeColor-8_81llA (J)V
@@ -115,8 +117,10 @@ public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public final fun setLinkTextDecoration (Landroidx/compose/ui/text/style/TextDecoration;)V
 	public final fun setListIndent (I)V
 	public final fun setOrderedListIndent (I)V
+	public final fun setOrderedListStyleType (Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType;)V
 	public final fun setPreserveStyleOnEmptyLine (Z)V
 	public final fun setUnorderedListIndent (I)V
+	public final fun setUnorderedListStyleType (Lcom/mohamedrejeb/richeditor/paragraph/type/UnorderedListStyleType;)V
 }
 
 public final class com/mohamedrejeb/richeditor/model/RichTextState {
@@ -143,7 +147,10 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun clearSpanStyles ()V
 	public final fun clearSpanStyles-5zc-tL8 (J)V
 	public final fun copy ()Lcom/mohamedrejeb/richeditor/model/RichTextState;
+	public final fun decreaseListLevel ()V
 	public final fun getAnnotatedString ()Landroidx/compose/ui/text/AnnotatedString;
+	public final fun getCanDecreaseListLevel ()Z
+	public final fun getCanIncreaseListLevel ()Z
 	public final fun getComposition-MzsxiRA ()Landroidx/compose/ui/text/TextRange;
 	public final fun getConfig ()Lcom/mohamedrejeb/richeditor/model/RichTextConfig;
 	public final fun getCurrentParagraphStyle ()Landroidx/compose/ui/text/ParagraphStyle;
@@ -155,9 +162,11 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun getSelectedLinkUrl ()Ljava/lang/String;
 	public final fun getSelection-d9O1mEE ()J
 	public final fun getSpanStyle-5zc-tL8 (J)Landroidx/compose/ui/text/SpanStyle;
+	public final fun increaseListLevel ()V
 	public final fun isCode ()Z
 	public final fun isCodeSpan ()Z
 	public final fun isLink ()Z
+	public final fun isList ()Z
 	public final fun isOrderedList ()Z
 	public final fun isRichSpan (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;)Z
 	public final fun isRichSpan (Lkotlin/reflect/KClass;)Z
@@ -216,6 +225,76 @@ public final class com/mohamedrejeb/richeditor/model/TextPaddingValues {
 	public final fun getVertical-XSAIIZE ()J
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType {
+	public abstract fun format (II)Ljava/lang/String;
+	public abstract fun getSuffix (I)Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType$Decimal : com/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType$Decimal;
+	public fun format (II)Ljava/lang/String;
+	public fun getSuffix (I)Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType$DefaultImpls {
+	public static fun format (Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType;II)Ljava/lang/String;
+	public static fun getSuffix (Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType;I)Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType$LowerAlpha : com/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType$LowerAlpha;
+	public fun format (II)Ljava/lang/String;
+	public fun getSuffix (I)Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType$LowerRoman : com/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType$LowerRoman;
+	public fun format (II)Ljava/lang/String;
+	public fun getSuffix (I)Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType$Multiple : com/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType {
+	public static final field $stable I
+	public fun <init> ([Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType;)V
+	public fun format (II)Ljava/lang/String;
+	public final fun getStyles ()[Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType;
+	public fun getSuffix (I)Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType$UpperAlpha : com/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType$UpperAlpha;
+	public fun format (II)Ljava/lang/String;
+	public fun getSuffix (I)Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType$UpperRoman : com/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType$UpperRoman;
+	public fun format (II)Ljava/lang/String;
+	public fun getSuffix (I)Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/paragraph/type/UnorderedListStyleType {
+	public static final field $stable I
+	public static final field Companion Lcom/mohamedrejeb/richeditor/paragraph/type/UnorderedListStyleType$Companion;
+	public synthetic fun <init> (Ljava/util/List;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/paragraph/type/UnorderedListStyleType$Companion {
+	public final fun from (Ljava/util/List;)Lcom/mohamedrejeb/richeditor/paragraph/type/UnorderedListStyleType;
+	public final fun from ([Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/paragraph/type/UnorderedListStyleType;
+	public final fun getCircle ()Lcom/mohamedrejeb/richeditor/paragraph/type/UnorderedListStyleType;
+	public final fun getDisc ()Lcom/mohamedrejeb/richeditor/paragraph/type/UnorderedListStyleType;
+	public final fun getSquare ()Lcom/mohamedrejeb/richeditor/paragraph/type/UnorderedListStyleType;
 }
 
 public final class com/mohamedrejeb/richeditor/ui/BasicRichTextEditorKt {

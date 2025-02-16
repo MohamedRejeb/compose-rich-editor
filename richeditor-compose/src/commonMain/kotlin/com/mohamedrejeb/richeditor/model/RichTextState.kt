@@ -1290,7 +1290,7 @@ public class RichTextState internal constructor(
             else
                 1
 
-        for (i in (index - 1) downTo 0) {
+        for (i in index - 1 downTo 0) {
             val prevParagraph = richParagraphList[i]
             val prevParagraphType = prevParagraph.type
 

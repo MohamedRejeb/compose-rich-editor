@@ -2,13 +2,15 @@ package com.mohamedrejeb.richeditor.parser.html
 
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
+import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
+import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import com.mohamedrejeb.richeditor.parser.utils.H1SpanStyle
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
-class RichTextStateHtmlParserTest {
+class RichTextStateHtmlParserEncodeTest {
     @Test
     fun testRemoveHtmlTextExtraSpaces() {
         val html = """
@@ -21,21 +23,6 @@ class RichTextStateHtmlParserTest {
             "Hello World! Welcome to Compose Rich Text Editor!",
             removeHtmlTextExtraSpaces(html)
         )
-    }
-
-    @Test
-    fun testParsingSimpleHtmlWithBrBackAndForth() {
-        val html = "<br><p>Hello World&excl;</p>"
-
-        val richTextState = RichTextStateHtmlParser.encode(html)
-
-        assertEquals(2, richTextState.richParagraphList.size)
-        assertTrue(richTextState.richParagraphList[0].isBlank())
-        assertEquals(1, richTextState.richParagraphList[1].children.size)
-
-        val parsedHtml = RichTextStateHtmlParser.decode(richTextState)
-
-        assertEquals(html, parsedHtml)
     }
 
     @OptIn(ExperimentalRichTextApi::class)
@@ -192,8 +179,156 @@ class RichTextStateHtmlParserTest {
         assertEquals(H1SpanStyle, secondPart.spanStyle)
     }
 
-    /**
-     * Block element adds line break on the end.
-     * If the current paragraph is not empty, it should add a line break before the block element.
-     */
+    @Test
+    fun testEncodeUnorderedList() {
+        val html = """
+            <ul>
+                <li>Item 1</li>
+                <li>Item 2</li>
+                <li>Item 3</li>
+            </ul>
+        """.trimIndent()
+
+        val richTextState = RichTextStateHtmlParser.encode(html)
+
+        assertEquals(3, richTextState.richParagraphList.size)
+
+        val firstItem = richTextState.richParagraphList[0].children[0]
+        val secondItem = richTextState.richParagraphList[1].children[0]
+        val thirdItem = richTextState.richParagraphList[2].children[0]
+
+        richTextState.richParagraphList.forEach { p ->
+            assertIs<UnorderedList>(p.type)
+        }
+
+        assertEquals("Item 1", firstItem.text)
+        assertEquals("Item 2", secondItem.text)
+        assertEquals("Item 3", thirdItem.text)
+    }
+
+    @Test
+    fun testEncodeUnorderedListWithNestedList() {
+        val html = """
+            <ul>
+                <li>Item1</li>
+                <li>Item2
+                    <ul>
+                        <li>Item2.1</li>
+                        <li>Item2.2</li>
+                    </ul>
+                </li>
+                <li>Item3</li>
+            </ul>
+        """
+            .trimIndent()
+            .replace("\n", "")
+            .replace(" ", "")
+
+        val richTextState = RichTextStateHtmlParser.encode(html)
+
+        assertEquals(5, richTextState.richParagraphList.size)
+
+        val firstItem = richTextState.richParagraphList[0].children[0]
+        val secondItem = richTextState.richParagraphList[1].children[0]
+        val thirdItem = richTextState.richParagraphList[2].children[0]
+        val fourthItem = richTextState.richParagraphList[3].children[0]
+        val fifthItem = richTextState.richParagraphList[4].children[0]
+
+        richTextState.richParagraphList.forEachIndexed { i, p ->
+            val type = p.type
+            assertIs<UnorderedList>(type)
+
+            if (
+                i == 0 ||
+                i == 1 ||
+                i == 4
+            )
+                assertEquals(1, type.level)
+            else
+                assertEquals(2, type.level)
+        }
+
+        assertEquals("Item1", firstItem.text)
+        assertEquals("Item2", secondItem.text)
+        assertEquals("Item2.1", thirdItem.text)
+        assertEquals("Item2.2", fourthItem.text)
+        assertEquals("Item3", fifthItem .text)
+    }
+
+    @Test
+    fun testEncodeOrderedList() {
+        val html = """
+            <ol>
+                <li>Item 1</li>
+                <li>Item 2</li>
+                <li>Item 3</li>
+            </ol>
+        """.trimIndent()
+
+        val richTextState = RichTextStateHtmlParser.encode(html)
+
+        assertEquals(3, richTextState.richParagraphList.size)
+
+        val firstItem = richTextState.richParagraphList[0].children[0]
+        val secondItem = richTextState.richParagraphList[1].children[0]
+        val thirdItem = richTextState.richParagraphList[2].children[0]
+
+        richTextState.richParagraphList.forEach { p ->
+            assertIs<OrderedList>(p.type)
+        }
+
+        assertEquals("Item 1", firstItem.text)
+        assertEquals("Item 2", secondItem.text)
+        assertEquals("Item 3", thirdItem.text)
+    }
+
+    @Test
+    fun testEncodeOrderedListWithNestedList() {
+        val html = """
+            <ol>
+                <li>Item1</li>
+                <li>Item2
+                    <ol>
+                        <li>Item2.1</li>
+                        <li>Item2.2</li>
+                    </ol>
+                </li>
+                <li>Item3</li>
+            </ol>
+        """
+            .trimIndent()
+            .replace("\n", "")
+            .replace(" ", "")
+
+        val richTextState = RichTextStateHtmlParser.encode(html)
+
+        assertEquals(5, richTextState.richParagraphList.size)
+
+        val firstItem = richTextState.richParagraphList[0].children[0]
+        val secondItem = richTextState.richParagraphList[1].children[0]
+        val thirdItem = richTextState.richParagraphList[2].children[0]
+        val fourthItem = richTextState.richParagraphList[3].children[0]
+        val fifthItem = richTextState.richParagraphList[4].children[0]
+
+        richTextState.richParagraphList.forEachIndexed { i, p ->
+            val type = p.type
+            assertIs<OrderedList>(type)
+
+            if (
+                i == 0 ||
+                i == 1 ||
+                i == 4
+            )
+                assertEquals(1, type.level)
+            else
+                assertEquals(2, type.level)
+        }
+
+        assertEquals("Item1", firstItem.text)
+        assertEquals("Item2", secondItem.text)
+        assertEquals("Item2.1", thirdItem.text)
+        assertEquals("Item2.2", fourthItem.text)
+        assertEquals("Item3", fifthItem .text)
+    }
+
 }

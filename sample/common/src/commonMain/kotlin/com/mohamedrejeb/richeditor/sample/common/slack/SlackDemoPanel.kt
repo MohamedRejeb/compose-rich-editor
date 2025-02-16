@@ -247,6 +247,26 @@ fun SlackDemoPanel(
         }
 
         item {
+            SlackDemoPanelButton(
+                onClick = {
+                    state.increaseListLevel()
+                },
+                enabled = state.canIncreaseListLevel,
+                icon = Icons.Outlined.TextIncrease,
+            )
+        }
+
+        item {
+            SlackDemoPanelButton(
+                onClick = {
+                    state.decreaseListLevel()
+                },
+                enabled = state.canDecreaseListLevel,
+                icon = Icons.Outlined.TextDecrease,
+            )
+        }
+
+        item {
             Box(
                 Modifier
                     .height(24.dp)

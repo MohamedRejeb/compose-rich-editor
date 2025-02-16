@@ -21,6 +21,7 @@ fun SlackDemoPanelButton(
     onClick: () -> Unit,
     icon: ImageVector,
     tint: Color? = null,
+    enabled: Boolean = true,
     isSelected: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
@@ -33,7 +34,7 @@ fun SlackDemoPanelButton(
             .clip(RoundedCornerShape(10.dp))
             .clickable(
                 onClick = onClick,
-                enabled = true,
+                enabled = enabled,
                 role = Role.Button,
             ),
         contentAlignment = Alignment.Center

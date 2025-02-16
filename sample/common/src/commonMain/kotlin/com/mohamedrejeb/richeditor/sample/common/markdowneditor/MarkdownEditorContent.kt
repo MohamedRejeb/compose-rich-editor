@@ -32,8 +32,8 @@ fun MarkdownEditorContent() {
         richTextState.config.codeSpanColor = Color(0xFFd7882d)
         richTextState.config.codeSpanBackgroundColor = Color.Transparent
         richTextState.config.codeSpanStrokeColor = Color(0xFF494b4d)
-        richTextState.config.unorderedListIndent = 40
-        richTextState.config.orderedListIndent = 50
+        richTextState.config.unorderedListIndent = 38
+        richTextState.config.orderedListIndent = 40
     }
 
     LaunchedEffect(richTextState.annotatedString, isMarkdownToRichText) {

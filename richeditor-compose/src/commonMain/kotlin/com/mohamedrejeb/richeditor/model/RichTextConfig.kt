@@ -2,6 +2,8 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextDecoration
+import com.mohamedrejeb.richeditor.paragraph.type.OrderedListStyleType
+import com.mohamedrejeb.richeditor.paragraph.type.UnorderedListStyleType
 
 public class RichTextConfig internal constructor(
     private val updateText: () -> Unit,
@@ -73,6 +75,30 @@ public class RichTextConfig internal constructor(
         }
 
     /**
+     * The prefixes for unordered lists items.
+     *
+     * The prefixes are used in order if the list is nested.
+     *
+     * For example, if the list is nested twice, the first prefix is used for the first level,
+     * the second prefix is used for the second level, and so on.
+     *
+     * If the list is nested more than the number of prefixes, the last prefix is used.
+     *
+     * The default prefixes are `•`, `◦`, and `▪`.
+     */
+    public var unorderedListStyleType: UnorderedListStyleType = DefaultUnorderedListStyleType
+        set(value) {
+            field = value
+            updateText()
+        }
+
+    public var orderedListStyleType: OrderedListStyleType = DefaultOrderedListStyleType
+        set(value) {
+            field = value
+            updateText()
+        }
+
+    /**
      * Whether to preserve the style when the line is empty.
      * The line can be empty when the user deletes all the characters
      * or when the user presses `enter` to create a new line.
@@ -83,3 +109,13 @@ public class RichTextConfig internal constructor(
 }
 
 internal const val DefaultListIndent = 38
+
+internal val DefaultUnorderedListStyleType =
+    UnorderedListStyleType.from("•", "◦", "▪")
+
+internal val DefaultOrderedListStyleType: OrderedListStyleType =
+    OrderedListStyleType.Multiple(
+        OrderedListStyleType.Decimal,
+        OrderedListStyleType.LowerRoman,
+        OrderedListStyleType.LowerAlpha,
+    )

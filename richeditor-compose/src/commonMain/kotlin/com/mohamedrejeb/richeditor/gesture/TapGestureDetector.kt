@@ -45,58 +45,62 @@ internal suspend fun PointerInputScope.detectTapGestures(
     onTap: ((Offset) -> Unit)? = null,
     consumeDown: (Offset) -> Boolean,
 ) {
-    awaitEachGesture {
-        val down = awaitFirstDown()
-        if (!consumeDown(down.position)) return@awaitEachGesture
-        down.consume()
-        val longPressTimeout = onLongPress?.let {
-            viewConfiguration.longPressTimeoutMillis
-        } ?: (Long.MAX_VALUE / 2)
-        var upOrCancel: PointerInputChange? = null
-        try {
-            // wait for first tap up or long press
-            upOrCancel = withTimeout(longPressTimeout) {
-                waitForUpOrCancellation()
+    try {
+        awaitEachGesture {
+            val down = awaitFirstDown()
+            if (!consumeDown(down.position)) return@awaitEachGesture
+            down.consume()
+            val longPressTimeout = onLongPress?.let {
+                viewConfiguration.longPressTimeoutMillis
+            } ?: (Long.MAX_VALUE / 2)
+            var upOrCancel: PointerInputChange? = null
+            try {
+                // wait for first tap up or long press
+                upOrCancel = withTimeout(longPressTimeout) {
+                    waitForUpOrCancellation()
+                }
+                upOrCancel?.consume()
+            } catch (_: PointerEventTimeoutCancellationException) {
+                onLongPress?.invoke(down.position)
+                consumeUntilUp()
             }
-            upOrCancel?.consume()
-        } catch (_: PointerEventTimeoutCancellationException) {
-            onLongPress?.invoke(down.position)
-            consumeUntilUp()
-        }
 
-        if (upOrCancel != null) {
-            // tap was successful.
-            if (onDoubleTap == null) {
-                onTap?.invoke(upOrCancel.position) // no need to check for double-tap.
-            } else {
-                // check for second tap
-                val secondDown = awaitSecondDown(upOrCancel)
-
-                if (secondDown == null) {
-                    onTap?.invoke(upOrCancel.position) // no valid second tap started
+            if (upOrCancel != null) {
+                // tap was successful.
+                if (onDoubleTap == null) {
+                    onTap?.invoke(upOrCancel.position) // no need to check for double-tap.
                 } else {
-                    try {
-                        // Might have a long second press as the second tap
-                        withTimeout(longPressTimeout) {
-                            val secondUp = waitForUpOrCancellation()
-                            if (secondUp != null) {
-                                secondUp.consume()
-                                onDoubleTap(secondUp.position)
-                            } else {
-                                onTap?.invoke(upOrCancel.position)
-                            }
-                        }
-                    } catch (e: PointerEventTimeoutCancellationException) {
-                        // The first tap was valid, but the second tap is a long press.
-                        // notify for the first tap
-                        onTap?.invoke(upOrCancel.position)
+                    // check for second tap
+                    val secondDown = awaitSecondDown(upOrCancel)
 
-                        // notify for the long press
-                        onLongPress?.invoke(secondDown.position)
-                        consumeUntilUp()
+                    if (secondDown == null) {
+                        onTap?.invoke(upOrCancel.position) // no valid second tap started
+                    } else {
+                        try {
+                            // Might have a long second press as the second tap
+                            withTimeout(longPressTimeout) {
+                                val secondUp = waitForUpOrCancellation()
+                                if (secondUp != null) {
+                                    secondUp.consume()
+                                    onDoubleTap(secondUp.position)
+                                } else {
+                                    onTap?.invoke(upOrCancel.position)
+                                }
+                            }
+                        } catch (e: PointerEventTimeoutCancellationException) {
+                            // The first tap was valid, but the second tap is a long press.
+                            // notify for the first tap
+                            onTap?.invoke(upOrCancel.position)
+
+                            // notify for the long press
+                            onLongPress?.invoke(secondDown.position)
+                            consumeUntilUp()
+                        }
                     }
                 }
             }
         }
+    } catch (_: Exception) {
+
     }
 }

@@ -1,6 +1,7 @@
 package com.mohamedrejeb.richeditor.paragraph
 
 import androidx.compose.ui.text.ParagraphStyle
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
@@ -25,7 +26,6 @@ internal class RichParagraph(
         textIndex: Int,
         offset: Int = 0,
         ignoreCustomFiltering: Boolean = false,
-        returnFirstIfEmpty: Boolean = false,
     ): Pair<Int, RichSpan?> {
         var index = offset
 
@@ -64,9 +64,6 @@ internal class RichParagraph(
             else
                 index = result.first
         }
-
-        if (returnFirstIfEmpty && index == textIndex)
-            return index to getFirstNonEmptyChild()
 
         return index to null
     }
@@ -177,6 +174,31 @@ internal class RichParagraph(
 
     fun isNotBlank(ignoreStartRichSpan: Boolean = true): Boolean = !isBlank(ignoreStartRichSpan)
 
+    fun getStartTextSpanStyle(): SpanStyle? {
+        children.fastForEach { richSpan ->
+            if (richSpan.text.isNotEmpty()) {
+                return richSpan.spanStyle
+            } else {
+                val result = richSpan.getStartTextSpanStyle(SpanStyle())
+
+                if (result != null)
+                    return result
+            }
+        }
+
+        val firstChild = children.firstOrNull()
+
+        children.clear()
+
+        if (firstChild != null) {
+            firstChild.children.clear()
+
+            children.add(firstChild)
+        }
+
+        return firstChild?.spanStyle
+    }
+
     fun getFirstNonEmptyChild(offset: Int = -1): RichSpan? {
         children.fastForEach { richSpan ->
             if (richSpan.text.isNotEmpty()) {
@@ -206,6 +228,20 @@ internal class RichParagraph(
         }
 
         return firstChild
+    }
+
+    fun getLastNonEmptyChild(): RichSpan? {
+        for (i in children.lastIndex downTo 0) {
+            val richSpan = children[i]
+            if (richSpan.text.isNotEmpty())
+                return richSpan
+
+            val result = richSpan.getLastNonEmptyChild()
+            if (result != null)
+                return result
+        }
+
+        return null
     }
 
     /**

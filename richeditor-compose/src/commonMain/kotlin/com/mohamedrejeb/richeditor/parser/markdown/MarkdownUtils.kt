@@ -126,7 +126,41 @@ internal fun correctMarkdownText(text: String): String {
         newText.append(char)
     }
 
+    var isLineStart = false
+    var isTwoSpaceIndent = false
+    var isReachedFirstIndent = false
+    var spaces = 0
+
     text.forEachIndexed { i, char ->
+        // Change indent from 2 spaces to 4 spaces
+        if (char == '\n') {
+            isLineStart = true
+        } else if (isLineStart) {
+            if (char == ' ') {
+                spaces++
+            } else if (!isReachedFirstIndent) {
+                isLineStart = false
+                if (spaces == 2) {
+                    newText.append("  ")
+                    isTwoSpaceIndent = true
+                } else {
+                    isTwoSpaceIndent = false
+                }
+
+                isReachedFirstIndent = spaces >= 2
+
+                spaces = 0
+            } else {
+                isLineStart = false
+                if (isTwoSpaceIndent && spaces >= 2) {
+                    newText.append(" ".repeat(spaces))
+                }
+
+                spaces = 0
+            }
+        }
+
+        // Extract edge spaces from tags
         if (char == '*' || char == '~') {
             if (!pendingTag.all { it == char })
                 onPendingTag()

@@ -15,7 +15,6 @@ import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 
 internal class UnorderedList private constructor(
     initialIndent: Int = DefaultListIndent,
-    startTextSpanStyle: SpanStyle = SpanStyle(),
     startTextWidth: TextUnit = 0.sp,
     initialNestedLevel: Int = 1,
     initialStyleType: UnorderedListStyleType = DefaultUnorderedListStyleType,
@@ -30,20 +29,12 @@ internal class UnorderedList private constructor(
 
     constructor(
         config: RichTextConfig,
-        startTextSpanStyle: SpanStyle = SpanStyle(),
         initialNestedLevel: Int = 1,
     ): this(
         initialIndent = config.unorderedListIndent,
-        startTextSpanStyle = startTextSpanStyle,
         initialNestedLevel = initialNestedLevel,
         initialStyleType = config.unorderedListStyleType,
     )
-
-    var startTextSpanStyle = startTextSpanStyle
-        set(value) {
-            field = value
-            startRichSpan = getNewStartRichSpan(startRichSpan.textRange)
-        }
 
     override var startTextWidth: TextUnit = startTextWidth
         set(value) {
@@ -111,7 +102,6 @@ internal class UnorderedList private constructor(
         return RichSpan(
             paragraph = RichParagraph(type = this),
             text = text,
-            spanStyle = startTextSpanStyle,
             textRange = TextRange(
                 textRange.min,
                 textRange.min + text.length
@@ -140,7 +130,6 @@ internal class UnorderedList private constructor(
         if (other !is UnorderedList) return false
 
         if (indent != other.indent) return false
-        if (startTextSpanStyle != other.startTextSpanStyle) return false
         if (startTextWidth != other.startTextWidth) return false
         if (nestedLevel != other.nestedLevel) return false
         if (styleType != other.styleType) return false
@@ -150,7 +139,6 @@ internal class UnorderedList private constructor(
 
     override fun hashCode(): Int {
         var result = indent
-        result = 31 * result + startTextSpanStyle.hashCode()
         result = 31 * result + startTextWidth.hashCode()
         result = 31 * result + nestedLevel
         result = 31 * result + styleType.hashCode()

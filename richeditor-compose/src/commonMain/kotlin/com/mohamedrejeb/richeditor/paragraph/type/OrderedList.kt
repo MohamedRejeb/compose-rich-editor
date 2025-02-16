@@ -16,7 +16,6 @@ import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 internal class OrderedList private constructor(
     number: Int,
     initialIndent: Int = DefaultListIndent,
-    startTextSpanStyle: SpanStyle = SpanStyle(),
     startTextWidth: TextUnit = 0.sp,
     initialNestedLevel: Int = 1,
     initialStyleType: OrderedListStyleType = DefaultOrderedListStyleType,
@@ -34,25 +33,17 @@ internal class OrderedList private constructor(
     constructor(
         number: Int,
         config: RichTextConfig,
-        startTextSpanStyle: SpanStyle,
         startTextWidth: TextUnit = 0.sp,
         initialNestedLevel: Int = 1,
     ) : this(
         number = number,
         initialIndent = config.orderedListIndent,
-        startTextSpanStyle = startTextSpanStyle,
         startTextWidth = startTextWidth,
         initialNestedLevel = initialNestedLevel,
         initialStyleType = config.orderedListStyleType,
     )
 
     var number = number
-        set(value) {
-            field = value
-            startRichSpan = getNewStartRichSpan(startRichSpan.textRange)
-        }
-
-    var startTextSpanStyle = startTextSpanStyle
         set(value) {
             field = value
             startRichSpan = getNewStartRichSpan(startRichSpan.textRange)
@@ -115,7 +106,6 @@ internal class OrderedList private constructor(
         return RichSpan(
             paragraph = RichParagraph(type = this),
             text = text,
-            spanStyle = startTextSpanStyle,
             textRange = TextRange(
                 textRange.min,
                 textRange.min + text.length
@@ -127,7 +117,6 @@ internal class OrderedList private constructor(
         OrderedList(
             number = number + 1,
             initialIndent = indent,
-            startTextSpanStyle = startTextSpanStyle,
             startTextWidth = startTextWidth,
             initialNestedLevel = nestedLevel,
             initialStyleType = styleType,
@@ -137,7 +126,6 @@ internal class OrderedList private constructor(
         OrderedList(
             number = number,
             initialIndent = indent,
-            startTextSpanStyle = startTextSpanStyle,
             startTextWidth = startTextWidth,
             initialNestedLevel = nestedLevel,
             initialStyleType = styleType,
@@ -149,7 +137,6 @@ internal class OrderedList private constructor(
 
         if (number != other.number) return false
         if (indent != other.indent) return false
-        if (startTextSpanStyle != other.startTextSpanStyle) return false
         if (startTextWidth != other.startTextWidth) return false
         if (nestedLevel != other.nestedLevel) return false
         if (styleType != other.styleType) return false
@@ -161,7 +148,6 @@ internal class OrderedList private constructor(
         var result = indent
         result = 31 * result + number
         result = 31 * result + indent
-        result = 31 * result + startTextSpanStyle.hashCode()
         result = 31 * result + startTextWidth.hashCode()
         result = 31 * result + nestedLevel
         result = 31 * result + styleType.hashCode()

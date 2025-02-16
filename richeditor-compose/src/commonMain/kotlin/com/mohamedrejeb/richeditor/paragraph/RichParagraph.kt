@@ -1,6 +1,7 @@
 package com.mohamedrejeb.richeditor.paragraph
 
 import androidx.compose.ui.text.ParagraphStyle
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
@@ -172,6 +173,31 @@ internal class RichParagraph(
     }
 
     fun isNotBlank(ignoreStartRichSpan: Boolean = true): Boolean = !isBlank(ignoreStartRichSpan)
+
+    fun getStartTextSpanStyle(): SpanStyle? {
+        children.fastForEach { richSpan ->
+            if (richSpan.text.isNotEmpty()) {
+                return richSpan.spanStyle
+            } else {
+                val result = richSpan.getStartTextSpanStyle(SpanStyle())
+
+                if (result != null)
+                    return result
+            }
+        }
+
+        val firstChild = children.firstOrNull()
+
+        children.clear()
+
+        if (firstChild != null) {
+            firstChild.children.clear()
+
+            children.add(firstChild)
+        }
+
+        return firstChild?.spanStyle
+    }
 
     fun getFirstNonEmptyChild(offset: Int = -1): RichSpan? {
         children.fastForEach { richSpan ->

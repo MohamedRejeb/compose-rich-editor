@@ -1246,7 +1246,6 @@ public class RichTextState internal constructor(
 
         val newType = UnorderedList(
             config = config,
-            startTextSpanStyle = paragraph.getFirstNonEmptyChild()?.spanStyle ?: SpanStyle(),
             initialNestedLevel = nestedLevel,
         )
 
@@ -1317,7 +1316,6 @@ public class RichTextState internal constructor(
         val newType = OrderedList(
             number = orderedListNumber,
             config = config,
-            startTextSpanStyle = firstRichSpan?.spanStyle ?: SpanStyle(),
             initialNestedLevel = nestedLevel,
         )
 
@@ -1620,7 +1618,9 @@ public class RichTextState internal constructor(
                 }
 
                 withStyle(richParagraph.paragraphStyle.merge(richParagraph.type.getStyle(config))) {
-                    append(richParagraph.type.startText)
+                    withStyle(richParagraph.getStartTextSpanStyle() ?: RichSpanStyle.DefaultSpanStyle) {
+                        append(richParagraph.type.startText)
+                    }
                     val richParagraphStartTextLength = richParagraph.type.startText.length
                     richParagraph.type.startRichSpan.textRange =
                         TextRange(index, index + richParagraphStartTextLength)
@@ -2069,7 +2069,6 @@ public class RichTextState internal constructor(
         if (richSpan.text == "- " || richSpan.text == "* ") {
             richSpan.paragraph.type = UnorderedList(
                 config = config,
-                startTextSpanStyle = richSpan.spanStyle,
             )
             richSpan.text = ""
         } else if (richSpan.text.matches(Regex("^\\d+\\. "))) {
@@ -2079,7 +2078,6 @@ public class RichTextState internal constructor(
                 richSpan.paragraph.type = OrderedList(
                     number = number,
                     config = config,
-                    startTextSpanStyle = richSpan.spanStyle,
                 )
                 richSpan.text = ""
             }
@@ -2146,7 +2144,6 @@ public class RichTextState internal constructor(
                 newType = OrderedList(
                     number = currentNumber,
                     config = config,
-                    startTextSpanStyle = currentParagraphType.startTextSpanStyle,
                     startTextWidth = currentParagraphType.startTextWidth,
                     initialNestedLevel = currentParagraphType.nestedLevel
                 ),
@@ -2201,7 +2198,6 @@ public class RichTextState internal constructor(
                     newType = OrderedList(
                         number = number,
                         config = config,
-                        startTextSpanStyle = currentParagraphType.startTextSpanStyle,
                         startTextWidth = currentParagraphType.startTextWidth,
                         initialNestedLevel = currentParagraphType.nestedLevel
                     ),
@@ -3657,7 +3653,10 @@ public class RichTextState internal constructor(
             var index = 0
             richParagraphList.fastForEachIndexed { i, richParagraph ->
                 withStyle(richParagraph.paragraphStyle.merge(richParagraph.type.getStyle(config))) {
-                    append(richParagraph.type.startText)
+                    withStyle(richParagraph.getStartTextSpanStyle() ?: RichSpanStyle.DefaultSpanStyle) {
+                        append(richParagraph.type.startText)
+                    }
+
                     val richParagraphStartTextLength = richParagraph.type.startText.length
                     richParagraph.type.startRichSpan.textRange =
                         TextRange(index, index + richParagraphStartTextLength)
@@ -3755,7 +3754,6 @@ public class RichTextState internal constructor(
                     newType = OrderedList(
                         number = orderedListNumber,
                         config = config,
-                        startTextSpanStyle = orderedListStartTextSpanStyle,
                         startTextWidth = type.startTextWidth,
                         initialNestedLevel = type.nestedLevel
                     ),
@@ -3763,7 +3761,6 @@ public class RichTextState internal constructor(
                 )
 
                 type.number = orderedListNumber
-                type.startTextSpanStyle = orderedListStartTextSpanStyle
             } else {
                 orderedListStartTextSpanStyle = SpanStyle()
             }

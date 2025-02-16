@@ -205,6 +205,23 @@ internal class RichSpan(
             richSpan.isBlank()
         }
 
+    internal fun getStartTextSpanStyle(
+        parentSpanStyle: SpanStyle
+    ): SpanStyle? {
+        children.fastForEach { richSpan ->
+            if (richSpan.text.isNotEmpty()) {
+                return spanStyle
+            }
+            else {
+                val result = richSpan.getStartTextSpanStyle(parentSpanStyle.merge(spanStyle))
+                if (result != null) {
+                    return result
+                }
+            }
+        }
+        return null
+    }
+
     /**
      * Get the first non-empty child
      *

@@ -20,8 +20,6 @@ import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.util.fastForEachReversed
 import com.mohamedrejeb.richeditor.paragraph.type.ConfigurableNestedLevel
-import com.mohamedrejeb.richeditor.paragraph.type.ListNestedLevel
-import kotlin.math.max
 
 internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 

@@ -64,9 +64,6 @@ internal class RichParagraph(
                 index = result.first
         }
 
-//        if (index == textIndex)
-//            return index to getLastNonEmptyChild()
-
         return index to null
     }
 

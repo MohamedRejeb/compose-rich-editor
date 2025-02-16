@@ -8,6 +8,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.isSpecified
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isAltPressed
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.isShiftPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
@@ -1341,12 +1350,47 @@ public class RichTextState internal constructor(
     }
 
     /**
+     * Increases and decreases the nested level of the current selected lists when the Tab key is pressed.
+     *
+     * @param event the key event.
+     * @return true if the nested level was increased or decreased, false otherwise.
+     */
+    internal fun onPreviewKeyEvent(event: KeyEvent): Boolean {
+        if (event.type != KeyEventType.KeyDown)
+            return false
+
+        if (event.key != Key.Tab)
+            return false
+
+        if (
+            event.isMetaPressed ||
+            event.isCtrlPressed ||
+            event.isAltPressed
+        )
+            return false
+
+        if (!isList)
+            return false
+
+        if (event.isShiftPressed && canDecreaseListNestedLevel())
+            decreaseListNestedLevel()
+        else if (!event.isShiftPressed && canIncreaseListNestedLevel())
+            increaseListNestedLevel()
+        else
+            return false
+
+        return true
+    }
+
+    /**
      * Checks weather the list nested level can be increased or not.
      *
      * @param paragraphs the list of paragraphs to check.
      * @return true if the list nested level can be increased, false otherwise.
      */
-    internal fun canIncreaseListNestedLevel(paragraphs: List<RichParagraph>): Boolean {
+    internal fun canIncreaseListNestedLevel(
+        paragraphs: List<RichParagraph> = getRichParagraphListByTextRange(selection),
+    ): Boolean {
         if (paragraphs.isEmpty())
             return false
 
@@ -1390,7 +1434,9 @@ public class RichTextState internal constructor(
      * @param paragraphs the list of paragraphs to check.
      * @return true if the list nested level can be decreased, false otherwise.
      */
-    internal fun canDecreaseListNestedLevel(paragraphs: List<RichParagraph>): Boolean {
+    internal fun canDecreaseListNestedLevel(
+        paragraphs: List<RichParagraph> = getRichParagraphListByTextRange(selection),
+    ): Boolean {
         if (paragraphs.isEmpty())
             return false
 
@@ -3408,7 +3454,8 @@ public class RichTextState internal constructor(
      * or an empty list if no such [RichParagraph] exists.
      */
     internal fun getRichParagraphListByTextRange(searchTextRange: TextRange): List<RichParagraph> {
-        if (singleParagraphMode) return richParagraphList.toList()
+        if (singleParagraphMode)
+            return richParagraphList.toList()
 
         var index = 0
         val richParagraphList = mutableListOf<RichParagraph>()

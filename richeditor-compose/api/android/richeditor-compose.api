@@ -102,6 +102,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public final fun getCodeSpanBackgroundColor-0d7_KjU ()J
 	public final fun getCodeSpanColor-0d7_KjU ()J
 	public final fun getCodeSpanStrokeColor-0d7_KjU ()J
+	public final fun getExitListOnEmptyItem ()Z
 	public final fun getLinkColor-0d7_KjU ()J
 	public final fun getLinkTextDecoration ()Landroidx/compose/ui/text/style/TextDecoration;
 	public final fun getListIndent ()I
@@ -113,6 +114,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public final fun setCodeSpanBackgroundColor-8_81llA (J)V
 	public final fun setCodeSpanColor-8_81llA (J)V
 	public final fun setCodeSpanStrokeColor-8_81llA (J)V
+	public final fun setExitListOnEmptyItem (Z)V
 	public final fun setLinkColor-8_81llA (J)V
 	public final fun setLinkTextDecoration (Landroidx/compose/ui/text/style/TextDecoration;)V
 	public final fun setListIndent (I)V

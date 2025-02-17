@@ -1478,7 +1478,7 @@ public class RichTextState internal constructor(
             else
                 it
         }
-        val paragraphFirstChildStartIndex = firstNonEmptyChildIndex ?: selection.min
+        val paragraphFirstChildStartIndex = (firstNonEmptyChildIndex ?: selection.min).coerceAtLeast(0)
 
         paragraph.type = newType
 
@@ -1871,7 +1871,11 @@ public class RichTextState internal constructor(
                 minRichSpan.paragraph.type = DefaultParagraph()
 
                 // Check if it's a list and handle level appropriately
-                if (minParagraphOldType is ConfigurableListLevel && minParagraphOldType.level > 1) {
+                if (
+                    minRemoveIndex == maxRemoveIndex &&
+                    minParagraphOldType is ConfigurableListLevel &&
+                    minParagraphOldType.level > 1
+                ) {
                     // Decrease level instead of exiting list
                     minParagraphOldType.level -= 1
                     tempTextFieldValue = updateParagraphType(

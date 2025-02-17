@@ -2712,10 +2712,12 @@ class RichTextStateTest {
             )
         )
 
-        richTextState.selection = TextRange(4, 14)
+        richTextState.selection = TextRange(4, 15)
         richTextState.removeSelectedText()
 
         assertEquals(2, richTextState.richParagraphList.size)
+        assertEquals("A", richTextState.richParagraphList[0].children.first().text)
+        assertEquals("D", richTextState.richParagraphList[1].children.first().text)
     }
 
     @OptIn(ExperimentalRichTextApi::class)

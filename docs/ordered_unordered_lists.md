@@ -150,16 +150,25 @@ When working with lists:
 
 > Note: The following examples are representations of how lists might appear. The actual appearance in your application may vary based on your configuration settings (style type, indentation, etc.).
 
-Ordered List Example:
+#### Ordered List Example
+```
 1. First level item
    a. Second level item
       i. Third level item
    b. Another second level
 2. Back to first level
+```
 
-Unordered List Example:
+#### Unordered List Example
+```
 • First level item
   ◦ Second level item
     ▪ Third level item
   ◦ Another second level
 • Back to first level
+```
+
+## Related Documentation
+
+- For HTML list import/export, see [HTML Import and Export](html_import_export.md)
+- For Markdown list import/export, see [Markdown Import and Export](markdown_import_export.md)

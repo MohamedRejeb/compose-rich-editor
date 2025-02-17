@@ -82,7 +82,7 @@ To get the current span style of the selection, use `RichTextState.currentSpanSt
 ```kotlin
 // Get the current span style.
 val currentSpanStyle = richTextState.currentSpanStyle
-val isBold = currentSpanStyle.fontWeight = FontWeight.Bold
+val isBold = currentSpanStyle.fontWeight == FontWeight.Bold
 ```
 
 #### Styling Paragraphs
@@ -99,7 +99,7 @@ To get the current paragraph style of the selection, use `RichTextState.currentP
 ```kotlin
 // Get the current paragraph style.
 val currentParagraphStyle = richTextState.currentParagraphStyle
-val isCentered = currentParagraphStyle.textAlign = TextAlign.Center
+val isCentered = currentParagraphStyle.textAlign == TextAlign.Center
 ```
 
 #### Add links
@@ -133,7 +133,10 @@ val myUriHandler by remember {
     })
 }
 CompositionLocalProvider(LocalUriHandler provides myUriHandler) {
-    RichText( ... )
+    RichText(
+        state = richTextState,
+        modifier = Modifier.fillMaxWidth()
+    )
 }
 ```
 

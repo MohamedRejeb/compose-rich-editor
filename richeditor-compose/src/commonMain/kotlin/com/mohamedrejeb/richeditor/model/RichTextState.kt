@@ -2252,8 +2252,27 @@ public class RichTextState internal constructor(
                 val isSelectionAtNewRichSpan =
                     newParagraphFirstRichSpan?.textRange?.min == tempTextFieldValue.selection.min - 1
 
-                // Check if the cursor is at the new paragraph
+                // Check if the cursor is at the new paragraph and if it's an empty list item
                 if (
+                    config.exitListOnEmptyItem &&
+                    isSelectionAtNewRichSpan &&
+                    richSpan.paragraph.isEmpty() &&
+                    richSpan.paragraph.type is ConfigurableListLevel
+                ) {
+                    // Exit list by removing list formatting
+                    tempTextFieldValue = updateParagraphType(
+                        paragraph = richSpan.paragraph,
+                        newType = DefaultParagraph(),
+                        textFieldValue = tempTextFieldValue,
+                    )
+                    newParagraphFirstRichSpan.spanStyle = SpanStyle()
+                    newParagraphFirstRichSpan.richSpanStyle = RichSpanStyle.Default
+
+                    // Ignore adding the new paragraph
+                    index--
+                    continue
+                } else
+                    if (
                     (!config.preserveStyleOnEmptyLine || richSpan.paragraph.isEmpty()) &&
                     isSelectionAtNewRichSpan
                 ) {

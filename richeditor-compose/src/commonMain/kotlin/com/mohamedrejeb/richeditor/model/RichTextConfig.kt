@@ -106,6 +106,15 @@ public class RichTextConfig internal constructor(
      * Default is `true`.
      */
     public var preserveStyleOnEmptyLine: Boolean = true
+
+    /**
+     * Whether to exit the list when pressing Enter on an empty list item.
+     * When true, pressing Enter on an empty list item will convert it to a normal paragraph.
+     * When false, pressing Enter on an empty list item will create a new list item.
+     *
+     * Default is `true`.
+     */
+    public var exitListOnEmptyItem: Boolean = true
 }
 
 internal const val DefaultListIndent = 38

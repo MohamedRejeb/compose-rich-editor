@@ -133,7 +133,7 @@ val myUriHandler by remember {
     })
 }
 CompositionLocalProvider(LocalUriHandler provides myUriHandler) {
-    RichTextEditor(
+    RichText(
         state = richTextState,
         modifier = Modifier.fillMaxWidth()
     )

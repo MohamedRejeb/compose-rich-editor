@@ -18,7 +18,7 @@ coroutines = "1.10.1"
 ktor = "3.1.0"
 android-minSdk = "21"
 android-compileSdk = "35"
-lifecycle = "2.8.4"
+lifecycle = "2.9.0+dev2082"
 navigation = "2.8.0-alpha11"
 
 [libraries]

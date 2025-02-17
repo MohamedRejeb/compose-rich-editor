@@ -10,14 +10,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
-import cafe.adriel.voyager.navigator.LocalNavigator
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun HtmlEditorContent() {
-    val navigator = LocalNavigator.current
-
+fun HtmlEditorContent(
+    navigateBack: () -> Unit
+) {
     var isHtmlToRichText by remember { mutableStateOf(false) }
 
     var html by remember {
@@ -47,7 +46,7 @@ fun HtmlEditorContent() {
                 title = { Text("Html Editor") },
                 navigationIcon = {
                     IconButton(
-                        onClick = { navigator?.pop() }
+                        onClick = navigateBack
                     ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }

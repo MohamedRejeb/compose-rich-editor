@@ -1310,8 +1310,6 @@ public class RichTextState internal constructor(
             break
         }
 
-        val firstRichSpan = paragraph.getFirstNonEmptyChild()
-
         val newType = OrderedList(
             number = orderedListNumber,
             config = config,

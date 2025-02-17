@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -12,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -67,6 +69,7 @@ fun HtmlToRichText(
                 onValueChange = {
                     onHtmlChange(it)
                 },
+                textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
             )
         }
 
@@ -105,6 +108,7 @@ fun HtmlToRichText(
                         RichText(
                             state = richTextState,
                             imageLoader = Coil3ImageLoader,
+                            style = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
                             modifier = Modifier
                                 .fillMaxWidth()
                         )

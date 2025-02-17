@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.sample.common.components.RichTextStyleRow
@@ -50,6 +51,7 @@ fun RichTextToHtml(
                     .fillMaxWidth()
                     .weight(1f),
                 state = richTextState,
+                textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
             )
         }
 
@@ -86,6 +88,7 @@ fun RichTextToHtml(
                 item {
                     Text(
                         text = html,
+                        style = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)

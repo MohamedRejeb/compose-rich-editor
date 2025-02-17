@@ -1864,7 +1864,22 @@ public class RichTextState internal constructor(
                     paragraphFirstChildMinIndex = minParagraphFirstChildMinIndex,
                 )
 
+                // Save the old paragraph type
+                val minParagraphOldType = minRichSpan.paragraph.type
+
+                // Set the paragraph type to DefaultParagraph
                 minRichSpan.paragraph.type = DefaultParagraph()
+
+                // Check if it's a list and handle level appropriately
+                if (minParagraphOldType is ConfigurableListLevel && minParagraphOldType.level > 1) {
+                    // Decrease level instead of exiting list
+                    minParagraphOldType.level -= 1
+                    tempTextFieldValue = updateParagraphType(
+                        paragraph = minRichSpan.paragraph,
+                        newType = minParagraphOldType,
+                        textFieldValue = tempTextFieldValue,
+                    )
+                }
             }
         }
 
@@ -1876,8 +1891,6 @@ public class RichTextState internal constructor(
                 paragraphStartTextLength = maxParagraphStartTextLength,
                 paragraphFirstChildMinIndex = maxParagraphFirstChildMinIndex,
             )
-
-            maxRichSpan.paragraph.type = DefaultParagraph()
 
             tempTextFieldValue = adjustOrderedListsNumbers(
                 startParagraphIndex = maxParagraphIndex + 1,
@@ -2271,8 +2284,7 @@ public class RichTextState internal constructor(
                     // Ignore adding the new paragraph
                     index--
                     continue
-                } else
-                    if (
+                } else if (
                     (!config.preserveStyleOnEmptyLine || richSpan.paragraph.isEmpty()) &&
                     isSelectionAtNewRichSpan
                 ) {

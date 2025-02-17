@@ -2291,8 +2291,8 @@ public class RichTextState internal constructor(
 
             if (newParagraphType is OrderedList) {
                 tempTextFieldValue = adjustOrderedListsNumbers(
-                    startParagraphIndex = paragraphIndex + 2,
-                    startNumber = newParagraphType.number + 1,
+                    startParagraphIndex = paragraphIndex + 1,
+                    startNumber = newParagraphType.number,
                     textFieldValue = tempTextFieldValue,
                 )
             }

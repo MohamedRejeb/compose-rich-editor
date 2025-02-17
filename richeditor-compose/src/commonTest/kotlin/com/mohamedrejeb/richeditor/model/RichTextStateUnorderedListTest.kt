@@ -1,11 +1,15 @@
 package com.mohamedrejeb.richeditor.model
 
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
+import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedListStyleType
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 
 @OptIn(ExperimentalRichTextApi::class)
 class RichTextStateUnorderedListTest {
@@ -169,5 +173,58 @@ class RichTextStateUnorderedListTest {
 
         // Should fallback to bullet point when the prefix list is empty
         assertEquals("• ", paragraph.type.startRichSpan.text)
+    }
+
+    @Test
+    fun testExitEmptyListItem() {
+        // Test with exitListOnEmptyItem = true (default)
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    type = UnorderedList(),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "",
+                            paragraph = it,
+                        ),
+                    )
+                }
+            )
+        )
+
+        // Simulate pressing Enter on empty list item
+        richTextState.selection = TextRange(richTextState.annotatedString.length)
+        richTextState.addTextAfterSelection("\n")
+
+        // Verify that list formatting is removed
+        assertEquals(1, richTextState.richParagraphList.size)
+        assertIs<DefaultParagraph>(richTextState.richParagraphList[0].type)
+
+        // Test with exitListOnEmptyItem = false
+        val richTextState2 = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    type = UnorderedList(),
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "",
+                            paragraph = it,
+                        ),
+                    )
+                }
+            )
+        )
+        richTextState2.config.exitListOnEmptyItem = false
+
+        // Simulate pressing Enter on empty list item
+        richTextState2.selection = TextRange(richTextState2.annotatedString.length)
+        richTextState2.addTextAfterSelection("\n")
+
+        // Verify that list formatting is preserved
+        assertEquals(2, richTextState2.richParagraphList.size)
+        assertIs<UnorderedList>(richTextState2.richParagraphList[0].type)
+        assertIs<UnorderedList>(richTextState2.richParagraphList[1].type)
     }
 }

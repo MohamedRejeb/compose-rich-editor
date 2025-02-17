@@ -8,6 +8,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -84,6 +86,7 @@ fun RichEditorContent() {
                     BasicRichTextEditor(
                         modifier = Modifier.fillMaxWidth(),
                         state = basicRichTextState,
+                        textStyle = TextStyle.Default.copy(fontFamily = FontFamily.Monospace),
                     )
                 }
 
@@ -115,6 +118,7 @@ fun RichEditorContent() {
                         modifier = Modifier.fillMaxWidth(),
                         state = richTextState,
                         readOnly = true,
+                        textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
                     )
                 }
 
@@ -145,6 +149,7 @@ fun RichEditorContent() {
                     OutlinedRichTextEditor(
                         modifier = Modifier.fillMaxWidth(),
                         state = outlinedRichTextState,
+                        textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
                     )
                 }
 

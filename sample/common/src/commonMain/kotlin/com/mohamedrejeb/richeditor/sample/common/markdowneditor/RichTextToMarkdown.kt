@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.sample.common.components.RichTextStyleRow
@@ -51,6 +52,7 @@ fun RichTextToMarkdown(
                     .fillMaxWidth()
                     .weight(1f),
                 state = richTextState,
+                textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
             )
         }
 
@@ -92,6 +94,7 @@ fun RichTextToMarkdown(
                     ) {
                         Text(
                             text = markdown,
+                            style = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
                             modifier = Modifier
                                 .fillMaxWidth()
                         )

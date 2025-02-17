@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -64,6 +65,7 @@ fun MarkdownToRichText(
                 onValueChange = {
                     onMarkdownChange(it)
                 },
+                textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
             )
         }
 
@@ -101,6 +103,7 @@ fun MarkdownToRichText(
                     RichText(
                         state = richTextState,
                         imageLoader = Coil3ImageLoader,
+                        style = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
                         modifier = Modifier
                             .fillMaxWidth()
                     )

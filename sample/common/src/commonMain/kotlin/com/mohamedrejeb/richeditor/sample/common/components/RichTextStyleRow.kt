@@ -230,21 +230,21 @@ fun RichTextStyleRow(
         }
 
         item {
-            RichTextStyleButton(
-                onClick = {
-                    state.addRichSpan(SpellCheck)
-                },
-                isSelected = false,
-                icon = Icons.Outlined.Spellcheck,
-            )
-        }
-
-        item {
             Box(
                 Modifier
                     .height(24.dp)
                     .width(1.dp)
                     .background(Color(0xFF393B3D))
+            )
+        }
+
+        item {
+            RichTextStyleButton(
+                onClick = {
+                    state.addRichSpan(SpellCheck)
+                },
+                isSelected = state.currentRichSpanStyle is SpellCheck,
+                icon = Icons.Outlined.Spellcheck,
             )
         }
 

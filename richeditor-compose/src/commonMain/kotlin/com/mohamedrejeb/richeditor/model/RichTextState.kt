@@ -1872,7 +1872,7 @@ public class RichTextState internal constructor(
 
                 // Check if it's a list and handle level appropriately
                 if (
-                    minRemoveIndex == maxRemoveIndex &&
+                    maxRemoveIndex - minRemoveIndex == 1 &&
                     minParagraphOldType is ConfigurableListLevel &&
                     minParagraphOldType.level > 1
                 ) {

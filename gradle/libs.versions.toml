@@ -13,12 +13,13 @@ nexus-publish = "2.0.0"
 # For sample
 androidx-appcompat = "1.7.0"
 activity-compose = "1.10.0"
-voyager = "1.1.0-beta03"
 richeditor = "1.0.0-rc10"
 coroutines = "1.10.1"
 ktor = "3.1.0"
 android-minSdk = "21"
 android-compileSdk = "35"
+lifecycle = "2.8.4"
+navigation = "2.8.0-alpha11"
 
 [libraries]
 ksoup-html = { module = "com.mohamedrejeb.ksoup:ksoup-html", version.ref = "ksoup" }
@@ -32,7 +33,6 @@ nexus-publish = { module = "io.github.gradle-nexus.publish-plugin:io.github.grad
 # For sample
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity-compose" }
-voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
 richeditor-compose = { module = "com.mohamedrejeb.richeditor:richeditor-compose", version.ref = "richeditor" }
 
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
@@ -46,6 +46,9 @@ ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "kto
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
 ktor-client-wasm = { module = "io.ktor:ktor-client-js-wasm-js", version.ref = "ktor" }
+
+lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigation" }
 
 [plugins]
 androidLibrary = { id = "com.android.library", version.ref = "agp" }

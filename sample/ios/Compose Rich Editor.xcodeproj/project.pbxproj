@@ -45,6 +45,7 @@
 		EA37A5F42A006747008B8114 /* Compose Rich EditorUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Compose Rich EditorUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EA37A5F82A006747008B8114 /* Compose_Rich_EditorUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Compose_Rich_EditorUITests.swift; sourceTree = "<group>"; };
 		EA37A5FA2A006747008B8114 /* Compose_Rich_EditorUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Compose_Rich_EditorUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		EA3C9A1A2D636EDF0011BAEC /* Compose-Rich-Editor-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Compose-Rich-Editor-Info.plist"; sourceTree = SOURCE_ROOT; };
 		EAC5C8372A0068FF009992F8 /* ComposeViewControllerToSwiftUi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeViewControllerToSwiftUi.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -96,6 +97,7 @@
 		EA37A5DC2A006746008B8114 /* Compose Rich Editor */ = {
 			isa = PBXGroup;
 			children = (
+				EA3C9A1A2D636EDF0011BAEC /* Compose-Rich-Editor-Info.plist */,
 				EA37A5DD2A006746008B8114 /* Compose_Rich_EditorApp.swift */,
 				EA37A5DF2A006746008B8114 /* ContentView.swift */,
 				EA37A5E12A006747008B8114 /* Assets.xcassets */,
@@ -446,6 +448,7 @@
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/../common/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Compose-Rich-Editor-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -481,6 +484,7 @@
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/../common/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Compose-Rich-Editor-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

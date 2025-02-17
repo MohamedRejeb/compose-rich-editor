@@ -54,9 +54,6 @@ kotlin {
         implementation(projects.richeditorCompose)
         implementation(projects.richeditorComposeCoil3)
 
-        // Voyager Navigator
-        implementation(libs.voyager.navigator)
-
         // Coil
         implementation(libs.coil.compose)
         implementation(libs.coil.svg)
@@ -64,6 +61,12 @@ kotlin {
 
         // Ktor
         implementation(libs.ktor.client.core)
+
+        // Lifecycle
+        implementation(libs.lifecycle.viewmodel.compose)
+
+        // Navigation
+        implementation(libs.navigation.compose)
     }
 
     sourceSets.androidMain.dependencies {

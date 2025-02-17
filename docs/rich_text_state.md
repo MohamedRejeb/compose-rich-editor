@@ -1,8 +1,15 @@
 # RichTextState
 
-Use `RichTextEditor` composable to create a rich text editor.
+`RichTextState` is the core component that manages the state of the Rich Text Editor. It handles:
+- Text content and styling
+- Selection and cursor position
+- Configuration settings
+- Text operations and modifications
+- Import/export functionality
 
-The `RichTextEditor` composable requires a `RichTextState` to manage the editor's state.
+## Basic Usage
+
+### Creating the State
 
 To create a `RichTextState`, use the `rememberRichTextState` function:
 
@@ -11,61 +18,107 @@ val state = rememberRichTextState()
 
 RichTextEditor(
     state = state,
+    modifier = Modifier.fillMaxWidth()
 )
 ```
 
-### Customizing the rich text configuration
+## Configuration
 
-Some of the rich text editor's features can be customized, such as the color of the links and the code blocks.
+### Appearance Settings
 
 ```kotlin
-// Change link color and text decoration.
+// Link appearance
 richTextState.config.linkColor = Color.Blue
 richTextState.config.linkTextDecoration = TextDecoration.Underline
 
-// Change code block colors.
+// Code block appearance
 richTextState.config.codeSpanColor = Color.Yellow
 richTextState.config.codeSpanBackgroundColor = Color.Transparent
 richTextState.config.codeSpanStrokeColor = Color.LightGray
+```
 
-// Change list indentation (ordered and unordered).
+### List Configuration
+
+```kotlin
+// Global list indentation
 richTextState.config.listIndent = 20
 
-// Change only ordered list indentation.
+// Specific list type indentation
 richTextState.config.orderedListIndent = 20
-
-// Change only unordered list indentation.
 richTextState.config.unorderedListIndent = 20
+
+// List behavior
+richTextState.config.exitListOnEmptyItem = true  // Exit list when pressing Enter on empty item
 ```
 
-### Changing the editor's selection
+## Text Operations
 
-The editor's selection can be changed using the `RichTextState.selection` property.
+### Selection Management
+
+The editor's selection can be controlled programmatically:
 
 ```kotlin
+// Set selection range
 richTextState.selection = TextRange(0, 5)
+
+// Select all text
+richTextState.selection = TextRange(0, richTextState.annotatedString.text.length)
+
+// Move cursor to end
+richTextState.selection = TextRange(richTextState.annotatedString.text.length)
 ```
 
-### Performing string operations on rich text
+### Text Modification
 
-The `RichTextState` class provides a set of functions to perform string operations on the rich text while preserving the styles.
+The `RichTextState` provides methods to modify text while preserving styles:
 
 ```kotlin
-// Insert text at custom posiotn.
+// Insert text at specific position
 richTextState.addTextAtIndex(5, "Hello")
 
-// Insert text after the current selection.
+// Insert text after current selection
 richTextState.addTextAfterSelection("Hello")
 
-// Remove text range.
+// Remove text
 richTextState.removeTextRange(TextRange(0, 5))
-
-// Remove selected text.
 richTextState.removeSelectedText()
 
-// Replace text range.
+// Replace text
 richTextState.replaceTextRange(TextRange(0, 5), "Hello")
-
-// Replace selected text.
 richTextState.replaceSelectedText("Hello")
 ```
+
+### Text Change Monitoring
+
+You can monitor text changes using the `annotatedString` property:
+
+```kotlin
+LaunchedEffect(richTextState.annotatedString) {
+    // Handle text changes
+    println("Text changed: ${richTextState.annotatedString.text}")
+}
+```
+
+## State Persistence
+
+To save and restore the editor's state:
+
+```kotlin
+// Save state
+val html = richTextState.toHtml()
+// or
+val markdown = richTextState.toMarkdown()
+
+// Restore state
+richTextState.setHtml(savedHtml)
+// or
+richTextState.setMarkdown(savedMarkdown)
+```
+
+## Related Documentation
+
+- For styling text spans, see [Span Style](span_style.md)
+- For styling paragraphs, see [Paragraph Style](paragraph_style.md)
+- For working with lists, see [Ordered and Unordered Lists](ordered_unordered_lists.md)
+- For HTML conversion, see [HTML Import and Export](html_import_export.md)
+- For Markdown conversion, see [Markdown Import and Export](markdown_import_export.md)

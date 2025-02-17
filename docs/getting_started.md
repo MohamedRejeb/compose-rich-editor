@@ -41,7 +41,7 @@ To get the current span style of the selection, use `RichTextState.currentSpanSt
 ```kotlin
 // Get the current span style.
 val currentSpanStyle = richTextState.currentSpanStyle
-val isBold = currentSpanStyle.fontWeight = FontWeight.Bold
+val isBold = currentSpanStyle.fontWeight == FontWeight.Bold
 ```
 
 Check out [the full documentation](span_style.md) for more info.
@@ -60,15 +60,16 @@ To get the current paragraph style of the selection, use `RichTextState.currentP
 ```kotlin
 // Get the current paragraph style.
 val currentParagraphStyle = richTextState.currentParagraphStyle
-val isCentered = currentParagraphStyle.textAlign = TextAlign.Center
+val isCentered = currentParagraphStyle.textAlign == TextAlign.Center
 ```
 
-Check out [the full documentation](span_style.md) for more info.
+Check out [the full documentation](paragraph_style.md) for more info.
 
 ## Supported Styling Formats
 
-The styling format supported by Compose Rich Editor:
+The styling formats supported by Compose Rich Editor:
 
+### Text Formatting
 * Bold
 * Italic
 * Underline
@@ -77,12 +78,18 @@ The styling format supported by Compose Rich Editor:
 * Background color
 * Font size
 * Any custom style using `SpanStyle`
+
+### Paragraph Formatting
 * Text Align
 * Any custom style using `ParagraphStyle`
+
+### Lists and Blocks
 * Ordered List
 * Unordered List
-* Links
 * Code Blocks
+
+### Links
+* Hyperlinks
 
 There are some styling formats that are not supported yet, but I'm planning to add them in the future:
 

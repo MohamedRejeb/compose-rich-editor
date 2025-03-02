@@ -3661,6 +3661,23 @@ public class RichTextState internal constructor(
     }
 
     /**
+     * Inserts the given [html] content after selection in the [RichTextState].
+     *
+     * @param html The html content to insert.
+     */
+    public fun insertHtmlAfterSelection(html: String) {
+        val newParagraphs = RichTextStateHtmlParser.encode(html).richParagraphList
+        val position = selection.max
+
+        selection = TextRange(selection.max)
+
+        insertParagraphs(
+            newParagraphs = newParagraphs,
+            position = position,
+        )
+    }
+
+    /**
      * Inserts the given [html] content at the specified [position] in the [RichTextState].
      *
      * The insertion behavior depends on the HTML content and the insertion position:
@@ -3698,6 +3715,23 @@ public class RichTextState internal constructor(
         val richParagraphList = RichTextStateMarkdownParser.encode(markdown).richParagraphList
         updateRichParagraphList(richParagraphList)
         return this
+    }
+
+    /**
+     * Inserts the given [markdown] content after selection in the [RichTextState].
+     *
+     * @param markdown The markdown content to insert.
+     */
+    public fun insertMarkdownAfterSelection(markdown: String) {
+        val newParagraphs = RichTextStateMarkdownParser.encode(markdown).richParagraphList
+        val position = selection.max
+
+        selection = TextRange(selection.max)
+
+        insertParagraphs(
+            newParagraphs = newParagraphs,
+            position = position,
+        )
     }
 
     /**
@@ -3845,6 +3879,8 @@ public class RichTextState internal constructor(
         if (richParagraphList.isEmpty())
             richParagraphList.add(RichParagraph())
 
+        val beforeTextLength = annotatedString.text.length
+
         val newStyledRichSpanList = mutableListOf<RichSpan>()
 
         usedInlineContentMapKeys.clear()
@@ -3888,10 +3924,14 @@ public class RichTextState internal constructor(
             }
         }
 
+        val selectionIndex =
+            (textFieldValue.selection.min + (annotatedString.text.length - beforeTextLength))
+                .coerceIn(0, annotatedString.text.length)
+
         styledRichSpanList.clear()
         textFieldValue = TextFieldValue(
             text = annotatedString.text,
-            selection = TextRange(annotatedString.text.length),
+            selection = TextRange(selectionIndex),
         )
         visualTransformation = VisualTransformation { _ ->
             TransformedText(

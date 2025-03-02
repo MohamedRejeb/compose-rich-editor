@@ -197,6 +197,13 @@ val html = "<p><b>Compose Rich Editor</b></p>"
 richTextState.setHtml(html)
 ```
 
+To insert HTML content at a specific position, use `RichTextState.insertHtml` method:
+
+```kotlin
+val html = "<b>inserted content</b>"
+richTextState.insertHtml(html, position = 5)
+```
+
 To convert `RichTextState` to HTML, use `RichTextState.toHtml` method:
 
 ```kotlin
@@ -210,6 +217,13 @@ To convert Markdown to `RichTextState`, use `RichTextState.setMarkdown` method:
 ```kotlin
 val markdown = "**Compose** *Rich* Editor"
 richTextState.setMarkdown(markdown)
+```
+
+To insert Markdown content at a specific position, use `RichTextState.insertMarkdown` method:
+
+```kotlin
+val markdown = "**inserted** *content*"
+richTextState.insertMarkdown(markdown, position = 5)
 ```
 
 To convert `RichTextState` to Markdown, use `RichTextState.toMarkdown` method:

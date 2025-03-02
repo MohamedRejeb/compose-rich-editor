@@ -2260,6 +2260,7 @@ public class RichTextState internal constructor(
             val newParagraph = richSpan.paragraph.slice(
                 startIndex = sliceIndex,
                 richSpan = richSpan,
+                removeSliceIndex = true,
             )
 
             // If the new paragraph is empty apply style depending on the config
@@ -2911,6 +2912,7 @@ public class RichTextState internal constructor(
     private fun RichParagraph.slice(
         startIndex: Int,
         richSpan: RichSpan,
+        removeSliceIndex: Boolean,
     ): RichParagraph {
         val newRichParagraph = RichParagraph(
             paragraphStyle = paragraphStyle,
@@ -2938,9 +2940,14 @@ public class RichTextState internal constructor(
                 endIndex = textStartIndex
                     .coerceIn(0, richSpan.text.length)
             )
+        val afterTextStartIndex =
+            if (removeSliceIndex)
+                textStartIndex + 1
+            else
+                textStartIndex
         val afterText =
             richSpan.text.substring(
-                startIndex = (textStartIndex + 1)
+                startIndex = afterTextStartIndex
                     .coerceIn(0, richSpan.text.length)
             )
 
@@ -3654,6 +3661,35 @@ public class RichTextState internal constructor(
     }
 
     /**
+     * Inserts the given [html] content at the specified [position] in the [RichTextState].
+     *
+     * The insertion behavior depends on the HTML content and the insertion position:
+     * 1. If the HTML contains a single paragraph:
+     *    - The content is inserted at the exact position within the existing paragraph
+     *    - All styles (both span and rich span styles) are preserved
+     * 2. If the HTML contains multiple paragraphs:
+     *    - The current paragraph is split at the insertion point
+     *    - The new paragraphs are inserted between the split parts
+     *    - All styles from the original paragraph are preserved in both split parts
+     *
+     * Special cases:
+     * - If position is 0, the content is inserted at the start
+     * - If position equals text length, the content is appended at the end
+     * - If the HTML is empty, no changes are made
+     *
+     * @param html The html content to insert.
+     * @param position The position at which to insert the html content.
+     */
+    public fun insertHtml(html: String, position: Int) {
+        val newParagraphs = RichTextStateHtmlParser.encode(html).richParagraphList
+
+        insertParagraphs(
+            newParagraphs = newParagraphs,
+            position = position,
+        )
+    }
+
+    /**
      * Updates the [RichTextState] with the given [markdown].
      *
      * @param markdown The markdown to update the [RichTextState] with.
@@ -3665,6 +3701,135 @@ public class RichTextState internal constructor(
     }
 
     /**
+     * Inserts the given [markdown] content at the specified [position] in the [RichTextState].
+     *
+     * The insertion behavior depends on the Markdown content and the insertion position:
+     * 1. If the Markdown contains a single paragraph:
+     *    - The content is inserted at the exact position within the existing paragraph
+     *    - All styles (both span and rich span styles) are preserved
+     * 2. If the Markdown contains multiple paragraphs:
+     *    - The current paragraph is split at the insertion point
+     *    - The new paragraphs are inserted between the split parts
+     *    - All styles from the original paragraph are preserved in both split parts
+     *
+     * Special cases:
+     * - If position is 0, the content is inserted at the start
+     * - If position equals text length, the content is appended at the end
+     * - If the Markdown is empty, no changes are made
+     *
+     * @param markdown The markdown content to insert.
+     * @param position The position at which to insert the markdown content.
+     */
+    public fun insertMarkdown(markdown: String, position: Int) {
+        val newParagraphs = RichTextStateMarkdownParser.encode(markdown).richParagraphList
+
+        insertParagraphs(
+            newParagraphs = newParagraphs,
+            position = position,
+        )
+    }
+
+    /**
+     * Inserts the given [newParagraphs] at the specified [position] in the [RichTextState].
+     *
+     * The insertion behavior depends on the paragraphs and the insertion position:
+     * 1. If the list contains a single paragraph:
+     *    - The content is inserted at the exact position within the existing paragraph
+     *    - All styles (both span and rich span styles) are preserved
+     * 2. If the list contains multiple paragraphs:
+     *    - The current paragraph is split at the insertion point
+     *    - The new paragraphs are inserted between the split parts
+     *    - All styles from the original paragraph are preserved in both split parts
+     *
+     * Special cases:
+     * - If position is 0, the content is inserted at the start
+     * - If position equals text length, the content is appended at the end
+     * - If the list is empty, no changes are made
+     *
+     * @param newParagraphs The new paragraphs to insert.
+     * @param position The position at which to insert the new paragraphs.
+     */
+    internal fun insertParagraphs(
+        newParagraphs: List<RichParagraph>,
+        position: Int
+    ) {
+        val position = position
+            .coerceIn(0, annotatedString.text.length)
+
+        if (newParagraphs.isEmpty())
+            return
+
+        if (richParagraphList.isEmpty())
+            richParagraphList.add(RichParagraph())
+
+        richParagraphList.first().let { p ->
+            if (p.children.isEmpty())
+                p.children.add(RichSpan(paragraph = p))
+        }
+
+        val firstNewParagraph = newParagraphs.first()
+
+        val richSpan = getRichSpanByTextIndex(
+            textIndex = position - 1,
+            ignoreCustomFiltering = true,
+        )
+            ?: return
+
+        val targetParagraph = richSpan.paragraph
+        val paragraphIndex = richParagraphList.indexOf(targetParagraph)
+
+        val sliceIndex = max(position, richSpan.textRange.min)
+
+        val targetParagraphFirstHalf = targetParagraph
+        val targetParagraphSecondHalf = targetParagraph.slice(
+            richSpan = richSpan,
+            startIndex = sliceIndex,
+            removeSliceIndex = false,
+        )
+
+        if (targetParagraphFirstHalf.isEmpty() && firstNewParagraph.isNotEmpty()) {
+            targetParagraphFirstHalf.paragraphStyle = firstNewParagraph.paragraphStyle
+            targetParagraphFirstHalf.type = firstNewParagraph.type
+        }
+
+        if (newParagraphs.size == 1) {
+            // Before position + Pasted Content + After Position
+
+            firstNewParagraph.updateChildrenParagraph(targetParagraphFirstHalf)
+            targetParagraphSecondHalf.updateChildrenParagraph(targetParagraphFirstHalf)
+            targetParagraphFirstHalf.children.addAll(firstNewParagraph.children)
+            targetParagraphFirstHalf.children.addAll(targetParagraphSecondHalf.children)
+            targetParagraphFirstHalf.removeEmptyChildren()
+        } else {
+            // Before position + First pasted paragraph
+            // Pasted paragraphs between first and last
+            // Last pasted paragraph + After position
+
+            val lastNewParagraph = newParagraphs.last()
+
+            // Before position + First pasted paragraph
+            firstNewParagraph.updateChildrenParagraph(targetParagraphFirstHalf)
+            targetParagraphFirstHalf.children.addAll(firstNewParagraph.children)
+            targetParagraphFirstHalf.removeEmptyChildren()
+
+            // Pasted paragraphs between first and last
+            if (newParagraphs.size >= 3) {
+                val middleParagraphs = newParagraphs.subList(1, newParagraphs.size - 1)
+                richParagraphList.addAll(paragraphIndex + 1, middleParagraphs)
+            }
+
+            // Last pasted paragraph + After position
+            targetParagraphSecondHalf.updateChildrenParagraph(lastNewParagraph)
+            lastNewParagraph.children.addAll(targetParagraphSecondHalf.children)
+            lastNewParagraph.removeEmptyChildren()
+            richParagraphList.add(paragraphIndex + newParagraphs.size - 1, lastNewParagraph)
+        }
+
+        // Update the state
+        updateRichParagraphList()
+    }
+
+    /**
      * Updates the [RichTextState] with the given [newRichParagraphList].
      * The [RichTextState] will be updated with the given [newRichParagraphList] and the [annotatedString] will be updated.
      *
@@ -3673,7 +3838,10 @@ public class RichTextState internal constructor(
     internal fun updateRichParagraphList(newRichParagraphList: List<RichParagraph>) {
         richParagraphList.clear()
         richParagraphList.addAll(newRichParagraphList)
+        updateRichParagraphList()
+    }
 
+    internal fun updateRichParagraphList() {
         if (richParagraphList.isEmpty())
             richParagraphList.add(RichParagraph())
 
@@ -3732,6 +3900,12 @@ public class RichTextState internal constructor(
             )
         }
         styledRichSpanList.addAll(newStyledRichSpanList)
+
+        // Clear un-applied styles
+        toAddSpanStyle = SpanStyle()
+        toRemoveSpanStyle = SpanStyle()
+        toAddRichSpanStyle = RichSpanStyle.Default
+        toRemoveRichSpanStyleKClass = RichSpanStyle.Default::class
 
         // Update current span style
         updateCurrentSpanStyle()

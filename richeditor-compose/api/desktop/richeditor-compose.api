@@ -165,6 +165,8 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun getSelection-d9O1mEE ()J
 	public final fun getSpanStyle-5zc-tL8 (J)Landroidx/compose/ui/text/SpanStyle;
 	public final fun increaseListLevel ()V
+	public final fun insertHtml (Ljava/lang/String;I)V
+	public final fun insertMarkdown (Ljava/lang/String;I)V
 	public final fun isCode ()Z
 	public final fun isCodeSpan ()Z
 	public final fun isLink ()Z

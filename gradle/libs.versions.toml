@@ -19,7 +19,7 @@ ktor = "3.1.1"
 android-minSdk = "21"
 android-compileSdk = "35"
 lifecycle = "2.8.4"
-navigation = "2.8.0-alpha11"
+navigation = "2.9.0+dev2149"
 
 [libraries]
 ksoup-html = { module = "com.mohamedrejeb.ksoup:ksoup-html", version.ref = "ksoup" }

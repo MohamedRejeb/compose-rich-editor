@@ -57,5 +57,4 @@ site
 ### Python ###
 venv/
 
-./junie/*
-./SUG.md
+./junie/

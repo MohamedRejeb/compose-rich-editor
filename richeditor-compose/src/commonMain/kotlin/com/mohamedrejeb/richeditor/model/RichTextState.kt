@@ -3626,7 +3626,10 @@ public class RichTextState internal constructor(
         richTextState.config.listIndent = config.listIndent
         richTextState.config.orderedListIndent = config.orderedListIndent
         richTextState.config.unorderedListIndent = config.unorderedListIndent
+        richTextState.config.unorderedListStyleType = config.unorderedListStyleType
+        richTextState.config.orderedListStyleType = config.orderedListStyleType
         richTextState.config.preserveStyleOnEmptyLine = config.preserveStyleOnEmptyLine
+        richTextState.config.exitListOnEmptyItem = config.exitListOnEmptyItem
 
         return richTextState
     }
@@ -4024,6 +4027,37 @@ public class RichTextState internal constructor(
         toText(richParagraphList = richParagraphList)
 
     /**
+     * Returns a specific range of the [RichTextState] as a text string.
+     *
+     * @param range The [TextRange] to convert to text.
+     * @return The text string for the specified range.
+     */
+    public fun toText(range: TextRange): String {
+        // Create a new RichTextState with only the content within the range
+        val state = copy()
+
+        if (range.max < state.textFieldValue.text.length)
+            state.removeTextRange(
+                textRange = TextRange(
+                    start = range.max
+                        .coerceAtLeast(0),
+                    end = state.textFieldValue.text.length
+                )
+            )
+
+        if (range.min > 0)
+            state.removeTextRange(
+                textRange = TextRange(
+                    start = 0,
+                    end = range.min
+                        .coerceAtMost(state.textFieldValue.text.length)
+                )
+            )
+
+        return state.toText()
+    }
+
+    /**
      * Decodes the [RichTextState] to a html string.
      *
      * @return The html string.
@@ -4033,12 +4067,74 @@ public class RichTextState internal constructor(
     }
 
     /**
+     * Decodes a specific range of the [RichTextState] to a html string.
+     *
+     * @param range The [TextRange] to convert to HTML.
+     * @return The html string for the specified range.
+     */
+    public fun toHtml(range: TextRange): String {
+        // Create a new RichTextState with only the content within the range
+        val state = copy()
+
+        if (range.max < state.textFieldValue.text.length)
+            state.removeTextRange(
+                textRange = TextRange(
+                    start = range.max
+                        .coerceAtLeast(0),
+                    end = state.textFieldValue.text.length
+                )
+            )
+
+        if (range.min > 0)
+            state.removeTextRange(
+                textRange = TextRange(
+                    start = 0,
+                    end = range.min
+                        .coerceAtMost(state.textFieldValue.text.length)
+                )
+            )
+
+        return RichTextStateHtmlParser.decode(state)
+    }
+
+    /**
      * Decodes the [RichTextState] to a markdown string.
      *
-     * @return The html string.
+     * @return The markdown string.
      */
     public fun toMarkdown(): String {
         return RichTextStateMarkdownParser.decode(this)
+    }
+
+    /**
+     * Decodes a specific range of the [RichTextState] to a markdown string.
+     *
+     * @param range The [TextRange] to convert to markdown.
+     * @return The markdown string for the specified range.
+     */
+    public fun toMarkdown(range: TextRange): String {
+        // Create a new RichTextState with only the content within the range
+        val state = copy()
+
+        if (range.max < state.textFieldValue.text.length)
+            state.removeTextRange(
+                textRange = TextRange(
+                    start = range.max
+                        .coerceAtLeast(0),
+                    end = state.textFieldValue.text.length
+                )
+            )
+
+        if (range.min > 0)
+            state.removeTextRange(
+                textRange = TextRange(
+                    start = 0,
+                    end = range.min
+                        .coerceAtMost(state.textFieldValue.text.length)
+                )
+            )
+
+        return RichTextStateMarkdownParser.decode(state)
     }
 
     /**

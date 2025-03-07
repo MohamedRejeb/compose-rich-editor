@@ -620,6 +620,81 @@ class RichTextStateTest {
 
     @OptIn(ExperimentalRichTextApi::class)
     @Test
+    fun testToTextRange() {
+        val richTextState = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(
+                    key = 1,
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "First paragraph",
+                            paragraph = it,
+                        ),
+                    )
+                },
+                RichParagraph(
+                    key = 2,
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Second paragraph",
+                            paragraph = it,
+                        ),
+                    )
+                },
+                RichParagraph(
+                    key = 3,
+                ).also {
+                    it.children.add(
+                        RichSpan(
+                            text = "Third paragraph",
+                            paragraph = it,
+                        ),
+                    )
+                }
+            )
+        )
+
+        // Test range within single paragraph
+        assertEquals(
+            "paragraph",
+            richTextState.toText(TextRange(6, 15))
+        )
+
+        // Test range across multiple paragraphs
+        assertEquals(
+            "paragraph\nSecond paragraph\nThird",
+            richTextState.toText(TextRange(6, 38))
+        )
+
+        // Test range from start
+        assertEquals(
+            "First para",
+            richTextState.toText(TextRange(0, 10))
+        )
+
+        // Test range to end
+        assertEquals(
+            "paragraph",
+            richTextState.toText(TextRange(39, 48))
+        )
+
+        // Test empty range
+        assertEquals(
+            "",
+            richTextState.toText(TextRange(5, 5))
+        )
+
+        // Test invalid range
+        assertEquals(
+            "",
+            richTextState.toText(TextRange(100, 200))
+        )
+    }
+
+    @OptIn(ExperimentalRichTextApi::class)
+    @Test
     fun testTextCorrection() {
         val richTextState = RichTextState(
             initialRichParagraphList = listOf(
@@ -938,6 +1013,22 @@ class RichTextStateTest {
 
         assertEquals(" World!\nRich Editor", richTextState.toText())
         assertEquals(TextRange(0), richTextState.selection)
+    }
+
+    @Test
+    fun testRemoveTextRange3() {
+        val state = RichTextState()
+        state.setMarkdown("""
+            1. First item
+            2. Second **bold** item
+               - Subitem one
+               - Subitem two
+            3. Third item
+        """.trimIndent())
+
+        state.removeTextRange(TextRange(0, 14))
+
+        state.printParagraphs()
     }
 
     @Test

@@ -314,7 +314,7 @@ internal class RichParagraph(
 
     fun copy(): RichParagraph {
         val newParagraph = RichParagraph(
-            paragraphStyle = paragraphStyle,
+            paragraphStyle = paragraphStyle.copy(),
             type = type.copy(),
         )
         children.fastForEach { childRichSpan ->

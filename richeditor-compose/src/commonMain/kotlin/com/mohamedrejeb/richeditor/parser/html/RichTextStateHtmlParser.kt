@@ -261,6 +261,15 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
     }
 
     override fun decode(richTextState: RichTextState): String {
+        if (richTextState.richParagraphList.isEmpty())
+            return "<p></p>"
+
+        if (
+            richTextState.richParagraphList.size == 1 &&
+            richTextState.richParagraphList.first().isEmpty()
+        )
+            return "<p></p>"
+
         val builder = StringBuilder()
 
         val openedListTagNames = mutableListOf<String>()

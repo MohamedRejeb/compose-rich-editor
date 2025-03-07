@@ -8,6 +8,7 @@ package com.mohamedrejeb.richeditor.parser.html
  */
 internal fun removeHtmlTextExtraSpaces(input: String, trimStart: Boolean = false): String {
     return input
+        .replace(' ', ' ')
         .replace('\n', ' ')
         .replace("\\s+".toRegex(), " ")
         .let {

@@ -346,7 +346,7 @@ public class RichTextState internal constructor(
      */
     public fun addTextAfterSelection(text: String): Unit =
         addTextAtIndex(
-            index = selection.min,
+            index = if(selection.reversed) selection.start else selection.end,
             text = text
         )
 
@@ -371,7 +371,7 @@ public class RichTextState internal constructor(
         }
 
         val beforeText = textFieldValue.text.substring(0, index)
-        val afterText = textFieldValue.text.substring(selection.max)
+        val afterText = textFieldValue.text.substring(index, textFieldValue.text.length)
         val newText = "$beforeText$text$afterText"
 
         onTextFieldValueChange(

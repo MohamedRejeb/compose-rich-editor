@@ -13,7 +13,7 @@ nexus-publish = "2.0.0"
 # For sample
 androidx-appcompat = "1.7.0"
 activity-compose = "1.10.0"
-richeditor = "1.0.0-rc10"
+richeditor = "1.0.0-rc12"
 coroutines = "1.10.1"
 ktor = "3.1.0"
 android-minSdk = "21"

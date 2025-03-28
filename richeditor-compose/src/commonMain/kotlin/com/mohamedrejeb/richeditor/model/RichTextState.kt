@@ -3258,7 +3258,7 @@ public class RichTextState internal constructor(
                         )
                     val distanceSp =
                         with(density) {
-                            (end - start).toSp()
+                            (end - start).absoluteValue.toSp()
                         }
 
                     if (paragraphType.startTextWidth != distanceSp) {

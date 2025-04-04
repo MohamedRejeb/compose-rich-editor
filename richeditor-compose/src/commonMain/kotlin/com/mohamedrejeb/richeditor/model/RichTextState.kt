@@ -24,6 +24,7 @@ import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.util.fastFirstOrNull
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
@@ -33,6 +34,7 @@ import com.mohamedrejeb.richeditor.paragraph.type.*
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startText
 import com.mohamedrejeb.richeditor.parser.html.RichTextStateHtmlParser
 import com.mohamedrejeb.richeditor.parser.markdown.RichTextStateMarkdownParser
+import com.mohamedrejeb.richeditor.parser.utils.HeadingParagraphStyle
 import com.mohamedrejeb.richeditor.utils.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
@@ -586,6 +588,56 @@ public class RichTextState internal constructor(
     }
 
     // RichSpanStyle
+
+    public fun toggleHeaderParagraphStyle(headerParagraphStyle: HeadingParagraphStyle) {
+        val spanStyle = headerParagraphStyle.getSpanStyle()
+
+        if (areHeaderSpanStylesEqual(currentSpanStyle, spanStyle)) {
+            removeHeaderStyle(spanStyle)
+        } else {
+            addHeaderStyle(spanStyle)
+        }
+    }
+
+    public fun addHeaderStyle(spanStyle: SpanStyle) {
+        val paragraphs = getRichParagraphListByTextRange(selection)
+        if (paragraphs.isEmpty()) return
+
+        paragraphs.forEach { paragraph ->
+            paragraph.children.forEach { richSpan ->
+                richSpan.spanStyle = richSpan.spanStyle.customMerge(spanStyle)
+            }
+        }
+        updateAnnotatedString()
+        updateCurrentSpanStyle()
+    }
+
+    public fun removeHeaderStyle(spanStyle: SpanStyle) {
+        val paragraphs = getRichParagraphListByTextRange(selection)
+        if (paragraphs.isEmpty()) return
+
+        paragraphs.forEach { paragraph ->
+            paragraph.children.forEach { richSpan ->
+                richSpan.spanStyle = richSpan.spanStyle.unmerge(spanStyle)
+            }
+        }
+        updateAnnotatedString()
+        updateCurrentSpanStyle()
+    }
+
+    private fun areHeaderSpanStylesEqual(style1: SpanStyle, style2: SpanStyle): Boolean {
+        // Compare relevant properties for header styles: fontSize, fontWeight, fontFamily, letterSpacing
+        if (style1.fontSize.isSpecified != style2.fontSize.isSpecified) return false
+        if (style1.fontWeight != style2.fontWeight) return false
+        if (style1.fontFamily != style2.fontFamily) return false
+        if (style1.letterSpacing.isSpecified != style2.letterSpacing.isSpecified) return false
+
+        if (style1.fontSize.isSpecified && style2.fontSize.isSpecified && style1.fontSize != style2.fontSize) return false
+        if (style1.letterSpacing.isSpecified && style2.letterSpacing.isSpecified && style1.letterSpacing != style2.letterSpacing) return false
+
+        return true
+    }
+
 
     /**
      * Add a link to the text field.
@@ -2283,8 +2335,8 @@ public class RichTextState internal constructor(
                         newType = DefaultParagraph(),
                         textFieldValue = tempTextFieldValue,
                     )
-                    newParagraphFirstRichSpan.spanStyle = SpanStyle()
-                    newParagraphFirstRichSpan.richSpanStyle = RichSpanStyle.Default
+                    newParagraphFirstRichSpan?.spanStyle = SpanStyle()
+                    newParagraphFirstRichSpan?.richSpanStyle = RichSpanStyle.Default
 
                     // Ignore adding the new paragraph
                     index--
@@ -2293,14 +2345,14 @@ public class RichTextState internal constructor(
                     (!config.preserveStyleOnEmptyLine || richSpan.paragraph.isEmpty()) &&
                     isSelectionAtNewRichSpan
                 ) {
-                    newParagraphFirstRichSpan.spanStyle = SpanStyle()
-                    newParagraphFirstRichSpan.richSpanStyle = RichSpanStyle.Default
+                    newParagraphFirstRichSpan?.spanStyle = SpanStyle()
+                    newParagraphFirstRichSpan?.richSpanStyle = RichSpanStyle.Default
                 } else if (
                     config.preserveStyleOnEmptyLine &&
                     isSelectionAtNewRichSpan
                 ) {
-                    newParagraphFirstRichSpan.spanStyle = currentSpanStyle
-                    newParagraphFirstRichSpan.richSpanStyle = currentRichSpanStyle
+                    newParagraphFirstRichSpan?.spanStyle = currentSpanStyle
+                    newParagraphFirstRichSpan?.richSpanStyle = currentRichSpanStyle
                 }
             }
 

@@ -594,8 +594,10 @@ public class RichTextState internal constructor(
 
         if (areHeaderSpanStylesEqual(currentSpanStyle, spanStyle)) {
             removeHeaderStyle(spanStyle)
+            removeParagraphStyle(headerParagraphStyle.getTextStyle().toParagraphStyle())
         } else {
             addHeaderStyle(spanStyle)
+            addParagraphStyle(headerParagraphStyle.getTextStyle().toParagraphStyle())
         }
     }
 

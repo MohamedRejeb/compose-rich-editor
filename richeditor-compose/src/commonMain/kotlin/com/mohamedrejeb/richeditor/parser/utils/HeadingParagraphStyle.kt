@@ -41,10 +41,7 @@ public enum class HeadingParagraphStyle(
     private val typography = Typography()
 
     public fun getSpanStyle(): SpanStyle {
-        return when (this) {
-            NORMAL -> SpanStyle()
-            H1, H2, H3, H4, H5, H6 -> this.getTextStyle().toSpanStyle()
-        }
+        return this.getTextStyle().toSpanStyle()
     }
 
     public fun getTextStyle() : TextStyle {

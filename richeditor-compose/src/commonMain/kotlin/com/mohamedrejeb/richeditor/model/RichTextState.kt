@@ -591,17 +591,18 @@ public class RichTextState internal constructor(
 
     public fun toggleHeaderParagraphStyle(headerParagraphStyle: HeadingParagraphStyle) {
         val spanStyle = headerParagraphStyle.getSpanStyle()
+        val paragraphStyle = headerParagraphStyle.getTextStyle().toParagraphStyle()
 
-        if (areHeaderSpanStylesEqual(currentSpanStyle, spanStyle)) {
-            removeHeaderStyle(spanStyle)
-            removeParagraphStyle(headerParagraphStyle.getTextStyle().toParagraphStyle())
+        if (headerParagraphStyle == HeadingParagraphStyle.NORMAL) {
+            HeadingParagraphStyle.entries.forEach {
+                removeHeaderStyleFromParagraph(it.getSpanStyle(), it.getTextStyle().toParagraphStyle())
+            }
         } else {
-            addHeaderStyle(spanStyle)
-            addParagraphStyle(headerParagraphStyle.getTextStyle().toParagraphStyle())
+            addHeaderStyleToParagraph(spanStyle, paragraphStyle)
         }
     }
 
-    public fun addHeaderStyle(spanStyle: SpanStyle) {
+    private fun addHeaderStyleToParagraph(spanStyle: SpanStyle, paragraphStyle: ParagraphStyle) {
         val paragraphs = getRichParagraphListByTextRange(selection)
         if (paragraphs.isEmpty()) return
 
@@ -609,37 +610,27 @@ public class RichTextState internal constructor(
             paragraph.children.forEach { richSpan ->
                 richSpan.spanStyle = richSpan.spanStyle.customMerge(spanStyle)
             }
+            paragraph.paragraphStyle = paragraph.paragraphStyle.merge(paragraphStyle)
         }
         updateAnnotatedString()
         updateCurrentSpanStyle()
+        updateCurrentParagraphStyle()
     }
 
-    public fun removeHeaderStyle(spanStyle: SpanStyle) {
+    private fun removeHeaderStyleFromParagraph(spanStyle: SpanStyle, paragraphStyle: ParagraphStyle) {
         val paragraphs = getRichParagraphListByTextRange(selection)
         if (paragraphs.isEmpty()) return
 
         paragraphs.forEach { paragraph ->
             paragraph.children.forEach { richSpan ->
-                richSpan.spanStyle = richSpan.spanStyle.unmerge(spanStyle)
+                richSpan.spanStyle = richSpan.spanStyle.unmerge(spanStyle) // Unmerge using toSpanStyle
             }
+            paragraph.paragraphStyle = paragraph.paragraphStyle.unmerge(paragraphStyle) // Unmerge ParagraphStyle
         }
         updateAnnotatedString()
         updateCurrentSpanStyle()
+        updateCurrentParagraphStyle()
     }
-
-    private fun areHeaderSpanStylesEqual(style1: SpanStyle, style2: SpanStyle): Boolean {
-        // Compare relevant properties for header styles: fontSize, fontWeight, fontFamily, letterSpacing
-        if (style1.fontSize.isSpecified != style2.fontSize.isSpecified) return false
-        if (style1.fontWeight != style2.fontWeight) return false
-        if (style1.fontFamily != style2.fontFamily) return false
-        if (style1.letterSpacing.isSpecified != style2.letterSpacing.isSpecified) return false
-
-        if (style1.fontSize.isSpecified && style2.fontSize.isSpecified && style1.fontSize != style2.fontSize) return false
-        if (style1.letterSpacing.isSpecified && style2.letterSpacing.isSpecified && style1.letterSpacing != style2.letterSpacing) return false
-
-        return true
-    }
-
 
     /**
      * Add a link to the text field.

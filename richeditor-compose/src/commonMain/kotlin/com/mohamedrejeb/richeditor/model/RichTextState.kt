@@ -589,11 +589,11 @@ public class RichTextState internal constructor(
 
     // RichSpanStyle
 
-    public fun toggleHeaderParagraphStyle(headerParagraphStyle: HeadingParagraphStyle) {
+    public fun setHeadingParagraphStyle(headerParagraphStyle: HeadingParagraphStyle) {
         val spanStyle = headerParagraphStyle.getSpanStyle()
         val paragraphStyle = headerParagraphStyle.getTextStyle().toParagraphStyle()
 
-        if (headerParagraphStyle == HeadingParagraphStyle.NORMAL) {
+        if (headerParagraphStyle == HeadingParagraphStyle.Normal) {
             HeadingParagraphStyle.entries.forEach {
                 removeHeaderStyleFromParagraph(it.getSpanStyle(), it.getTextStyle().toParagraphStyle())
             }

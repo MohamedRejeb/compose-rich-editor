@@ -572,30 +572,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
      * For example, if the first [RichSpan] spanStyle is [H1SpanStyle], the markdown line start text will be "# ".
      */
     private fun getMarkdownLineStartTextFromFirstRichSpan(firstRichSpan: RichSpan): String {
-        if ((firstRichSpan.spanStyle.fontWeight?.weight ?: 400) <= 400) return ""
-        val fontSize = firstRichSpan.spanStyle.fontSize
-
-        return if (fontSize.isEm) {
-            when {
-                fontSize >= H1SpanStyle.fontSize -> "# "
-                fontSize >= H2SpanStyle.fontSize -> "## "
-                fontSize >= H3SpanStyle.fontSize -> "### "
-                fontSize >= H4SpanStyle.fontSize -> "#### "
-                fontSize >= H5SpanStyle.fontSize -> "##### "
-                fontSize >= H6SpanStyle.fontSize -> "###### "
-                else -> ""
-            }
-        } else {
-            when {
-                fontSize.value >= H1SpanStyle.fontSize.value * 16 -> "# "
-                fontSize.value >= H2SpanStyle.fontSize.value * 16 -> "## "
-                fontSize.value >= H3SpanStyle.fontSize.value * 16 -> "### "
-                fontSize.value >= H4SpanStyle.fontSize.value * 16 -> "#### "
-                fontSize.value >= H5SpanStyle.fontSize.value * 16 -> "##### "
-                fontSize.value >= H6SpanStyle.fontSize.value * 16 -> "###### "
-                else -> ""
-            }
-        }
+        return HeadingParagraphStyle.fromRichSpan(firstRichSpan).markdownElement
     }
 
     /**

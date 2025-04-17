@@ -374,20 +374,17 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
             // Append paragraph start text
             builder.appendParagraphStartText(richParagraph)
 
-            var isHeading = false
-
             richParagraph.getFirstNonEmptyChild()?.let { firstNonEmptyChild ->
                 if (firstNonEmptyChild.text.isNotEmpty()) {
                     // Append markdown line start text
                     val lineStartText = getMarkdownLineStartTextFromFirstRichSpan(firstNonEmptyChild)
                     builder.append(lineStartText)
-                    isHeading = lineStartText.startsWith('#')
                 }
             }
 
             // Append paragraph children
             richParagraph.children.fastForEach { richSpan ->
-                builder.append(decodeRichSpanToMarkdown(richSpan, isHeading))
+                builder.append(decodeRichSpanToMarkdown(richSpan))
             }
 
             // Append line break if needed
@@ -410,7 +407,6 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     @OptIn(ExperimentalRichTextApi::class)
     private fun decodeRichSpanToMarkdown(
         richSpan: RichSpan,
-        isHeading: Boolean,
     ): String {
         val stringBuilder = StringBuilder()
 
@@ -424,8 +420,8 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         val markdownOpen = mutableListOf<String>()
         val markdownClose = mutableListOf<String>()
 
-        // Ignore adding bold `**` for heading since it's already bold
-        if ((richSpan.spanStyle.fontWeight?.weight ?: 400) > 400 && !isHeading) {
+        // Bold is based off fontWeight
+        if ((richSpan.spanStyle.fontWeight?.weight ?: 400) > 400) {
             markdownOpen += "**"
             markdownClose += "**"
         }
@@ -457,7 +453,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
         // Append children
         richSpan.children.fastForEach { child ->
-            stringBuilder.append(decodeRichSpanToMarkdown(child, isHeading))
+            stringBuilder.append(decodeRichSpanToMarkdown(child))
         }
 
         // Append markdown close

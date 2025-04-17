@@ -121,6 +121,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 }
 
                 val tagSpanStyle = markdownElementsSpanStyleEncodeMap[node.type]
+                val tagParagraphStyle = markdownElementsParagraphStyleEncodeMap[node.type]
 
                 if (node.type in markdownBlockElements) {
                     val currentRichParagraph = richParagraphList.last()
@@ -140,6 +141,11 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                         }
 
                         currentRichParagraph.type = currentRichParagraphType
+                    }
+
+                    // Apply paragraph style (if applicable)
+                    tagParagraphStyle?.let {
+                        currentRichParagraph.paragraphStyle = currentRichParagraph.paragraphStyle.merge(it)
                     }
 
                     val newRichSpan = RichSpan(paragraph = currentRichParagraph)
@@ -478,7 +484,10 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
     /**
      * Encodes Markdown elements to [SpanStyle].
-     *
+     * Some Markdown elements have both an associated SpanStyle and ParagraphStyle.
+     * Ensure both the [SpanStyle] (via [markdownElementsSpanStyleEncodeMap] - if applicable) and
+     * [androidx.compose.ui.text.ParagraphStyle] (via [markdownElementsParagraphStyleEncodeMap] - if applicable)
+     * are applied to the text.
      * @see <a href="https://www.w3schools.com/html/html_formatting.asp">HTML formatting</a>
      */
     private val markdownElementsSpanStyleEncodeMap = mapOf(
@@ -491,6 +500,23 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         MarkdownElementTypes.ATX_4 to H4SpanStyle,
         MarkdownElementTypes.ATX_5 to H5SpanStyle,
         MarkdownElementTypes.ATX_6 to H6SpanStyle,
+    )
+
+    /**
+     * Encodes the Markdown elements to [androidx.compose.ui.text.ParagraphStyle].
+     * Some Markdown elements have both an associated SpanStyle and ParagraphStyle.
+     * Ensure both the [SpanStyle] (via [markdownElementsSpanStyleEncodeMap] - if applicable) and
+     * [androidx.compose.ui.text.ParagraphStyle] (via [markdownElementsParagraphStyleEncodeMap] if applicable)
+     * are applied to the text.
+     * @see <a href="https://github.com/chrisalley/markdown-garden/blob/master/source/guides/headers/atx-headers.md">ATX Header formatting</a>
+     */
+    private val markdownElementsParagraphStyleEncodeMap = mapOf(
+        MarkdownElementTypes.ATX_1 to H1ParagraphStyle,
+        MarkdownElementTypes.ATX_2 to H2ParagraphStyle,
+        MarkdownElementTypes.ATX_3 to H3ParagraphStyle,
+        MarkdownElementTypes.ATX_4 to H4ParagraphStyle,
+        MarkdownElementTypes.ATX_5 to H5ParagraphStyle,
+        MarkdownElementTypes.ATX_6 to H6ParagraphStyle,
     )
 
     /**

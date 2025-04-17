@@ -94,6 +94,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 val cssStyleMap = attributes["style"]?.let { CssEncoder.parseCssStyle(it) } ?: emptyMap()
                 val cssSpanStyle = CssEncoder.parseCssStyleMapToSpanStyle(cssStyleMap)
                 val tagSpanStyle = htmlElementsSpanStyleEncodeMap[name]
+                val tagParagraphStyle = htmlElementsParagraphStyleEncodeMap[name]
 
                 val currentRichParagraph = richParagraphList.lastOrNull()
                 val isCurrentRichParagraphBlank = currentRichParagraph?.isBlank() == true
@@ -132,6 +133,11 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
                     newRichParagraph.paragraphStyle = newRichParagraph.paragraphStyle.merge(cssParagraphStyle)
                     newRichParagraph.type = paragraphType
+
+                    // Apply paragraph style (if applicable)
+                    tagParagraphStyle?.let {
+                        newRichParagraph.paragraphStyle = newRichParagraph.paragraphStyle.merge(it)
+                    }
 
                     if (!isCurrentRichParagraphBlank) {
                         stringBuilder.append(' ')
@@ -570,6 +576,11 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 /**
  * Encodes HTML elements to [SpanStyle].
  *
+ * Some HTML elements have both an associated SpanStyle and ParagraphStyle.
+ * Ensure both the [SpanStyle] (via [htmlElementsSpanStyleEncodeMap] - if applicable) and
+ * [androidx.compose.ui.text.ParagraphStyle] (via [htmlElementsParagraphStyleEncodeMap] - if applicable)
+ * are applied to the text.
+ *
  * @see <a href="https://www.w3schools.com/html/html_formatting.asp">HTML formatting</a>
  */
 internal val htmlElementsSpanStyleEncodeMap = mapOf(
@@ -592,6 +603,23 @@ internal val htmlElementsSpanStyleEncodeMap = mapOf(
     "h4" to H4SpanStyle,
     "h5" to H5SpanStyle,
     "h6" to H6SpanStyle,
+)
+
+/**
+ * Encodes the HTML elements to [androidx.compose.ui.text.ParagraphStyle].
+ * Some HTML elements have both an associated SpanStyle and ParagraphStyle.
+ * Ensure both the [SpanStyle] (via [htmlElementsSpanStyleEncodeMap] - if applicable) and
+ * [androidx.compose.ui.text.ParagraphStyle] (via [htmlElementsParagraphStyleEncodeMap] - if applicable)
+ * are applied to the text.
+ * @see <a href="https://www.w3schools.com/html/html_formatting.asp">HTML formatting</a>
+ */
+internal val htmlElementsParagraphStyleEncodeMap = mapOf(
+    "h1" to H1ParagraphStyle,
+    "h2" to H2ParagraphStyle,
+    "h3" to H3ParagraphStyle,
+    "h4" to H4ParagraphStyle,
+    "h5" to H5ParagraphStyle,
+    "h6" to H6ParagraphStyle,
 )
 
 /**

@@ -7,17 +7,6 @@ import androidx.compose.ui.text.TextStyle
 import com.mohamedrejeb.richeditor.model.RichSpan
 import org.intellij.markdown.MarkdownElementTypes
 
-internal val htmlHeadingTags = setOf( "h1", "h2", "h3", "h4", "h5", "h6")
-
-internal val markdownHeadingNodes = setOf(
-    MarkdownElementTypes.ATX_1,
-    MarkdownElementTypes.ATX_2,
-    MarkdownElementTypes.ATX_3,
-    MarkdownElementTypes.ATX_4,
-    MarkdownElementTypes.ATX_5,
-    MarkdownElementTypes.ATX_6
-)
-
 public enum class HeadingParagraphStyle(
     public val markdownElement: String
 ) {

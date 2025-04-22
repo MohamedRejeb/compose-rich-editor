@@ -392,7 +392,22 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     else paragraphGroupTagName
 
                 // Create paragraph css
-                val paragraphCssMap = CssDecoder.decodeParagraphStyleToCssStyleMap(richParagraph.paragraphStyle)
+                val paragraphCssMap =
+                    /*
+                     Heading paragraph styles inherit custom ParagraphStyle from the Typography class.
+                     This will allow us to remove any inherited ParagraphStyle properties, but keep the user added ones.
+                     <h1> to <h6> tags will allow the browser to apply the default heading styles.
+                     If the paragraphTagName isn't a h1-h6 tag, it will revert to the old behavior of applying whatever paragraphstyle is present.
+                     */
+                    if (paragraphTagName in HeadingParagraphStyle.headingTags) {
+                        val headingType = HeadingParagraphStyle.fromParagraphStyle(richParagraph.paragraphStyle)
+                        val baseParagraphStyle = headingType.getParagraphStyle()
+                        val diffParagraphStyle = richParagraph.paragraphStyle.unmerge(baseParagraphStyle)
+                        CssDecoder.decodeParagraphStyleToCssStyleMap(diffParagraphStyle)
+                    } else {
+                        CssDecoder.decodeParagraphStyleToCssStyleMap(richParagraph.paragraphStyle)
+                    }
+
                 val paragraphCss = CssDecoder.decodeCssStyleMap(paragraphCssMap)
 
                 // Append paragraph opening tag

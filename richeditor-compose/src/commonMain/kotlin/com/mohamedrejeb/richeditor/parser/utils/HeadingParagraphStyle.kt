@@ -62,5 +62,38 @@ public enum class HeadingParagraphStyle(
                         && entrySpanStyle.letterSpacing == richSpanStyle.spanStyle.letterSpacing
             } ?: Normal
         }
+
+        public fun fromParagraphStyle(paragraphStyle: ParagraphStyle): HeadingParagraphStyle {
+            return entries.find {
+                val entryParagraphStyle = it.getParagraphStyle()
+                entryParagraphStyle.lineHeight == paragraphStyle.lineHeight
+                        && entryParagraphStyle.textAlign == paragraphStyle.textAlign
+                        && entryParagraphStyle.textDirection == paragraphStyle.textDirection
+                        && entryParagraphStyle.lineBreak == paragraphStyle.lineBreak
+                        && entryParagraphStyle.hyphens == paragraphStyle.hyphens
+            } ?: Normal
+        }
+
+        /**
+         * HTML heading tags.
+         *
+         * @see <a href="https://www.w3schools.com/html/html_headings.asp">HTML headings</a>
+         */
+        internal val headingTags = setOf("h1", "h2", "h3", "h4", "h5", "h6")
+
+        /**
+         * Markdown heading nodes.
+         *
+         * @see <a href="https://www.w3schools.com/html/html_headings.asp">Markdown headings</a>
+         */
+        internal val markdownHeadingNodes = setOf(
+            MarkdownElementTypes.ATX_1,
+            MarkdownElementTypes.ATX_2,
+            MarkdownElementTypes.ATX_3,
+            MarkdownElementTypes.ATX_4,
+            MarkdownElementTypes.ATX_5,
+            MarkdownElementTypes.ATX_6,
+        )
+
     }
 }

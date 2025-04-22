@@ -416,7 +416,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
                 // Append paragraph children
                 richParagraph.children.fastForEach { richSpan ->
-                    builder.append(decodeRichSpanToHtml(richSpan))
+                    builder.append(decodeRichSpanToHtml(richSpan, headingType = HeadingParagraphStyle.fromRichSpan(richSpan)))
                 }
 
                 // Append paragraph closing tag

@@ -20,6 +20,7 @@ import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.util.fastForEachReversed
 import com.mohamedrejeb.richeditor.paragraph.type.ConfigurableListLevel
+import com.mohamedrejeb.richeditor.utils.unmerge
 
 internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 

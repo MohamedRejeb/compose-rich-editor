@@ -389,7 +389,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 // Create paragraph tag name
                 val paragraphTagName =
                     if (paragraphGroupTagName == "ol" || paragraphGroupTagName == "ul") "li"
-                    else "p"
+                    else paragraphGroupTagName
 
                 // Create paragraph css
                 val paragraphCssMap = CssDecoder.decodeParagraphStyleToCssStyleMap(richParagraph.paragraphStyle)

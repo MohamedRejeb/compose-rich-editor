@@ -11,6 +11,7 @@ import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startText
+import com.mohamedrejeb.richeditor.parser.utils.HeadingParagraphStyle
 import com.mohamedrejeb.richeditor.ui.test.getRichTextStyleTreeRepresentation
 
 internal class RichParagraph(
@@ -197,6 +198,25 @@ internal class RichParagraph(
         }
 
         return firstChild?.spanStyle
+    }
+
+    /**
+     * Retrieves the [HeadingParagraphStyle] applied to this paragraph.
+     *
+     * In Rich Text editors like Google Docs, heading styles (H1-H6) are
+     * applied to the entire paragraph. This function reflects that behavior
+     * by checking all child [RichSpan]s for a non-default [HeadingParagraphStyle].
+     * If any child [RichSpan] has a heading style (other than [HeadingParagraphStyle.Normal]),
+     * this function returns that heading style, indicating that the entire paragraph is styled as a heading.
+     */
+    fun getHeadingParagraphStyle() : HeadingParagraphStyle {
+        children.fastForEach { richSpan ->
+            val childHeadingParagraphStyle = HeadingParagraphStyle.fromRichSpan(richSpan)
+            if (childHeadingParagraphStyle != HeadingParagraphStyle.Normal){
+                return childHeadingParagraphStyle
+            }
+        }
+        return HeadingParagraphStyle.Normal
     }
 
     fun getFirstNonEmptyChild(offset: Int = -1): RichSpan? {

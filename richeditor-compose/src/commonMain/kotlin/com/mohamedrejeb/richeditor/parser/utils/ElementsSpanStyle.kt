@@ -7,6 +7,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.em
+import com.mohamedrejeb.richeditor.model.HeadingParagraphStyle
 
 internal val MarkBackgroundColor = Color.Yellow
 internal val SmallFontSize = 0.8f.em

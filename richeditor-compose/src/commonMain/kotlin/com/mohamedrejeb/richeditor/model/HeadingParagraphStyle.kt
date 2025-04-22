@@ -1,10 +1,9 @@
-package com.mohamedrejeb.richeditor.parser.utils
+package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
-import com.mohamedrejeb.richeditor.model.RichSpan
 import org.intellij.markdown.MarkdownElementTypes
 
 public enum class HeadingParagraphStyle(

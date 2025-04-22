@@ -34,7 +34,6 @@ import com.mohamedrejeb.richeditor.paragraph.type.*
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startText
 import com.mohamedrejeb.richeditor.parser.html.RichTextStateHtmlParser
 import com.mohamedrejeb.richeditor.parser.markdown.RichTextStateMarkdownParser
-import com.mohamedrejeb.richeditor.parser.utils.HeadingParagraphStyle
 import com.mohamedrejeb.richeditor.utils.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope

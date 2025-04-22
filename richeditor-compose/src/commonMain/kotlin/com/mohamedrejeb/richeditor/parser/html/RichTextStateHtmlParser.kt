@@ -441,7 +441,11 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
     }
 
     @OptIn(ExperimentalRichTextApi::class)
-    private fun decodeRichSpanToHtml(richSpan: RichSpan, parentFormattingTags: List<String> = emptyList()): String {
+    private fun decodeRichSpanToHtml(
+        richSpan: RichSpan,
+        parentFormattingTags: List<String> = emptyList(),
+        headingType: HeadingParagraphStyle = HeadingParagraphStyle.Normal,
+    ): String {
         val stringBuilder = StringBuilder()
 
         // Check if span is empty
@@ -459,7 +463,16 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         }
 
         // Convert span style to CSS string
-        val htmlStyleFormat = CssDecoder.decodeSpanStyleToHtmlStylingFormat(richSpan.spanStyle)
+        val htmlStyleFormat =
+            /**
+             * If the heading type is normal, follow the previous behavior of encoding the SpanStyle to the
+             * Css span style. If it is a heading paragraph style, remove the Heading-specific [SpanStyle] features via
+             * [unmerge] but retain the non-heading associated [SpanStyle] properties.
+             */
+            if (headingType == HeadingParagraphStyle.Normal)
+                CssDecoder.decodeSpanStyleToHtmlStylingFormat(richSpan.spanStyle)
+            else
+                CssDecoder.decodeSpanStyleToHtmlStylingFormat(richSpan.spanStyle.unmerge(headingType.getSpanStyle()))
         val spanCss = CssDecoder.decodeCssStyleMap(htmlStyleFormat.cssStyleMap)
         val htmlTags = htmlStyleFormat.htmlTags.filter { it !in parentFormattingTags }
 

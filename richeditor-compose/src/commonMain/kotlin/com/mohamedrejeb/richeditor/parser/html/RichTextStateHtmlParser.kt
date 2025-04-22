@@ -279,7 +279,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         richTextState.richParagraphList.fastForEachIndexed { index, richParagraph ->
             val richParagraphType = richParagraph.type
             val isParagraphEmpty = richParagraph.isEmpty()
-            val paragraphGroupTagName = decodeHtmlElementFromRichParagraphType(richParagraph.type)
+            val paragraphGroupTagName = decodeHtmlElementFromRichParagraph(richParagraph)
 
             val paragraphLevel =
                 if (richParagraphType is ConfigurableListLevel)
@@ -559,15 +559,16 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
     }
 
     /**
-     * Decodes HTML elements from [ParagraphType].
+     * Decodes HTML elements from [RichParagraph].
      */
-    private fun decodeHtmlElementFromRichParagraphType(
-        richParagraphType: ParagraphType,
+    private fun decodeHtmlElementFromRichParagraph(
+        richParagraph: RichParagraph,
     ): String {
-        return when (richParagraphType) {
+        val paragraphType = richParagraph.type
+        return when (paragraphType) {
             is UnorderedList -> "ul"
             is OrderedList -> "ol"
-            else -> "p"
+            else -> richParagraph.getHeadingParagraphStyle().htmlTag ?: "p"
         }
     }
 

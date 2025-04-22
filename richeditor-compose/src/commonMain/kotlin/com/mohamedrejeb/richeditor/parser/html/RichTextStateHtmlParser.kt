@@ -215,11 +215,9 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 if (isCurrentTagBlockElement && !isCurrentRichParagraphBlank) {
                     stringBuilder.append(' ')
 
-                    val newParagraph =
-                        if (richParagraphList.isEmpty())
-                            RichParagraph()
-                        else
-                            RichParagraph(paragraphStyle = richParagraphList.last().paragraphStyle)
+                    //TODO - This was causing the paragraph style from heading tags to be applied to
+                    // subsequent paragraphs. Verify that this isn't crucial (all the tests still pass)
+                    val newParagraph = RichParagraph()
 
                     richParagraphList.add(newParagraph)
 

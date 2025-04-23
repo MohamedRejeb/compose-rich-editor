@@ -586,8 +586,19 @@ public class RichTextState internal constructor(
         removeSpanStyle(currentSpanStyle, textRange)
     }
 
-    // RichSpanStyle
-
+    /**
+    * Sets the heading style for the currently selected paragraphs.
+    *
+    * This function applies the specified [headerParagraphStyle] to all paragraphs
+    * that are fully or partially within the current [selection].
+    *
+    * If the specified style is [HeadingParagraphStyle.Normal], any existing heading
+    * style (H1-H6) is removed from the selected paragraphs. Otherwise, the specified
+    * heading style is applied, replacing any previous heading style on those paragraphs.
+    * Heading styles are applied to the entire paragraph, if the selection is collapsed -
+    * consistent with common rich text editor behavior. If the selection is not collapsed,
+    * heading styles will be applied to each paragraph in the selection.
+    */
     public fun setHeadingParagraphStyle(headerParagraphStyle: HeadingParagraphStyle) {
         val spanStyle = headerParagraphStyle.getSpanStyle()
         val paragraphStyle = headerParagraphStyle.getTextStyle().toParagraphStyle()
@@ -601,6 +612,16 @@ public class RichTextState internal constructor(
         }
     }
 
+    /**
+     * Internal helper function to apply a given header [SpanStyle] and [ParagraphStyle]
+     * to the specified list of paragraphs.
+     *
+     * This function is used by [setHeadingParagraphStyle] after determining which
+     * style to set and handling the removal of previous heading styles.
+     * Consistent with common rich text editor behavior, heading styles are applied to the entire paragraph(s).
+     * Note: This function only adds the styles and does not handle removing existing
+     * heading styles from the paragraphs.
+     */
     private fun addHeaderStyleToParagraph(spanStyle: SpanStyle, paragraphStyle: ParagraphStyle) {
         val paragraphs = getRichParagraphListByTextRange(selection)
         if (paragraphs.isEmpty()) return
@@ -616,6 +637,15 @@ public class RichTextState internal constructor(
         updateCurrentParagraphStyle()
     }
 
+    /**
+     * Internal helper function to remove a given header [SpanStyle] and [ParagraphStyle]
+     * from the specified list of paragraphs.
+     *
+     * This function is used by [setHeadingParagraphStyle] to clear any existing heading
+     * styles before applying a new one, or to remove a specific heading style when
+     * setting the paragraph style back to [HeadingParagraphStyle.Normal].
+     * Consistent with common rich text editor behavior, heading styles are removed from the entire paragraph(s).
+     */
     private fun removeHeaderStyleFromParagraph(spanStyle: SpanStyle, paragraphStyle: ParagraphStyle) {
         val paragraphs = getRichParagraphListByTextRange(selection)
         if (paragraphs.isEmpty()) return

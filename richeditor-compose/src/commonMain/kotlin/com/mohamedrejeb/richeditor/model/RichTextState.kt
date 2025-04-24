@@ -24,7 +24,6 @@ import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.util.fastFirstOrNull
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
@@ -587,75 +586,26 @@ public class RichTextState internal constructor(
     }
 
     /**
-    * Sets the heading style for the currently selected paragraphs.
-    *
-    * This function applies the specified [headerParagraphStyle] to all paragraphs
-    * that are fully or partially within the current [selection].
-    *
-    * If the specified style is [HeadingParagraphStyle.Normal], any existing heading
-    * style (H1-H6) is removed from the selected paragraphs. Otherwise, the specified
-    * heading style is applied, replacing any previous heading style on those paragraphs.
-    * Heading styles are applied to the entire paragraph, if the selection is collapsed -
-    * consistent with common rich text editor behavior. If the selection is not collapsed,
-    * heading styles will be applied to each paragraph in the selection.
-    */
-    public fun setHeadingParagraphStyle(headerParagraphStyle: HeadingParagraphStyle) {
-        val spanStyle = headerParagraphStyle.getSpanStyle()
-        val paragraphStyle = headerParagraphStyle.getTextStyle().toParagraphStyle()
-
-        if (headerParagraphStyle == HeadingParagraphStyle.Normal) {
-            HeadingParagraphStyle.entries.forEach {
-                removeHeaderStyleFromParagraph(it.getSpanStyle(), it.getTextStyle().toParagraphStyle())
-            }
-        } else {
-            addHeaderStyleToParagraph(spanStyle, paragraphStyle)
-        }
-    }
-
-    /**
-     * Internal helper function to apply a given header [SpanStyle] and [ParagraphStyle]
-     * to the specified list of paragraphs.
+     * Sets the heading style for the currently selected paragraphs.
      *
-     * This function is used by [setHeadingParagraphStyle] after determining which
-     * style to set and handling the removal of previous heading styles.
-     * Consistent with common rich text editor behavior, heading styles are applied to the entire paragraph(s).
-     * Note: This function only adds the styles and does not handle removing existing
-     * heading styles from the paragraphs.
+     * This function applies the specified [headerParagraphStyle] to all paragraphs
+     * that are fully or partially within the current [selection].
+     *
+     * If the specified style is [HeadingParagraphStyle.Normal], any existing heading
+     * style (H1-H6) is removed from the selected paragraphs. Otherwise, the specified
+     * heading style is applied, replacing any previous heading style on those paragraphs.
+     * Heading styles are applied to the entire paragraph, if the selection is collapsed -
+     * consistent with common rich text editor behavior. If the selection is not collapsed,
+     * heading styles will be applied to each paragraph in the selection.
      */
-    private fun addHeaderStyleToParagraph(spanStyle: SpanStyle, paragraphStyle: ParagraphStyle) {
+    public fun setHeadingStyle(headerParagraphStyle: HeadingParagraphStyle) {
         val paragraphs = getRichParagraphListByTextRange(selection)
         if (paragraphs.isEmpty()) return
 
         paragraphs.forEach { paragraph ->
-            paragraph.children.forEach { richSpan ->
-                richSpan.spanStyle = richSpan.spanStyle.customMerge(spanStyle)
-            }
-            paragraph.paragraphStyle = paragraph.paragraphStyle.merge(paragraphStyle)
+            paragraph.setHeadingStyle(headerParagraphStyle)
         }
-        updateAnnotatedString()
-        updateCurrentSpanStyle()
-        updateCurrentParagraphStyle()
-    }
 
-    /**
-     * Internal helper function to remove a given header [SpanStyle] and [ParagraphStyle]
-     * from the specified list of paragraphs.
-     *
-     * This function is used by [setHeadingParagraphStyle] to clear any existing heading
-     * styles before applying a new one, or to remove a specific heading style when
-     * setting the paragraph style back to [HeadingParagraphStyle.Normal].
-     * Consistent with common rich text editor behavior, heading styles are removed from the entire paragraph(s).
-     */
-    private fun removeHeaderStyleFromParagraph(spanStyle: SpanStyle, paragraphStyle: ParagraphStyle) {
-        val paragraphs = getRichParagraphListByTextRange(selection)
-        if (paragraphs.isEmpty()) return
-
-        paragraphs.forEach { paragraph ->
-            paragraph.children.forEach { richSpan ->
-                richSpan.spanStyle = richSpan.spanStyle.unmerge(spanStyle) // Unmerge using toSpanStyle
-            }
-            paragraph.paragraphStyle = paragraph.paragraphStyle.unmerge(paragraphStyle) // Unmerge ParagraphStyle
-        }
         updateAnnotatedString()
         updateCurrentSpanStyle()
         updateCurrentParagraphStyle()

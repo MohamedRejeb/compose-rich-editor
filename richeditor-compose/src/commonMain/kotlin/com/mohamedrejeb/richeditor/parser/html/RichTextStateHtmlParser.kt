@@ -20,6 +20,7 @@ import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.util.fastForEachReversed
 import com.mohamedrejeb.richeditor.paragraph.type.ConfigurableListLevel
+import com.mohamedrejeb.richeditor.utils.diff
 import com.mohamedrejeb.richeditor.utils.unmerge
 
 internal object RichTextStateHtmlParser : RichTextStateParser<String> {
@@ -401,7 +402,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     if (paragraphTagName in HeadingParagraphStyle.headingTags) {
                         val headingType = HeadingParagraphStyle.fromParagraphStyle(richParagraph.paragraphStyle)
                         val baseParagraphStyle = headingType.getParagraphStyle()
-                        val diffParagraphStyle = richParagraph.paragraphStyle.unmerge(baseParagraphStyle)
+                        val diffParagraphStyle = richParagraph.paragraphStyle.diff(baseParagraphStyle)
                         CssDecoder.decodeParagraphStyleToCssStyleMap(diffParagraphStyle)
                     } else {
                         CssDecoder.decodeParagraphStyleToCssStyleMap(richParagraph.paragraphStyle)
@@ -466,12 +467,12 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
             /**
              * If the heading type is normal, follow the previous behavior of encoding the SpanStyle to the
              * Css span style. If it is a heading paragraph style, remove the Heading-specific [SpanStyle] features via
-             * [unmerge] but retain the non-heading associated [SpanStyle] properties.
+             * [diff] but retain the non-heading associated [SpanStyle] properties.
              */
             if (headingType == HeadingParagraphStyle.Normal)
                 CssDecoder.decodeSpanStyleToHtmlStylingFormat(richSpan.spanStyle)
             else
-                CssDecoder.decodeSpanStyleToHtmlStylingFormat(richSpan.spanStyle.unmerge(headingType.getSpanStyle()))
+                CssDecoder.decodeSpanStyleToHtmlStylingFormat(richSpan.spanStyle.diff(headingType.getSpanStyle()))
         val spanCss = CssDecoder.decodeCssStyleMap(htmlStyleFormat.cssStyleMap)
         val htmlTags = htmlStyleFormat.htmlTags.filter { it !in parentFormattingTags }
 

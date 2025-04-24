@@ -7,6 +7,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.model.HeadingParagraphStyle
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
@@ -421,10 +422,16 @@ class RichTextStateMarkdownParserEncodeTest {
 
         val firstParagraph = state.richParagraphList[0]
 
-        assertEquals(H1SpanStyle, firstParagraph.getFirstNonEmptyChild()!!.spanStyle)
+        // Check paragraph type and heading style
+        assertEquals(HeadingParagraphStyle.H1, firstParagraph.getHeadingParagraphStyle())
+        // Check span style applied by the parser
+        assertEquals(HeadingParagraphStyle.H1.getSpanStyle(), firstParagraph.getFirstNonEmptyChild()!!.spanStyle)
+
 
         val secondParagraph = state.richParagraphList[1]
-        assertEquals(H2SpanStyle, secondParagraph.getFirstNonEmptyChild()!!.spanStyle)
+        assertEquals(HeadingParagraphStyle.H2, secondParagraph.getHeadingParagraphStyle())
+        assertEquals(HeadingParagraphStyle.H2.getSpanStyle(), secondParagraph.getFirstNonEmptyChild()!!.spanStyle)
+
 
         assertEquals("Prompt\nEmphasis", state.toText())
     }
@@ -541,6 +548,44 @@ class RichTextStateMarkdownParserEncodeTest {
         assertEquals("Item2.2", fourthItem.text)
         assertEquals("Item3", fifthItem .text)
         assertEquals("Item4", sixthItem .text)
+    }
+
+    @Test
+    fun testEncodeHeadingParagraphStyles() {
+        val markdown = """
+            # Heading 1
+            Some text
+            ## Heading 2
+            More text
+        """.trimIndent()
+
+        val state = RichTextStateMarkdownParser.encode(markdown)
+
+        assertEquals(4, state.richParagraphList.size)
+
+        // Paragraph 0: H1
+        val p0 = state.richParagraphList[0]
+        assertEquals(HeadingParagraphStyle.H1, p0.getHeadingParagraphStyle())
+        assertEquals("Heading 1", p0.getFirstNonEmptyChild()?.text)
+        assertEquals(HeadingParagraphStyle.H1.getSpanStyle(), p0.getFirstNonEmptyChild()?.spanStyle)
+
+        // Paragraph 1: Normal
+        val p1 = state.richParagraphList[1]
+        assertEquals(HeadingParagraphStyle.Normal, p1.getHeadingParagraphStyle())
+        assertEquals("Some text", p1.getFirstNonEmptyChild()?.text)
+        assertEquals(SpanStyle(), p1.getFirstNonEmptyChild()?.spanStyle) // Default SpanStyle
+
+        // Paragraph 2: H2
+        val p2 = state.richParagraphList[2]
+        assertEquals(HeadingParagraphStyle.H2, p2.getHeadingParagraphStyle())
+        assertEquals("Heading 2", p2.getFirstNonEmptyChild()?.text)
+        assertEquals(HeadingParagraphStyle.H2.getSpanStyle(), p2.getFirstNonEmptyChild()?.spanStyle)
+
+        // Paragraph 3: Normal
+        val p3 = state.richParagraphList[3]
+        assertEquals(HeadingParagraphStyle.Normal, p3.getHeadingParagraphStyle())
+        assertEquals("More text", p3.getFirstNonEmptyChild()?.text)
+        assertEquals(SpanStyle(), p3.getFirstNonEmptyChild()?.spanStyle) // Default SpanStyle
     }
 
 }

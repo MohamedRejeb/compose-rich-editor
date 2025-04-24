@@ -1,6 +1,9 @@
 package com.mohamedrejeb.richeditor.parser.html
 
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.FontWeight
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.model.HeadingParagraphStyle
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
@@ -329,6 +332,72 @@ class RichTextStateHtmlParserEncodeTest {
         assertEquals("Item2.1", thirdItem.text)
         assertEquals("Item2.2", fourthItem.text)
         assertEquals("Item3", fifthItem .text)
+    }
+
+    @Test
+    fun testEncodeHeadingParagraphStyles() {
+        val html = """
+            <h1>Heading 1</h1>
+            <p>Some text</p>
+            <h2>Heading 2</h2>
+            <p>More text</p>
+        """.trimIndent()
+
+        val state = RichTextStateHtmlParser.encode(html)
+
+        assertEquals(4, state.richParagraphList.size)
+
+        // Paragraph 0: H1
+        val p0 = state.richParagraphList[0]
+        assertEquals(HeadingParagraphStyle.H1, p0.getHeadingParagraphStyle())
+        assertEquals("Heading 1", p0.getFirstNonEmptyChild()?.text)
+        assertEquals(HeadingParagraphStyle.H1.getSpanStyle(), p0.getFirstNonEmptyChild()?.spanStyle)
+
+        // Paragraph 1: Normal
+        val p1 = state.richParagraphList[1]
+        assertEquals(HeadingParagraphStyle.Normal, p1.getHeadingParagraphStyle())
+        assertEquals("Some text", p1.getFirstNonEmptyChild()?.text)
+        assertEquals(SpanStyle(), p1.getFirstNonEmptyChild()?.spanStyle) // Default SpanStyle
+
+        // Paragraph 2: H2
+        val p2 = state.richParagraphList[2]
+        assertEquals(HeadingParagraphStyle.H2, p2.getHeadingParagraphStyle())
+        assertEquals("Heading 2", p2.getFirstNonEmptyChild()?.text)
+        assertEquals(HeadingParagraphStyle.H2.getSpanStyle(), p2.getFirstNonEmptyChild()?.spanStyle)
+
+        // Paragraph 3: Normal
+        val p3 = state.richParagraphList[3]
+        assertEquals(HeadingParagraphStyle.Normal, p3.getHeadingParagraphStyle())
+        assertEquals("More text", p3.getFirstNonEmptyChild()?.text)
+        assertEquals(SpanStyle(), p3.getFirstNonEmptyChild()?.spanStyle) // Default SpanStyle
+    }
+
+    @Test
+    fun testEncodeHeadingParagraphStylesWithInlineStyles() {
+        val html = """
+            <h1 style="color: red;">Red Heading 1</h1>
+            <h2 style="font-weight: bold;">Bold Heading 2</h2>
+        """.trimIndent()
+
+        val state = RichTextStateHtmlParser.encode(html)
+
+        assertEquals(2, state.richParagraphList.size)
+
+        // Paragraph 0: H1 with red color
+        val p0 = state.richParagraphList[0]
+        assertEquals(HeadingParagraphStyle.H1, p0.getHeadingParagraphStyle())
+        assertEquals("Red Heading 1", p0.getFirstNonEmptyChild()?.text)
+        // Check that the base H1 style is applied AND the red color
+        val expectedH1Style = HeadingParagraphStyle.H1.getSpanStyle().merge(SpanStyle(color = androidx.compose.ui.graphics.Color.Red))
+        assertEquals(expectedH1Style, p0.getFirstNonEmptyChild()?.spanStyle)
+
+        // Paragraph 1: H2 with bold font weight
+        val p1 = state.richParagraphList[1]
+        assertEquals(HeadingParagraphStyle.H2, p1.getHeadingParagraphStyle())
+        assertEquals("Bold Heading 2", p1.getFirstNonEmptyChild()?.text)
+        // Check that the base H2 style is applied AND the bold font weight
+        val expectedH2Style = HeadingParagraphStyle.H2.getSpanStyle().merge(SpanStyle(fontWeight = FontWeight.Bold))
+        assertEquals(expectedH2Style, p1.getFirstNonEmptyChild()?.spanStyle)
     }
 
 }

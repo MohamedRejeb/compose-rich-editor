@@ -21,7 +21,11 @@ public enum class HeadingParagraphStyle(
     private val typography = Typography()
 
     public fun getSpanStyle(): SpanStyle {
-        return this.getTextStyle().toSpanStyle()
+        /*
+        * All headings specify a normal font weight, but the user can still apply "bold" and have it be a valid heading
+        * We'll remove the font weight from the span style so that the user can still apply "bold"
+         */
+        return this.getTextStyle().toSpanStyle().copy(fontWeight = null)
     }
 
     public fun getParagraphStyle() : ParagraphStyle {
@@ -29,7 +33,7 @@ public enum class HeadingParagraphStyle(
     }
 
     //See H1-H6 Conversion https://developer.android.com/develop/ui/compose/designsystems/material2-material3#typography
-    public fun getTextStyle() : TextStyle {
+    private fun getTextStyle() : TextStyle {
         return when (this) {
             Normal -> TextStyle.Default
             H1 -> typography.displayLarge
@@ -46,7 +50,6 @@ public enum class HeadingParagraphStyle(
             return entries.find {
                 val entrySpanStyle = it.getSpanStyle()
                 entrySpanStyle.fontSize == spanStyle.fontSize
-                        && entrySpanStyle.fontWeight == spanStyle.fontWeight
                         && entrySpanStyle.fontFamily == spanStyle.fontFamily
                         && entrySpanStyle.letterSpacing == spanStyle.letterSpacing
             } ?: Normal
@@ -56,7 +59,6 @@ public enum class HeadingParagraphStyle(
             return entries.find {
                 val entrySpanStyle = it.getSpanStyle()
                 entrySpanStyle.fontSize == richSpanStyle.spanStyle.fontSize
-                        && entrySpanStyle.fontWeight == richSpanStyle.spanStyle.fontWeight
                         && entrySpanStyle.fontFamily == richSpanStyle.spanStyle.fontFamily
                         && entrySpanStyle.letterSpacing == richSpanStyle.spanStyle.letterSpacing
             } ?: Normal

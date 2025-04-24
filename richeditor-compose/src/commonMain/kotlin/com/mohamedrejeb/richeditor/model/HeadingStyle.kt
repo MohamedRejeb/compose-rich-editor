@@ -33,7 +33,7 @@ public enum class HeadingStyle(
     }
 
     //See H1-H6 Conversion https://developer.android.com/develop/ui/compose/designsystems/material2-material3#typography
-    private fun getTextStyle() : TextStyle {
+    public fun getTextStyle() : TextStyle {
         return when (this) {
             Normal -> TextStyle.Default
             H1 -> typography.displayLarge

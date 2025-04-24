@@ -6,7 +6,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import org.intellij.markdown.MarkdownElementTypes
 
-public enum class HeadingParagraphStyle(
+public enum class HeadingStyle(
     public val markdownElement: String,
     public val htmlTag: String? = null,
 ) {
@@ -46,7 +46,7 @@ public enum class HeadingParagraphStyle(
     }
 
     public companion object {
-        public fun fromSpanStyle(spanStyle: SpanStyle): HeadingParagraphStyle {
+        public fun fromSpanStyle(spanStyle: SpanStyle): HeadingStyle {
             return entries.find {
                 val entrySpanStyle = it.getSpanStyle()
                 entrySpanStyle.fontSize == spanStyle.fontSize
@@ -55,7 +55,7 @@ public enum class HeadingParagraphStyle(
             } ?: Normal
         }
 
-        internal fun fromRichSpan(richSpanStyle: RichSpan): HeadingParagraphStyle {
+        internal fun fromRichSpan(richSpanStyle: RichSpan): HeadingStyle {
             return entries.find {
                 val entrySpanStyle = it.getSpanStyle()
                 entrySpanStyle.fontSize == richSpanStyle.spanStyle.fontSize
@@ -64,7 +64,7 @@ public enum class HeadingParagraphStyle(
             } ?: Normal
         }
 
-        public fun fromParagraphStyle(paragraphStyle: ParagraphStyle): HeadingParagraphStyle {
+        public fun fromParagraphStyle(paragraphStyle: ParagraphStyle): HeadingStyle {
             return entries.find {
                 val entryParagraphStyle = it.getParagraphStyle()
                 entryParagraphStyle.lineHeight == paragraphStyle.lineHeight

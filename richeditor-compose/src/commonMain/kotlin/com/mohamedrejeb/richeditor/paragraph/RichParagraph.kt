@@ -7,7 +7,7 @@ import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.util.fastForEachReversed
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
-import com.mohamedrejeb.richeditor.model.HeadingParagraphStyle
+import com.mohamedrejeb.richeditor.model.HeadingStyle
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
@@ -203,22 +203,22 @@ internal class RichParagraph(
     }
 
     /**
-     * Retrieves the [HeadingParagraphStyle] applied to this paragraph.
+     * Retrieves the [HeadingStyle] applied to this paragraph.
      *
      * In Rich Text editors like Google Docs, heading styles (H1-H6) are
      * applied to the entire paragraph. This function reflects that behavior
-     * by checking all child [RichSpan]s for a non-default [HeadingParagraphStyle].
-     * If any child [RichSpan] has a heading style (other than [HeadingParagraphStyle.Normal]),
+     * by checking all child [RichSpan]s for a non-default [HeadingStyle].
+     * If any child [RichSpan] has a heading style (other than [HeadingStyle.Normal]),
      * this function returns that heading style, indicating that the entire paragraph is styled as a heading.
      */
-    fun getHeadingParagraphStyle() : HeadingParagraphStyle {
+    fun getHeadingStyle() : HeadingStyle {
         children.fastForEach { richSpan ->
-            val childHeadingParagraphStyle = HeadingParagraphStyle.fromRichSpan(richSpan)
-            if (childHeadingParagraphStyle != HeadingParagraphStyle.Normal){
+            val childHeadingParagraphStyle = HeadingStyle.fromRichSpan(richSpan)
+            if (childHeadingParagraphStyle != HeadingStyle.Normal){
                 return childHeadingParagraphStyle
             }
         }
-        return HeadingParagraphStyle.Normal
+        return HeadingStyle.Normal
     }
 
     /**
@@ -226,24 +226,24 @@ internal class RichParagraph(
      *
      * This function applies the specified [headerParagraphStyle] to the entire paragraph.
      *
-     * If the specified style is [HeadingParagraphStyle.Normal], any existing heading
+     * If the specified style is [HeadingStyle.Normal], any existing heading
      * style (H1-H6) is removed from the paragraph. Otherwise, the specified
      * heading style is applied, replacing any previous heading style on this paragraph.
      *
      * Heading styles are applied to the entire paragraph, consistent with common rich text editor
     behavior.
      */
-    fun setHeadingStyle(headerParagraphStyle: HeadingParagraphStyle) {
+    fun setHeadingStyle(headerParagraphStyle: HeadingStyle) {
         val spanStyle = headerParagraphStyle.getSpanStyle()
         val paragraphStyle = headerParagraphStyle.getParagraphStyle()
 
         // Remove any existing heading styles first
-        HeadingParagraphStyle.entries.forEach {
+        HeadingStyle.entries.forEach {
             removeHeadingStyle(it.getSpanStyle(), it.getParagraphStyle())
         }
 
         // Apply the new heading style if it's not Normal
-        if (headerParagraphStyle != HeadingParagraphStyle.Normal) {
+        if (headerParagraphStyle != HeadingStyle.Normal) {
             addHeadingStyle(spanStyle, paragraphStyle)
         }
     }
@@ -270,7 +270,7 @@ internal class RichParagraph(
      *
      * This function is used by [setHeadingStyle] to clear any existing heading
      * styles before applying a new one, or to remove a specific heading style when
-     * setting the paragraph style back to [HeadingParagraphStyle.Normal].
+     * setting the paragraph style back to [HeadingStyle.Normal].
      */
     private fun removeHeadingStyle(spanStyle: SpanStyle, paragraphStyle: ParagraphStyle) {
         children.forEach { richSpan ->

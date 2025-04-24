@@ -21,7 +21,6 @@ import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.util.fastForEachReversed
 import com.mohamedrejeb.richeditor.paragraph.type.ConfigurableListLevel
 import com.mohamedrejeb.richeditor.utils.diff
-import com.mohamedrejeb.richeditor.utils.unmerge
 
 internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
@@ -399,8 +398,8 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                      <h1> to <h6> tags will allow the browser to apply the default heading styles.
                      If the paragraphTagName isn't a h1-h6 tag, it will revert to the old behavior of applying whatever paragraphstyle is present.
                      */
-                    if (paragraphTagName in HeadingParagraphStyle.headingTags) {
-                        val headingType = HeadingParagraphStyle.fromParagraphStyle(richParagraph.paragraphStyle)
+                    if (paragraphTagName in HeadingStyle.headingTags) {
+                        val headingType = HeadingStyle.fromParagraphStyle(richParagraph.paragraphStyle)
                         val baseParagraphStyle = headingType.getParagraphStyle()
                         val diffParagraphStyle = richParagraph.paragraphStyle.diff(baseParagraphStyle)
                         CssDecoder.decodeParagraphStyleToCssStyleMap(diffParagraphStyle)
@@ -417,7 +416,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
                 // Append paragraph children
                 richParagraph.children.fastForEach { richSpan ->
-                    builder.append(decodeRichSpanToHtml(richSpan, headingType = HeadingParagraphStyle.fromRichSpan(richSpan)))
+                    builder.append(decodeRichSpanToHtml(richSpan, headingType = HeadingStyle.fromRichSpan(richSpan)))
                 }
 
                 // Append paragraph closing tag
@@ -444,7 +443,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
     private fun decodeRichSpanToHtml(
         richSpan: RichSpan,
         parentFormattingTags: List<String> = emptyList(),
-        headingType: HeadingParagraphStyle = HeadingParagraphStyle.Normal,
+        headingType: HeadingStyle = HeadingStyle.Normal,
     ): String {
         val stringBuilder = StringBuilder()
 
@@ -469,7 +468,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
              * Css span style. If it is a heading paragraph style, remove the Heading-specific [SpanStyle] features via
              * [diff] but retain the non-heading associated [SpanStyle] properties.
              */
-            if (headingType == HeadingParagraphStyle.Normal)
+            if (headingType == HeadingStyle.Normal)
                 CssDecoder.decodeSpanStyleToHtmlStylingFormat(richSpan.spanStyle)
             else
                 CssDecoder.decodeSpanStyleToHtmlStylingFormat(richSpan.spanStyle.diff(headingType.getSpanStyle()))
@@ -596,7 +595,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         return when (paragraphType) {
             is UnorderedList -> "ul"
             is OrderedList -> "ol"
-            else -> richParagraph.getHeadingParagraphStyle().htmlTag ?: "p"
+            else -> richParagraph.getHeadingStyle().htmlTag ?: "p"
         }
     }
 

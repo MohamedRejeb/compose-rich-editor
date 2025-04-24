@@ -7,7 +7,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
-import com.mohamedrejeb.richeditor.model.HeadingParagraphStyle
+import com.mohamedrejeb.richeditor.model.HeadingStyle
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
@@ -595,7 +595,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
      * For example, if the first [RichSpan] spanStyle is [H1SpanStyle], the markdown line start text will be "# ".
      */
     private fun getMarkdownLineStartTextFromFirstRichSpan(firstRichSpan: RichSpan): String {
-        return HeadingParagraphStyle.fromRichSpan(firstRichSpan).markdownElement
+        return HeadingStyle.fromRichSpan(firstRichSpan).markdownElement
     }
 
     /**

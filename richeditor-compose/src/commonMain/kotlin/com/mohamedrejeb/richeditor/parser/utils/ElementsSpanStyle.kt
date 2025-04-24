@@ -7,7 +7,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.em
-import com.mohamedrejeb.richeditor.model.HeadingParagraphStyle
+import com.mohamedrejeb.richeditor.model.HeadingStyle
 
 internal val MarkBackgroundColor = Color.Yellow
 internal val SmallFontSize = 0.8f.em
@@ -20,9 +20,9 @@ internal val SubscriptSpanStyle = SpanStyle(baselineShift = BaselineShift.Subscr
 internal val SuperscriptSpanStyle = SpanStyle(baselineShift = BaselineShift.Superscript)
 internal val MarkSpanStyle = SpanStyle(background = MarkBackgroundColor)
 internal val SmallSpanStyle = SpanStyle(fontSize = SmallFontSize)
-internal val H1SpanStyle = HeadingParagraphStyle.H1.getSpanStyle()
-internal val H2SpanStyle = HeadingParagraphStyle.H2.getSpanStyle()
-internal val H3SpanStyle = HeadingParagraphStyle.H3.getSpanStyle()
-internal val H4SpanStyle = HeadingParagraphStyle.H4.getSpanStyle()
-internal val H5SpanStyle = HeadingParagraphStyle.H5.getSpanStyle()
-internal val H6SpanStyle = HeadingParagraphStyle.H6.getSpanStyle()
+internal val H1SpanStyle = HeadingStyle.H1.getSpanStyle()
+internal val H2SpanStyle = HeadingStyle.H2.getSpanStyle()
+internal val H3SpanStyle = HeadingStyle.H3.getSpanStyle()
+internal val H4SpanStyle = HeadingStyle.H4.getSpanStyle()
+internal val H5SpanStyle = HeadingStyle.H5.getSpanStyle()
+internal val H6SpanStyle = HeadingStyle.H6.getSpanStyle()

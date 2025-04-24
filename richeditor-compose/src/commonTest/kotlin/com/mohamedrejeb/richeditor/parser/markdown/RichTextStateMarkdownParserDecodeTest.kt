@@ -7,7 +7,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
-import com.mohamedrejeb.richeditor.model.HeadingParagraphStyle
+import com.mohamedrejeb.richeditor.model.HeadingStyle
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
@@ -520,27 +520,27 @@ class RichTextStateMarkdownParserDecodeTest {
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 1", paragraph = it))
-                    it.setHeadingStyle(HeadingParagraphStyle.H1)
+                    it.setHeadingStyle(HeadingStyle.H1)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 2", paragraph = it))
-                    it.setHeadingStyle(HeadingParagraphStyle.H2)
+                    it.setHeadingStyle(HeadingStyle.H2)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 3", paragraph = it))
-                    it.setHeadingStyle(HeadingParagraphStyle.H3)
+                    it.setHeadingStyle(HeadingStyle.H3)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 4", paragraph = it))
-                    it.setHeadingStyle(HeadingParagraphStyle.H4)
+                    it.setHeadingStyle(HeadingStyle.H4)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 5", paragraph = it))
-                    it.setHeadingStyle(HeadingParagraphStyle.H5)
+                    it.setHeadingStyle(HeadingStyle.H5)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 6", paragraph = it))
-                    it.setHeadingStyle(HeadingParagraphStyle.H6)
+                    it.setHeadingStyle(HeadingStyle.H6)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Another Normal Paragraph", paragraph = it))

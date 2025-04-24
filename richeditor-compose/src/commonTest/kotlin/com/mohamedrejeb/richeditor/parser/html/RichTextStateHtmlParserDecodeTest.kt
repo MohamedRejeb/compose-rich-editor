@@ -5,7 +5,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
-import com.mohamedrejeb.richeditor.model.HeadingParagraphStyle
+import com.mohamedrejeb.richeditor.model.HeadingStyle
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
@@ -511,27 +511,27 @@ class RichTextStateHtmlParserDecodeTest {
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 1", paragraph = it))
-                    it.setHeadingStyle(HeadingParagraphStyle.H1)
+                    it.setHeadingStyle(HeadingStyle.H1)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 2", paragraph = it))
-                    it.setHeadingStyle(HeadingParagraphStyle.H2)
+                    it.setHeadingStyle(HeadingStyle.H2)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 3", paragraph = it))
-                    it.setHeadingStyle(HeadingParagraphStyle.H3)
+                    it.setHeadingStyle(HeadingStyle.H3)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 4", paragraph = it))
-                    it.setHeadingStyle(HeadingParagraphStyle.H4)
+                    it.setHeadingStyle(HeadingStyle.H4)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 5", paragraph = it))
-                    it.setHeadingStyle(HeadingParagraphStyle.H5)
+                    it.setHeadingStyle(HeadingStyle.H5)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 6", paragraph = it))
-                    it.setHeadingStyle(HeadingParagraphStyle.H6)
+                    it.setHeadingStyle(HeadingStyle.H6)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Another Normal Paragraph", paragraph = it))
@@ -563,13 +563,13 @@ class RichTextStateHtmlParserDecodeTest {
                     val span = RichSpan(text = "Bold Heading 1", paragraph = it)
                     span.spanStyle = span.spanStyle.merge(SpanStyle(fontWeight = FontWeight.Bold))
                     it.children.add(span)
-                    it.setHeadingStyle(HeadingParagraphStyle.H1)
+                    it.setHeadingStyle(HeadingStyle.H1)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     val span = RichSpan(text = "Italic Heading 2", paragraph = it)
                     span.spanStyle = span.spanStyle.merge(SpanStyle(fontStyle = FontStyle.Italic))
                     it.children.add(span)
-                    it.setHeadingStyle(HeadingParagraphStyle.H2)
+                    it.setHeadingStyle(HeadingStyle.H2)
                 }
             )
         )
@@ -597,13 +597,13 @@ class RichTextStateHtmlParserDecodeTest {
         state.selection = TextRange(paragraph2StartIndex, paragraph2EndIndex)
 
         // Apply H2 heading style
-        state.setHeadingStyle(HeadingParagraphStyle.H2)
+        state.setHeadingStyle(HeadingStyle.H2)
 
         // Verify the second paragraph is now H2
         assertEquals(3, state.richParagraphList.size)
-        assertEquals(HeadingParagraphStyle.Normal, state.richParagraphList[0].getHeadingParagraphStyle())
-        assertEquals(HeadingParagraphStyle.H2, state.richParagraphList[1].getHeadingParagraphStyle())
-        assertEquals(HeadingParagraphStyle.Normal, state.richParagraphList[2].getHeadingParagraphStyle())
+        assertEquals(HeadingStyle.Normal, state.richParagraphList[0].getHeadingStyle())
+        assertEquals(HeadingStyle.H2, state.richParagraphList[1].getHeadingStyle())
+        assertEquals(HeadingStyle.Normal, state.richParagraphList[2].getHeadingStyle())
 
         // Verify the text content is unchanged
         assertEquals(initialText.replace("\n", " "), state.annotatedString.text)

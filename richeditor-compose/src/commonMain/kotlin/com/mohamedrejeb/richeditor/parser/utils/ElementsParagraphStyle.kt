@@ -1,10 +1,10 @@
 package com.mohamedrejeb.richeditor.parser.utils
 
-import com.mohamedrejeb.richeditor.model.HeadingParagraphStyle
+import com.mohamedrejeb.richeditor.model.HeadingStyle
 
-internal val H1ParagraphStyle = HeadingParagraphStyle.H1.getParagraphStyle()
-internal val H2ParagraphStyle = HeadingParagraphStyle.H2.getParagraphStyle()
-internal val H3ParagraphStyle = HeadingParagraphStyle.H3.getParagraphStyle()
-internal val H4ParagraphStyle = HeadingParagraphStyle.H4.getParagraphStyle()
-internal val H5ParagraphStyle = HeadingParagraphStyle.H5.getParagraphStyle()
-internal val H6ParagraphStyle = HeadingParagraphStyle.H6.getParagraphStyle()
+internal val H1ParagraphStyle = HeadingStyle.H1.getParagraphStyle()
+internal val H2ParagraphStyle = HeadingStyle.H2.getParagraphStyle()
+internal val H3ParagraphStyle = HeadingStyle.H3.getParagraphStyle()
+internal val H4ParagraphStyle = HeadingStyle.H4.getParagraphStyle()
+internal val H5ParagraphStyle = HeadingStyle.H5.getParagraphStyle()
+internal val H6ParagraphStyle = HeadingStyle.H6.getParagraphStyle()

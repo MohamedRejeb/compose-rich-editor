@@ -591,14 +591,14 @@ public class RichTextState internal constructor(
      * This function applies the specified [headerParagraphStyle] to all paragraphs
      * that are fully or partially within the current [selection].
      *
-     * If the specified style is [HeadingParagraphStyle.Normal], any existing heading
+     * If the specified style is [HeadingStyle.Normal], any existing heading
      * style (H1-H6) is removed from the selected paragraphs. Otherwise, the specified
      * heading style is applied, replacing any previous heading style on those paragraphs.
      * Heading styles are applied to the entire paragraph, if the selection is collapsed -
      * consistent with common rich text editor behavior. If the selection is not collapsed,
      * heading styles will be applied to each paragraph in the selection.
      */
-    public fun setHeadingStyle(headerParagraphStyle: HeadingParagraphStyle) {
+    public fun setHeadingStyle(headerParagraphStyle: HeadingStyle) {
         val paragraphs = getRichParagraphListByTextRange(selection)
         if (paragraphs.isEmpty()) return
 

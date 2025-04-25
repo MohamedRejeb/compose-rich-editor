@@ -2290,8 +2290,8 @@ public class RichTextState internal constructor(
                         newType = DefaultParagraph(),
                         textFieldValue = tempTextFieldValue,
                     )
-                    newParagraphFirstRichSpan?.spanStyle = SpanStyle()
-                    newParagraphFirstRichSpan?.richSpanStyle = RichSpanStyle.Default
+                    newParagraphFirstRichSpan.spanStyle = SpanStyle()
+                    newParagraphFirstRichSpan.richSpanStyle = RichSpanStyle.Default
 
                     // Ignore adding the new paragraph
                     index--
@@ -2300,14 +2300,14 @@ public class RichTextState internal constructor(
                     (!config.preserveStyleOnEmptyLine || richSpan.paragraph.isEmpty()) &&
                     isSelectionAtNewRichSpan
                 ) {
-                    newParagraphFirstRichSpan?.spanStyle = SpanStyle()
-                    newParagraphFirstRichSpan?.richSpanStyle = RichSpanStyle.Default
+                    newParagraphFirstRichSpan.spanStyle = SpanStyle()
+                    newParagraphFirstRichSpan.richSpanStyle = RichSpanStyle.Default
                 } else if (
                     config.preserveStyleOnEmptyLine &&
                     isSelectionAtNewRichSpan
                 ) {
-                    newParagraphFirstRichSpan?.spanStyle = currentSpanStyle
-                    newParagraphFirstRichSpan?.richSpanStyle = currentRichSpanStyle
+                    newParagraphFirstRichSpan.spanStyle = currentSpanStyle
+                    newParagraphFirstRichSpan.richSpanStyle = currentRichSpanStyle
                 }
             }
 

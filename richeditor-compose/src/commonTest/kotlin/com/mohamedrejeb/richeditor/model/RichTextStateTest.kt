@@ -3180,5 +3180,4 @@ class RichTextStateTest {
         assertEquals("Google", link.text)
         assertEquals(FontWeight.Bold, link.spanStyle.fontWeight)
     }
-
 }

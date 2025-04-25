@@ -1,5 +1,6 @@
 package com.mohamedrejeb.richeditor.model
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
@@ -3178,6 +3179,19 @@ class RichTextStateTest {
         assertIs<RichSpanStyle.Link>(link.richSpanStyle)
         assertEquals("Google", link.text)
         assertEquals(FontWeight.Bold, link.spanStyle.fontWeight)
+    }
+
+    @Test
+    fun testAdjustRichParagraphLayout() {
+
+        val html = """
+            <p dir="rtl" class="rich-text-editor__paragraph"><b><strong style="white-space: pre-wrap;" class="rich-text-editor__bold">إعلان تهنئة بمناسبة العطلة المدرسية</strong></b></p><p dir="rtl" class="rich-text-editor__paragraph"><span style="white-space: pre-wrap;">إلى جميع أعضاء الهيئة التربوية الكرام،</span></p><p dir="rtl" class="rich-text-editor__paragraph"><span style="white-space: pre-wrap;">بمناسبة حلول العطلة المدرسية، تتقدّم إدارة المدرسة إليكم بأصدق التهاني والتقدير لجهودكم المبذولة طيلة الفترة الدراسية. لقد كنتم، كما عهدناكم دائمًا، قدوة في العطاء والإخلاص، وساهمتم في بناء جيل واعٍ ومتميّز. 😊</span></p><p dir="rtl" class="rich-text-editor__paragraph"><span style="white-space: pre-wrap;">نتمنى لكم عطلة مريحة ومليئة بالاسترخاء والإنجازات الشخصية، على أمل أن نلتقي بعد العطلة بروح متجددة لمواصلة رسالتنا التربوية السامية.</span></p><p dir="rtl" class="rich-text-editor__paragraph"><span style="white-space: pre-wrap;">عطلة سعيدة، وكل عام وأنتم بخير!</span></p><p dir="rtl" class="rich-text-editor__paragraph"><b><strong style="white-space: pre-wrap;" class="rich-text-editor__bold">إدارة المدرسة</strong></b></p>
+        """.trimIndent()
+
+        val richTextState = RichTextState()
+        richTextState.config.linkColor = Color(0xFF0072C6)
+        richTextState.config.linkTextDecoration = TextDecoration.None
+        richTextState.setHtml(html)
     }
 
 }

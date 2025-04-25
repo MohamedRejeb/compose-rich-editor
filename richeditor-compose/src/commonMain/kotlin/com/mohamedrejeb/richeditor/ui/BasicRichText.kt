@@ -93,7 +93,6 @@ public fun BasicRichText(
                 state.onTextLayout(
                     textLayoutResult = it,
                     density = density,
-                    maxLines = maxLines,
                 )
                 onTextLayout(it)
             },

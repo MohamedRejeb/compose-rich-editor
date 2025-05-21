@@ -346,7 +346,7 @@ public class RichTextState internal constructor(
      */
     public fun addTextAfterSelection(text: String): Unit =
         addTextAtIndex(
-            index = if(selection.reversed) selection.start else selection.end,
+            index = if (selection.reversed) selection.start else selection.end,
             text = text
         )
 
@@ -1478,7 +1478,8 @@ public class RichTextState internal constructor(
             else
                 it
         }
-        val paragraphFirstChildStartIndex = (firstNonEmptyChildIndex ?: selection.min).coerceAtLeast(0)
+        val paragraphFirstChildStartIndex =
+            (firstNonEmptyChildIndex ?: selection.min).coerceAtLeast(0)
 
         paragraph.type = newType
 
@@ -1905,13 +1906,19 @@ public class RichTextState internal constructor(
 
         // Remove spans from the max paragraph
         val isMaxParagraphEmpty =
-            maxRichSpan.paragraph.removeTextRange(removeRange, maxParagraphFirstChildMinIndex) == null
+            maxRichSpan.paragraph.removeTextRange(
+                removeRange,
+                maxParagraphFirstChildMinIndex
+            ) == null
 
         if (!singleParagraphMode) {
             if (maxParagraphIndex != minParagraphIndex) {
                 // Remove spans from the min paragraph
                 val isMinParagraphEmpty =
-                    minRichSpan.paragraph.removeTextRange(removeRange, minParagraphFirstChildMinIndex) == null
+                    minRichSpan.paragraph.removeTextRange(
+                        removeRange,
+                        minParagraphFirstChildMinIndex
+                    ) == null
 
                 if (isMaxParagraphEmpty) {
                     // Remove the max paragraph if it's empty
@@ -3210,6 +3217,7 @@ public class RichTextState internal constructor(
             currentAppliedParagraphStyle = richParagraphList
                 .getCommonStyle()
                 ?: ParagraphStyle()
+
             isUnorderedList = richParagraphList.all { it.type is UnorderedList }
             isOrderedList = richParagraphList.all { it.type is OrderedList }
             isList = richParagraphList.all { it.type is UnorderedList || it.type is OrderedList }
@@ -3221,30 +3229,36 @@ public class RichTextState internal constructor(
     internal fun onTextLayout(
         textLayoutResult: TextLayoutResult,
         density: Density,
-        maxLines: Int = Int.MAX_VALUE,
     ) {
         this.textLayoutResult = textLayoutResult
         adjustRichParagraphLayout(
             density = density,
-            maxLines = maxLines,
         )
     }
 
     private fun adjustRichParagraphLayout(
         density: Density,
-        maxLines: Int,
     ) {
         var isParagraphUpdated = false
 
         textLayoutResult?.let { textLayoutResult ->
+            val offsetLimit =
+                if (
+                    textLayoutResult.multiParagraph.didExceedMaxLines &&
+                    textLayoutResult.multiParagraph.maxLines > 0 &&
+                    textLayoutResult.multiParagraph.maxLines != Int.MAX_VALUE
+                )
+                    textLayoutResult.getLineEnd(textLayoutResult.multiParagraph.maxLines - 1)
+                else
+                    textLayoutResult.layoutInput.text.text.length
+
             richParagraphList.forEachIndexed { index, richParagraph ->
                 val paragraphType = richParagraph.type
-                if (index + 1 > maxLines || paragraphType !is ConfigurableStartTextWidth)
-                    return@forEachIndexed
 
                 if (
+                    paragraphType is ConfigurableStartTextWidth &&
                     paragraphType.startText.isNotEmpty() &&
-                    paragraphType.startRichSpan.textRange.max <= textLayoutResult.layoutInput.text.text.length
+                    paragraphType.startRichSpan.textRange.max <= offsetLimit
                 ) {
                     val start =
                         textLayoutResult.getHorizontalPosition(
@@ -3258,7 +3272,7 @@ public class RichTextState internal constructor(
                         )
                     val distanceSp =
                         with(density) {
-                            (end - start).toSp()
+                            (end - start).absoluteValue.toSp()
                         }
 
                     if (paragraphType.startTextWidth != distanceSp) {
@@ -3639,11 +3653,14 @@ public class RichTextState internal constructor(
      *
      * @param text The text to update the [RichTextState] with.
      */
-    public fun setText(text: String): RichTextState {
+    public fun setText(
+        text: String,
+        selection: TextRange = TextRange(text.length),
+    ): RichTextState {
         val textFieldValue =
             TextFieldValue(
                 text = text,
-                selection = TextRange(text.length),
+                selection = selection,
             )
 
         onTextFieldValueChange(
@@ -3892,7 +3909,9 @@ public class RichTextState internal constructor(
             var index = 0
             richParagraphList.fastForEachIndexed { i, richParagraph ->
                 withStyle(richParagraph.paragraphStyle.merge(richParagraph.type.getStyle(config))) {
-                    withStyle(richParagraph.getStartTextSpanStyle() ?: RichSpanStyle.DefaultSpanStyle) {
+                    withStyle(
+                        richParagraph.getStartTextSpanStyle() ?: RichSpanStyle.DefaultSpanStyle
+                    ) {
                         append(richParagraph.type.startText)
                     }
 

@@ -1,5 +1,6 @@
 package com.mohamedrejeb.richeditor.model
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
@@ -3179,5 +3180,4 @@ class RichTextStateTest {
         assertEquals("Google", link.text)
         assertEquals(FontWeight.Bold, link.spanStyle.fontWeight)
     }
-
 }

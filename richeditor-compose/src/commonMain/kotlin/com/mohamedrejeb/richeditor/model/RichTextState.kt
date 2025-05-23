@@ -467,10 +467,32 @@ public class RichTextState internal constructor(
      * @see [removeSpanStyle]
      */
     public fun toggleSpanStyle(spanStyle: SpanStyle) {
-        if (currentSpanStyle.isSpecifiedFieldsEquals(spanStyle))
-            removeSpanStyle(spanStyle)
-        else
-            addSpanStyle(spanStyle)
+        if (spanStyle.isUnspecifiedColorSpan()) {
+            val modifiedSpan = currentSpanStyle.copy(color = Color.Unspecified)
+            removeSpanStyle(currentSpanStyle)
+            addSpanStyle(modifiedSpan)
+        } else {
+            if (currentSpanStyle.isSpecifiedFieldsEquals(spanStyle))
+                removeSpanStyle(spanStyle)
+            else
+                addSpanStyle(spanStyle)
+        }
+    }
+
+    /**
+     * Clear color [SpanStyle]s for current selection.
+     */
+    public fun clearSelectionColorSpans() {
+        annotatedString
+            .subSequence(selection)
+            .spanStyles
+            .filter { it.item.color.isSpecified }
+            .forEach {
+                val spanStyle = SpanStyle(color = it.item.color)
+                toRemoveSpanStyle = toRemoveSpanStyle.customMerge(spanStyle)
+                toAddSpanStyle = toAddSpanStyle.unmerge(spanStyle)
+                if (!selection.collapsed) applyRichSpanStyleToSelectedText()
+            }
     }
 
     /**
@@ -4094,4 +4116,8 @@ public class RichTextState internal constructor(
             }
         )
     }
+}
+
+private fun SpanStyle.isUnspecifiedColorSpan(): Boolean {
+    return this == SpanStyle(color = Color.Unspecified)
 }

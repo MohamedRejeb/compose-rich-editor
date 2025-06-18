@@ -196,7 +196,8 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun setHtml (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public final fun setMarkdown (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public final fun setSelection-5zc-tL8 (J)V
-	public final fun setText (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
+	public final fun setText-FDrldGo (Ljava/lang/String;J)Lcom/mohamedrejeb/richeditor/model/RichTextState;
+	public static synthetic fun setText-FDrldGo$default (Lcom/mohamedrejeb/richeditor/model/RichTextState;Ljava/lang/String;JILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public final fun toHtml ()Ljava/lang/String;
 	public final fun toMarkdown ()Ljava/lang/String;
 	public final fun toText ()Ljava/lang/String;

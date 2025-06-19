@@ -11,7 +11,7 @@ coil = "3.2.0"
 nexus-publish = "2.0.0"
 
 # For sample
-androidx-appcompat = "1.7.0"
+androidx-appcompat = "1.7.1"
 activity-compose = "1.10.1"
 richeditor = "1.0.0-rc10"
 coroutines = "1.10.2"

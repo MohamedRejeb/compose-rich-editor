@@ -278,7 +278,7 @@ final class com.mohamedrejeb.richeditor.model/RichTextState { // com.mohamedreje
     final fun setConfig(androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.text.style/TextDecoration? = ..., androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ..., kotlin/Int = ...) // com.mohamedrejeb.richeditor.model/RichTextState.setConfig|setConfig(androidx.compose.ui.graphics.Color;androidx.compose.ui.text.style.TextDecoration?;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;kotlin.Int){}[0]
     final fun setHtml(kotlin/String): com.mohamedrejeb.richeditor.model/RichTextState // com.mohamedrejeb.richeditor.model/RichTextState.setHtml|setHtml(kotlin.String){}[0]
     final fun setMarkdown(kotlin/String): com.mohamedrejeb.richeditor.model/RichTextState // com.mohamedrejeb.richeditor.model/RichTextState.setMarkdown|setMarkdown(kotlin.String){}[0]
-    final fun setText(kotlin/String): com.mohamedrejeb.richeditor.model/RichTextState // com.mohamedrejeb.richeditor.model/RichTextState.setText|setText(kotlin.String){}[0]
+    final fun setText(kotlin/String, androidx.compose.ui.text/TextRange = ...): com.mohamedrejeb.richeditor.model/RichTextState // com.mohamedrejeb.richeditor.model/RichTextState.setText|setText(kotlin.String;androidx.compose.ui.text.TextRange){}[0]
     final fun toHtml(): kotlin/String // com.mohamedrejeb.richeditor.model/RichTextState.toHtml|toHtml(){}[0]
     final fun toMarkdown(): kotlin/String // com.mohamedrejeb.richeditor.model/RichTextState.toMarkdown|toMarkdown(){}[0]
     final fun toText(): kotlin/String // com.mohamedrejeb.richeditor.model/RichTextState.toText|toText(){}[0]

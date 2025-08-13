@@ -56,3 +56,5 @@ site
 
 ### Python ###
 venv/
+
+kotlin-js-store

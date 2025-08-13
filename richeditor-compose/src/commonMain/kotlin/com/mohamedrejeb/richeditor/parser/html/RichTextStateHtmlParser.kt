@@ -124,10 +124,12 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                         else
                             RichParagraph()
 
-                    var paragraphType: ParagraphType = DefaultParagraph()
-                    if (name == "li" && lastOpenedTag != null) {
-                        paragraphType = encodeHtmlElementToRichParagraphType(lastOpenedTag, currentListLevel)
-                    }
+                    val paragraphType: ParagraphType =
+                        if (name == "li" && lastOpenedTag != null)
+                            encodeHtmlElementToRichParagraphType(lastOpenedTag, currentListLevel)
+                        else
+                            DefaultParagraph()
+
                     val cssParagraphStyle = CssEncoder.parseCssStyleMapToParagraphStyle(cssStyleMap, attributes)
 
                     newRichParagraph.paragraphStyle = newRichParagraph.paragraphStyle.merge(cssParagraphStyle)

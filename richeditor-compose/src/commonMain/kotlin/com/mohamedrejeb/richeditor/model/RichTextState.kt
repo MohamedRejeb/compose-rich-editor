@@ -142,7 +142,7 @@ public class RichTextState internal constructor(
 
     @Deprecated(
         message = "Use isRichSpan with T or KClass instead",
-        replaceWith = ReplaceWith("isRichSpan<>()"),
+        replaceWith = ReplaceWith("isRichSpan<RichSpanStyle>()"),
         level = DeprecationLevel.WARNING,
     )
     public fun isRichSpan(spanStyle: RichSpanStyle): Boolean =
@@ -4144,6 +4144,8 @@ public class RichTextState internal constructor(
                 )
             )
 
+        printParagraphs()
+
         if (range.min > 0)
             state.removeTextRange(
                 textRange = TextRange(
@@ -4152,6 +4154,8 @@ public class RichTextState internal constructor(
                         .coerceAtMost(state.textFieldValue.text.length)
                 )
             )
+
+        printParagraphs()
 
         return RichTextStateMarkdownParser.decode(state)
     }

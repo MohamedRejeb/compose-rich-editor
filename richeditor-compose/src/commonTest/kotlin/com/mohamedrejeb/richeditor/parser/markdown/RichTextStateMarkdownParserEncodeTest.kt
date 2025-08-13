@@ -11,6 +11,7 @@ import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
+import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import com.mohamedrejeb.richeditor.parser.utils.H1SpanStyle
 import com.mohamedrejeb.richeditor.parser.utils.H2SpanStyle
 import kotlin.test.Test
@@ -524,6 +525,61 @@ class RichTextStateMarkdownParserEncodeTest {
             }
 
             assertIs<OrderedList>(type)
+
+            if (
+                i == 0 ||
+                i == 1 ||
+                i == 4
+            )
+                assertEquals(1, type.level)
+            else
+                assertEquals(2, type.level)
+        }
+
+        assertEquals("Item1", firstItem.text)
+        assertEquals("Item2", secondItem.text)
+        assertEquals("Item2.1", thirdItem.text)
+        assertEquals("Item2.2", fourthItem.text)
+        assertEquals("Item3", fifthItem .text)
+        assertEquals("Item4", sixthItem .text)
+    }
+
+    @Test
+    fun testEncodeOrderedListWithNestedUList() {
+        val markdown = """
+            1. Item1
+            2. Item2
+              - Item2.1
+              - Item2.2
+            3. Item3
+            Item4
+        """.trimIndent()
+
+        val richTextState = RichTextStateMarkdownParser.encode(markdown)
+
+        richTextState.printParagraphs()
+
+        assertEquals(6, richTextState.richParagraphList.size)
+
+        val firstItem = richTextState.richParagraphList[0].children[0]
+        val secondItem = richTextState.richParagraphList[1].children[0]
+        val thirdItem = richTextState.richParagraphList[2].children[0]
+        val fourthItem = richTextState.richParagraphList[3].children[0]
+        val fifthItem = richTextState.richParagraphList[4].children[0]
+        val sixthItem = richTextState.richParagraphList[5].children[0]
+
+        richTextState.richParagraphList.forEachIndexed { i, p ->
+            val type = p.type
+
+            if (i == 5) {
+                assertIs<DefaultParagraph>(type)
+                return@forEachIndexed
+            }
+
+            if (i == 2 || i == 3)
+                assertIs<UnorderedList>(type)
+            else
+                assertIs<OrderedList>(type)
 
             if (
                 i == 0 ||

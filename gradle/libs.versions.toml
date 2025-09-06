@@ -1,7 +1,7 @@
 [versions]
 agp = "8.11.1"
 kotlin = "2.2.10"
-compose = "1.8.2"
+compose = "1.9.0-rc01"
 dokka = "2.0.0"
 
 ksoup = "0.6.0"
@@ -18,8 +18,8 @@ coroutines = "1.10.2"
 ktor = "3.2.3"
 android-minSdk = "21"
 android-compileSdk = "36"
-lifecycle = "2.9.1"
-navigation = "2.9.0-beta03"
+lifecycle = "2.9.3"
+navigation = "2.9.0-rc01"
 
 [libraries]
 ksoup-html = { module = "com.mohamedrejeb.ksoup:ksoup-html", version.ref = "ksoup" }

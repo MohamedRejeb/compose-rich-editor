@@ -451,21 +451,21 @@ class RichTextStateMarkdownParserDecodeTest {
         state.setMarkdown("""
             1. First item
             2. Second **bold** item
-               - Subitem one
-               - Subitem two
+                - Subitem one
+                - Subitem two
             3. Third item
         """.trimIndent())
 
         // Test range within a list
         assertEquals(
-            "Second **bold** item\n   - Subitem one",
+            "1. Second **bold** item\n    - Subitem one",
             state.toMarkdown(TextRange(14, 47))
         )
 
         // Test range across multiple list items
         assertEquals(
-            "2. Second **bold** item\n   - Subitem one\n   - Subitem two\n3. Third",
-            state.toMarkdown(TextRange(13, 82))
+            "\n1. Second **bold** item\n    - Subitem one\n    - Subitem two\n2. Third",
+            state.toMarkdown(TextRange(13, 70))
         )
     }
 

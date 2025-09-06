@@ -1885,11 +1885,22 @@ public class RichTextState internal constructor(
                         textFieldValue = tempTextFieldValue,
                     )
                 }
+
+                if (minParagraphOldType is OrderedList) {
+                    tempTextFieldValue = adjustOrderedListsNumbers(
+                        startParagraphIndex = minParagraphIndex + 1,
+                        startNumber = minParagraphOldType.number,
+                        textFieldValue = tempTextFieldValue,
+                    )
+                }
             }
         }
 
         // Handle Remove the max paragraph custom text
-        if (maxRemoveIndex < maxParagraphFirstChildMinIndex) {
+        if (
+            (minParagraphIndex == maxParagraphIndex || minRemoveIndex >= minParagraphFirstChildMinIndex) &&
+            maxRemoveIndex < maxParagraphFirstChildMinIndex
+        ) {
             handleRemoveMaxParagraphStartText(
                 minRemoveIndex = minRemoveIndex,
                 maxRemoveIndex = maxRemoveIndex,
@@ -1928,7 +1939,7 @@ public class RichTextState internal constructor(
                 if (isMinParagraphEmpty) {
                     // Set the min paragraph type to the max paragraph type
                     // Since the max paragraph is going to take the min paragraph's place
-                    maxRichSpan.paragraph.type = minRichSpan.paragraph.type
+//                    maxRichSpan.paragraph.type = minRichSpan.paragraph.type
 
                     // Remove the min paragraph if it's empty
                     richParagraphList.remove(minRichSpan.paragraph)
@@ -2048,7 +2059,11 @@ public class RichTextState internal constructor(
         paragraphStartTextLength: Int,
         paragraphFirstChildMinIndex: Int,
     ) {
-        if (maxRemoveIndex < paragraphFirstChildMinIndex && paragraphStartTextLength > 0) {
+        if (
+            maxRemoveIndex < paragraphFirstChildMinIndex &&
+//            maxRemoveIndex > paragraphFirstChildMinIndex - paragraphStartTextLength &&
+            paragraphStartTextLength > 0
+        ) {
             paragraphStartTextLength - (paragraphFirstChildMinIndex - maxRemoveIndex)
 
             val beforeText =

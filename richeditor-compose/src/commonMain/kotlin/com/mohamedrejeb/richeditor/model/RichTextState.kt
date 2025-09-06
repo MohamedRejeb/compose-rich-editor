@@ -24,6 +24,7 @@ import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.util.fastCoerceAtLeast
 import androidx.compose.ui.util.fastFirstOrNull
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
@@ -1489,7 +1490,8 @@ public class RichTextState internal constructor(
 
         val beforeText = textFieldValue.text.substring(
             0,
-            paragraphFirstChildStartIndex - paragraphOldStartTextLength
+            (paragraphFirstChildStartIndex - paragraphOldStartTextLength)
+                .fastCoerceAtLeast(0)
         )
         val afterText = textFieldValue.text.substring(paragraphFirstChildStartIndex)
 
@@ -1505,8 +1507,8 @@ public class RichTextState internal constructor(
         return textFieldValue.copy(
             text = beforeText + newType.startText + afterText,
             selection = TextRange(
-                newSelectionMin,
-                newSelectionMax,
+                newSelectionMin.coerceAtLeast(0),
+                newSelectionMax.coerceAtLeast(0),
             ),
         )
     }
@@ -1885,14 +1887,6 @@ public class RichTextState internal constructor(
                         textFieldValue = tempTextFieldValue,
                     )
                 }
-
-                if (minParagraphOldType is OrderedList) {
-                    tempTextFieldValue = adjustOrderedListsNumbers(
-                        startParagraphIndex = minParagraphIndex + 1,
-                        startNumber = minParagraphOldType.number,
-                        textFieldValue = tempTextFieldValue,
-                    )
-                }
             }
         }
 
@@ -2201,6 +2195,9 @@ public class RichTextState internal constructor(
         if (startParagraphType is OrderedList)
             levelNumberMap[startParagraphType.level] = startParagraphType.number
 
+        if (startParagraphIndex == -1)
+            levelNumberMap[1] = 0
+
         // Update the paragraph type of the paragraphs after the new paragraph
         for (i in (startParagraphIndex + 1)..richParagraphList.lastIndex) {
             val currentParagraph = richParagraphList[i]
@@ -2208,13 +2205,13 @@ public class RichTextState internal constructor(
 
             if (currentParagraphType is ConfigurableListLevel) {
                 // Clear the completed list levels
-                levelNumberMap.keys.toList().fastForEach { level ->
-                    if (level > currentParagraphType.level)
-                        levelNumberMap.remove(level)
+                levelNumberMap.filterKeys { level ->
+                    level <= currentParagraphType.level
                 }
             } else {
                 // Clear the map if the current paragraph is not a list
                 levelNumberMap.clear()
+                levelNumberMap[1] = 0
             }
 
             // Remove current list level from map if the current paragraph is an unordered list
@@ -2241,9 +2238,14 @@ public class RichTextState internal constructor(
                 )
             }
 
-            // Break if we reach the end paragraph index
-            if (i >= endParagraphIndex)
-                break
+            if (
+                currentParagraphType !is ConfigurableListLevel ||
+                (currentParagraphType is UnorderedList && currentParagraphType.level == 1)
+            ) {
+                // Break if we reach the end paragraph index
+                if (i >= endParagraphIndex)
+                    break
+            }
         }
     }
 
@@ -4159,8 +4161,6 @@ public class RichTextState internal constructor(
                 )
             )
 
-        printParagraphs()
-
         if (range.min > 0)
             state.removeTextRange(
                 textRange = TextRange(
@@ -4169,8 +4169,6 @@ public class RichTextState internal constructor(
                         .coerceAtMost(state.textFieldValue.text.length)
                 )
             )
-
-        printParagraphs()
 
         return RichTextStateMarkdownParser.decode(state)
     }

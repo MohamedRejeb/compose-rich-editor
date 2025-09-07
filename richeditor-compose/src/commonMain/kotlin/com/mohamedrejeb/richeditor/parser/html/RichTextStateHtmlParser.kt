@@ -185,7 +185,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
                     // Keep the same style when having a line break in the middle of a paragraph,
                     // Ex: <h1>Hello<br>World!</h1>
-                    if (isLastOpenedTagBlockElement && !isCurrentRichParagraphBlank)
+                    if (isLastOpenedTagBlockElement)
                         currentRichSpan?.let { richSpan ->
                             val newRichSpan = richSpan.copy(
                                 text = "",
@@ -255,7 +255,8 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         }
 
         richParagraphList.forEach { richParagraph ->
-            richParagraph.removeEmptyChildren()
+            if (!richParagraph.isEmpty())
+                richParagraph.removeEmptyChildren()
         }
 
         return RichTextState(

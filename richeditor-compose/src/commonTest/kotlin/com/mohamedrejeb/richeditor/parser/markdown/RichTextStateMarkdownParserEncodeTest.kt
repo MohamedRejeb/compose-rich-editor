@@ -12,6 +12,7 @@ import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
+import com.mohamedrejeb.richeditor.parser.html.RichTextStateHtmlParser
 import com.mohamedrejeb.richeditor.parser.utils.H1SpanStyle
 import com.mohamedrejeb.richeditor.parser.utils.H2SpanStyle
 import kotlin.test.Test
@@ -597,6 +598,41 @@ class RichTextStateMarkdownParserEncodeTest {
         assertEquals("Item2.2", fourthItem.text)
         assertEquals("Item3", fifthItem .text)
         assertEquals("Item4", sixthItem .text)
+    }
+
+    @Test
+    fun testHtmlEncodeSetRichSpanParentCorrectly() {
+        val html = "<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\"></head><body><div style=\"background-color:#1e1f22;color:#bcbec4\"><pre style=\"font-family:'JetBrains Mono',monospace;font-size:9.8pt;\"><span style=\"font-style:italic;\">println</span>(<span style=\"color:#6aab73;\">\"insertHtml:&#32;</span><span style=\"color:#cf8e6d;\">\$</span>position<span style=\"color:#6aab73;\">\"</span>)</pre></div></body></html>"
+        val richTextState = RichTextStateHtmlParser.encode(html)
+
+        richTextState.selection = TextRange(0)
+
+        assertEquals(1, richTextState.richParagraphList[0].children.size)
+        assertEquals(13, richTextState.richParagraphList[0].children[0].spanStyle.fontSize.value.toInt())
+        assertEquals(7, richTextState.richParagraphList[0].children[0].children.size)
+        richTextState.richParagraphList[0].children[0].children.forEach {
+            assertEquals(richTextState.richParagraphList[0].children[0], it.parent)
+        }
+
+        richTextState.onTextFieldValueChange(
+            newTextFieldValue = TextFieldValue(
+                text = "\n${richTextState.textFieldValue.text}",
+                selection = TextRange(1)
+            )
+        )
+    }
+
+    @Test
+    fun testHtmlEncodeInheritSpanStyleCorrectly() {
+        val html = "<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\"></head><body><div style=\"background-color:#1e1f22;color:#bcbec4\"><pre style=\"font-family:'JetBrains Mono',monospace;font-size:9.8pt;\"><span style=\"font-style:italic;\">println</span>(<span style=\"color:#6aab73;\">\"selection&#32;html:&#32;</span><span style=\"color:#cf8e6d;\">\$</span>html<span style=\"color:#6aab73;\">\"</span>)<br><span style=\"font-style:italic;\">println</span>(<span style=\"color:#6aab73;\">\"selection&#32;text:&#32;</span><span style=\"color:#cf8e6d;\">\$</span>text<span style=\"color:#6aab73;\">\"</span>)<br><br><span style=\"color:#cf8e6d;\">val&#32;</span>htmlSelection&#32;=&#32;<span style=\"color:#cf8e6d;\">object&#32;</span>:&#32;StringSelection(html),&#32;Transferable&#32;{</pre></div></body></html>"
+        val richTextState = RichTextStateHtmlParser.encode(html)
+
+        val fontSize = richTextState.richParagraphList[0].getFirstNonEmptyChild()!!.fullSpanStyle.fontSize
+
+        richTextState.richParagraphList.forEachIndexed { index, paragraph ->
+            val paragraphFontSize = paragraph.getFirstNonEmptyChild()!!.fullSpanStyle.fontSize
+            assertEquals(fontSize, paragraphFontSize)
+        }
     }
 
 }

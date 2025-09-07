@@ -39,15 +39,24 @@ internal class DesktopRichTextClipboardManager(
             when {
                 transferable.isDataFlavorSupported(DataFlavor.fragmentHtmlFlavor) -> {
                     val rawHtmlText = transferable.getTransferData(DataFlavor.fragmentHtmlFlavor) as String
-                    val plainText = transferable.getTransferData(DataFlavor.stringFlavor) as String
                     val htmlText = HtmlClipboardUtils.extractHtmlFromClipboard(rawHtmlText)
                     println("rawHtmlText: $rawHtmlText")
                     println("htmlText: $htmlText")
-                    richTextState.insertHtmlAfterSelection(rawHtmlText)
+                    val position = richTextState.selection.min
+                    richTextState.removeSelectedText()
+                    richTextState.insertHtml(
+                        html = rawHtmlText,
+                        position = position
+                    )
                 }
                 transferable.isDataFlavorSupported(DataFlavor.stringFlavor) -> {
                     val plainText = transferable.getTransferData(DataFlavor.stringFlavor) as String
-                    richTextState.addTextAfterSelection(plainText)
+                    val position = richTextState.selection.min
+                    richTextState.removeSelectedText()
+                    richTextState.addTextAtIndex(
+                        index = position,
+                        text = plainText
+                    )
                 }
                 else -> null
             }

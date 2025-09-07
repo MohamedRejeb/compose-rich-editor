@@ -24,6 +24,7 @@ import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.util.fastCoerceAtLeast
 import androidx.compose.ui.util.fastFirstOrNull
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
@@ -142,7 +143,7 @@ public class RichTextState internal constructor(
 
     @Deprecated(
         message = "Use isRichSpan with T or KClass instead",
-        replaceWith = ReplaceWith("isRichSpan<>()"),
+        replaceWith = ReplaceWith("isRichSpan<RichSpanStyle>()"),
         level = DeprecationLevel.WARNING,
     )
     public fun isRichSpan(spanStyle: RichSpanStyle): Boolean =
@@ -295,6 +296,9 @@ public class RichTextState internal constructor(
                     "The text length is ${textFieldValue.text.length}, " +
                     "but the end index is ${textRange.max}."
         }
+
+        if (textRange.collapsed)
+            return
 
         onTextFieldValueChange(
             newTextFieldValue = textFieldValue.copy(
@@ -1489,7 +1493,8 @@ public class RichTextState internal constructor(
 
         val beforeText = textFieldValue.text.substring(
             0,
-            paragraphFirstChildStartIndex - paragraphOldStartTextLength
+            (paragraphFirstChildStartIndex - paragraphOldStartTextLength)
+                .fastCoerceAtLeast(0)
         )
         val afterText = textFieldValue.text.substring(paragraphFirstChildStartIndex)
 
@@ -1505,8 +1510,8 @@ public class RichTextState internal constructor(
         return textFieldValue.copy(
             text = beforeText + newType.startText + afterText,
             selection = TextRange(
-                newSelectionMin,
-                newSelectionMax,
+                newSelectionMin.coerceAtLeast(0),
+                newSelectionMax.coerceAtLeast(0),
             ),
         )
     }
@@ -1889,7 +1894,10 @@ public class RichTextState internal constructor(
         }
 
         // Handle Remove the max paragraph custom text
-        if (maxRemoveIndex < maxParagraphFirstChildMinIndex) {
+        if (
+            (minParagraphIndex == maxParagraphIndex || minRemoveIndex >= minParagraphFirstChildMinIndex) &&
+            maxRemoveIndex < maxParagraphFirstChildMinIndex
+        ) {
             handleRemoveMaxParagraphStartText(
                 minRemoveIndex = minRemoveIndex,
                 maxRemoveIndex = maxRemoveIndex,
@@ -1928,7 +1936,7 @@ public class RichTextState internal constructor(
                 if (isMinParagraphEmpty) {
                     // Set the min paragraph type to the max paragraph type
                     // Since the max paragraph is going to take the min paragraph's place
-                    maxRichSpan.paragraph.type = minRichSpan.paragraph.type
+//                    maxRichSpan.paragraph.type = minRichSpan.paragraph.type
 
                     // Remove the min paragraph if it's empty
                     richParagraphList.remove(minRichSpan.paragraph)
@@ -2048,7 +2056,11 @@ public class RichTextState internal constructor(
         paragraphStartTextLength: Int,
         paragraphFirstChildMinIndex: Int,
     ) {
-        if (maxRemoveIndex < paragraphFirstChildMinIndex && paragraphStartTextLength > 0) {
+        if (
+            maxRemoveIndex < paragraphFirstChildMinIndex &&
+//            maxRemoveIndex > paragraphFirstChildMinIndex - paragraphStartTextLength &&
+            paragraphStartTextLength > 0
+        ) {
             paragraphStartTextLength - (paragraphFirstChildMinIndex - maxRemoveIndex)
 
             val beforeText =
@@ -2186,6 +2198,9 @@ public class RichTextState internal constructor(
         if (startParagraphType is OrderedList)
             levelNumberMap[startParagraphType.level] = startParagraphType.number
 
+        if (startParagraphIndex == -1)
+            levelNumberMap[1] = 0
+
         // Update the paragraph type of the paragraphs after the new paragraph
         for (i in (startParagraphIndex + 1)..richParagraphList.lastIndex) {
             val currentParagraph = richParagraphList[i]
@@ -2193,13 +2208,13 @@ public class RichTextState internal constructor(
 
             if (currentParagraphType is ConfigurableListLevel) {
                 // Clear the completed list levels
-                levelNumberMap.keys.toList().fastForEach { level ->
-                    if (level > currentParagraphType.level)
-                        levelNumberMap.remove(level)
+                levelNumberMap.filterKeys { level ->
+                    level <= currentParagraphType.level
                 }
             } else {
                 // Clear the map if the current paragraph is not a list
                 levelNumberMap.clear()
+                levelNumberMap[1] = 0
             }
 
             // Remove current list level from map if the current paragraph is an unordered list
@@ -2226,9 +2241,14 @@ public class RichTextState internal constructor(
                 )
             }
 
-            // Break if we reach the end paragraph index
-            if (i >= endParagraphIndex)
-                break
+            if (
+                currentParagraphType !is ConfigurableListLevel ||
+                (currentParagraphType is UnorderedList && currentParagraphType.level == 1)
+            ) {
+                // Break if we reach the end paragraph index
+                if (i >= endParagraphIndex)
+                    break
+            }
         }
     }
 
@@ -3640,7 +3660,10 @@ public class RichTextState internal constructor(
         richTextState.config.listIndent = config.listIndent
         richTextState.config.orderedListIndent = config.orderedListIndent
         richTextState.config.unorderedListIndent = config.unorderedListIndent
+        richTextState.config.unorderedListStyleType = config.unorderedListStyleType
+        richTextState.config.orderedListStyleType = config.orderedListStyleType
         richTextState.config.preserveStyleOnEmptyLine = config.preserveStyleOnEmptyLine
+        richTextState.config.exitListOnEmptyItem = config.exitListOnEmptyItem
 
         return richTextState
     }
@@ -4043,6 +4066,37 @@ public class RichTextState internal constructor(
         toText(richParagraphList = richParagraphList)
 
     /**
+     * Returns a specific range of the [RichTextState] as a text string.
+     *
+     * @param range The [TextRange] to convert to text.
+     * @return The text string for the specified range.
+     */
+    public fun toText(range: TextRange): String {
+        // Create a new RichTextState with only the content within the range
+        val state = copy()
+
+        if (range.max < state.textFieldValue.text.length)
+            state.removeTextRange(
+                textRange = TextRange(
+                    start = range.max
+                        .coerceAtLeast(0),
+                    end = state.textFieldValue.text.length
+                )
+            )
+
+        if (range.min > 0)
+            state.removeTextRange(
+                textRange = TextRange(
+                    start = 0,
+                    end = range.min
+                        .coerceAtMost(state.textFieldValue.text.length)
+                )
+            )
+
+        return state.toText()
+    }
+
+    /**
      * Decodes the [RichTextState] to a html string.
      *
      * @return The html string.
@@ -4052,12 +4106,74 @@ public class RichTextState internal constructor(
     }
 
     /**
+     * Decodes a specific range of the [RichTextState] to a html string.
+     *
+     * @param range The [TextRange] to convert to HTML.
+     * @return The html string for the specified range.
+     */
+    public fun toHtml(range: TextRange): String {
+        // Create a new RichTextState with only the content within the range
+        val state = copy()
+
+        if (range.max < state.textFieldValue.text.length)
+            state.removeTextRange(
+                textRange = TextRange(
+                    start = range.max
+                        .coerceAtLeast(0),
+                    end = state.textFieldValue.text.length
+                )
+            )
+
+        if (range.min > 0)
+            state.removeTextRange(
+                textRange = TextRange(
+                    start = 0,
+                    end = range.min
+                        .coerceAtMost(state.textFieldValue.text.length)
+                )
+            )
+
+        return RichTextStateHtmlParser.decode(state)
+    }
+
+    /**
      * Decodes the [RichTextState] to a markdown string.
      *
-     * @return The html string.
+     * @return The markdown string.
      */
     public fun toMarkdown(): String {
         return RichTextStateMarkdownParser.decode(this)
+    }
+
+    /**
+     * Decodes a specific range of the [RichTextState] to a markdown string.
+     *
+     * @param range The [TextRange] to convert to markdown.
+     * @return The markdown string for the specified range.
+     */
+    public fun toMarkdown(range: TextRange): String {
+        // Create a new RichTextState with only the content within the range
+        val state = copy()
+
+        if (range.max < state.textFieldValue.text.length)
+            state.removeTextRange(
+                textRange = TextRange(
+                    start = range.max
+                        .coerceAtLeast(0),
+                    end = state.textFieldValue.text.length
+                )
+            )
+
+        if (range.min > 0)
+            state.removeTextRange(
+                textRange = TextRange(
+                    start = 0,
+                    end = range.min
+                        .coerceAtMost(state.textFieldValue.text.length)
+                )
+            )
+
+        return RichTextStateMarkdownParser.decode(state)
     }
 
     /**

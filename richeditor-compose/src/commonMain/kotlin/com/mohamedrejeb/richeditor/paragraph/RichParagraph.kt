@@ -174,6 +174,7 @@ internal class RichParagraph(
 
     fun isNotBlank(ignoreStartRichSpan: Boolean = true): Boolean = !isBlank(ignoreStartRichSpan)
 
+    @OptIn(ExperimentalRichTextApi::class)
     fun getStartTextSpanStyle(): SpanStyle? {
         children.fastForEach { richSpan ->
             if (richSpan.text.isNotEmpty()) {
@@ -186,17 +187,23 @@ internal class RichParagraph(
             }
         }
 
-        val firstChild = children.firstOrNull()
+        var deepFirstChild = children.firstOrNull() ?: return null
+        var childChildren = deepFirstChild.children
 
-        children.clear()
-
-        if (firstChild != null) {
-            firstChild.children.clear()
-
-            children.add(firstChild)
+        while (childChildren.isNotEmpty()) {
+            deepFirstChild = childChildren.firstOrNull() ?: break
+            childChildren = deepFirstChild.children
         }
 
-        return firstChild?.spanStyle
+        deepFirstChild.spanStyle = deepFirstChild.fullSpanStyle
+        deepFirstChild.richSpanStyle = deepFirstChild.fullStyle
+        deepFirstChild.children.clear()
+        deepFirstChild.parent = null
+
+        children.clear()
+        children.add(deepFirstChild)
+
+        return deepFirstChild.spanStyle
     }
 
     fun getFirstNonEmptyChild(offset: Int = -1): RichSpan? {
@@ -314,7 +321,7 @@ internal class RichParagraph(
 
     fun copy(): RichParagraph {
         val newParagraph = RichParagraph(
-            paragraphStyle = paragraphStyle,
+            paragraphStyle = paragraphStyle.copy(),
             type = type.copy(),
         )
         children.fastForEach { childRichSpan ->

@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -25,6 +26,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
+import com.mohamedrejeb.richeditor.clipboard.createRichTextClipboardManager
 import com.mohamedrejeb.richeditor.model.RichTextState
 import kotlinx.coroutines.CoroutineScope
 
@@ -196,11 +198,11 @@ public fun BasicRichTextEditor(
 ) {
     val density = LocalDensity.current
     val layoutDirection = LocalLayoutDirection.current
-    val clipboardManager = LocalClipboardManager.current
-    val richClipboardManager = remember(state) {
-        RichTextClipboardManager(
+    val clipboard = LocalClipboard.current
+    val richClipboardManager = remember(state, clipboard) {
+        createRichTextClipboardManager(
             richTextState = state,
-            clipboardManager = clipboardManager
+            clipboard = clipboard
         )
     }
 
@@ -229,7 +231,7 @@ public fun BasicRichTextEditor(
         }
     }
 
-    CompositionLocalProvider(LocalClipboardManager provides richClipboardManager) {
+    CompositionLocalProvider(LocalClipboard provides richClipboardManager) {
         BasicTextField(
             value = state.textFieldValue,
             onValueChange = {

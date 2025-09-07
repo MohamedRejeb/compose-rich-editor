@@ -56,3 +56,7 @@ site
 
 ### Python ###
 venv/
+
+.junie
+
+kotlin-js-store

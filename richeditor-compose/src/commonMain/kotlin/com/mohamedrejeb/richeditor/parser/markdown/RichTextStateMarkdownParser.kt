@@ -114,6 +114,8 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 onText(text)
             },
             onOpenNode = { node ->
+                val lastOpenedNode = openedNodes.lastOrNull()
+
                 openedNodes.add(node)
 
                 if (node.type == MarkdownElementTypes.LIST_ITEM) {
@@ -125,9 +127,13 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 if (node.type in markdownBlockElements) {
                     val currentRichParagraph = richParagraphList.last()
 
+                    val isList =
+                        lastOpenedNode?.type == MarkdownElementTypes.ORDERED_LIST ||
+                                lastOpenedNode?.type == MarkdownElementTypes.UNORDERED_LIST
+
                     // Get paragraph type from markdown element
-                    if (currentRichParagraphType is DefaultParagraph) {
-                        val paragraphType = encodeRichParagraphTypeFromMarkdownElement(node)
+                    if (currentRichParagraphType is DefaultParagraph || isList) {
+                        val paragraphType = encodeRichParagraphTypeFromMarkdownElement(lastOpenedNode ?: node)
                         currentRichParagraphType = paragraphType
                     }
 
@@ -252,17 +258,17 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     currentRichSpan = null
                 }
 
-                val lastOpenedNodes = openedNodes.lastOrNull()
+                val lastOpenedNode = openedNodes.lastOrNull()
 
                 val isList =
                     node.type == MarkdownElementTypes.ORDERED_LIST ||
                             node.type == MarkdownElementTypes.UNORDERED_LIST
 
                 val isLastList =
-                    lastOpenedNodes != null &&
-                            (lastOpenedNodes.type == MarkdownElementTypes.ORDERED_LIST ||
-                                    lastOpenedNodes.type == MarkdownElementTypes.UNORDERED_LIST ||
-                                    lastOpenedNodes.type == MarkdownElementTypes.LIST_ITEM)
+                    lastOpenedNode != null &&
+                            (lastOpenedNode.type == MarkdownElementTypes.ORDERED_LIST ||
+                                    lastOpenedNode.type == MarkdownElementTypes.UNORDERED_LIST ||
+                                    lastOpenedNode.type == MarkdownElementTypes.LIST_ITEM)
 
                 // Reset paragraph type
                 if (isList && !isLastList) {

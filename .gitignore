@@ -58,3 +58,5 @@ site
 venv/
 
 .junie
+
+kotlin-js-store

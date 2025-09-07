@@ -635,4 +635,17 @@ class RichTextStateMarkdownParserEncodeTest {
         }
     }
 
+    @Test
+    fun testHtmlEncodeInheritSpanStyleCorrectly2() {
+        val html = "<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\"></head><body><div style=\"background-color:#1e1f22;color:#bcbec4\"><pre style=\"font-family:'JetBrains Mono',monospace;font-size:9.8pt;\"><span style=\"color:#cf8e6d;\">val&#32;</span>html&#32;=&#32;<span style=\"color:#6aab73;\">\"hello\"<br></span><span style=\"color:#cf8e6d;\">val&#32;</span>richTextState&#32;=&#32;RichTextStateHtmlParser.encode(html)</pre></div></body></html>"
+        val richTextState = RichTextStateHtmlParser.encode(html)
+
+        val fontSize = richTextState.richParagraphList[0].getFirstNonEmptyChild()!!.fullSpanStyle.fontSize
+
+        richTextState.richParagraphList.forEachIndexed { index, paragraph ->
+            val paragraphFontSize = paragraph.getFirstNonEmptyChild()!!.fullSpanStyle.fontSize
+            assertEquals(fontSize, paragraphFontSize)
+        }
+    }
+
 }

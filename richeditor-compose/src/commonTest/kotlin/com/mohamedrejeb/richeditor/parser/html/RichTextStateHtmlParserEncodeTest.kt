@@ -1,6 +1,5 @@
 package com.mohamedrejeb.richeditor.parser.html
 
-import androidx.compose.ui.text.TextRange
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList

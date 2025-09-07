@@ -14,6 +14,7 @@ import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
+import com.mohamedrejeb.richeditor.parser.html.RichTextStateHtmlParser
 import kotlin.test.*
 
 @ExperimentalRichTextApi
@@ -3271,4 +3272,29 @@ class RichTextStateTest {
         assertEquals("Google", link.text)
         assertEquals(FontWeight.Bold, link.spanStyle.fontWeight)
     }
+
+
+
+    @Test
+    fun testAddLineBreakInTheBeginning() {
+        val html = "<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\"></head><body><div style=\"background-color:#1e1f22;color:#bcbec4\"><pre style=\"font-family:'JetBrains Mono',monospace;font-size:9.8pt;\"><span style=\"font-style:italic;\">println</span>(<span style=\"color:#6aab73;\">\"insertHtml:&#32;</span><span style=\"color:#cf8e6d;\">\$</span>position<span style=\"color:#6aab73;\">\"</span>)</pre></div></body></html>"
+        val richTextState = RichTextStateHtmlParser.encode(html)
+
+        richTextState.selection = TextRange(0)
+
+        assertEquals(1, richTextState.richParagraphList[0].children.size)
+        assertEquals(13, richTextState.richParagraphList[0].children[0].spanStyle.fontSize.value.toInt())
+        assertEquals(7, richTextState.richParagraphList[0].children[0].children.size)
+        richTextState.richParagraphList[0].children[0].children.forEach {
+            assertEquals(richTextState.richParagraphList[0].children[0], it.parent)
+        }
+
+        richTextState.onTextFieldValueChange(
+            newTextFieldValue = TextFieldValue(
+                text = "\n${richTextState.textFieldValue.text}",
+                selection = TextRange(1)
+            )
+        )
+    }
+
 }

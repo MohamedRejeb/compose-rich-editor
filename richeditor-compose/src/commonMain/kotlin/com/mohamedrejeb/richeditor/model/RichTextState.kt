@@ -297,6 +297,9 @@ public class RichTextState internal constructor(
                     "but the end index is ${textRange.max}."
         }
 
+        if (textRange.collapsed)
+            return
+
         onTextFieldValueChange(
             newTextFieldValue = textFieldValue.copy(
                 text = textFieldValue.text.removeRange(

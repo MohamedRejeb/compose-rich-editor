@@ -61,6 +61,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 } else {
                     val newRichSpan = RichSpan(paragraph = currentRichParagraph)
                     newRichSpan.text = addedText
+                    newRichSpan.parent = safeCurrentRichSpan
                     safeCurrentRichSpan.children.add(newRichSpan)
                 }
 

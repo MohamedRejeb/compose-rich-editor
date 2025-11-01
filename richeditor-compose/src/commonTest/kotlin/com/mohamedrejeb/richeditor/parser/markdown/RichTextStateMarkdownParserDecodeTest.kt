@@ -7,6 +7,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.model.HeadingStyle
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
@@ -508,6 +509,59 @@ class RichTextStateMarkdownParserDecodeTest {
         )
 
         assertEquals(expectedMarkdown, richTextState.toMarkdown())
+    }
+
+    @Test
+    fun testDecodeHeadingParagraphStyles() {
+        val state = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(type = DefaultParagraph()).also {
+                    it.children.add(RichSpan(text = "Normal Paragraph", paragraph = it))
+                },
+                RichParagraph(type = DefaultParagraph()).also {
+                    it.children.add(RichSpan(text = "Heading 1", paragraph = it))
+                    it.setHeadingStyle(HeadingStyle.H1)
+                },
+                RichParagraph(type = DefaultParagraph()).also {
+                    it.children.add(RichSpan(text = "Heading 2", paragraph = it))
+                    it.setHeadingStyle(HeadingStyle.H2)
+                },
+                RichParagraph(type = DefaultParagraph()).also {
+                    it.children.add(RichSpan(text = "Heading 3", paragraph = it))
+                    it.setHeadingStyle(HeadingStyle.H3)
+                },
+                RichParagraph(type = DefaultParagraph()).also {
+                    it.children.add(RichSpan(text = "Heading 4", paragraph = it))
+                    it.setHeadingStyle(HeadingStyle.H4)
+                },
+                RichParagraph(type = DefaultParagraph()).also {
+                    it.children.add(RichSpan(text = "Heading 5", paragraph = it))
+                    it.setHeadingStyle(HeadingStyle.H5)
+                },
+                RichParagraph(type = DefaultParagraph()).also {
+                    it.children.add(RichSpan(text = "Heading 6", paragraph = it))
+                    it.setHeadingStyle(HeadingStyle.H6)
+                },
+                RichParagraph(type = DefaultParagraph()).also {
+                    it.children.add(RichSpan(text = "Another Normal Paragraph", paragraph = it))
+                }
+            )
+        )
+
+        val markdown = RichTextStateMarkdownParser.decode(state)
+
+        val expectedMarkdown = """
+            Normal Paragraph
+            # Heading 1
+            ## Heading 2
+            ### Heading 3
+            #### Heading 4
+            ##### Heading 5
+            ###### Heading 6
+            Another Normal Paragraph
+        """.trimIndent()
+
+        assertEquals(expectedMarkdown, markdown)
     }
 
 }

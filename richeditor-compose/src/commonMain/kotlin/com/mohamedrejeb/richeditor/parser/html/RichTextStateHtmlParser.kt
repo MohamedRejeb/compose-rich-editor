@@ -20,6 +20,7 @@ import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.util.fastForEachReversed
 import com.mohamedrejeb.richeditor.paragraph.type.ConfigurableListLevel
+import com.mohamedrejeb.richeditor.utils.diff
 
 internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
@@ -94,6 +95,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 val cssStyleMap = attributes["style"]?.let { CssEncoder.parseCssStyle(it) } ?: emptyMap()
                 val cssSpanStyle = CssEncoder.parseCssStyleMapToSpanStyle(cssStyleMap)
                 val tagSpanStyle = htmlElementsSpanStyleEncodeMap[name]
+                val tagParagraphStyle = htmlElementsParagraphStyleEncodeMap[name]
 
                 val currentRichParagraph = richParagraphList.lastOrNull()
                 val isCurrentRichParagraphBlank = currentRichParagraph?.isBlank() == true
@@ -132,6 +134,11 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
                     newRichParagraph.paragraphStyle = newRichParagraph.paragraphStyle.merge(cssParagraphStyle)
                     newRichParagraph.type = paragraphType
+
+                    // Apply paragraph style (if applicable)
+                    tagParagraphStyle?.let {
+                        newRichParagraph.paragraphStyle = newRichParagraph.paragraphStyle.merge(it)
+                    }
 
                     if (!isCurrentRichParagraphBlank) {
                         stringBuilder.append(' ')
@@ -208,11 +215,9 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 if (isCurrentTagBlockElement && !isCurrentRichParagraphBlank) {
                     stringBuilder.append(' ')
 
-                    val newParagraph =
-                        if (richParagraphList.isEmpty())
-                            RichParagraph()
-                        else
-                            RichParagraph(paragraphStyle = richParagraphList.last().paragraphStyle)
+                    //TODO - This was causing the paragraph style from heading tags to be applied to
+                    // subsequent paragraphs. Verify that this isn't crucial (all the tests still pass)
+                    val newParagraph = RichParagraph()
 
                     richParagraphList.add(newParagraph)
 
@@ -273,7 +278,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         richTextState.richParagraphList.fastForEachIndexed { index, richParagraph ->
             val richParagraphType = richParagraph.type
             val isParagraphEmpty = richParagraph.isEmpty()
-            val paragraphGroupTagName = decodeHtmlElementFromRichParagraphType(richParagraph.type)
+            val paragraphGroupTagName = decodeHtmlElementFromRichParagraph(richParagraph)
 
             val paragraphLevel =
                 if (richParagraphType is ConfigurableListLevel)
@@ -383,10 +388,25 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 // Create paragraph tag name
                 val paragraphTagName =
                     if (paragraphGroupTagName == "ol" || paragraphGroupTagName == "ul") "li"
-                    else "p"
+                    else paragraphGroupTagName
 
                 // Create paragraph css
-                val paragraphCssMap = CssDecoder.decodeParagraphStyleToCssStyleMap(richParagraph.paragraphStyle)
+                val paragraphCssMap =
+                    /*
+                     Heading paragraph styles inherit custom ParagraphStyle from the Typography class.
+                     This will allow us to remove any inherited ParagraphStyle properties, but keep the user added ones.
+                     <h1> to <h6> tags will allow the browser to apply the default heading styles.
+                     If the paragraphTagName isn't a h1-h6 tag, it will revert to the old behavior of applying whatever paragraphstyle is present.
+                     */
+                    if (paragraphTagName in HeadingStyle.headingTags) {
+                        val headingType = HeadingStyle.fromParagraphStyle(richParagraph.paragraphStyle)
+                        val baseParagraphStyle = headingType.getParagraphStyle()
+                        val diffParagraphStyle = richParagraph.paragraphStyle.diff(baseParagraphStyle)
+                        CssDecoder.decodeParagraphStyleToCssStyleMap(diffParagraphStyle)
+                    } else {
+                        CssDecoder.decodeParagraphStyleToCssStyleMap(richParagraph.paragraphStyle)
+                    }
+
                 val paragraphCss = CssDecoder.decodeCssStyleMap(paragraphCssMap)
 
                 // Append paragraph opening tag
@@ -396,7 +416,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
                 // Append paragraph children
                 richParagraph.children.fastForEach { richSpan ->
-                    builder.append(decodeRichSpanToHtml(richSpan))
+                    builder.append(decodeRichSpanToHtml(richSpan, headingType = HeadingStyle.fromRichSpan(richSpan)))
                 }
 
                 // Append paragraph closing tag
@@ -420,7 +440,11 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
     }
 
     @OptIn(ExperimentalRichTextApi::class)
-    private fun decodeRichSpanToHtml(richSpan: RichSpan, parentFormattingTags: List<String> = emptyList()): String {
+    private fun decodeRichSpanToHtml(
+        richSpan: RichSpan,
+        parentFormattingTags: List<String> = emptyList(),
+        headingType: HeadingStyle = HeadingStyle.Normal,
+    ): String {
         val stringBuilder = StringBuilder()
 
         // Check if span is empty
@@ -438,7 +462,16 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         }
 
         // Convert span style to CSS string
-        val htmlStyleFormat = CssDecoder.decodeSpanStyleToHtmlStylingFormat(richSpan.spanStyle)
+        val htmlStyleFormat =
+            /**
+             * If the heading type is normal, follow the previous behavior of encoding the SpanStyle to the
+             * Css span style. If it is a heading paragraph style, remove the Heading-specific [SpanStyle] features via
+             * [diff] but retain the non-heading associated [SpanStyle] properties.
+             */
+            if (headingType == HeadingStyle.Normal)
+                CssDecoder.decodeSpanStyleToHtmlStylingFormat(richSpan.spanStyle)
+            else
+                CssDecoder.decodeSpanStyleToHtmlStylingFormat(richSpan.spanStyle.diff(headingType.getSpanStyle()))
         val spanCss = CssDecoder.decodeCssStyleMap(htmlStyleFormat.cssStyleMap)
         val htmlTags = htmlStyleFormat.htmlTags.filter { it !in parentFormattingTags }
 
@@ -553,15 +586,16 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
     }
 
     /**
-     * Decodes HTML elements from [ParagraphType].
+     * Decodes HTML elements from [RichParagraph].
      */
-    private fun decodeHtmlElementFromRichParagraphType(
-        richParagraphType: ParagraphType,
+    private fun decodeHtmlElementFromRichParagraph(
+        richParagraph: RichParagraph,
     ): String {
-        return when (richParagraphType) {
+        val paragraphType = richParagraph.type
+        return when (paragraphType) {
             is UnorderedList -> "ul"
             is OrderedList -> "ol"
-            else -> "p"
+            else -> richParagraph.getHeadingStyle().htmlTag ?: "p"
         }
     }
 
@@ -569,6 +603,11 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
 /**
  * Encodes HTML elements to [SpanStyle].
+ *
+ * Some HTML elements have both an associated SpanStyle and ParagraphStyle.
+ * Ensure both the [SpanStyle] (via [htmlElementsSpanStyleEncodeMap] - if applicable) and
+ * [androidx.compose.ui.text.ParagraphStyle] (via [htmlElementsParagraphStyleEncodeMap] - if applicable)
+ * are applied to the text.
  *
  * @see <a href="https://www.w3schools.com/html/html_formatting.asp">HTML formatting</a>
  */
@@ -592,6 +631,23 @@ internal val htmlElementsSpanStyleEncodeMap = mapOf(
     "h4" to H4SpanStyle,
     "h5" to H5SpanStyle,
     "h6" to H6SpanStyle,
+)
+
+/**
+ * Encodes the HTML elements to [androidx.compose.ui.text.ParagraphStyle].
+ * Some HTML elements have both an associated SpanStyle and ParagraphStyle.
+ * Ensure both the [SpanStyle] (via [htmlElementsSpanStyleEncodeMap] - if applicable) and
+ * [androidx.compose.ui.text.ParagraphStyle] (via [htmlElementsParagraphStyleEncodeMap] - if applicable)
+ * are applied to the text.
+ * @see <a href="https://www.w3schools.com/html/html_formatting.asp">HTML formatting</a>
+ */
+internal val htmlElementsParagraphStyleEncodeMap = mapOf(
+    "h1" to H1ParagraphStyle,
+    "h2" to H2ParagraphStyle,
+    "h3" to H3ParagraphStyle,
+    "h4" to H4ParagraphStyle,
+    "h5" to H5ParagraphStyle,
+    "h6" to H6ParagraphStyle,
 )
 
 /**

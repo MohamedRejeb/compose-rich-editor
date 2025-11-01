@@ -52,6 +52,44 @@ internal fun SpanStyle.customMerge(
     }
 }
 
+/**
+ * Creates a new [SpanStyle] that contains only the properties that are different
+ * between this [SpanStyle] and the [other] [SpanStyle].
+ *
+ * Properties that are the same in both styles are set to their default/unspecified values
+ * in the resulting [SpanStyle].
+ *
+ * This is useful for identifying the "delta" or the additional styles applied on top
+ * of a base style (e.g., finding user-added bold/italic on a heading style).
+ *
+ * @param other The [SpanStyle] to compare against.
+ * @return A new [SpanStyle] containing only the differing properties.
+ */
+internal fun SpanStyle.diff(
+    other: SpanStyle,
+): SpanStyle {
+    return SpanStyle(
+        color = if (this.color != other.color) this.color else Color.Unspecified,
+        fontFamily = if (this.fontFamily != other.fontFamily) this.fontFamily else null,
+        fontSize = if (this.fontSize != other.fontSize) this.fontSize else TextUnit.Unspecified,
+        fontWeight = if (this.fontWeight != other.fontWeight) this.fontWeight else null,
+        fontStyle = if (this.fontStyle != other.fontStyle) this.fontStyle else null,
+        fontSynthesis = if (this.fontSynthesis != other.fontSynthesis) this.fontSynthesis else null,
+        fontFeatureSettings = if (this.fontFeatureSettings != other.fontFeatureSettings)
+            this.fontFeatureSettings else null,
+        letterSpacing = if (this.letterSpacing != other.letterSpacing) this.letterSpacing else
+            TextUnit.Unspecified,
+        baselineShift = if (this.baselineShift != other.baselineShift) this.baselineShift else null,
+        textGeometricTransform = if (this.textGeometricTransform != other.textGeometricTransform)
+            this.textGeometricTransform else null,
+        localeList = if (this.localeList != other.localeList) this.localeList else null,
+        background = if (this.background != other.background) this.background else Color.Unspecified,
+        // For TextDecoration, we want the decorations present in 'this' but not in 'other'
+        textDecoration = other.textDecoration?.let { this.textDecoration?.minus(it) },
+        shadow = if (this.shadow != other.shadow) this.shadow else null,
+    )
+}
+
 internal fun SpanStyle.unmerge(
     other: SpanStyle?,
 ): SpanStyle {

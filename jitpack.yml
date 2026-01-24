@@ -1,0 +1,5 @@
+jdk:
+  - openjdk17
+
+install:
+  - ./gradlew --no-daemon clean :richeditor-compose:publishToMavenLocal :richeditor-compose-coil3:publishToMavenLocal -x test

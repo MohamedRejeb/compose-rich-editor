@@ -90,6 +90,8 @@ import kotlin.math.roundToInt
 public fun RichTextEditor(
     state: RichTextState,
     modifier: Modifier = Modifier,
+    minHeight: Dp = TextFieldDefaults.MinHeight,
+    maxHeight: Dp = Dp.Unspecified,
     enabled: Boolean = true,
     readOnly: Boolean = false,
     textStyle: TextStyle = LocalTextStyle.current,
@@ -109,6 +111,7 @@ public fun RichTextEditor(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape = RichTextEditorDefaults.filledShape,
     colors: RichTextEditorColors = RichTextEditorDefaults.richTextEditorColors(),
+    disableSelectionToolbar: Boolean = false,
     contentPadding: PaddingValues =
         if (label == null) {
             RichTextEditorDefaults.richTextEditorWithoutLabelPadding()
@@ -126,9 +129,10 @@ public fun RichTextEditor(
         BasicRichTextEditor(
             state = state,
             modifier = modifier
+                .heightIn(min = minHeight, max = maxHeight)
                 .defaultMinSize(
                     minWidth = TextFieldDefaults.MinWidth,
-                    minHeight = TextFieldDefaults.MinHeight
+                    minHeight = Dp.Unspecified
                 ),
             enabled = enabled,
             readOnly = readOnly,
@@ -142,6 +146,7 @@ public fun RichTextEditor(
             onTextLayout = onTextLayout,
             interactionSource = interactionSource,
             cursorBrush = SolidColor(colors.cursorColor(isError).value),
+            disableSelectionToolbar = disableSelectionToolbar,
             decorationBox = @Composable { innerTextField ->
                 // places leading icon, text field with label and placeholder, trailing icon
                 RichTextEditorDefaults.RichTextEditorDecorationBox(

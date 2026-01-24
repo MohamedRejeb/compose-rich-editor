@@ -25,12 +25,18 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
+val isJitPack = System.getenv("JITPACK") != null
+
 include(
     ":richeditor-compose",
     ":richeditor-compose-coil3",
-
-    ":sample:android",
-    ":sample:desktop",
-    ":sample:web",
-    ":sample:common",
 )
+
+if (!isJitPack) {
+    include(
+        ":sample:android",
+        ":sample:desktop",
+        ":sample:web",
+        ":sample:common",
+    )
+}

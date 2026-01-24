@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.0"
+agp = "8.13.2"
 kotlin = "2.2.10"
 compose = "1.8.2"
 dokka = "2.0.0"

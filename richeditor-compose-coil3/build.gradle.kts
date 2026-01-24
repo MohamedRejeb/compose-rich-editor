@@ -11,6 +11,10 @@ plugins {
     id("module.publication")
 }
 
+// JitPack build images can ship with an older GLIBC.
+// Kotlin/JS downloads a Node.js binary that may not run there, so we skip JS/WASM targets on JitPack.
+val isJitPack = System.getenv("JITPACK") != null
+
 kotlin {
     explicitApi()
     applyDefaultHierarchyTemplate()
@@ -30,14 +34,16 @@ kotlin {
         }
     }
 
-    js(IR) {
-        browser()
-    }
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        browser {
-            testTask {
-                enabled = false
+    if (!isJitPack) {
+        js(IR) {
+            browser()
+        }
+        @OptIn(ExperimentalWasmDsl::class)
+        wasmJs {
+            browser {
+                testTask {
+                    enabled = false
+                }
             }
         }
     }

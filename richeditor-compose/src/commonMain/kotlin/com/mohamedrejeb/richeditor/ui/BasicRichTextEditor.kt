@@ -1,24 +1,34 @@
 package com.mohamedrejeb.richeditor.ui
 
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.composed
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.pointer.changedToDownIgnoreConsumed
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
@@ -85,6 +95,8 @@ import kotlinx.coroutines.CoroutineScope
 public fun BasicRichTextEditor(
     state: RichTextState,
     modifier: Modifier = Modifier,
+    minHeight: Dp = TextFieldDefaults.MinHeight,
+    maxHeight: Dp = Dp.Unspecified,
     enabled: Boolean = true,
     readOnly: Boolean = false,
     textStyle: TextStyle = TextStyle.Default,
@@ -98,11 +110,17 @@ public fun BasicRichTextEditor(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     cursorBrush: Brush = SolidColor(Color.Black),
     decorationBox: @Composable (innerTextField: @Composable () -> Unit) -> Unit =
-        @Composable { innerTextField -> innerTextField() }
+        @Composable { innerTextField -> innerTextField() },
+    disableSelectionToolbar: Boolean = false
 ) {
     BasicRichTextEditor(
         state = state,
-        modifier = modifier,
+        modifier = modifier
+            .heightIn(min = minHeight, max = maxHeight)
+            .defaultMinSize(
+                minWidth = TextFieldDefaults.MinWidth,
+                minHeight = Dp.Unspecified
+            ),
         enabled = enabled,
         readOnly = readOnly,
         textStyle = textStyle,
@@ -116,7 +134,8 @@ public fun BasicRichTextEditor(
         interactionSource = interactionSource,
         cursorBrush = cursorBrush,
         decorationBox = decorationBox,
-        contentPadding = PaddingValues()
+        contentPadding = PaddingValues(),
+        disableSelectionToolbar = disableSelectionToolbar
     )
 }
 
@@ -192,7 +211,8 @@ public fun BasicRichTextEditor(
     cursorBrush: Brush = SolidColor(Color.Black),
     decorationBox: @Composable (innerTextField: @Composable () -> Unit) -> Unit =
         @Composable { innerTextField -> innerTextField() },
-    contentPadding: PaddingValues
+    contentPadding: PaddingValues,
+    disableSelectionToolbar: Boolean = false
 ) {
     val density = LocalDensity.current
     val layoutDirection = LocalLayoutDirection.current
@@ -230,67 +250,72 @@ public fun BasicRichTextEditor(
     }
 
     CompositionLocalProvider(LocalClipboardManager provides richClipboardManager) {
-        BasicTextField(
-            value = state.textFieldValue,
-            onValueChange = {
-                if (readOnly) return@BasicTextField
-                if (it.text.length > maxLength) return@BasicTextField
+        ProvideNoSelectionToolbar(disableSelectionToolbar = disableSelectionToolbar) {
+            BasicTextField(
+                value = state.textFieldValue,
+                onValueChange = {
+                    if (readOnly) return@BasicTextField
+                    if (it.text.length > maxLength) return@BasicTextField
 
-                state.onTextFieldValueChange(it)
-            },
-            modifier = modifier
-                .onPreviewKeyEvent { event ->
-                    if (readOnly)
-                        return@onPreviewKeyEvent false
+                    state.onTextFieldValueChange(it)
+                },
+                modifier = modifier
+                    .blockDoubleTapSelection(disableSelectionToolbar)
+                    .blockLongPressSelection(disableSelectionToolbar)
+                    .onPreviewKeyEvent { event ->
+                        if (readOnly)
+                            return@onPreviewKeyEvent false
 
-                    state.onPreviewKeyEvent(event)
-                }
-                .drawRichSpanStyle(
-                    richTextState = state,
-                    topPadding = with(density) { contentPadding.calculateTopPadding().toPx() },
-                    startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() },
-                )
-                .then(
-                    if (!readOnly)
-                        Modifier
-                    else
-                        Modifier.focusProperties { canFocus = false }
-                )
-                .then(
-                    if (singleParagraph)
-                        Modifier
-                    else
-                        Modifier
-                            // Workaround for Desktop to fix a bug in BasicTextField where it doesn't select the correct text
-                            // when the text contains multiple paragraphs.
-                            .adjustTextIndicatorOffset(
-                                state = state,
-                                contentPadding = contentPadding,
-                                density = density,
-                                layoutDirection = layoutDirection,
-                                scope = rememberCoroutineScope()
-                            )
-                ),
-            enabled = enabled,
-            readOnly = readOnly,
-            textStyle = textStyle,
-            keyboardOptions = keyboardOptions,
-            keyboardActions = keyboardActions,
-            singleLine = singleLine,
-            maxLines = maxLines,
-            minLines = minLines,
-            visualTransformation = state.visualTransformation,
-            onTextLayout = {
-                state.onTextLayout(
-                    textLayoutResult = it,
-                    density = density,
-                )
-                onTextLayout(it)
-            },
-            interactionSource = interactionSource,
-            cursorBrush = cursorBrush,
-            decorationBox = decorationBox,
-        )
+                        state.onPreviewKeyEvent(event)
+                    }
+                    .drawRichSpanStyle(
+                        richTextState = state,
+                        topPadding = with(density) { contentPadding.calculateTopPadding().toPx() },
+                        startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() },
+                    )
+                    .then(
+                        if (!readOnly)
+                            Modifier
+                        else
+                            Modifier.focusProperties { canFocus = false }
+                    )
+                    .then(
+                        if (singleParagraph)
+                            Modifier
+                        else
+                            Modifier
+                                // Workaround for Desktop to fix a bug in BasicTextField where it doesn't select the correct text
+                                // when the text contains multiple paragraphs.
+                                .adjustTextIndicatorOffset(
+                                    state = state,
+                                    contentPadding = contentPadding,
+                                    density = density,
+                                    layoutDirection = layoutDirection,
+                                    scope = rememberCoroutineScope()
+                                )
+                    ),
+                enabled = enabled,
+                readOnly = readOnly,
+                textStyle = textStyle,
+                keyboardOptions = keyboardOptions,
+                keyboardActions = keyboardActions,
+                singleLine = singleLine,
+                maxLines = maxLines,
+                minLines = minLines,
+                visualTransformation = state.visualTransformation,
+                onTextLayout = {
+                    state.onTextLayout(
+                        textLayoutResult = it,
+                        density = density,
+                    )
+                    onTextLayout(it)
+                },
+                interactionSource = interactionSource,
+                cursorBrush = cursorBrush,
+                decorationBox = decorationBox,
+            )
+
+        }
     }
 }
 
@@ -317,3 +342,84 @@ internal suspend fun adjustTextIndicatorOffset(
 }
 
 public typealias RichTextChangedListener = (RichTextState) -> Unit
+
+private fun Modifier.blockLongPressSelection(enabled: Boolean): Modifier = composed {
+    if (!enabled) return@composed this
+
+    val viewConfig = LocalViewConfiguration.current
+    val longPressMs = viewConfig.longPressTimeoutMillis
+
+    this.pointerInput(longPressMs) {
+        awaitEachGesture {
+            // 1) Pusti "down" da prođe (tap/fokus/kursor mora raditi)
+            val down = awaitFirstDown(requireUnconsumed = false)
+            val start = down.uptimeMillis
+
+            var longPressTriggered = false
+
+            // 2) Prati evente dok je prst dole
+            while (true) {
+                val event = awaitPointerEvent()
+
+                val anyPressed = event.changes.any { it.pressed }
+                if (!anyPressed) break
+
+                val now = event.changes.maxOfOrNull { it.uptimeMillis } ?: start
+                if (!longPressTriggered && (now - start) >= longPressMs) {
+                    // ✅ Long-press moment: od ovog trenutka "pojedemo" gesture
+                    // (sprečava selection pipeline i toolbar)
+                    longPressTriggered = true
+                    event.changes.forEach { it.consume() }
+                }
+
+                if (longPressTriggered) {
+                    // nakon long-pressa nastavi gutati sve (drag/handles ne kreću)
+                    event.changes.forEach { it.consume() }
+                }
+            }
+        }
+    }
+}
+
+private fun Modifier.blockDoubleTapSelection(enabled: Boolean): Modifier = composed {
+    if (!enabled) return@composed this
+
+    // “double tap” prag (ms). 250ms je standardno dovoljno.
+    val doubleTapMs = 250L
+
+    this.pointerInput(doubleTapMs) {
+        var lastDownUptime = 0L
+
+        awaitEachGesture {
+            // čekamo eventove u ovoj gesti
+            while (true) {
+                val event = awaitPointerEvent()
+
+                // nađi promjenu koja je upravo postala "down"
+                val down = event.changes.firstOrNull { it.changedToDownIgnoreConsumed() }
+                if (down != null) {
+                    val now = down.uptimeMillis
+                    val isDoubleTap = lastDownUptime != 0L && (now - lastDownUptime) <= doubleTapMs
+
+                    lastDownUptime = now
+
+                    if (isDoubleTap) {
+                        // ✅ Ovo je drugi tap: pojedi ga da Compose ne pokrene "select word" pipeline
+                        down.consume()
+
+                        // i pojedi sve dok se ne pusti prst (da ne krene selection drag)
+                        while (true) {
+                            val e2 = awaitPointerEvent()
+                            e2.changes.forEach { it.consume() }
+                            if (e2.changes.none { it.pressed }) break
+                        }
+                        break
+                    }
+                }
+
+                // završi gestu kad nema više pressed
+                if (event.changes.none { it.pressed }) break
+            }
+        }
+    }
+}

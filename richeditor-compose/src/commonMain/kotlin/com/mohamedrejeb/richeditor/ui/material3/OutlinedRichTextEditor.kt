@@ -110,6 +110,7 @@ public fun OutlinedRichTextEditor(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape = RichTextEditorDefaults.outlinedShape,
     colors: RichTextEditorColors = RichTextEditorDefaults.outlinedRichTextEditorColors(),
+    disableSelectionToolbar: Boolean = false,
     contentPadding: PaddingValues = RichTextEditorDefaults.outlinedRichTextEditorPadding(),
 ) {
     // If color is not provided via the text style, use content color as a default

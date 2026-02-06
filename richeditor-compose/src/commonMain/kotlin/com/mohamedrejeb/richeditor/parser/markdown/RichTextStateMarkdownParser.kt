@@ -108,8 +108,11 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
             }
         }
 
+        // Correct the markdown text first so we can use it in callbacks
+        val correctedMarkdown = correctMarkdownText(input)
+
         encodeMarkdownToRichText(
-            markdown = input,
+            markdown = correctedMarkdown,
             onText = { text ->
                 onText(text)
             },
@@ -152,7 +155,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                         currentRichSpan = null
                     }
                 } else if (node.type != MarkdownTokenTypes.EOL) {
-                    val richSpanStyle = encodeMarkdownElementToRichSpanStyle(node, input)
+                    val richSpanStyle = encodeMarkdownElementToRichSpanStyle(node, correctedMarkdown)
 
                     if (richParagraphList.isEmpty())
                         richParagraphList.add(RichParagraph())
@@ -201,7 +204,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     node.type == GFMTokenTypes.GFM_AUTOLINK ||
                     node.type == MarkdownTokenTypes.CODE_LINE
                 ) {
-                    onText(node.getTextInNode(input).toString())
+                    onText(node.getTextInNode(correctedMarkdown).toString())
                 }
             },
             onCloseNode = { node ->

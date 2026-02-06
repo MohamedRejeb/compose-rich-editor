@@ -19,14 +19,13 @@ internal fun encodeMarkdownToRichText(
     onHtmlTag: (tag: String) -> Unit,
     onHtmlBlock: (html: String) -> Unit,
 ) {
-    val markdownText = correctMarkdownText(markdown)
 
     val parser = MarkdownParser(GFMFlavourDescriptor())
-    val tree = parser.buildMarkdownTreeFromString(markdownText)
+    val tree = parser.buildMarkdownTreeFromString(markdown)
     tree.children.fastForEach { node ->
         encodeMarkdownNodeToRichText(
             node = node,
-            markdown = markdownText,
+            markdown = markdown,
             onOpenNode = onOpenNode,
             onCloseNode = onCloseNode,
             onText = onText,

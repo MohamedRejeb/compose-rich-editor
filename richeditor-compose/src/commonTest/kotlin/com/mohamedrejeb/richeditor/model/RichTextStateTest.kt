@@ -1,6 +1,7 @@
 package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.Paragraph
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
@@ -11,6 +12,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
+import com.mohamedrejeb.richeditor.paragraph.type.AutomaticListType
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
@@ -1188,6 +1190,41 @@ class RichTextStateTest {
 
         assertIs<UnorderedList>(orderedList)
         assertTrue(state.isUnorderedList)
+    }
+
+    fun testDisabledAutoRecognize(allowedAutomaticType: AutomaticListType?, text: String) {
+        val state = RichTextState()
+        state.config.autoFormatedListTypes = setOfNotNull(allowedAutomaticType)
+
+        state.onTextFieldValueChange(
+            TextFieldValue(
+                text = text,
+                selection = TextRange(text.length),
+            )
+        )
+
+        val orderedList = state.richParagraphList.first().type
+
+        assertIs<DefaultParagraph>(orderedList)
+        val allowedTypes = state.config.autoFormatedListTypes
+        when  {
+            AutomaticListType.Ordered in allowedTypes -> assertFalse(state.isUnorderedList)
+            AutomaticListType.Unordered in allowedTypes -> assertFalse(state.isOrderedList)
+            else -> {
+                assertFalse(state.isUnorderedList)
+                assertFalse(state.isOrderedList)
+            }
+        }
+    }
+
+    @Test
+    fun testDisabledAutoRecognizeOrderedList() {
+        testDisabledAutoRecognize(AutomaticListType.Unordered, "29")
+        testDisabledAutoRecognize(AutomaticListType.Unordered, "1")
+        testDisabledAutoRecognize(AutomaticListType.Ordered, "- ")
+        testDisabledAutoRecognize(AutomaticListType.Ordered, "* ")
+        testDisabledAutoRecognize(null, "* ")
+        testDisabledAutoRecognize(null, "12")
     }
 
     @Test

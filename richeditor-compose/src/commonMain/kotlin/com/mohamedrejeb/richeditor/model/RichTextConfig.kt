@@ -2,6 +2,7 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextDecoration
+import com.mohamedrejeb.richeditor.paragraph.type.AutomaticListType
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedListStyleType
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedListStyleType
 
@@ -75,6 +76,17 @@ public class RichTextConfig internal constructor(
         }
 
     /**
+     * List types where auto formatting is enabled.
+     *
+     * Default is ordered and unordered.
+     */
+    public var autoFormatedListTypes: Set<AutomaticListType> = DefaultAutoFormatting
+        set(value) {
+            field = value
+            updateText()
+        }
+
+    /**
      * The prefixes for unordered lists items.
      *
      * The prefixes are used in order if the list is nested.
@@ -118,6 +130,10 @@ public class RichTextConfig internal constructor(
 }
 
 internal const val DefaultListIndent = 38
+
+internal val DefaultAutoFormatting = setOf(
+    AutomaticListType.Unordered, AutomaticListType.Ordered
+)
 
 internal val DefaultUnorderedListStyleType =
     UnorderedListStyleType.from("•", "◦", "▪")

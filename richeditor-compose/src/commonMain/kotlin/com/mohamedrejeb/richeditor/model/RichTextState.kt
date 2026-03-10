@@ -2088,11 +2088,13 @@ public class RichTextState internal constructor(
             return
 
         if (richSpan.text == "- " || richSpan.text == "* ") {
+            if (!config.autoFormatedListTypes.contains(AutomaticListType.Unordered)) return
             richSpan.paragraph.type = UnorderedList(
                 config = config,
             )
             richSpan.text = ""
         } else if (richSpan.text.matches(Regex("^\\d+\\. "))) {
+            if (!config.autoFormatedListTypes.contains(AutomaticListType.Ordered)) return
             val dotIndex = richSpan.text.indexOf('.')
             if (dotIndex != -1) {
                 val number = richSpan.text.substring(0, dotIndex).toIntOrNull() ?: 1

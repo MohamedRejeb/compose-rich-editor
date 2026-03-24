@@ -21,12 +21,36 @@ private class IosSpannedPasteHandler(
     private fun readHtmlFromPasteboard(): String? {
         val pasteboard = UIPasteboard.generalPasteboard
         val value = pasteboard.valueForPasteboardType(HTML_UTI) ?: return null
-        if (value is String) return value
-        // iOS sometimes stores HTML as NSData
-        val data = value as? NSData ?: pasteboard.dataForPasteboardType(HTML_UTI) ?: return null
-        @Suppress("UNCHECKED_CAST")
-        return NSString.create(data = data, encoding = NSUTF8StringEncoding) as? String
+        val raw = if (value is String) value else {
+            // iOS sometimes stores HTML as NSData
+            val data = value as? NSData ?: pasteboard.dataForPasteboardType(HTML_UTI) ?: return null
+            @Suppress("UNCHECKED_CAST")
+            NSString.create(data = data, encoding = NSUTF8StringEncoding) as? String ?: return null
+        }
+        return stripSourceBackgroundColor(raw)
     }
+
+    /**
+     * iOS clipboard HTML carries the source document's background-color (typically white
+     * or transparent) on every span.  Strip those so they don't render as white boxes
+     * behind the text inside the editor.
+     *
+     * Intentional highlight colors (yellow, blue, etc.) are left intact because only
+     * white, near-white, and transparent values are removed.
+     */
+    private fun stripSourceBackgroundColor(html: String): String =
+        html.replace(
+            Regex(
+                """background-color\s*:\s*""" +
+                """(?:white|transparent""" +
+                """|#[fF]{3,6}""" +
+                """|rgb\(\s*255\s*,\s*255\s*,\s*255\s*\)""" +
+                """|rgba\(\s*255\s*,\s*255\s*,\s*255\s*,\s*(?:0|1|1\.0|0\.0)\s*\)""" +
+                """)\s*;?""",
+                RegexOption.IGNORE_CASE,
+            ),
+            "",
+        )
 
     override fun readHtml(): String? {
         pasteLog(PASTE_TAG, "iOS readHtml: checking UIPasteboard")

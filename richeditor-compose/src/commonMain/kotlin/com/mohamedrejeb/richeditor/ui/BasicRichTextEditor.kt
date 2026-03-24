@@ -220,6 +220,10 @@ public fun BasicRichTextEditor(
         SpannedPasteTextToolbar(delegate = originalToolbar, pasteHandler = pasteHandler)
     }
 
+    // Wire the paste handler into state so onTextFieldValueChange can use it for the IME path.
+    SideEffect {
+        state.spannedPasteHandler = pasteHandler
+    }
 
     LaunchedEffect(singleParagraph) {
         state.singleParagraphMode = singleParagraph

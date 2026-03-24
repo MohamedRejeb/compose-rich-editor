@@ -29,6 +29,7 @@ import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
+import com.mohamedrejeb.richeditor.ui.SpannedPasteHandler
 import com.mohamedrejeb.richeditor.paragraph.type.*
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startText
 import com.mohamedrejeb.richeditor.parser.html.RichTextStateHtmlParser
@@ -1528,6 +1529,13 @@ public class RichTextState internal constructor(
     internal var pendingHtmlPaste: String? = null
 
     /**
+     * Set by [com.mohamedrejeb.richeditor.ui.BasicRichTextEditor] so that [onTextFieldValueChange]
+     * can probe the platform clipboard when the IME paste button bypasses
+     * [com.mohamedrejeb.richeditor.ui.RichTextClipboardManager].
+     */
+    internal var spannedPasteHandler: SpannedPasteHandler? = null
+
+    /**
      * Handles the new text field value.
      *
      * @param newTextFieldValue the new text field value.
@@ -1546,11 +1554,20 @@ public class RichTextState internal constructor(
         // This covers the soft-keyboard IME paste path (performContextMenuAction) which
         // bypasses both the TextToolbar wrapper and onPreviewKeyEvent.
         if (pendingHtml != null && newTextFieldValue.text != textFieldValue.text) {
+            com.mohamedrejeb.richeditor.ui.pasteLog(
+                com.mohamedrejeb.richeditor.ui.PASTE_TAG,
+                "onTextFieldValueChange: pendingHtml present — applying HTML paste. " +
+                "old=\"${textFieldValue.text.take(40)}\" new=\"${newTextFieldValue.text.take(40)}\""
+            )
             val insertionPoint = textFieldValue.selection.min
 
             // If text was selected, BasicTextField already deleted it in newTextFieldValue.
             // We need to apply the same deletion to our rich paragraph list.
             if (!textFieldValue.selection.collapsed) {
+                com.mohamedrejeb.richeditor.ui.pasteLog(
+                    com.mohamedrejeb.richeditor.ui.PASTE_TAG,
+                    "onTextFieldValueChange: deleting selection ${textFieldValue.selection.min}..${textFieldValue.selection.max}"
+                )
                 val trimmed = textFieldValue.text
                     .removeRange(textFieldValue.selection.min, textFieldValue.selection.max)
                 tempTextFieldValue = TextFieldValue(
@@ -1562,9 +1579,66 @@ public class RichTextState internal constructor(
             }
 
             // Insert the HTML at the (now-collapsed) cursor position.
+            com.mohamedrejeb.richeditor.ui.pasteLog(
+                com.mohamedrejeb.richeditor.ui.PASTE_TAG,
+                "onTextFieldValueChange: calling insertHtmlAfterSelection at cursor=$insertionPoint"
+            )
             selection = TextRange(insertionPoint)
             insertHtmlAfterSelection(pendingHtml)
+            com.mohamedrejeb.richeditor.ui.pasteLog(
+                com.mohamedrejeb.richeditor.ui.PASTE_TAG,
+                "onTextFieldValueChange: HTML paste complete, result text=\"${textFieldValue.text.take(80)}\""
+            )
             return
+        }
+
+        if (pendingHtml != null) {
+            // pendingHtml was set but text didn't change (e.g. empty paste, same-content paste).
+            com.mohamedrejeb.richeditor.ui.pasteLog(
+                com.mohamedrejeb.richeditor.ui.PASTE_TAG,
+                "onTextFieldValueChange: pendingHtml was set but text unchanged — discarding. " +
+                "old=\"${textFieldValue.text.take(40)}\" new=\"${newTextFieldValue.text.take(40)}\""
+            )
+        }
+
+        // IME fallback: soft-keyboard paste button goes through InputConnection directly, so
+        // RichTextClipboardManager.getText() is never called and pendingHtmlPaste stays null.
+        // If text was added, ask the platform handler whether the added text matches the
+        // clipboard — if so, it means this was a paste and we can apply the HTML.
+        if (pendingHtml == null && newTextFieldValue.text.length > textFieldValue.text.length) {
+            val addedLen = newTextFieldValue.text.length - textFieldValue.text.length
+            val selEnd = newTextFieldValue.selection.min
+            val selStart = (selEnd - addedLen).coerceAtLeast(0)
+            val addedText = newTextFieldValue.text.substring(selStart, selEnd)
+            com.mohamedrejeb.richeditor.ui.pasteLog(
+                com.mohamedrejeb.richeditor.ui.PASTE_TAG,
+                "onTextFieldValueChange: no pendingHtml, probing IME fallback for addedText=\"${addedText.take(80)}\""
+            )
+            val imeHtml = spannedPasteHandler?.getHtmlIfMatch(addedText)
+            if (imeHtml != null) {
+                com.mohamedrejeb.richeditor.ui.pasteLog(
+                    com.mohamedrejeb.richeditor.ui.PASTE_TAG,
+                    "onTextFieldValueChange: IME fallback — applying HTML paste at cursor=$selStart"
+                )
+                val insertionPoint = textFieldValue.selection.min
+                if (!textFieldValue.selection.collapsed) {
+                    val trimmed = textFieldValue.text
+                        .removeRange(textFieldValue.selection.min, textFieldValue.selection.max)
+                    tempTextFieldValue = TextFieldValue(
+                        text = trimmed,
+                        selection = TextRange(insertionPoint),
+                    )
+                    handleRemovingCharacters()
+                    updateTextFieldValue()
+                }
+                selection = TextRange(insertionPoint)
+                insertHtmlAfterSelection(imeHtml)
+                com.mohamedrejeb.richeditor.ui.pasteLog(
+                    com.mohamedrejeb.richeditor.ui.PASTE_TAG,
+                    "onTextFieldValueChange: IME HTML paste complete"
+                )
+                return
+            }
         }
 
         tempTextFieldValue = newTextFieldValue

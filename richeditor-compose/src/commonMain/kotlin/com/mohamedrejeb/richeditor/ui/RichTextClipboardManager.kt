@@ -33,15 +33,20 @@ internal class RichTextClipboardManager(
     private val spannedPasteHandler: SpannedPasteHandler,
 ): ClipboardManager {
     override fun getText(): AnnotatedString? {
+        pasteLog(PASTE_TAG, "ClipboardManager.getText() called")
         // Ask the platform handler whether the clipboard has HTML / Spanned content.
         val html = spannedPasteHandler.readHtml()
         if (html != null) {
+            pasteLog(PASTE_TAG, "getText: HTML found → setting pendingHtmlPaste and returning plain-text fallback")
             // Signal onTextFieldValueChange to apply the HTML instead of plain text.
             richTextState.pendingHtmlPaste = html
             // Return the plain-text version so that BasicTextField / InputConnection
             // still knows how many characters are being inserted (cursor placement, etc.).
-            return clipboardManager.getText()
+            val plain = clipboardManager.getText()
+            pasteLog(PASTE_TAG, "getText: plain-text fallback = \"${plain?.text?.take(80)}\"")
+            return plain
         }
+        pasteLog(PASTE_TAG, "getText: no HTML — plain paste proceeds normally")
         return clipboardManager.getText()
     }
 

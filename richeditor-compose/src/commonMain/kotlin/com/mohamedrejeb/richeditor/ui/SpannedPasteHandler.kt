@@ -24,6 +24,20 @@ internal interface SpannedPasteHandler {
      * @return `true` if styled content was applied; `false` to fall back to plain-text paste.
      */
     fun tryPasteSpanned(): Boolean
+
+    /**
+     * Called from [RichTextState.onTextFieldValueChange] when text was added without going
+     * through [RichTextClipboardManager.getText] (e.g. the soft-keyboard IME paste button, which
+     * uses Android's [InputConnection.performContextMenuAction] and reads the system clipboard
+     * directly, bypassing [LocalClipboardManager]).
+     *
+     * Compares [addedText] against the current clipboard plain text.  If they match **and** the
+     * clipboard contains HTML or an Android [Spanned], returns the HTML so the caller can apply
+     * rich formatting instead of keeping the plain-text insertion.
+     *
+     * @return HTML string if the added text was a styled paste, `null` otherwise.
+     */
+    fun getHtmlIfMatch(addedText: String): String?
 }
 
 @Composable

@@ -15,10 +15,20 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalTextToolbar
+import androidx.compose.ui.platform.TextToolbar
+import androidx.compose.ui.platform.TextToolbarStatus
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
@@ -203,6 +213,11 @@ public fun BasicRichTextEditor(
             clipboardManager = clipboardManager
         )
     }
+    val pasteHandler = rememberSpannedPasteHandler(state)
+    val originalToolbar = LocalTextToolbar.current
+    val richTextToolbar = remember(originalToolbar, pasteHandler) {
+        SpannedPasteTextToolbar(delegate = originalToolbar, pasteHandler = pasteHandler)
+    }
 
     LaunchedEffect(singleParagraph) {
         state.singleParagraphMode = singleParagraph
@@ -229,7 +244,10 @@ public fun BasicRichTextEditor(
         }
     }
 
-    CompositionLocalProvider(LocalClipboardManager provides richClipboardManager) {
+    CompositionLocalProvider(
+        LocalClipboardManager provides richClipboardManager,
+        LocalTextToolbar provides richTextToolbar,
+    ) {
         BasicTextField(
             value = state.textFieldValue,
             onValueChange = {
@@ -242,6 +260,13 @@ public fun BasicRichTextEditor(
                 .onPreviewKeyEvent { event ->
                     if (readOnly)
                         return@onPreviewKeyEvent false
+
+                    // Intercept Ctrl+V / Cmd+V to apply span-aware paste on supported platforms.
+                    if (event.type == KeyEventType.KeyDown &&
+                        event.key == Key.V &&
+                        (event.isCtrlPressed || event.isMetaPressed) &&
+                        pasteHandler.tryPasteSpanned()
+                    ) return@onPreviewKeyEvent true
 
                     state.onPreviewKeyEvent(event)
                 }
@@ -317,3 +342,57 @@ internal suspend fun adjustTextIndicatorOffset(
 }
 
 public typealias RichTextChangedListener = (RichTextState) -> Unit
+
+/**
+ * A [TextToolbar] decorator that intercepts the "Paste" context-menu action and routes it
+ * through [SpannedPasteHandler.tryPasteSpanned] before falling back to the original handler.
+ * This is how styled text (HTML / Android spans) from other apps reaches the editor.
+ */
+private class SpannedPasteTextToolbar(
+    private val delegate: TextToolbar,
+    private val pasteHandler: SpannedPasteHandler,
+) : TextToolbar {
+
+    override val status: TextToolbarStatus get() = delegate.status
+    override fun hide() = delegate.hide()
+
+    // Compose 1.7+ overload that includes onAutofillRequested.
+    override fun showMenu(
+        rect: Rect,
+        onCopyRequested: (() -> Unit)?,
+        onPasteRequested: (() -> Unit)?,
+        onCutRequested: (() -> Unit)?,
+        onSelectAllRequested: (() -> Unit)?,
+        onAutofillRequested: (() -> Unit)?,
+    ) {
+        delegate.showMenu(
+            rect = rect,
+            onCopyRequested = onCopyRequested,
+            onPasteRequested = wrapPaste(onPasteRequested),
+            onCutRequested = onCutRequested,
+            onSelectAllRequested = onSelectAllRequested,
+            onAutofillRequested = onAutofillRequested,
+        )
+    }
+
+    // Older 5-parameter overload kept for binary compatibility with Compose < 1.7.
+    override fun showMenu(
+        rect: Rect,
+        onCopyRequested: (() -> Unit)?,
+        onPasteRequested: (() -> Unit)?,
+        onCutRequested: (() -> Unit)?,
+        onSelectAllRequested: (() -> Unit)?,
+    ) {
+        delegate.showMenu(
+            rect = rect,
+            onCopyRequested = onCopyRequested,
+            onPasteRequested = wrapPaste(onPasteRequested),
+            onCutRequested = onCutRequested,
+            onSelectAllRequested = onSelectAllRequested,
+        )
+    }
+
+    private fun wrapPaste(original: (() -> Unit)?): (() -> Unit)? =
+        if (original == null) null
+        else ({ if (!pasteHandler.tryPasteSpanned()) original() })
+}

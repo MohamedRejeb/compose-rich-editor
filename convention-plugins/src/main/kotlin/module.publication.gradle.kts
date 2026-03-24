@@ -47,16 +47,20 @@ publishing {
     }
 }
 
-signing {
-    useInMemoryPgpKeys(
-        System.getenv("OSSRH_GPG_SECRET_KEY_ID"),
-        System.getenv("OSSRH_GPG_SECRET_KEY"),
-        System.getenv("OSSRH_GPG_SECRET_KEY_PASSWORD"),
-    )
-    sign(publishing.publications)
-}
+val skipSigning = providers.gradleProperty("skipSigning").orElse("false").get().toBoolean()
 
-// TODO: remove after https://youtrack.jetbrains.com/issue/KT-46466 is fixed
-project.tasks.withType(AbstractPublishToMaven::class.java).configureEach {
-    dependsOn(project.tasks.withType(Sign::class.java))
+if (!skipSigning) {
+    signing {
+        useInMemoryPgpKeys(
+            System.getenv("OSSRH_GPG_SECRET_KEY_ID"),
+            System.getenv("OSSRH_GPG_SECRET_KEY"),
+            System.getenv("OSSRH_GPG_SECRET_KEY_PASSWORD"),
+        )
+        sign(publishing.publications)
+    }
+
+    // TODO: remove after https://youtrack.jetbrains.com/issue/KT-46466 is fixed
+    project.tasks.withType(AbstractPublishToMaven::class.java).configureEach {
+        dependsOn(project.tasks.withType(Sign::class.java))
+    }
 }

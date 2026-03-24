@@ -1521,11 +1521,52 @@ public class RichTextState internal constructor(
     private var tempTextFieldValue = textFieldValue
 
     /**
+     * Set by [RichTextClipboardManager.getText] when the platform clipboard contains HTML or
+     * Android [Spanned] content.  Consumed—and cleared—at the top of [onTextFieldValueChange]
+     * so the styled content is applied instead of the plain-text that BasicTextField inserts.
+     */
+    internal var pendingHtmlPaste: String? = null
+
+    /**
      * Handles the new text field value.
      *
      * @param newTextFieldValue the new text field value.
      */
     internal fun onTextFieldValueChange(newTextFieldValue: TextFieldValue) {
+        // Always consume pendingHtmlPaste immediately so stale state never leaks.
+        val pendingHtml = pendingHtmlPaste
+        pendingHtmlPaste = null
+
+        // When the platform clipboard contained HTML/Spanned content,
+        // RichTextClipboardManager.getText() stored the HTML here and returned the plain-text
+        // fallback.  BasicTextField then inserted that plain text and called onValueChange.
+        // We intercept here – before handleAddingCharacters runs – discard the plain-text
+        // insertion and replace it with the properly styled HTML content.
+        //
+        // This covers the soft-keyboard IME paste path (performContextMenuAction) which
+        // bypasses both the TextToolbar wrapper and onPreviewKeyEvent.
+        if (pendingHtml != null && newTextFieldValue.text != textFieldValue.text) {
+            val insertionPoint = textFieldValue.selection.min
+
+            // If text was selected, BasicTextField already deleted it in newTextFieldValue.
+            // We need to apply the same deletion to our rich paragraph list.
+            if (!textFieldValue.selection.collapsed) {
+                val trimmed = textFieldValue.text
+                    .removeRange(textFieldValue.selection.min, textFieldValue.selection.max)
+                tempTextFieldValue = TextFieldValue(
+                    text = trimmed,
+                    selection = TextRange(insertionPoint),
+                )
+                handleRemovingCharacters()
+                updateTextFieldValue()
+            }
+
+            // Insert the HTML at the (now-collapsed) cursor position.
+            selection = TextRange(insertionPoint)
+            insertHtmlAfterSelection(pendingHtml)
+            return
+        }
+
         tempTextFieldValue = newTextFieldValue
 
         if (tempTextFieldValue.text.length > textFieldValue.text.length)

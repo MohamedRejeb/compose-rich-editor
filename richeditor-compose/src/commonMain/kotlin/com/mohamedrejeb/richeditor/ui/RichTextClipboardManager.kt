@@ -17,14 +17,31 @@ import kotlin.math.min
  * A [ClipboardManager] that can handle [RichTextState].
  * It will convert the [RichTextState] to [AnnotatedString] and delegate the [ClipboardManager] to handle the rest.
  *
+ * On Android, [getText] also inspects the raw [ClipData] for HTML / Spanned content.
+ * When rich content is detected it stores it in [RichTextState.pendingHtmlPaste] so that
+ * [RichTextState.onTextFieldValueChange] can apply the styles instead of the plain-text
+ * fallback.  This covers **all** paste paths, including the IME's own paste button which
+ * bypasses both the [TextToolbar] and `onPreviewKeyEvent`.
+ *
  * @param richTextState The [RichTextState] to be handled.
  * @param clipboardManager The [ClipboardManager] to delegate the rest of the work to.
+ * @param spannedPasteHandler Platform handler that knows how to read HTML from the clipboard.
  */
 internal class RichTextClipboardManager(
     private val richTextState: RichTextState,
-    private val clipboardManager: ClipboardManager
+    private val clipboardManager: ClipboardManager,
+    private val spannedPasteHandler: SpannedPasteHandler,
 ): ClipboardManager {
     override fun getText(): AnnotatedString? {
+        // Ask the platform handler whether the clipboard has HTML / Spanned content.
+        val html = spannedPasteHandler.readHtml()
+        if (html != null) {
+            // Signal onTextFieldValueChange to apply the HTML instead of plain text.
+            richTextState.pendingHtmlPaste = html
+            // Return the plain-text version so that BasicTextField / InputConnection
+            // still knows how many characters are being inserted (cursor placement, etc.).
+            return clipboardManager.getText()
+        }
         return clipboardManager.getText()
     }
 

@@ -207,17 +207,19 @@ public fun BasicRichTextEditor(
     val density = LocalDensity.current
     val layoutDirection = LocalLayoutDirection.current
     val clipboardManager = LocalClipboardManager.current
-    val richClipboardManager = remember(state) {
+    val pasteHandler = rememberSpannedPasteHandler(state)
+    val richClipboardManager = remember(state, pasteHandler) {
         RichTextClipboardManager(
             richTextState = state,
-            clipboardManager = clipboardManager
+            clipboardManager = clipboardManager,
+            spannedPasteHandler = pasteHandler,
         )
     }
-    val pasteHandler = rememberSpannedPasteHandler(state)
     val originalToolbar = LocalTextToolbar.current
     val richTextToolbar = remember(originalToolbar, pasteHandler) {
         SpannedPasteTextToolbar(delegate = originalToolbar, pasteHandler = pasteHandler)
     }
+
 
     LaunchedEffect(singleParagraph) {
         state.singleParagraphMode = singleParagraph

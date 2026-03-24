@@ -29,20 +29,28 @@ private class AndroidSpannedPasteHandler(
     private val clipboardManager: ClipboardManager,
 ) : SpannedPasteHandler {
 
-    override fun tryPasteSpanned(): Boolean {
-        val item = clipboardManager.primaryClip?.getItemAt(0) ?: return false
-
-        // Prefer explicit HTML provided by the source app (Chrome, Google Docs, Gmail, …).
-        val html = item.htmlText
+    // ------------------------------------------------------------------
+    // Read-only: just returns the HTML string, never touches RichTextState
+    // ------------------------------------------------------------------
+    override fun readHtml(): String? {
+        val item = clipboardManager.primaryClip?.getItemAt(0) ?: return null
+        // Prefer explicit HTML provided by the source app (Chrome, Docs, Gmail, …)
+        return item.htmlText
             ?: run {
-                // Fall back: if the clipboard text is a Spanned (e.g. copied from an
-                // AppCompatEditText that carries StyleSpan / UnderlineSpan / URLSpan / etc.),
-                // convert those Android spans to HTML so the existing parser can handle them.
-                val text = item.text ?: return false
-                if (text is Spanned) spannedToHtml(text) else return false
+                // Fall back: if the clipboard text is a Spanned (copied from an
+                // AppCompatEditText), convert Android spans → HTML.
+                val text = item.text ?: return null
+                if (text is Spanned) spannedToHtml(text) else null
             }
+    }
 
-        // Replace any active selection before inserting — mirrors AppCompatEditText paste.
+    // ------------------------------------------------------------------
+    // TextToolbar / Ctrl+V path: delete selection, insert HTML directly.
+    // The IME path is handled via RichTextState.pendingHtmlPaste instead.
+    // ------------------------------------------------------------------
+    override fun tryPasteSpanned(): Boolean {
+        val html = readHtml() ?: return false
+
         if (!state.selection.collapsed) {
             val selMin = state.selection.min
             val trimmed = state.textFieldValue.text.removeRange(selMin, state.selection.max)
@@ -61,7 +69,6 @@ private class AndroidSpannedPasteHandler(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             Html.toHtml(spanned, Html.TO_HTML_PARAGRAPH_LINES_INDIVIDUAL)
         } else {
-            // Pre-N: flagless overload — produces equivalent HTML for common spans.
             Html.toHtml(spanned)
         }
 }

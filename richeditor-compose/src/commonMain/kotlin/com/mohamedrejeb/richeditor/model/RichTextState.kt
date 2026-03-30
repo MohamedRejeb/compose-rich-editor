@@ -57,7 +57,7 @@ public class RichTextState internal constructor(
 
     internal val richParagraphList = mutableStateListOf<RichParagraph>()
     internal var visualTransformation: VisualTransformation by mutableStateOf(VisualTransformation.None)
-    internal var textFieldValue by mutableStateOf(TextFieldValue())
+    public var textFieldValue by mutableStateOf(TextFieldValue())
         private set
 
     internal val inlineContentMap = mutableStateMapOf<String, InlineTextContent>()
@@ -1525,7 +1525,7 @@ public class RichTextState internal constructor(
      *
      * @param newTextFieldValue the new text field value.
      */
-    internal fun onTextFieldValueChange(newTextFieldValue: TextFieldValue) {
+    public fun onTextFieldValueChange(newTextFieldValue: TextFieldValue) {
         tempTextFieldValue = newTextFieldValue
 
         if (tempTextFieldValue.text.length > textFieldValue.text.length)

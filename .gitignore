@@ -58,5 +58,6 @@ site
 venv/
 
 .junie
+.claude
 
 kotlin-js-store

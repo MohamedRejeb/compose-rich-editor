@@ -9,6 +9,8 @@ import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
 import java.awt.datatransfer.Transferable
 import com.mohamedrejeb.richeditor.clipboard.utils.HtmlClipboardUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 internal actual fun createRichTextClipboardManager(
     richTextState: RichTextState,
@@ -36,9 +38,13 @@ internal class DesktopRichTextClipboardManager(
         println("getClipEntry")
         try {
             val transferable = awtClipboard?.getContents(null) ?: return null
+            println("transferable: $transferable")
             when {
                 transferable.isDataFlavorSupported(DataFlavor.fragmentHtmlFlavor) -> {
-                    val rawHtmlText = transferable.getTransferData(DataFlavor.fragmentHtmlFlavor) as String
+                    val rawHtmlText =
+                        withContext(Dispatchers.IO) {
+                            transferable.getTransferData(DataFlavor.fragmentHtmlFlavor)
+                        } as String
                     val htmlText = HtmlClipboardUtils.extractHtmlFromClipboard(rawHtmlText)
                     println("rawHtmlText: $rawHtmlText")
                     println("htmlText: $htmlText")
@@ -49,8 +55,12 @@ internal class DesktopRichTextClipboardManager(
                         position = position
                     )
                 }
+
                 transferable.isDataFlavorSupported(DataFlavor.stringFlavor) -> {
-                    val plainText = transferable.getTransferData(DataFlavor.stringFlavor) as String
+                    val plainText =
+                        withContext(Dispatchers.IO) {
+                            transferable.getTransferData(DataFlavor.stringFlavor)
+                        } as String
                     val position = richTextState.selection.min
                     richTextState.removeSelectedText()
                     richTextState.addTextAtIndex(
@@ -58,10 +68,9 @@ internal class DesktopRichTextClipboardManager(
                         text = plainText
                     )
                 }
-                else -> null
             }
         } catch (e: Exception) {
-
+            e.printStackTrace()
         }
 
         return null

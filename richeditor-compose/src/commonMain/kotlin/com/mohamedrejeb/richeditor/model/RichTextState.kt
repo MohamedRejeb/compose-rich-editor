@@ -4058,6 +4058,111 @@ public class RichTextState internal constructor(
     }
 
     /**
+     * Extracts a new [RichTextState] containing only the content within the given [range].
+     * This method directly copies and trims paragraphs without going through the editing
+     * pipeline, preserving paragraph types (lists, etc.) and avoiding side effects like
+     * list-exit behavior that [removeTextRange] would trigger.
+     *
+     * @param range The [TextRange] to extract.
+     * @return A new [RichTextState] with only the content in the range.
+     */
+    private fun extractRangeState(range: TextRange): RichTextState {
+        val textLength = annotatedString.text.length
+        val rangeStart = range.min.coerceIn(0, textLength)
+        val rangeEnd = range.max.coerceIn(0, textLength)
+
+        if (rangeStart >= rangeEnd) {
+            return RichTextState(listOf(RichParagraph()))
+        }
+
+        val resultParagraphs = mutableListOf<RichParagraph>()
+
+        for ((i, paragraph) in richParagraphList.withIndex()) {
+            val startTextLen = paragraph.type.startText.length
+            val paragraphStart = paragraph.type.startRichSpan.textRange.min
+            val contentStart = paragraphStart + startTextLen
+
+            // Compute paragraph content end from children
+            val contentEnd = paragraph.children.lastOrNull()?.fullTextRange?.max ?: contentStart
+
+            // Each paragraph (except the last) has a trailing separator character
+            val hasSeparator = i < richParagraphList.lastIndex
+            val paragraphEndWithSep = contentEnd + if (hasSeparator) 1 else 0
+
+            // Skip paragraphs that are entirely outside the range (including separator)
+            if (paragraphEndWithSep <= rangeStart || contentStart >= rangeEnd) {
+                continue
+            }
+
+            // If only the trailing separator is in range (content itself is before range),
+            // include an empty paragraph to represent the line break
+            if (contentEnd <= rangeStart && rangeStart < paragraphEndWithSep) {
+                resultParagraphs.add(RichParagraph())
+                continue
+            }
+
+            // This paragraph has content within the range — copy and trim
+            val newParagraph = paragraph.copy()
+
+            // Trim children spans to only include text within [rangeStart, rangeEnd)
+            trimSpanList(newParagraph.children, rangeStart, rangeEnd)
+            newParagraph.removeEmptyChildren()
+
+            resultParagraphs.add(newParagraph)
+        }
+
+        if (resultParagraphs.isEmpty()) {
+            resultParagraphs.add(RichParagraph())
+        }
+
+        return RichTextState(resultParagraphs)
+    }
+
+    /**
+     * Recursively trims a list of [RichSpan]s so that only text within
+     * [rangeStart, rangeEnd) (in terms of the original annotated string positions) is kept.
+     * Spans completely outside the range are emptied; partially overlapping spans are substring-trimmed.
+     */
+    @OptIn(ExperimentalRichTextApi::class)
+    private fun trimSpanList(
+        spans: MutableList<RichSpan>,
+        rangeStart: Int,
+        rangeEnd: Int,
+    ) {
+        val toRemove = mutableListOf<Int>()
+
+        for (i in spans.indices) {
+            val span = spans[i]
+            val spanTextStart = span.textRange.min
+            val spanTextEnd = span.textRange.max
+
+            // Trim this span's own text
+            if (spanTextEnd <= rangeStart || spanTextStart >= rangeEnd) {
+                // Completely outside — clear text
+                span.text = ""
+            } else if (spanTextStart < rangeStart || spanTextEnd > rangeEnd) {
+                // Partially overlapping — trim
+                val trimStart = (rangeStart - spanTextStart).coerceAtLeast(0)
+                val trimEnd = (rangeEnd - spanTextStart).coerceAtMost(span.text.length)
+                span.text = span.text.substring(trimStart, trimEnd)
+            }
+            // else: fully inside, keep as-is
+
+            // Recursively trim children
+            trimSpanList(span.children, rangeStart, rangeEnd)
+
+            // Mark empty spans for removal
+            if (span.text.isEmpty() && span.children.isEmpty() && span.richSpanStyle !is RichSpanStyle.Image) {
+                toRemove.add(i)
+            }
+        }
+
+        for (i in toRemove.asReversed()) {
+            spans.removeAt(i)
+        }
+    }
+
+    /**
      * Returns the [RichTextState] as a text string.
      *
      * @return The text string.
@@ -4072,27 +4177,7 @@ public class RichTextState internal constructor(
      * @return The text string for the specified range.
      */
     public fun toText(range: TextRange): String {
-        // Create a new RichTextState with only the content within the range
-        val state = copy()
-
-        if (range.max < state.textFieldValue.text.length)
-            state.removeTextRange(
-                textRange = TextRange(
-                    start = range.max
-                        .coerceAtLeast(0),
-                    end = state.textFieldValue.text.length
-                )
-            )
-
-        if (range.min > 0)
-            state.removeTextRange(
-                textRange = TextRange(
-                    start = 0,
-                    end = range.min
-                        .coerceAtMost(state.textFieldValue.text.length)
-                )
-            )
-
+        val state = extractRangeState(range)
         return state.toText()
     }
 
@@ -4112,27 +4197,7 @@ public class RichTextState internal constructor(
      * @return The html string for the specified range.
      */
     public fun toHtml(range: TextRange): String {
-        // Create a new RichTextState with only the content within the range
-        val state = copy()
-
-        if (range.max < state.textFieldValue.text.length)
-            state.removeTextRange(
-                textRange = TextRange(
-                    start = range.max
-                        .coerceAtLeast(0),
-                    end = state.textFieldValue.text.length
-                )
-            )
-
-        if (range.min > 0)
-            state.removeTextRange(
-                textRange = TextRange(
-                    start = 0,
-                    end = range.min
-                        .coerceAtMost(state.textFieldValue.text.length)
-                )
-            )
-
+        val state = extractRangeState(range)
         return RichTextStateHtmlParser.decode(state)
     }
 
@@ -4152,27 +4217,7 @@ public class RichTextState internal constructor(
      * @return The markdown string for the specified range.
      */
     public fun toMarkdown(range: TextRange): String {
-        // Create a new RichTextState with only the content within the range
-        val state = copy()
-
-        if (range.max < state.textFieldValue.text.length)
-            state.removeTextRange(
-                textRange = TextRange(
-                    start = range.max
-                        .coerceAtLeast(0),
-                    end = state.textFieldValue.text.length
-                )
-            )
-
-        if (range.min > 0)
-            state.removeTextRange(
-                textRange = TextRange(
-                    start = 0,
-                    end = range.min
-                        .coerceAtMost(state.textFieldValue.text.length)
-                )
-            )
-
+        val state = extractRangeState(range)
         return RichTextStateMarkdownParser.decode(state)
     }
 

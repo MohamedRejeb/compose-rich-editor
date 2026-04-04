@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextLayoutResult
@@ -232,6 +231,10 @@ public fun BasicRichTextEditor(
     }
 
     CompositionLocalProvider(LocalClipboard provides richClipboardManager) {
+//        BasicTextField(
+//            state = ,
+//            outputTransformation =
+//        )
         BasicTextField(
             value = state.textFieldValue,
             onValueChange = {

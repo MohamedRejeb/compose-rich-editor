@@ -28,6 +28,7 @@ import androidx.compose.ui.util.fastCoerceAtLeast
 import androidx.compose.ui.util.fastFirstOrNull
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
+import androidx.compose.ui.util.fastForEachReversed
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.*
@@ -4077,7 +4078,7 @@ public class RichTextState internal constructor(
 
         val resultParagraphs = mutableListOf<RichParagraph>()
 
-        for ((i, paragraph) in richParagraphList.withIndex()) {
+        richParagraphList.fastForEachIndexed { i, paragraph ->
             val startTextLen = paragraph.type.startText.length
             val paragraphStart = paragraph.type.startRichSpan.textRange.min
             val contentStart = paragraphStart + startTextLen
@@ -4091,14 +4092,14 @@ public class RichTextState internal constructor(
 
             // Skip paragraphs that are entirely outside the range (including separator)
             if (paragraphEndWithSep <= rangeStart || contentStart >= rangeEnd) {
-                continue
+                return@fastForEachIndexed
             }
 
             // If only the trailing separator is in range (content itself is before range),
             // include an empty paragraph to represent the line break
-            if (contentEnd <= rangeStart && rangeStart < paragraphEndWithSep) {
+            if (rangeStart in contentEnd..<paragraphEndWithSep) {
                 resultParagraphs.add(RichParagraph())
-                continue
+                return@fastForEachIndexed
             }
 
             // This paragraph has content within the range — copy and trim
@@ -4131,8 +4132,7 @@ public class RichTextState internal constructor(
     ) {
         val toRemove = mutableListOf<Int>()
 
-        for (i in spans.indices) {
-            val span = spans[i]
+        spans.fastForEachIndexed { i, span ->
             val spanTextStart = span.textRange.min
             val spanTextEnd = span.textRange.max
 
@@ -4157,7 +4157,7 @@ public class RichTextState internal constructor(
             }
         }
 
-        for (i in toRemove.asReversed()) {
+        toRemove.fastForEachReversed { i ->
             spans.removeAt(i)
         }
     }

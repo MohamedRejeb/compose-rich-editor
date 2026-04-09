@@ -1661,7 +1661,14 @@ public class RichTextState internal constructor(
         }
 
         styledRichSpanList.clear()
-        textFieldValue = newTextFieldValue.copy(text = annotatedString.text)
+        val newTextLength = annotatedString.text.length
+        textFieldValue = newTextFieldValue.copy(
+            text = annotatedString.text,
+            selection = TextRange(
+                newTextFieldValue.selection.start.coerceIn(0, newTextLength),
+                newTextFieldValue.selection.end.coerceIn(0, newTextLength),
+            ),
+        )
         visualTransformation = VisualTransformation { _ ->
             TransformedText(
                 text = annotatedString,
@@ -3263,6 +3270,11 @@ public class RichTextState internal constructor(
         var isParagraphUpdated = false
 
         textLayoutResult?.let { textLayoutResult ->
+            val layoutTextLength = textLayoutResult.layoutInput.text.text.length
+
+            // Skip if the layout result is stale (text changed since layout was computed)
+            if (layoutTextLength != annotatedString.text.length) return
+
             val offsetLimit =
                 if (
                     textLayoutResult.multiParagraph.didExceedMaxLines &&
@@ -3271,14 +3283,18 @@ public class RichTextState internal constructor(
                 )
                     textLayoutResult.getLineEnd(textLayoutResult.multiParagraph.maxLines - 1)
                 else
-                    textLayoutResult.layoutInput.text.text.length
+                    layoutTextLength
 
-            richParagraphList.forEachIndexed { index, richParagraph ->
+            // Snapshot the list to avoid ConcurrentModificationException on SnapshotStateList
+            val paragraphs = richParagraphList.toList()
+
+            paragraphs.forEachIndexed { index, richParagraph ->
                 val paragraphType = richParagraph.type
 
                 if (
                     paragraphType is ConfigurableStartTextWidth &&
                     paragraphType.startText.isNotEmpty() &&
+                    paragraphType.startRichSpan.textRange.min >= 0 &&
                     paragraphType.startRichSpan.textRange.max <= offsetLimit
                 ) {
                     val start =

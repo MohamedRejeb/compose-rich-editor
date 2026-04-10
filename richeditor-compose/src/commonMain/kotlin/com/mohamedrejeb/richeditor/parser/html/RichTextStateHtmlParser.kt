@@ -61,6 +61,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 } else {
                     val newRichSpan = RichSpan(paragraph = currentRichParagraph)
                     newRichSpan.text = addedText
+                    newRichSpan.parent = safeCurrentRichSpan
                     safeCurrentRichSpan.children.add(newRichSpan)
                 }
 
@@ -124,10 +125,12 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                         else
                             RichParagraph()
 
-                    var paragraphType: ParagraphType = DefaultParagraph()
-                    if (name == "li" && lastOpenedTag != null) {
-                        paragraphType = encodeHtmlElementToRichParagraphType(lastOpenedTag, currentListLevel)
-                    }
+                    val paragraphType: ParagraphType =
+                        if (name == "li" && lastOpenedTag != null)
+                            encodeHtmlElementToRichParagraphType(lastOpenedTag, currentListLevel)
+                        else
+                            DefaultParagraph()
+
                     val cssParagraphStyle = CssEncoder.parseCssStyleMapToParagraphStyle(cssStyleMap, attributes)
 
                     newRichParagraph.paragraphStyle = newRichParagraph.paragraphStyle.merge(cssParagraphStyle)
@@ -182,21 +185,34 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
                     // Keep the same style when having a line break in the middle of a paragraph,
                     // Ex: <h1>Hello<br>World!</h1>
-                    if (isLastOpenedTagBlockElement && !isCurrentRichParagraphBlank)
-                        currentRichSpan?.let { richSpan ->
-                            val newRichSpan = richSpan.copy(
+                    if (currentRichSpan != null && openedTags.isNotEmpty()) {
+                        currentRichSpan = null
+
+                        openedTags.forEach { (name, attributes) ->
+                            val cssStyleMap = attributes["style"]?.let { CssEncoder.parseCssStyle(it) } ?: emptyMap()
+                            val cssSpanStyle = CssEncoder.parseCssStyleMapToSpanStyle(cssStyleMap)
+                            val tagSpanStyle = htmlElementsSpanStyleEncodeMap[name]
+                            val tagWithCssSpanStyle = cssSpanStyle.customMerge(tagSpanStyle)
+
+                            val newRichSpan = RichSpan(
+                                children = mutableListOf(),
+                                paragraph = newParagraph,
+                                parent = currentRichSpan,
                                 text = "",
                                 textRange = TextRange.Zero,
-                                paragraph = newParagraph,
-                                children = mutableListOf(),
+                                spanStyle = tagWithCssSpanStyle
                             )
 
-                            newParagraph.children.add(newRichSpan)
+                            if (currentRichSpan == null) {
+                                newParagraph.children.add(newRichSpan)
+                            } else {
+                                currentRichSpan?.children?.add(newRichSpan)
+                            }
 
                             currentRichSpan = newRichSpan
                         }
-                    else
-                        currentRichSpan = null
+
+                    }
                 }
             }
             .onCloseTag { name, _ ->
@@ -252,7 +268,8 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         }
 
         richParagraphList.forEach { richParagraph ->
-            richParagraph.removeEmptyChildren()
+            if (!richParagraph.isEmpty())
+                richParagraph.removeEmptyChildren()
         }
 
         return RichTextState(
@@ -261,6 +278,15 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
     }
 
     override fun decode(richTextState: RichTextState): String {
+        if (richTextState.richParagraphList.isEmpty())
+            return "<p></p>"
+
+        if (
+            richTextState.richParagraphList.size == 1 &&
+            richTextState.richParagraphList.first().isEmpty()
+        )
+            return "<p></p>"
+
         val builder = StringBuilder()
 
         val openedListTagNames = mutableListOf<String>()

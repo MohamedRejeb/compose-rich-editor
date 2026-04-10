@@ -10,6 +10,7 @@ import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startText
 import com.mohamedrejeb.richeditor.utils.append
 import androidx.compose.ui.util.fastForEachIndexed
+import com.mohamedrejeb.richeditor.clipboard.createRichTextClipboardManager
 import kotlin.math.max
 import kotlin.math.min
 
@@ -24,8 +25,19 @@ internal class RichTextClipboardManager(
     private val richTextState: RichTextState,
     private val clipboardManager: ClipboardManager
 ): ClipboardManager {
+//    private val manager = createRichTextClipboardManager(
+//        richTextState = richTextState,
+//        clipboardManager = clipboardManager
+//    )
+
     override fun getText(): AnnotatedString? {
-        return clipboardManager.getText()
+//        val content = manager.getRichTextContent()
+//        println("content: $content")
+
+//        if (content != null && content.htmlText != null)
+//            richTextState.setHtml(content.htmlText)
+
+        return null
     }
 
     @OptIn(ExperimentalRichTextApi::class)

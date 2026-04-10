@@ -1,5 +1,6 @@
 package com.mohamedrejeb.richeditor.parser.html
 
+import androidx.compose.ui.text.TextRange
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichTextState
@@ -486,14 +487,131 @@ class RichTextStateHtmlParserDecodeTest {
         assertEquals(expectedHtml, richTextState.toHtml())
     }
 
+
+
+    @OptIn(ExperimentalRichTextApi::class)
     @Test
-    fun testDecodeSpanWithOnlySpace() {
-        val html = "<meta charset='utf-8'><span style=\"box-sizing: border-box; color: rgb(240, 246, 252); font-family: -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, &quot;Noto Sans&quot;, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(1, 4, 9); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;\">results in the</span><span style=\"color: rgb(240, 246, 252); font-family: -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, &quot;Noto Sans&quot;, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(1, 4, 9); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;\"><span> </span></span><b style=\"box-sizing: border-box; font-weight: var(--base-text-weight-semibold, 600); color: rgb(240, 246, 252); font-family: -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, &quot;Noto Sans&quot;, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(1, 4, 9); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;\">Horizon-School</b>"
-        val richTextState = RichTextStateHtmlParser.encode(html)
+    fun testToHtmlWithRange() {
+        // Test basic text conversion with range
+        val richTextState = RichTextStateHtmlParser.encode("<p>Hello World!</p>")
+
+        // Test middle range
+        assertEquals(
+            "<p>World</p>",
+            richTextState.toHtml(TextRange(6, 11))
+        )
+
+        // Test start range
+        assertEquals(
+            "<p>Hello</p>",
+            richTextState.toHtml(TextRange(0, 5))
+        )
+
+        // Test end range
+        assertEquals(
+            "<p>World&excl;</p>",
+            richTextState.toHtml(TextRange(6, 12))
+        )
+
+        // Test full range
+        assertEquals(
+            "<p>Hello World&excl;</p>",
+            richTextState.toHtml(TextRange(0, 12))
+        )
+
+        // Test empty range
+        assertEquals(
+            "<p></p>",
+            richTextState.toHtml(TextRange(0, 0))
+        )
+    }
+
+    @OptIn(ExperimentalRichTextApi::class)
+    @Test
+    fun testToHtmlWithInvalidRange() {
+        val richTextState = RichTextStateHtmlParser.encode("<p>Hello World</p>")
+
+        // Test range with start > end
+        assertEquals(
+            "<p>llo</p>",
+            richTextState.toHtml(TextRange(5, 2))
+        )
+
+        // Test range beyond text length
+        assertEquals(
+            "<p>World</p>",
+            richTextState.toHtml(TextRange(6, 19))
+        )
+    }
+
+    @OptIn(ExperimentalRichTextApi::class)
+    @Test
+    fun testToHtmlWithNestedStyles() {
+        val richTextState = RichTextStateHtmlParser.encode(
+            "<p>Start <i>italic with <b>bold</b> text</i> end</p>"
+        )
+
+        // Test selecting only nested bold text
+        assertEquals(
+            "<p><b><i>bold</i></b></p>", // order of tags may change here because of optimizations
+            richTextState.toHtml(TextRange(18, 22))
+        )
+
+        // Test selecting partial nested text
+        assertEquals(
+            "<p><i>with <b>bold</b></i></p>",
+            richTextState.toHtml(TextRange(13, 22))
+        )
+
+        // Test selecting entire styled section
+        assertEquals(
+            "<p><i>italic with <b>bold</b> text</i></p>",
+            richTextState.toHtml(TextRange(6, 27))
+        )
+    }
+
+    @OptIn(ExperimentalRichTextApi::class)
+    @Test
+    fun testToHtmlWithRangeAndStyles() {
+        // Test text with mixed styles
+        val richTextState = RichTextStateHtmlParser.encode(
+            "<p>Hello <b>Bold</b> and <i>Italic</i> text!</p>"
+        )
+
+        // Test selecting only bold text
+        assertEquals(
+            "<p><b>Bold</b></p>",
+            richTextState.toHtml(TextRange(6, 10))
+        )
+
+        // Test selecting only italic text
+        assertEquals(
+            "<p><i>Italic</i></p>",
+            richTextState.toHtml(TextRange(15, 21))
+        )
+
+        // Test selecting text with multiple styles
+        assertEquals(
+            "<p><b>Bold</b> and <i>Italic</i></p>",
+            richTextState.toHtml(TextRange(6, 21))
+        )
+
+        // Test selecting partial styled text
+        assertEquals(
+            "<p>o <b>Bold</b> and <i>Ital</i></p>",
+            richTextState.toHtml(TextRange(4, 19))
+        )
+    }
+
+    @Test
+    fun testToHtmlWithRangeReversed() {
+        val richTextState = RichTextStateHtmlParser.encode(
+            "<p>Hey all <b>bruh </b><i>emnn <u>fdf fdf</u> fdf</i></p><p><i>so yes </i></p>"
+        )
 
         assertEquals(
-            "results in the Horizon-School",
-            richTextState.annotatedString.text
+            richTextState.toHtml(TextRange(16, 28)),
+            richTextState.toHtml(TextRange(28, 16))
         )
     }
 

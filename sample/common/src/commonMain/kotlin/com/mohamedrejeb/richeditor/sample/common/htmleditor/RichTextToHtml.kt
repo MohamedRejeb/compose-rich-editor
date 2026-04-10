@@ -3,6 +3,7 @@ package com.mohamedrejeb.richeditor.sample.common.htmleditor
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -86,13 +87,18 @@ fun RichTextToHtml(
                     .padding(vertical = 12.dp, horizontal = 12.dp)
             ) {
                 item {
-                    Text(
-                        text = html,
-                        style = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
+                    SelectionContainer(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
-                    )
+                    ) {
+                        Text(
+                            text = html,
+                            style = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        )
+                    }
                 }
             }
         }

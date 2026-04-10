@@ -169,7 +169,7 @@ class RichTextStateMarkdownParserDecodeTest {
             expected =
                 """
                     Hello
-                    
+
                     <br>
                     <br>
                     World!
@@ -207,7 +207,7 @@ class RichTextStateMarkdownParserDecodeTest {
 
         assertEquals(
             expected = """
-                
+
                 <br>
             """.trimIndent(),
             actual = markdown,
@@ -220,7 +220,7 @@ class RichTextStateMarkdownParserDecodeTest {
         state.setMarkdown(
             """
                 Hello
-                
+
                 World!
             """.trimIndent(),
         )
@@ -230,7 +230,7 @@ class RichTextStateMarkdownParserDecodeTest {
         assertEquals(
             expected = """
                 Hello
-                
+
                 World!
             """.trimIndent(),
             actual = markdown,
@@ -243,11 +243,11 @@ class RichTextStateMarkdownParserDecodeTest {
         state.setMarkdown(
             """
                 Hello
-            
+
                 <br>
-                
+
                 <br>
-                
+
                 World!
             """.trimIndent(),
         )
@@ -257,7 +257,7 @@ class RichTextStateMarkdownParserDecodeTest {
         assertEquals(
             expected = """
                 Hello
-                
+
                 <br>
                 <br>
                 World!
@@ -272,12 +272,12 @@ class RichTextStateMarkdownParserDecodeTest {
         state.setMarkdown(
             """
                 Hello
-            
+
                 <br>
                 q
-                
+
                 <br>
-                
+
                 World!
             """.trimIndent(),
         )
@@ -287,10 +287,10 @@ class RichTextStateMarkdownParserDecodeTest {
         assertEquals(
             expected = """
                 Hello
-                
+
                 <br>
                 q
-                
+
                 <br>
                 World!
             """.trimIndent(),
@@ -375,6 +375,97 @@ class RichTextStateMarkdownParserDecodeTest {
                 ## Emphasis
             """.trimIndent(),
             state.toMarkdown()
+        )
+    }
+
+    @Test
+    fun testDecodeTextRange() {
+        val state = RichTextState()
+        state.setMarkdown("""
+            Hello **bold** text
+            with *italic* style
+            and ~~strikethrough~~ formatting
+        """.trimIndent())
+
+        // Test middle range
+        assertEquals(
+            "**bold** text\nwith",
+            state.toMarkdown(TextRange(6, 20))
+        )
+
+        // Test start range
+        assertEquals(
+            "Hello **bold**",
+            state.toMarkdown(TextRange(0, 10))
+        )
+
+        // Test end range
+        assertEquals(
+            "~~strikethrough~~ formatting",
+            state.toMarkdown(TextRange(38, 62))
+        )
+
+        // Test empty range
+        assertEquals(
+            "",
+            state.toMarkdown(TextRange(5, 5))
+        )
+
+        // Test invalid range
+        assertEquals(
+            "",
+            state.toMarkdown(TextRange(100, 200))
+        )
+    }
+
+    @Test
+    fun testDecodeTextRangeWithPartialFormatting() {
+        val state = RichTextState()
+        state.setMarkdown("""
+            This is **bold and *italic* text** here
+            with ~~strike through~~ formatting
+        """.trimIndent())
+
+        // Test range that starts in middle of bold and ends after italic
+        assertEquals(
+            "**bold and *italic* text**",
+            state.toMarkdown(TextRange(8, 28))
+        )
+
+        // Test range that starts before bold and ends in middle of italic
+        assertEquals(
+            "This is **bold and *ita***",
+            state.toMarkdown(TextRange(0, 20))
+        )
+
+        // Test range that starts in middle of one format and ends in middle of another
+        assertEquals(
+            "**and *italic* text** here\nwith ~~strike~~",
+            state.toMarkdown(TextRange(13, 45))
+        )
+    }
+
+    @Test
+    fun testDecodeTextRangeWithLists() {
+        val state = RichTextState()
+        state.setMarkdown("""
+            1. First item
+            2. Second **bold** item
+                - Subitem one
+                - Subitem two
+            3. Third item
+        """.trimIndent())
+
+        // Test range within a list
+        assertEquals(
+            "1. Second **bold** item\n    - Subitem one",
+            state.toMarkdown(TextRange(14, 47))
+        )
+
+        // Test range across multiple list items
+        assertEquals(
+            "\n1. Second **bold** item\n    - Subitem one\n    - Subitem two\n2. Third",
+            state.toMarkdown(TextRange(13, 70))
         )
     }
 

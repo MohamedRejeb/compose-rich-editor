@@ -61,6 +61,8 @@ venv/
 .junie
 .claude
 
+CLAUDE.md
+
 kotlin-js-store
 
 ### Plans ###

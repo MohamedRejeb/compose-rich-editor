@@ -226,6 +226,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                             val cssSpanStyle = CssEncoder.parseCssStyleMapToSpanStyle(cssStyleMap)
                             val tagSpanStyle = htmlElementsSpanStyleEncodeMap[name]
                             val tagWithCssSpanStyle = cssSpanStyle.customMerge(tagSpanStyle)
+                            val richSpanStyle = encodeHtmlElementToRichSpanStyle(name, attributes)
 
                             val newRichSpan = RichSpan(
                                 children = mutableListOf(),
@@ -233,7 +234,8 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                                 parent = currentRichSpan,
                                 text = "",
                                 textRange = TextRange.Zero,
-                                spanStyle = tagWithCssSpanStyle
+                                spanStyle = tagWithCssSpanStyle,
+                                richSpanStyle = richSpanStyle,
                             )
 
                             if (currentRichSpan == null) {

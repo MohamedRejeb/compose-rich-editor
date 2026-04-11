@@ -185,9 +185,6 @@ class RichTextStateHtmlParserBugTest {
     // #586: <br> breaks <a> tag
     // ========================================================================
 
-    // TODO: <br> inside an inline element (<a>, <strong>, etc.) creates a new RichParagraph
-    //  which loses the parent span's RichSpanStyle (Link in this case).
-    @Ignore
     @Test
     fun testIssue586_brInsideLinkPreservesLink() {
         // Input: <a href="https://example.com"><br>Text<br></a>

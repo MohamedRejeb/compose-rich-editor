@@ -904,6 +904,7 @@ public class RichTextState internal constructor(
             if (selection.collapsed) {
                 val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
                 paragraph.paragraphStyle = paragraph.paragraphStyle.merge(paragraphStyle)
+                clearLineBreakContinuations(paragraph)
             }
             // If the selection is not collapsed, we add the paragraph style to all the paragraphs in the selection
             else {
@@ -911,6 +912,7 @@ public class RichTextState internal constructor(
                 if (paragraphs.isEmpty()) return
                 paragraphs.fastForEach {
                     it.paragraphStyle = it.paragraphStyle.merge(paragraphStyle)
+                    clearLineBreakContinuations(it)
                 }
             }
             // We update the annotated string to reflect the changes
@@ -940,6 +942,7 @@ public class RichTextState internal constructor(
             if (selection.collapsed) {
                 val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
                 paragraph.paragraphStyle = paragraph.paragraphStyle.unmerge(paragraphStyle)
+                clearLineBreakContinuations(paragraph)
             }
             // If the selection is not collapsed, we remove the paragraph style from all the paragraphs in the selection
             else {
@@ -947,6 +950,7 @@ public class RichTextState internal constructor(
                 if (paragraphs.isEmpty()) return
                 paragraphs.fastForEach {
                     it.paragraphStyle = it.paragraphStyle.unmerge(paragraphStyle)
+                    clearLineBreakContinuations(it)
                 }
             }
             // We update the annotated string to reflect the changes
@@ -1518,6 +1522,9 @@ public class RichTextState internal constructor(
             (firstNonEmptyChildIndex ?: selection.min).coerceAtLeast(0)
 
         paragraph.type = newType
+
+        // A paragraph change means this and its trailing <br> continuations are independent now
+        clearLineBreakContinuations(paragraph)
 
         // If the paragraph type start text length didn't change, we don't need to update the text field value
         if (paragraphOldStartTextLength == newType.startText.length)
@@ -3263,6 +3270,23 @@ public class RichTextState internal constructor(
         val richSpanList = getRichSpanListByTextRange(textRange)
 
         return richSpanList.getCommonStyle() ?: RichSpanStyle.DefaultSpanStyle
+    }
+
+    /**
+     * Clears [RichParagraph.isFromLineBreak] on the given paragraph and all
+     * consecutive trailing paragraphs that have `isFromLineBreak = true`.
+     *
+     * This ensures that when a paragraph's style or type changes, its `<br>`
+     * continuations become independent paragraphs in the HTML output.
+     */
+    private fun clearLineBreakContinuations(paragraph: RichParagraph) {
+        paragraph.isFromLineBreak = false
+        val index = richParagraphList.indexOf(paragraph)
+        if (index < 0) return
+        for (i in (index + 1)..richParagraphList.lastIndex) {
+            if (!richParagraphList[i].isFromLineBreak) break
+            richParagraphList[i].isFromLineBreak = false
+        }
     }
 
     /**

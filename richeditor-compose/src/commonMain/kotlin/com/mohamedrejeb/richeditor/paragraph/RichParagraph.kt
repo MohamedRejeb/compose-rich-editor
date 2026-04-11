@@ -18,6 +18,12 @@ internal class RichParagraph(
     val children: MutableList<RichSpan> = mutableListOf(),
     var paragraphStyle: ParagraphStyle = DefaultParagraphStyle,
     var type: ParagraphType = DefaultParagraph(),
+    /**
+     * When true, this paragraph was created from a `<br>` tag during HTML parsing
+     * and should be joined with the previous paragraph using `<br>` in HTML output
+     * rather than being wrapped in its own `<p>` tag.
+     */
+    var isFromLineBreak: Boolean = false,
 ) {
 
     @OptIn(ExperimentalRichTextApi::class)

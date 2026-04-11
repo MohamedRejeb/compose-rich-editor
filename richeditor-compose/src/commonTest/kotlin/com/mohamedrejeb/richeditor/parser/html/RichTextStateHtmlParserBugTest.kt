@@ -1,8 +1,11 @@
 package com.mohamedrejeb.richeditor.parser.html
 
+import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
@@ -226,9 +229,6 @@ class RichTextStateHtmlParserBugTest {
     // #583: \n rendered as empty <p></p> instead of <br> in HTML output
     // ========================================================================
 
-    // TODO: <br> within a paragraph creates separate RichParagraph objects during parsing.
-    //  The HTML decoder then outputs each as a separate <p> instead of using <br> within one <p>.
-    @Ignore
     @Test
     fun testIssue583_newlinesWithinParagraphExportAsBr() {
         // When a user types newlines within a paragraph (not Enter to create new paragraph),
@@ -261,6 +261,106 @@ class RichTextStateHtmlParserBugTest {
             pCount,
             "#583: Single paragraph with <br> should export as 1 <p>, not $pCount. HTML: '$html'"
         )
+    }
+
+    @Test
+    fun testIssue583_brRoundTrip() {
+        // <br> inside a paragraph should survive round-trip
+        val input = "<p>Line one<br>Line two<br>Line three</p>"
+        val state = RichTextState()
+        state.setHtml(input)
+
+        val html = state.toHtml()
+        assertEquals(input, html, "#583: <br> round-trip should be exact")
+    }
+
+    @Test
+    fun testIssue583_lineBreakFlagClearedOnParagraphStyleChange() {
+        // Changing paragraph style (e.g. alignment) on a <br> paragraph
+        // should clear isFromLineBreak so it exports as its own <p>
+        val state = RichTextState()
+        state.setHtml("<p>Line one<br>Line two</p>")
+
+        // Verify initial state: line two should be isFromLineBreak
+        assertTrue(state.richParagraphList[1].isFromLineBreak, "Line two should be from linebreak initially")
+
+        // Select "Line two" and change alignment
+        val lineTwoStart = state.annotatedString.text.indexOf("Line two")
+        state.selection = TextRange(lineTwoStart, lineTwoStart + "Line two".length)
+        state.addParagraphStyle(ParagraphStyle(textAlign = TextAlign.Center))
+
+        // isFromLineBreak should now be cleared
+        assertFalse(state.richParagraphList[1].isFromLineBreak, "isFromLineBreak should be cleared after paragraph style change")
+
+        // HTML should now have two <p> tags
+        val html = state.toHtml()
+        val pCount = "<p".toRegex().findAll(html).count()
+        assertEquals(2, pCount, "Should have 2 <p> tags after style change. HTML: '$html'")
+    }
+
+    @Test
+    fun testIssue583_parentStyleChangeClearsTrailingContinuations() {
+        // Changing the FIRST paragraph's style should clear isFromLineBreak
+        // on all trailing continuation paragraphs
+        val state = RichTextState()
+        state.setHtml("<p>Line one<br>Line two<br>Line three</p>")
+
+        assertEquals(3, state.richParagraphList.size)
+        assertFalse(state.richParagraphList[0].isFromLineBreak)
+        assertTrue(state.richParagraphList[1].isFromLineBreak)
+        assertTrue(state.richParagraphList[2].isFromLineBreak)
+
+        // Select "Line one" (the parent paragraph) and change alignment
+        val lineOneStart = state.annotatedString.text.indexOf("Line one")
+        state.selection = TextRange(lineOneStart, lineOneStart + "Line one".length)
+        state.addParagraphStyle(ParagraphStyle(textAlign = TextAlign.Center))
+
+        // All trailing continuations should be cleared
+        assertFalse(state.richParagraphList[1].isFromLineBreak, "Line two should no longer be from linebreak")
+        assertFalse(state.richParagraphList[2].isFromLineBreak, "Line three should no longer be from linebreak")
+
+        // HTML should have 3 separate <p> tags
+        val html = state.toHtml()
+        val pCount = "<p".toRegex().findAll(html).count()
+        assertEquals(3, pCount, "Should have 3 <p> tags after parent style change. HTML: '$html'")
+    }
+
+    @Test
+    fun testIssue583_lineBreakFlagClearedOnListToggle() {
+        // Converting a <br> paragraph to a list should clear isFromLineBreak
+        val state = RichTextState()
+        state.setHtml("<p>Line one<br>Line two</p>")
+
+        assertTrue(state.richParagraphList[1].isFromLineBreak)
+
+        // Select "Line two" and toggle ordered list
+        val lineTwoStart = state.annotatedString.text.indexOf("Line two")
+        state.selection = TextRange(lineTwoStart, lineTwoStart + "Line two".length)
+        state.toggleOrderedList()
+
+        assertFalse(state.richParagraphList[1].isFromLineBreak, "isFromLineBreak should be cleared after list toggle")
+    }
+
+    @Test
+    fun testIssue583_lineBreakFlagPreservedOnSpanStyleChange() {
+        // Changing SPAN style (bold, italic) should NOT clear isFromLineBreak
+        // because span styles don't change the paragraph structure
+        val state = RichTextState()
+        state.setHtml("<p>Line one<br>Line two</p>")
+
+        assertTrue(state.richParagraphList[1].isFromLineBreak)
+
+        // Select "Line two" and make it bold
+        val lineTwoStart = state.annotatedString.text.indexOf("Line two")
+        state.selection = TextRange(lineTwoStart, lineTwoStart + "Line two".length)
+        state.toggleSpanStyle(SpanStyle(fontWeight = FontWeight.Bold))
+
+        // isFromLineBreak should still be true — bold doesn't change paragraph structure
+        assertTrue(state.richParagraphList[1].isFromLineBreak, "isFromLineBreak should survive span style changes")
+
+        // HTML should still use <br>
+        val html = state.toHtml()
+        assertTrue(html.contains("<br>"), "Should still use <br>. HTML: '$html'")
     }
 
     // ========================================================================

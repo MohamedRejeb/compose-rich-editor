@@ -4090,10 +4090,13 @@ public class RichTextState internal constructor(
                 levelNumberMap.remove(type.level)
 
             if (type is OrderedList) {
+                // Use startFrom for the first item if explicitly set (from <ol start="N">),
+                // otherwise default to 1
+                val isFirstAtLevel = levelNumberMap[type.level] == null
                 val orderedListNumber =
                     levelNumberMap[type.level]
                         ?.plus(1)
-                        ?: 1
+                        ?: type.startFrom
 
                 levelNumberMap[type.level] = orderedListNumber
 
@@ -4101,13 +4104,17 @@ public class RichTextState internal constructor(
                     orderedListStartTextSpanStyle =
                         richParagraph.getFirstNonEmptyChild()?.spanStyle ?: SpanStyle()
 
+                // Preserve startFrom on the first item so it survives re-runs
+                val preservedStartFrom = if (isFirstAtLevel) type.startFrom else 1
+
                 tempTextFieldValue = updateParagraphType(
                     paragraph = richParagraph,
                     newType = OrderedList(
                         number = orderedListNumber,
                         config = config,
                         startTextWidth = type.startTextWidth,
-                        initialLevel = type.level
+                        initialLevel = type.level,
+                        startFrom = preservedStartFrom,
                     ),
                     textFieldValue = tempTextFieldValue,
                 )

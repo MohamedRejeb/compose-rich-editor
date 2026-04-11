@@ -32,6 +32,12 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         val toKeepEmptyParagraphIndexSet = mutableSetOf<Int>()
         var currentRichSpan: RichSpan? = null
         var currentListLevel = 0
+        // Tracks the next item number per list nesting level for ordered lists.
+        // Key = list level (1-based), Value = next number to assign.
+        val orderedListCounters = mutableMapOf<Int, Int>()
+        // Tracks the explicit start value per list level (from <ol start="N">).
+        // Only set when start != 1. Used to propagate startFrom to the first OrderedList item.
+        val orderedListStartValues = mutableMapOf<Int, Int>()
 
         val handler = KsoupHtmlHandler
             .Builder()
@@ -80,8 +86,14 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 }
 
                 if (name == "ul" || name == "ol") {
-                    // Todo: Apply ul/ol styling if exists
-                    currentListLevel = currentListLevel + 1
+                    currentListLevel += 1
+                    if (name == "ol") {
+                        val startAttr = attributes["start"]?.toIntOrNull() ?: 1
+                        orderedListCounters[currentListLevel] = startAttr
+                        if (startAttr != 1) {
+                            orderedListStartValues[currentListLevel] = startAttr
+                        }
+                    }
                     return@onOpenTag
                 }
 
@@ -101,8 +113,16 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 val isCurrentTagBlockElement = name in htmlBlockElements
                 val isLastOpenedTagBlockElement = lastOpenedTag in htmlBlockElements
 
-                // For <li> tags inside <ul> or <ol> tags
-                if (
+                // Handle <li value="N"> attribute — overrides the counter for this item
+                if (name == "li" && lastOpenedTag == "ol") {
+                    val valueAttr = attributes["value"]?.toIntOrNull()
+                    if (valueAttr != null) {
+                        orderedListCounters[currentListLevel] = valueAttr
+                    }
+                }
+
+                // For <li> tags inside <ul> or <ol> tags — reuse blank current paragraph
+                val isFirstLiInBlankParagraph =
                     lastOpenedTag != null &&
                     isCurrentTagBlockElement &&
                     isLastOpenedTagBlockElement &&
@@ -110,8 +130,9 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     currentRichParagraph != null &&
                     currentRichParagraph.type is DefaultParagraph &&
                     isCurrentRichParagraphBlank
-                ) {
-                    val paragraphType = encodeHtmlElementToRichParagraphType(lastOpenedTag, currentListLevel)
+
+                if (isFirstLiInBlankParagraph) {
+                    val paragraphType = encodeHtmlElementToRichParagraphType(lastOpenedTag!!, currentListLevel, orderedListCounters, orderedListStartValues)
                     currentRichParagraph.type = paragraphType
 
                     val cssParagraphStyle = CssEncoder.parseCssStyleMapToParagraphStyle(cssStyleMap, attributes)
@@ -125,9 +146,12 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                         else
                             RichParagraph()
 
+                    // Only assign paragraph type if not already handled above
                     val paragraphType: ParagraphType =
-                        if (name == "li" && lastOpenedTag != null)
-                            encodeHtmlElementToRichParagraphType(lastOpenedTag, currentListLevel)
+                        if (isFirstLiInBlankParagraph)
+                            currentRichParagraph.type
+                        else if (name == "li" && lastOpenedTag != null)
+                            encodeHtmlElementToRichParagraphType(lastOpenedTag, currentListLevel, orderedListCounters, orderedListStartValues)
                         else
                             DefaultParagraph()
 
@@ -238,6 +262,10 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 }
 
                 if (name == "ul" || name == "ol") {
+                    if (name == "ol") {
+                        orderedListCounters.remove(currentListLevel)
+                        orderedListStartValues.remove(currentListLevel)
+                    }
                     currentListLevel = (currentListLevel - 1).coerceAtLeast(0)
                     return@onCloseTag
                 }
@@ -382,7 +410,11 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
             }
 
             if (isOpenParagraphGroup()) {
-                builder.append("<$paragraphGroupTagName>")
+                if (paragraphGroupTagName == "ol" && richParagraphType is OrderedList && richParagraphType.startFrom > 1) {
+                    builder.append("<ol start=\"${richParagraphType.startFrom}\">")
+                } else {
+                    builder.append("<$paragraphGroupTagName>")
+                }
                 openedListTagNames.add(paragraphGroupTagName)
             }
 
@@ -570,10 +602,22 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
     private fun encodeHtmlElementToRichParagraphType(
         tagName: String,
         listLevel: Int,
+        orderedListCounters: MutableMap<Int, Int>,
+        orderedListStartValues: MutableMap<Int, Int>,
     ): ParagraphType {
         return when (tagName) {
             "ul" -> UnorderedList(initialLevel = listLevel)
-            "ol" -> OrderedList(number = 1, initialLevel = listLevel)
+            "ol" -> {
+                val number = orderedListCounters[listLevel] ?: 1
+                orderedListCounters[listLevel] = number + 1
+                // Set startFrom on the first item from <ol start="N">, default 1
+                val startFrom = orderedListStartValues.remove(listLevel) ?: 1
+                OrderedList(
+                    number = number,
+                    initialLevel = listLevel,
+                    startFrom = startFrom,
+                )
+            }
             else -> DefaultParagraph()
         }
     }

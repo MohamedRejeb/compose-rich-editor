@@ -1,7 +1,10 @@
 package com.mohamedrejeb.richeditor.parser.markdown
 
+import com.mohamedrejeb.richeditor.model.RichTextState
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.test.assertNotNull
 
 class MarkdownUtilsTest {
 
@@ -80,6 +83,69 @@ class MarkdownUtilsTest {
             expectedOutput,
             correctMarkdownText(markdownInput)
         )
+    }
+
+    @Test
+    fun testDeepNestedList20Levels() {
+        val input = buildString {
+            repeat(20) { level ->
+                append("  ".repeat(level))  // 2-space indent per level
+                appendLine("- Item ${level + 1}")
+            }
+        }.trimEnd()
+
+        val output = correctMarkdownText(input)
+
+        assertTrue(
+            output.length >= input.length,
+            "Lost ${input.length - output.length} characters"
+        )
+    }
+
+    @Test
+    fun testDeepNestedListWithFormatting() {
+        val input = buildString {
+            repeat(20) { level ->
+                append("  ".repeat(level))
+                appendLine("- Item ${level + 1} **bold** *italic*")
+            }
+        }.trimEnd()
+
+        val output = correctMarkdownText(input)
+        assertTrue(output.length >= input.length)
+    }
+
+
+    @Test
+    fun testParseDeepNestedListDoesNotCrash() {
+        // This should not throw StringIndexOutOfBoundsException
+        val markdown = buildString {
+            repeat(20) { level ->
+                append("  ".repeat(level))
+                appendLine("- Item ${level + 1} **bold** [link](url)")
+            }
+        }.trimEnd()
+
+        // This calls correctMarkdownText(), builds AST, then calls getTextInNode()
+        val encoded = RichTextStateMarkdownParser.encode(markdown)
+        assertTrue(encoded.richParagraphList.isNotEmpty())
+    }
+
+    @Test
+    fun testNestedListWithoutCrash() {
+        // From the production crash report
+        val message = buildString {
+            repeat(20) { i ->
+                append("- Item $i\n")
+                append("  - Nested $i\n")
+            }
+            append("**Bold at end** and [link](http://test.com)")
+        }
+
+        // Should not throw StringIndexOutOfBoundsException
+        val state = RichTextState()
+        state.setMarkdown(message)
+        assertNotNull(state.annotatedString.text)
     }
 
 }

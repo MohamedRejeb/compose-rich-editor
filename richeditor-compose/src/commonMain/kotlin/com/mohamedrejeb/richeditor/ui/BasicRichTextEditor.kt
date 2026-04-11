@@ -11,6 +11,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -25,6 +26,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
+import com.mohamedrejeb.richeditor.clipboard.ClipboardEventEffect
 import com.mohamedrejeb.richeditor.clipboard.createRichTextClipboardManager
 import com.mohamedrejeb.richeditor.model.RichTextState
 import kotlinx.coroutines.CoroutineScope
@@ -205,6 +207,8 @@ public fun BasicRichTextEditor(
         )
     }
 
+    ClipboardEventEffect(richTextState = state)
+
     LaunchedEffect(singleParagraph) {
         state.singleParagraphMode = singleParagraph
     }
@@ -231,10 +235,6 @@ public fun BasicRichTextEditor(
     }
 
     CompositionLocalProvider(LocalClipboard provides richClipboardManager) {
-//        BasicTextField(
-//            state = ,
-//            outputTransformation =
-//        )
         BasicTextField(
             value = state.textFieldValue,
             onValueChange = {
@@ -244,6 +244,9 @@ public fun BasicRichTextEditor(
                 state.onTextFieldValueChange(it)
             },
             modifier = modifier
+                .onFocusChanged { focusState ->
+                    state.isFocused = focusState.isFocused
+                }
                 .onPreviewKeyEvent { event ->
                     if (readOnly)
                         return@onPreviewKeyEvent false

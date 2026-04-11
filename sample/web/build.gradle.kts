@@ -15,7 +15,12 @@ kotlin {
     }
 
     wasmJs {
-        browser()
+        outputModuleName = "web"
+        browser {
+            commonWebpackConfig {
+                outputFileName = "web.js"
+            }
+        }
         binaries.executable()
     }
 

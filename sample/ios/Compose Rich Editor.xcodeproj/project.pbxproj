@@ -274,7 +274,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd \"$SRCROOT/../..\"\n./gradlew :sample:common:embedAndSignAppleFrameworkForXcode\n";
+			shellScript = "if [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"\n  exit 0\nfi\ncd \"$SRCROOT/../..\"\n./gradlew :sample:common:embedAndSignAppleFrameworkForXcode";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -464,7 +464,7 @@
 					"-framework",
 					Common,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.mohamedrejeb.Compose-Rich-Editor";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mohamedrejeb.Compose-Rich-Editorr";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -500,7 +500,7 @@
 					"-framework",
 					Common,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.mohamedrejeb.Compose-Rich-Editor";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mohamedrejeb.Compose-Rich-Editorr";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;

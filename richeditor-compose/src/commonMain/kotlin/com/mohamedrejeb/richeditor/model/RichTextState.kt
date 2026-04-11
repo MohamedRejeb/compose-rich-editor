@@ -66,6 +66,37 @@ public class RichTextState internal constructor(
     internal val usedInlineContentMapKeys = mutableSetOf<String>()
 
     /**
+     * Pending HTML from clipboard, set by platform clipboard managers during [getClipEntry].
+     * Consumed by [onTextFieldValueChange] on the next text addition (paste).
+     */
+    internal var pendingClipboardHtml: String? = null
+
+    /**
+     * The last non-collapsed selection. Updated whenever the selection changes from a
+     * non-collapsed range to a different value. Used by clipboard managers on platforms
+     * (e.g. Android) where the selection collapses before [setClipEntry] is called.
+     */
+    internal var lastNonCollapsedSelection: TextRange = TextRange.Zero
+
+    /**
+     * Returns the best available selection for copy operations.
+     * Prefers the current selection if it's non-collapsed, otherwise falls back
+     * to [lastNonCollapsedSelection]. Returns null if neither is usable.
+     */
+    internal val copySelection: TextRange?
+        get() {
+            if (!selection.collapsed) return selection
+            if (!lastNonCollapsedSelection.collapsed) return lastNonCollapsedSelection
+            return null
+        }
+
+    /**
+     * Whether the text field is currently focused.
+     * Updated by [BasicRichTextEditor] via [onFocusChanged].
+     */
+    internal var isFocused: Boolean = false
+
+    /**
      * The annotated string representing the rich text.
      */
     public var annotatedString: AnnotatedString by mutableStateOf(AnnotatedString(text = ""))
@@ -1532,6 +1563,17 @@ public class RichTextState internal constructor(
      * @param newTextFieldValue the new text field value.
      */
     internal fun onTextFieldValueChange(newTextFieldValue: TextFieldValue) {
+        // Check for pending HTML from clipboard paste
+        val pendingHtml = pendingClipboardHtml
+        if (pendingHtml != null && newTextFieldValue.text.length > textFieldValue.text.length) {
+            pendingClipboardHtml = null
+            val position = selection.min
+            removeSelectedText()
+            insertHtml(html = pendingHtml, position = position)
+            return
+        }
+        pendingClipboardHtml = null
+
         tempTextFieldValue = newTextFieldValue
 
         if (tempTextFieldValue.text.length > textFieldValue.text.length)
@@ -1564,6 +1606,11 @@ public class RichTextState internal constructor(
         if (!singleParagraphMode) {
             // Check for paragraphs
             checkForParagraphs()
+        }
+
+        // Track the last non-collapsed selection for clipboard operations
+        if (!textFieldValue.selection.collapsed) {
+            lastNonCollapsedSelection = textFieldValue.selection
         }
 
         if (

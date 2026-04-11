@@ -10,9 +10,7 @@ import androidx.compose.ui.util.fastForEachIndexed
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
-import com.mohamedrejeb.richeditor.model.RichTextConfig
 import com.mohamedrejeb.richeditor.model.RichTextState
-import com.mohamedrejeb.richeditor.ui.RichTextClipboardManager
 import kotlin.math.max
 import kotlin.math.min
 
@@ -183,65 +181,6 @@ internal fun AnnotatedString.Builder.append(
             selection = selection,
             onStyledRichSpan = onStyledRichSpan,
         )
-    }
-    return index
-}
-
-/**
- * Used in [RichTextClipboardManager]
- */
-internal fun AnnotatedString.Builder.append(
-    richSpanList: List<RichSpan>,
-    startIndex: Int,
-    selection: TextRange,
-    richTextConfig: RichTextConfig,
-): Int {
-    var index = startIndex
-    richSpanList.fastForEach { richSpan ->
-        index = append(
-            richSpan = richSpan,
-            startIndex = index,
-            selection = selection,
-            richTextConfig = richTextConfig,
-        )
-    }
-    return index
-}
-
-/**
- * Used in [RichTextClipboardManager]
- */
-@OptIn(ExperimentalRichTextApi::class)
-internal fun AnnotatedString.Builder.append(
-    richSpan: RichSpan,
-    startIndex: Int,
-    selection: TextRange,
-    richTextConfig: RichTextConfig,
-): Int {
-    var index = startIndex
-
-    withStyle(richSpan.spanStyle.merge(richSpan.richSpanStyle.spanStyle(richTextConfig))) {
-        richSpan.textRange = TextRange(index, index + richSpan.text.length)
-        if (
-            !selection.collapsed &&
-            selection.min < index + richSpan.text.length &&
-            selection.max > index
-        ) {
-            val selectedText = richSpan.text.substring(
-                max(0, selection.min - index),
-                min(selection.max - index, richSpan.text.length)
-            )
-            append(selectedText)
-        }
-        index += richSpan.text.length
-        richSpan.children.fastForEach { richSpan ->
-            index = append(
-                richSpan = richSpan,
-                startIndex = index,
-                selection = selection,
-                richTextConfig = richTextConfig,
-            )
-        }
     }
     return index
 }

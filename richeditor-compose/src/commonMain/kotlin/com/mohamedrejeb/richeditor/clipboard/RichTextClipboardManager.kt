@@ -15,25 +15,10 @@ internal expect fun createRichTextClipboardManager(
 ): RichTextClipboardManager
 
 /**
- * Interface for managing clipboard operations with rich text content.
- * This interface provides methods for copying and pasting rich text while preserving formatting.
+ * Platform-specific clipboard manager that intercepts [Clipboard] operations
+ * to support rich text (HTML) copy/paste.
+ *
+ * Each platform implementation reads HTML from the native clipboard in [getClipEntry]
+ * and writes HTML + plain text in [setClipEntry].
  */
-internal interface RichTextClipboardManager: Clipboard {
-    /**
-     * Gets the current content from the clipboard.
-     * @return [RichTextContent] containing the clipboard content, or null if clipboard is empty
-     */
-    fun getRichTextContent()
-
-    /**
-     * Sets the rich text content to the clipboard.
-     * @param content The [RichTextContent] to be set to the clipboard
-     */
-    fun setRichTextContent()
-
-    /**
-     * Checks if the clipboard has content that can be converted to rich text.
-     * @return true if clipboard has compatible content, false otherwise
-     */
-    fun hasRichTextContent(): Boolean
-}
+internal interface RichTextClipboardManager : Clipboard

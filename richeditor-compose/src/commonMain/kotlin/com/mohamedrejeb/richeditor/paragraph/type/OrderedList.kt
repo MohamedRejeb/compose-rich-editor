@@ -18,15 +18,22 @@ internal class OrderedList private constructor(
     startTextWidth: TextUnit = 0.sp,
     initialLevel: Int = 1,
     initialStyleType: OrderedListStyleType = DefaultOrderedListStyleType,
+    /**
+     * The start number for the first item in this list group.
+     * Defaults to 1. When > 1, the HTML output includes `start="N"` on the `<ol>` tag.
+     */
+    val startFrom: Int = 1,
 ) : ParagraphType, ConfigurableStartTextWidth, ConfigurableListLevel {
 
     constructor(
         number: Int,
         initialLevel: Int = 1,
+        startFrom: Int = 1,
     ) : this(
         number = number,
         initialIndent = DefaultListIndent,
         initialLevel = initialLevel,
+        startFrom = startFrom,
     )
 
     constructor(
@@ -34,12 +41,14 @@ internal class OrderedList private constructor(
         config: RichTextConfig,
         startTextWidth: TextUnit = 0.sp,
         initialLevel: Int = 1,
+        startFrom: Int = 1,
     ) : this(
         number = number,
         initialIndent = config.orderedListIndent,
         startTextWidth = startTextWidth,
         initialLevel = initialLevel,
         initialStyleType = config.orderedListStyleType,
+        startFrom = startFrom,
     )
 
     var number = number

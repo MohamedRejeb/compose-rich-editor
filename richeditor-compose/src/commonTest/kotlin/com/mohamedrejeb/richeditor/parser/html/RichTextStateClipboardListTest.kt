@@ -1104,7 +1104,7 @@ class RichTextStateClipboardListTest {
         )
         val text = state.annotatedString.text
 
-        // Copy only the third item - should it produce <li> with number 3 or reset to 1?
+        // Copy only the third item - should reset to 1
         val thirdStart = text.indexOf("Third")
         val thirdEnd = thirdStart + "Third".length
 

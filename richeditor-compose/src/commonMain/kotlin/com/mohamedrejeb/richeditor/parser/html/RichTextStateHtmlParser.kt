@@ -160,6 +160,12 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     newRichParagraph.paragraphStyle = newRichParagraph.paragraphStyle.merge(cssParagraphStyle)
                     newRichParagraph.type = paragraphType
 
+                    // A block element (<p>, <h1>, etc.) opening on a blank paragraph
+                    // from a <br> should not carry the linebreak flag
+                    if (isCurrentRichParagraphBlank && newRichParagraph.isFromLineBreak && name != "li") {
+                        newRichParagraph.isFromLineBreak = false
+                    }
+
                     if (!isCurrentRichParagraphBlank) {
                         stringBuilder.append(' ')
 
@@ -196,9 +202,12 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
                     val newParagraph =
                         if (richParagraphList.isEmpty())
-                            RichParagraph()
+                            RichParagraph(isFromLineBreak = true)
                         else
-                            RichParagraph(paragraphStyle = richParagraphList.last().paragraphStyle)
+                            RichParagraph(
+                                paragraphStyle = richParagraphList.last().paragraphStyle,
+                                isFromLineBreak = true,
+                            )
 
                     richParagraphList.add(newParagraph)
 
@@ -443,22 +452,38 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     if (paragraphGroupTagName == "ol" || paragraphGroupTagName == "ul") "li"
                     else "p"
 
-                // Create paragraph css
-                val paragraphCssMap = CssDecoder.decodeParagraphStyleToCssStyleMap(richParagraph.paragraphStyle)
-                val paragraphCss = CssDecoder.decodeCssStyleMap(paragraphCssMap)
+                // If this paragraph came from a <br>, emit <br> + content inline
+                // without opening a new <p> tag (the previous <p> is still open)
+                if (richParagraph.isFromLineBreak && index > 0) {
+                    builder.append("<$BrElement>")
+                    richParagraph.children.fastForEach { richSpan ->
+                        builder.append(decodeRichSpanToHtml(richSpan))
+                    }
+                } else {
+                    // Create paragraph css
+                    val paragraphCssMap = CssDecoder.decodeParagraphStyleToCssStyleMap(richParagraph.paragraphStyle)
+                    val paragraphCss = CssDecoder.decodeCssStyleMap(paragraphCssMap)
 
-                // Append paragraph opening tag
-                builder.append("<$paragraphTagName")
-                if (paragraphCss.isNotBlank()) builder.append(" style=\"$paragraphCss\"")
-                builder.append(">")
+                    // Append paragraph opening tag
+                    builder.append("<$paragraphTagName")
+                    if (paragraphCss.isNotBlank()) builder.append(" style=\"$paragraphCss\"")
+                    builder.append(">")
 
-                // Append paragraph children
-                richParagraph.children.fastForEach { richSpan ->
-                    builder.append(decodeRichSpanToHtml(richSpan))
+                    // Append paragraph children
+                    richParagraph.children.fastForEach { richSpan ->
+                        builder.append(decodeRichSpanToHtml(richSpan))
+                    }
                 }
 
-                // Append paragraph closing tag
-                builder.append("</$paragraphTagName>")
+                // Check if the next paragraph is also a <br> continuation — if so, don't close yet
+                val nextParagraph = richTextState.richParagraphList.getOrNull(index + 1)
+                val nextIsLineBreakContinuation = nextParagraph != null &&
+                    nextParagraph.isFromLineBreak &&
+                    !nextParagraph.isEmpty()
+
+                if (!nextIsLineBreakContinuation) {
+                    builder.append("</$paragraphTagName>")
+                }
             }
 
             // Save last paragraph group tag name

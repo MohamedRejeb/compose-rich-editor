@@ -2,7 +2,7 @@
 agp = "8.13.2"
 kotlin = "2.3.20"
 compose = "1.10.3"
-material3 = "1.10.0-alpha05"
+material3 = "1.11.0-alpha06"
 material-icons-extended = "1.7.3"
 dokka = "2.2.0"
 

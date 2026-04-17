@@ -1804,7 +1804,16 @@ public class RichTextState internal constructor(
         )
         val previousIndex = startTypeIndex - 1
 
-        val activeRichSpan = getOrCreateRichSpanByTextIndex(previousIndex)
+        val candidateRichSpan = getOrCreateRichSpanByTextIndex(previousIndex)
+
+        // Image spans own a single placeholder char in the raw text; typed
+        // characters adjacent to an image must go into a new sibling span
+        // rather than be appended onto the image span's text. See #466.
+        val activeRichSpan =
+            if (candidateRichSpan?.richSpanStyle is RichSpanStyle.Image)
+                null
+            else
+                candidateRichSpan
 
         if (activeRichSpan != null) {
             val isAndroidSuggestion =
@@ -1912,14 +1921,31 @@ public class RichTextState internal constructor(
                 richParagraphList.add(RichParagraph())
             }
 
+            val imageSibling =
+                candidateRichSpan?.takeIf { it.richSpanStyle is RichSpanStyle.Image }
+            val paragraph = imageSibling?.paragraph ?: richParagraphList.last()
             val newRichSpan = RichSpan(
-                paragraph = richParagraphList.last(),
+                paragraph = paragraph,
                 text = typedText,
                 textRange = TextRange(startTypeIndex, startTypeIndex + typedText.length),
                 spanStyle = toAddSpanStyle,
                 richSpanStyle = toAddRichSpanStyle,
             )
-            richParagraphList.last().children.add(newRichSpan)
+
+            if (imageSibling != null) {
+                // Insert on the correct side of the image placeholder so span
+                // ordering matches the raw-text ordering when the tree is
+                // re-serialized by updateAnnotatedString. See #466.
+                val imageIndex = paragraph.children.indexOf(imageSibling)
+                val insertIndex =
+                    if (startTypeIndex <= imageSibling.textRange.min)
+                        imageIndex
+                    else
+                        imageIndex + 1
+                paragraph.children.add(insertIndex, newRichSpan)
+            } else {
+                paragraph.children.add(newRichSpan)
+            }
         }
     }
 

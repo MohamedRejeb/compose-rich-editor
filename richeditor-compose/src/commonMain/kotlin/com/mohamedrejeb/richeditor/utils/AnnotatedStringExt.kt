@@ -122,6 +122,23 @@ internal fun AnnotatedString.Builder.append(
     var index = startIndex
 
     withStyle(richSpan.spanStyle.merge(richSpan.richSpanStyle.spanStyle(state.config))) {
+        if (richSpan.richSpanStyle is RichSpanStyle.Image) {
+            // Image owns a single placeholder char in the raw text;
+            // appendCustomContent (via appendInlineContent) emits that
+            // char plus the inline-content annotation. Skip the normal
+            // append path so the placeholder isn't duplicated. See #466.
+            richSpan.textRange = TextRange(index, index + richSpan.text.length)
+
+            with(richSpan.richSpanStyle) {
+                appendCustomContent(richTextState = state)
+            }
+
+            onStyledRichSpan(richSpan)
+
+            index += richSpan.text.length
+            return@withStyle
+        }
+
         val newText = text.substring(index, index + richSpan.text.length)
 
         richSpan.text = newText
@@ -220,7 +237,15 @@ internal fun AnnotatedString.Builder.append(
 
     withStyle(richSpan.spanStyle.merge(richSpan.richSpanStyle.spanStyle(state.config))) {
         richSpan.textRange = TextRange(index, index + richSpan.text.length)
-        append(richSpan.text)
+
+        // Image owns a single placeholder char in the raw text;
+        // appendCustomContent (via appendInlineContent) emits that
+        // char plus the inline-content annotation. Skip append(text)
+        // for images so the placeholder isn't duplicated. See #466.
+        if (richSpan.richSpanStyle !is RichSpanStyle.Image) {
+            append(richSpan.text)
+        }
+
         with(richSpan.richSpanStyle) {
             appendCustomContent(
                 richTextState = state,

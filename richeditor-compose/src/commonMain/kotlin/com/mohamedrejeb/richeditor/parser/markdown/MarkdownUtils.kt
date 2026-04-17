@@ -129,11 +129,17 @@ internal fun correctMarkdownText(text: String): String {
     var isTwoSpaceIndent = false
     var isReachedFirstIndent = false
     var spaces = 0
+    // Tracks whether any non-whitespace content has been emitted on the current
+    // line. A `*` is a bullet-list marker (not an emphasis delimiter) when it
+    // appears before any other content on its line and is followed by a space,
+    // newline, or end-of-input. See #637.
+    var hasLineContent = false
 
     text.forEachIndexed { i, char ->
         // Change indent from 2 spaces to 4 spaces
         if (char == '\n') {
             isLineStart = true
+            hasLineContent = false
         } else if (isLineStart) {
             if (char == ' ') {
                 spaces++
@@ -161,13 +167,30 @@ internal fun correctMarkdownText(text: String): String {
 
         // Extract edge spaces from tags
         if (char == '*' || char == '~') {
-            if (!pendingTag.all { it == char })
-                onPendingTag()
+            val nextChar = text.getOrNull(i + 1)
+            val isBulletMarker =
+                char == '*' &&
+                    !hasLineContent &&
+                    pendingTag.isEmpty() &&
+                    (nextChar == null || nextChar == ' ' || nextChar == '\n')
 
-            pendingTag += char
+            if (isBulletMarker) {
+                // Emit the star verbatim as a list-item marker without folding the
+                // surrounding spaces into a paired emphasis delimiter.
+                addPendingSpaces()
+                newText.append(char)
+                hasLineContent = true
+            } else {
+                if (!pendingTag.all { it == char })
+                    onPendingTag()
 
-            if (pendingTag.length > 2)
-                onPendingTag()
+                pendingTag += char
+
+                if (pendingTag.length > 2)
+                    onPendingTag()
+
+                hasLineContent = true
+            }
         } else if (char == ' ') {
             if (isCloseTag())
                 onTag()
@@ -175,6 +198,9 @@ internal fun correctMarkdownText(text: String): String {
             pendingSpaces++
         } else {
             onTextChar(char)
+            if (char != '\n') {
+                hasLineContent = true
+            }
         }
     }
 

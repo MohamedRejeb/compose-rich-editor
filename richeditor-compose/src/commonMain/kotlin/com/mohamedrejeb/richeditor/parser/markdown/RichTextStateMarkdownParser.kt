@@ -21,6 +21,7 @@ import com.mohamedrejeb.richeditor.parser.html.BrElement
 import com.mohamedrejeb.richeditor.parser.html.RichTextStateHtmlParser
 import com.mohamedrejeb.richeditor.parser.html.htmlElementsSpanStyleEncodeMap
 import com.mohamedrejeb.richeditor.parser.utils.*
+import com.mohamedrejeb.richeditor.utils.InlineContentPlaceholder
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.MarkdownTokenTypes
 import org.intellij.markdown.ast.ASTNode
@@ -104,7 +105,9 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                         contentDescription = text
                     )
 
-                currentRichSpan?.text = ""
+                // Image owns a single placeholder char in the raw text so span
+                // textRanges line up with the rendered annotated string. See #466.
+                currentRichSpan?.text = InlineContentPlaceholder
             }
         }
 

@@ -15,6 +15,7 @@ import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import com.mohamedrejeb.richeditor.parser.RichTextStateParser
 import com.mohamedrejeb.richeditor.parser.utils.*
+import com.mohamedrejeb.richeditor.utils.InlineContentPlaceholder
 import com.mohamedrejeb.richeditor.utils.customMerge
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
@@ -188,6 +189,13 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     val newRichSpan = RichSpan(paragraph = currentRichParagraph)
                     newRichSpan.spanStyle = cssSpanStyle.customMerge(tagSpanStyle)
                     newRichSpan.richSpanStyle = richSpanStyle
+
+                    // Image spans own a single inline-content placeholder char in the
+                    // raw text so span textRanges line up with the rendered annotated
+                    // string. See #466.
+                    if (richSpanStyle is RichSpanStyle.Image) {
+                        newRichSpan.text = InlineContentPlaceholder
+                    }
 
                     if (currentRichSpan != null) {
                         newRichSpan.parent = currentRichSpan

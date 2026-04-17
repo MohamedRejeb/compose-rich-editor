@@ -32,11 +32,18 @@ kotlin {
         }
     }
 
-    js(IR).browser()
-    wasmJs {
+    js {
         browser {
             testTask {
                 enabled = false
+            }
+        }
+    }
+
+    wasmJs {
+        browser {
+            testTask {
+                enabled = true
             }
         }
     }

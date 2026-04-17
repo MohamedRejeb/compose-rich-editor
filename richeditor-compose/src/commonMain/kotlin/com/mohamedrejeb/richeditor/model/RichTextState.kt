@@ -1565,6 +1565,12 @@ public class RichTextState internal constructor(
     private var tempTextFieldValue = textFieldValue
 
     /**
+     * Set to true when the IME revert is detected (#640), so [checkForParagraphs]
+     * uses a threshold of 0 to scan all newlines.
+     */
+    private var forceCheckAllNewlines = false
+
+    /**
      * Handles the new text field value.
      *
      * @param newTextFieldValue the new text field value.
@@ -1585,8 +1591,60 @@ public class RichTextState internal constructor(
 
         if (tempTextFieldValue.text.length > textFieldValue.text.length)
             handleAddingCharacters()
-        else if (tempTextFieldValue.text.length < textFieldValue.text.length)
-            handleRemovingCharacters()
+        else if (tempTextFieldValue.text.length < textFieldValue.text.length) {
+            val newNewlineCount = tempTextFieldValue.text.count { it == '\n' }
+            val oldNewlineCount = textFieldValue.text.count { it == '\n' }
+            val isImeRevert = newNewlineCount > oldNewlineCount
+                && !singleParagraphMode
+                && richParagraphList.size > 1
+                && textFieldValue.selection.collapsed
+
+            // Selection replacement: old selection was a range and the new text fits the
+            // pattern of "selection removed + optional replacement chars at selection start".
+            // Split into two steps: remove the old selection, then add any replacement chars.
+            val selMin = textFieldValue.selection.min
+            val selMax = textFieldValue.selection.max
+            val pureRemovalText = textFieldValue.text.substring(0, selMin) +
+                textFieldValue.text.substring(selMax)
+            val newTextStartsWithPrefix = tempTextFieldValue.text.length >= selMin &&
+                tempTextFieldValue.text.substring(0, selMin) == textFieldValue.text.substring(0, selMin)
+            val replacementCount = tempTextFieldValue.text.length - pureRemovalText.length
+            val isSelectionReplacement = !textFieldValue.selection.collapsed &&
+                !isImeRevert &&
+                newTextStartsWithPrefix &&
+                replacementCount >= 0 &&
+                tempTextFieldValue.text.length >= selMin + replacementCount &&
+                tempTextFieldValue.text.substring(selMin + replacementCount) ==
+                    textFieldValue.text.substring(selMax)
+
+            if (isImeRevert) {
+                // IME revert: merge last paragraph back, let checkForParagraphs rebuild. See #640.
+                val lastParagraph = richParagraphList.removeAt(richParagraphList.lastIndex)
+                val precedingParagraph = richParagraphList.last()
+                lastParagraph.updateChildrenParagraph(precedingParagraph)
+                precedingParagraph.children.addAll(lastParagraph.children)
+                forceCheckAllNewlines = true
+            } else if (isSelectionReplacement) {
+                // Step 1: remove the old selection as a pure deletion
+                val actualNewTextFieldValue = tempTextFieldValue
+                tempTextFieldValue = textFieldValue.copy(
+                    text = pureRemovalText,
+                    selection = TextRange(selMin),
+                )
+                handleRemovingCharacters()
+
+                // Step 2: if there are replacement chars, add them
+                if (replacementCount > 0) {
+                    updateTextFieldValue()
+                    tempTextFieldValue = actualNewTextFieldValue
+                    if (actualNewTextFieldValue.text.length > textFieldValue.text.length) {
+                        handleAddingCharacters()
+                    }
+                }
+            } else {
+                handleRemovingCharacters()
+            }
+        }
         else if (
             tempTextFieldValue.text == textFieldValue.text &&
             tempTextFieldValue.selection != textFieldValue.selection
@@ -1972,6 +2030,32 @@ public class RichTextState internal constructor(
                 startNumber = 1,
                 textFieldValue = tempTextFieldValue,
             )
+        } else if (
+            minParagraphIndex != maxParagraphIndex &&
+            minRemoveIndex < minParagraphFirstChildMinIndex &&
+            maxRemoveIndex < maxParagraphFirstChildMinIndex &&
+            maxParagraphStartTextLength > 0
+        ) {
+            // Cross-paragraph removal: both min and max paragraph prefixes are partially cut.
+            // Leftover max prefix chars remain in tempTextFieldValue.text; preserve them by
+            // prepending to the max paragraph's first non-empty child and demoting the
+            // paragraph to DefaultParagraph so rendering aligns with the kept chars.
+            val leftoverPrefixLength = maxParagraphFirstChildMinIndex - maxRemoveIndex
+            if (leftoverPrefixLength > 0) {
+                val leftoverChars = maxRichSpan.paragraph.type.startText
+                    .takeLast(leftoverPrefixLength)
+                val firstChild = maxRichSpan.paragraph.getFirstNonEmptyChild()
+                if (firstChild != null) {
+                    firstChild.text = leftoverChars + firstChild.text
+                }
+            }
+            maxRichSpan.paragraph.type = DefaultParagraph()
+
+            tempTextFieldValue = adjustOrderedListsNumbers(
+                startParagraphIndex = maxParagraphIndex + 1,
+                startNumber = 1,
+                textFieldValue = tempTextFieldValue,
+            )
         }
 
         // Remove spans from the max paragraph
@@ -2317,15 +2401,37 @@ public class RichTextState internal constructor(
     private fun checkForParagraphs() {
         var index = tempTextFieldValue.text.lastIndex
 
+        // Count newlines vs paragraph breaks to detect unprocessed newlines.
+        // This handles the case where IME sends a text update that removes our
+        // paragraph prefix (e.g. "2. ") but keeps the newline, the newline
+        // position ends up before the old selection, so the normal threshold
+        // would skip it. See #640.
+        // Lower the threshold to scan all newlines when:
+        // - forceCheckAllNewlines: set by IME revert detection in onTextFieldValueChange
+        // - There's a single paragraph but the text has newlines: autocorrect shortened
+        //   text + added newline in one onValueChange call (the newline is before the
+        //   old cursor, so the normal threshold would skip it). See #640.
+        val actualNewlines = tempTextFieldValue.text.count { it == '\n' }
+        val breakThreshold =
+            if (forceCheckAllNewlines || (actualNewlines > 0 && richParagraphList.size == 1)) 0
+            else textFieldValue.selection.min
+        forceCheckAllNewlines = false
+
         while (true) {
             // Search for the next paragraph
             index = tempTextFieldValue.text.lastIndexOf('\n', index)
 
             // If there are no more paragraphs, break
-            if (index < textFieldValue.selection.min) break
+            if (index < breakThreshold) break
 
             // Get the rich span style at the index to split it between two paragraphs
-            val richSpan = getRichSpanByTextIndex(index)
+            var richSpan = getRichSpanByTextIndex(index)
+
+            // If the newline is at the end of the text (past all spans) during an IME revert
+            // rebuild, use the last span of the last paragraph. See #640.
+            if (richSpan == null && index == tempTextFieldValue.text.lastIndex && breakThreshold == 0) {
+                richSpan = richParagraphList.lastOrNull()?.getLastNonEmptyChild()
+            }
 
             // If there is no rich span style at the index, continue (this should not happen)
             if (richSpan == null) {
@@ -4196,7 +4302,7 @@ public class RichTextState internal constructor(
                 return@fastForEachIndexed
             }
 
-            // This paragraph has content within the range — copy and trim
+            // This paragraph has content within the range, copy and trim
             val newParagraph = paragraph.copy()
 
             // Trim children spans to only include text within [rangeStart, rangeEnd)
@@ -4232,10 +4338,10 @@ public class RichTextState internal constructor(
 
             // Trim this span's own text
             if (spanTextEnd <= rangeStart || spanTextStart >= rangeEnd) {
-                // Completely outside — clear text
+                // Completely outside, clear text
                 span.text = ""
             } else if (spanTextStart < rangeStart || spanTextEnd > rangeEnd) {
-                // Partially overlapping — trim
+                // Partially overlapping, trim
                 val trimStart = (rangeStart - spanTextStart).coerceAtLeast(0)
                 val trimEnd = (rangeEnd - spanTextStart).coerceAtMost(span.text.length)
                 span.text = span.text.substring(trimStart, trimEnd)

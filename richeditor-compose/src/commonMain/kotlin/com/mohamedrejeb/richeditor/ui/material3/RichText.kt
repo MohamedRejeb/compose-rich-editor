@@ -50,9 +50,7 @@ import com.mohamedrejeb.richeditor.ui.BasicRichText
  * [overflow] and TextAlign may have unexpected effects.
  * @param maxLines an optional maximum number of lines for the text to span, wrapping if
  * necessary. If the text exceeds the given number of lines, it will be truncated according to
- * [overflow] and [softWrap]. It is required that 1 <= [minLines] <= [maxLines].
- * @param minLines the minimum height in terms of minimum number of visible lines. It is required
- * that 1 <= [minLines] <= [maxLines].
+ * [overflow] and [softWrap]. If it is not null, then it must be greater than zero.
  * @param inlineContent a map storing composables that replaces certain ranges of the text, used to
  * insert composables into text layout. See [InlineTextContent].
  * @param onTextLayout callback that is executed when a new text layout is calculated. A
@@ -77,7 +75,6 @@ public fun RichText(
     overflow: TextOverflow = TextOverflow.Clip,
     softWrap: Boolean = true,
     maxLines: Int = Int.MAX_VALUE,
-    minLines: Int = 1,
     inlineContent: Map<String, InlineTextContent> = mapOf(),
     onTextLayout: (TextLayoutResult) -> Unit = {},
     style: TextStyle = LocalTextStyle.current,
@@ -111,7 +108,6 @@ public fun RichText(
         overflow = overflow,
         softWrap = softWrap,
         maxLines = maxLines,
-        minLines = minLines,
         inlineContent = inlineContent,
         imageLoader = imageLoader,
     )

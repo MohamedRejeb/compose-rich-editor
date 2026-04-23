@@ -23,6 +23,8 @@ abstract interface com.mohamedrejeb.richeditor.model/RichSpanStyle { // com.moha
         abstract fun <get-acceptNewTextInTheEdges>(): kotlin/Boolean // com.mohamedrejeb.richeditor.model/RichSpanStyle.acceptNewTextInTheEdges.<get-acceptNewTextInTheEdges>|<get-acceptNewTextInTheEdges>(){}[0]
     abstract val spanStyle // com.mohamedrejeb.richeditor.model/RichSpanStyle.spanStyle|{}spanStyle[0]
         abstract fun <get-spanStyle>(): kotlin/Function1<com.mohamedrejeb.richeditor.model/RichTextConfig, androidx.compose.ui.text/SpanStyle> // com.mohamedrejeb.richeditor.model/RichSpanStyle.spanStyle.<get-spanStyle>|<get-spanStyle>(){}[0]
+    open val isAtomic // com.mohamedrejeb.richeditor.model/RichSpanStyle.isAtomic|{}isAtomic[0]
+        open fun <get-isAtomic>(): kotlin/Boolean // com.mohamedrejeb.richeditor.model/RichSpanStyle.isAtomic.<get-isAtomic>|<get-isAtomic>(){}[0]
 
     abstract fun (androidx.compose.ui.graphics.drawscope/DrawScope).drawCustomStyle(androidx.compose.ui.text/TextLayoutResult, androidx.compose.ui.text/TextRange, com.mohamedrejeb.richeditor.model/RichTextConfig, kotlin/Float = ..., kotlin/Float = ...) // com.mohamedrejeb.richeditor.model/RichSpanStyle.drawCustomStyle|drawCustomStyle@androidx.compose.ui.graphics.drawscope.DrawScope(androidx.compose.ui.text.TextLayoutResult;androidx.compose.ui.text.TextRange;com.mohamedrejeb.richeditor.model.RichTextConfig;kotlin.Float;kotlin.Float){}[0]
     open fun (androidx.compose.ui.text/AnnotatedString.Builder).appendCustomContent(com.mohamedrejeb.richeditor.model/RichTextState): androidx.compose.ui.text/AnnotatedString.Builder // com.mohamedrejeb.richeditor.model/RichSpanStyle.appendCustomContent|appendCustomContent@androidx.compose.ui.text.AnnotatedString.Builder(com.mohamedrejeb.richeditor.model.RichTextState){}[0]
@@ -47,6 +49,8 @@ abstract interface com.mohamedrejeb.richeditor.model/RichSpanStyle { // com.moha
             final fun <get-acceptNewTextInTheEdges>(): kotlin/Boolean // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.acceptNewTextInTheEdges.<get-acceptNewTextInTheEdges>|<get-acceptNewTextInTheEdges>(){}[0]
         final val contentDescription // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.contentDescription|{}contentDescription[0]
             final fun <get-contentDescription>(): kotlin/String? // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.contentDescription.<get-contentDescription>|<get-contentDescription>(){}[0]
+        final val isAtomic // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.isAtomic|{}isAtomic[0]
+            final fun <get-isAtomic>(): kotlin/Boolean // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.isAtomic.<get-isAtomic>|<get-isAtomic>(){}[0]
         final val model // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.model|{}model[0]
             final fun <get-model>(): kotlin/Any // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.model.<get-model>|<get-model>(){}[0]
         final val spanStyle // com.mohamedrejeb.richeditor.model/RichSpanStyle.Image.spanStyle|{}spanStyle[0]
@@ -76,6 +80,28 @@ abstract interface com.mohamedrejeb.richeditor.model/RichSpanStyle { // com.moha
         final fun (androidx.compose.ui.graphics.drawscope/DrawScope).drawCustomStyle(androidx.compose.ui.text/TextLayoutResult, androidx.compose.ui.text/TextRange, com.mohamedrejeb.richeditor.model/RichTextConfig, kotlin/Float, kotlin/Float) // com.mohamedrejeb.richeditor.model/RichSpanStyle.Link.drawCustomStyle|drawCustomStyle@androidx.compose.ui.graphics.drawscope.DrawScope(androidx.compose.ui.text.TextLayoutResult;androidx.compose.ui.text.TextRange;com.mohamedrejeb.richeditor.model.RichTextConfig;kotlin.Float;kotlin.Float){}[0]
         final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.model/RichSpanStyle.Link.equals|equals(kotlin.Any?){}[0]
         final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.model/RichSpanStyle.Link.hashCode|hashCode(){}[0]
+    }
+
+    final class Token : com.mohamedrejeb.richeditor.model/RichSpanStyle { // com.mohamedrejeb.richeditor.model/RichSpanStyle.Token|null[0]
+        constructor <init>(kotlin/String, kotlin/String, kotlin/String) // com.mohamedrejeb.richeditor.model/RichSpanStyle.Token.<init>|<init>(kotlin.String;kotlin.String;kotlin.String){}[0]
+
+        final val acceptNewTextInTheEdges // com.mohamedrejeb.richeditor.model/RichSpanStyle.Token.acceptNewTextInTheEdges|{}acceptNewTextInTheEdges[0]
+            final fun <get-acceptNewTextInTheEdges>(): kotlin/Boolean // com.mohamedrejeb.richeditor.model/RichSpanStyle.Token.acceptNewTextInTheEdges.<get-acceptNewTextInTheEdges>|<get-acceptNewTextInTheEdges>(){}[0]
+        final val id // com.mohamedrejeb.richeditor.model/RichSpanStyle.Token.id|{}id[0]
+            final fun <get-id>(): kotlin/String // com.mohamedrejeb.richeditor.model/RichSpanStyle.Token.id.<get-id>|<get-id>(){}[0]
+        final val isAtomic // com.mohamedrejeb.richeditor.model/RichSpanStyle.Token.isAtomic|{}isAtomic[0]
+            final fun <get-isAtomic>(): kotlin/Boolean // com.mohamedrejeb.richeditor.model/RichSpanStyle.Token.isAtomic.<get-isAtomic>|<get-isAtomic>(){}[0]
+        final val label // com.mohamedrejeb.richeditor.model/RichSpanStyle.Token.label|{}label[0]
+            final fun <get-label>(): kotlin/String // com.mohamedrejeb.richeditor.model/RichSpanStyle.Token.label.<get-label>|<get-label>(){}[0]
+        final val spanStyle // com.mohamedrejeb.richeditor.model/RichSpanStyle.Token.spanStyle|{}spanStyle[0]
+            final fun <get-spanStyle>(): kotlin/Function1<com.mohamedrejeb.richeditor.model/RichTextConfig, androidx.compose.ui.text/SpanStyle> // com.mohamedrejeb.richeditor.model/RichSpanStyle.Token.spanStyle.<get-spanStyle>|<get-spanStyle>(){}[0]
+        final val triggerId // com.mohamedrejeb.richeditor.model/RichSpanStyle.Token.triggerId|{}triggerId[0]
+            final fun <get-triggerId>(): kotlin/String // com.mohamedrejeb.richeditor.model/RichSpanStyle.Token.triggerId.<get-triggerId>|<get-triggerId>(){}[0]
+
+        final fun (androidx.compose.ui.graphics.drawscope/DrawScope).drawCustomStyle(androidx.compose.ui.text/TextLayoutResult, androidx.compose.ui.text/TextRange, com.mohamedrejeb.richeditor.model/RichTextConfig, kotlin/Float, kotlin/Float) // com.mohamedrejeb.richeditor.model/RichSpanStyle.Token.drawCustomStyle|drawCustomStyle@androidx.compose.ui.graphics.drawscope.DrawScope(androidx.compose.ui.text.TextLayoutResult;androidx.compose.ui.text.TextRange;com.mohamedrejeb.richeditor.model.RichTextConfig;kotlin.Float;kotlin.Float){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.model/RichSpanStyle.Token.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.model/RichSpanStyle.Token.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.model/RichSpanStyle.Token.toString|toString(){}[0]
     }
 
     final object Companion // com.mohamedrejeb.richeditor.model/RichSpanStyle.Companion|null[0]
@@ -136,6 +162,51 @@ abstract interface com.mohamedrejeb.richeditor.paragraph.type/OrderedListStyleTy
     }
 }
 
+final class com.mohamedrejeb.richeditor.model.trigger/Trigger { // com.mohamedrejeb.richeditor.model.trigger/Trigger|null[0]
+    constructor <init>(kotlin/String, kotlin/Char, kotlin/Function1<com.mohamedrejeb.richeditor.model/RichTextConfig, androidx.compose.ui.text/SpanStyle> = ..., kotlin/Function6<androidx.compose.ui.graphics.drawscope/DrawScope, androidx.compose.ui.text/TextLayoutResult, androidx.compose.ui.text/TextRange, com.mohamedrejeb.richeditor.model/RichTextConfig, kotlin/Float, kotlin/Float, kotlin/Unit>? = ..., kotlin.collections/Set<kotlin/Char> = ..., kotlin/Boolean = ..., kotlin/Int = ...) // com.mohamedrejeb.richeditor.model.trigger/Trigger.<init>|<init>(kotlin.String;kotlin.Char;kotlin.Function1<com.mohamedrejeb.richeditor.model.RichTextConfig,androidx.compose.ui.text.SpanStyle>;kotlin.Function6<androidx.compose.ui.graphics.drawscope.DrawScope,androidx.compose.ui.text.TextLayoutResult,androidx.compose.ui.text.TextRange,com.mohamedrejeb.richeditor.model.RichTextConfig,kotlin.Float,kotlin.Float,kotlin.Unit>?;kotlin.collections.Set<kotlin.Char>;kotlin.Boolean;kotlin.Int){}[0]
+
+    final val char // com.mohamedrejeb.richeditor.model.trigger/Trigger.char|{}char[0]
+        final fun <get-char>(): kotlin/Char // com.mohamedrejeb.richeditor.model.trigger/Trigger.char.<get-char>|<get-char>(){}[0]
+    final val drawStyle // com.mohamedrejeb.richeditor.model.trigger/Trigger.drawStyle|{}drawStyle[0]
+        final fun <get-drawStyle>(): kotlin/Function6<androidx.compose.ui.graphics.drawscope/DrawScope, androidx.compose.ui.text/TextLayoutResult, androidx.compose.ui.text/TextRange, com.mohamedrejeb.richeditor.model/RichTextConfig, kotlin/Float, kotlin/Float, kotlin/Unit>? // com.mohamedrejeb.richeditor.model.trigger/Trigger.drawStyle.<get-drawStyle>|<get-drawStyle>(){}[0]
+    final val id // com.mohamedrejeb.richeditor.model.trigger/Trigger.id|{}id[0]
+        final fun <get-id>(): kotlin/String // com.mohamedrejeb.richeditor.model.trigger/Trigger.id.<get-id>|<get-id>(){}[0]
+    final val maxQueryLength // com.mohamedrejeb.richeditor.model.trigger/Trigger.maxQueryLength|{}maxQueryLength[0]
+        final fun <get-maxQueryLength>(): kotlin/Int // com.mohamedrejeb.richeditor.model.trigger/Trigger.maxQueryLength.<get-maxQueryLength>|<get-maxQueryLength>(){}[0]
+    final val requireWordBoundary // com.mohamedrejeb.richeditor.model.trigger/Trigger.requireWordBoundary|{}requireWordBoundary[0]
+        final fun <get-requireWordBoundary>(): kotlin/Boolean // com.mohamedrejeb.richeditor.model.trigger/Trigger.requireWordBoundary.<get-requireWordBoundary>|<get-requireWordBoundary>(){}[0]
+    final val stopChars // com.mohamedrejeb.richeditor.model.trigger/Trigger.stopChars|{}stopChars[0]
+        final fun <get-stopChars>(): kotlin.collections/Set<kotlin/Char> // com.mohamedrejeb.richeditor.model.trigger/Trigger.stopChars.<get-stopChars>|<get-stopChars>(){}[0]
+    final val style // com.mohamedrejeb.richeditor.model.trigger/Trigger.style|{}style[0]
+        final fun <get-style>(): kotlin/Function1<com.mohamedrejeb.richeditor.model/RichTextConfig, androidx.compose.ui.text/SpanStyle> // com.mohamedrejeb.richeditor.model.trigger/Trigger.style.<get-style>|<get-style>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.model.trigger/Trigger.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.model.trigger/Trigger.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.model.trigger/Trigger.toString|toString(){}[0]
+}
+
+final class com.mohamedrejeb.richeditor.model.trigger/TriggerQuery { // com.mohamedrejeb.richeditor.model.trigger/TriggerQuery|null[0]
+    constructor <init>(kotlin/String, kotlin/String, androidx.compose.ui.text/TextRange, androidx.compose.ui.geometry/Rect?) // com.mohamedrejeb.richeditor.model.trigger/TriggerQuery.<init>|<init>(kotlin.String;kotlin.String;androidx.compose.ui.text.TextRange;androidx.compose.ui.geometry.Rect?){}[0]
+
+    final val caretRect // com.mohamedrejeb.richeditor.model.trigger/TriggerQuery.caretRect|{}caretRect[0]
+        final fun <get-caretRect>(): androidx.compose.ui.geometry/Rect? // com.mohamedrejeb.richeditor.model.trigger/TriggerQuery.caretRect.<get-caretRect>|<get-caretRect>(){}[0]
+    final val query // com.mohamedrejeb.richeditor.model.trigger/TriggerQuery.query|{}query[0]
+        final fun <get-query>(): kotlin/String // com.mohamedrejeb.richeditor.model.trigger/TriggerQuery.query.<get-query>|<get-query>(){}[0]
+    final val range // com.mohamedrejeb.richeditor.model.trigger/TriggerQuery.range|{}range[0]
+        final fun <get-range>(): androidx.compose.ui.text/TextRange // com.mohamedrejeb.richeditor.model.trigger/TriggerQuery.range.<get-range>|<get-range>(){}[0]
+    final val triggerId // com.mohamedrejeb.richeditor.model.trigger/TriggerQuery.triggerId|{}triggerId[0]
+        final fun <get-triggerId>(): kotlin/String // com.mohamedrejeb.richeditor.model.trigger/TriggerQuery.triggerId.<get-triggerId>|<get-triggerId>(){}[0]
+
+    final fun component1(): kotlin/String // com.mohamedrejeb.richeditor.model.trigger/TriggerQuery.component1|component1(){}[0]
+    final fun component2(): kotlin/String // com.mohamedrejeb.richeditor.model.trigger/TriggerQuery.component2|component2(){}[0]
+    final fun component3(): androidx.compose.ui.text/TextRange // com.mohamedrejeb.richeditor.model.trigger/TriggerQuery.component3|component3(){}[0]
+    final fun component4(): androidx.compose.ui.geometry/Rect? // com.mohamedrejeb.richeditor.model.trigger/TriggerQuery.component4|component4(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., androidx.compose.ui.text/TextRange = ..., androidx.compose.ui.geometry/Rect? = ...): com.mohamedrejeb.richeditor.model.trigger/TriggerQuery // com.mohamedrejeb.richeditor.model.trigger/TriggerQuery.copy|copy(kotlin.String;kotlin.String;androidx.compose.ui.text.TextRange;androidx.compose.ui.geometry.Rect?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.model.trigger/TriggerQuery.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.model.trigger/TriggerQuery.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.model.trigger/TriggerQuery.toString|toString(){}[0]
+}
+
 final class com.mohamedrejeb.richeditor.model/ImageData { // com.mohamedrejeb.richeditor.model/ImageData|null[0]
     constructor <init>(androidx.compose.ui.graphics.painter/Painter, kotlin/String? = ..., androidx.compose.ui/Alignment = ..., androidx.compose.ui.layout/ContentScale = ..., androidx.compose.ui/Modifier = ...) // com.mohamedrejeb.richeditor.model/ImageData.<init>|<init>(androidx.compose.ui.graphics.painter.Painter;kotlin.String?;androidx.compose.ui.Alignment;androidx.compose.ui.layout.ContentScale;androidx.compose.ui.Modifier){}[0]
 
@@ -193,6 +264,8 @@ final class com.mohamedrejeb.richeditor.model/RichTextConfig { // com.mohamedrej
 final class com.mohamedrejeb.richeditor.model/RichTextState { // com.mohamedrejeb.richeditor.model/RichTextState|null[0]
     constructor <init>() // com.mohamedrejeb.richeditor.model/RichTextState.<init>|<init>(){}[0]
 
+    final val activeTriggerQuery // com.mohamedrejeb.richeditor.model/RichTextState.activeTriggerQuery|{}activeTriggerQuery[0]
+        final fun <get-activeTriggerQuery>(): com.mohamedrejeb.richeditor.model.trigger/TriggerQuery? // com.mohamedrejeb.richeditor.model/RichTextState.activeTriggerQuery.<get-activeTriggerQuery>|<get-activeTriggerQuery>(){}[0]
     final val composition // com.mohamedrejeb.richeditor.model/RichTextState.composition|{}composition[0]
         final fun <get-composition>(): androidx.compose.ui.text/TextRange? // com.mohamedrejeb.richeditor.model/RichTextState.composition.<get-composition>|<get-composition>(){}[0]
     final val config // com.mohamedrejeb.richeditor.model/RichTextState.config|{}config[0]
@@ -213,6 +286,8 @@ final class com.mohamedrejeb.richeditor.model/RichTextState { // com.mohamedreje
         final fun <get-selectedLinkText>(): kotlin/String? // com.mohamedrejeb.richeditor.model/RichTextState.selectedLinkText.<get-selectedLinkText>|<get-selectedLinkText>(){}[0]
     final val selectedLinkUrl // com.mohamedrejeb.richeditor.model/RichTextState.selectedLinkUrl|{}selectedLinkUrl[0]
         final fun <get-selectedLinkUrl>(): kotlin/String? // com.mohamedrejeb.richeditor.model/RichTextState.selectedLinkUrl.<get-selectedLinkUrl>|<get-selectedLinkUrl>(){}[0]
+    final val triggers // com.mohamedrejeb.richeditor.model/RichTextState.triggers|{}triggers[0]
+        final fun <get-triggers>(): kotlin.collections/List<com.mohamedrejeb.richeditor.model.trigger/Trigger> // com.mohamedrejeb.richeditor.model/RichTextState.triggers.<get-triggers>|<get-triggers>(){}[0]
 
     final var annotatedString // com.mohamedrejeb.richeditor.model/RichTextState.annotatedString|{}annotatedString[0]
         final fun <get-annotatedString>(): androidx.compose.ui.text/AnnotatedString // com.mohamedrejeb.richeditor.model/RichTextState.annotatedString.<get-annotatedString>|<get-annotatedString>(){}[0]
@@ -244,6 +319,7 @@ final class com.mohamedrejeb.richeditor.model/RichTextState { // com.mohamedreje
     final fun addTextAfterSelection(kotlin/String) // com.mohamedrejeb.richeditor.model/RichTextState.addTextAfterSelection|addTextAfterSelection(kotlin.String){}[0]
     final fun addTextAtIndex(kotlin/Int, kotlin/String) // com.mohamedrejeb.richeditor.model/RichTextState.addTextAtIndex|addTextAtIndex(kotlin.Int;kotlin.String){}[0]
     final fun addUnorderedList() // com.mohamedrejeb.richeditor.model/RichTextState.addUnorderedList|addUnorderedList(){}[0]
+    final fun cancelActiveTrigger() // com.mohamedrejeb.richeditor.model/RichTextState.cancelActiveTrigger|cancelActiveTrigger(){}[0]
     final fun clear() // com.mohamedrejeb.richeditor.model/RichTextState.clear|clear(){}[0]
     final fun clearRichSpans() // com.mohamedrejeb.richeditor.model/RichTextState.clearRichSpans|clearRichSpans(){}[0]
     final fun clearRichSpans(androidx.compose.ui.text/TextRange) // com.mohamedrejeb.richeditor.model/RichTextState.clearRichSpans|clearRichSpans(androidx.compose.ui.text.TextRange){}[0]
@@ -259,8 +335,10 @@ final class com.mohamedrejeb.richeditor.model/RichTextState { // com.mohamedreje
     final fun insertHtmlAfterSelection(kotlin/String) // com.mohamedrejeb.richeditor.model/RichTextState.insertHtmlAfterSelection|insertHtmlAfterSelection(kotlin.String){}[0]
     final fun insertMarkdown(kotlin/String, kotlin/Int) // com.mohamedrejeb.richeditor.model/RichTextState.insertMarkdown|insertMarkdown(kotlin.String;kotlin.Int){}[0]
     final fun insertMarkdownAfterSelection(kotlin/String) // com.mohamedrejeb.richeditor.model/RichTextState.insertMarkdownAfterSelection|insertMarkdownAfterSelection(kotlin.String){}[0]
+    final fun insertToken(kotlin/String, kotlin/String, kotlin/String) // com.mohamedrejeb.richeditor.model/RichTextState.insertToken|insertToken(kotlin.String;kotlin.String;kotlin.String){}[0]
     final fun isRichSpan(com.mohamedrejeb.richeditor.model/RichSpanStyle): kotlin/Boolean // com.mohamedrejeb.richeditor.model/RichTextState.isRichSpan|isRichSpan(com.mohamedrejeb.richeditor.model.RichSpanStyle){}[0]
     final fun isRichSpan(kotlin.reflect/KClass<out com.mohamedrejeb.richeditor.model/RichSpanStyle>): kotlin/Boolean // com.mohamedrejeb.richeditor.model/RichTextState.isRichSpan|isRichSpan(kotlin.reflect.KClass<out|com.mohamedrejeb.richeditor.model.RichSpanStyle>){}[0]
+    final fun registerTrigger(com.mohamedrejeb.richeditor.model.trigger/Trigger) // com.mohamedrejeb.richeditor.model/RichTextState.registerTrigger|registerTrigger(com.mohamedrejeb.richeditor.model.trigger.Trigger){}[0]
     final fun removeCode() // com.mohamedrejeb.richeditor.model/RichTextState.removeCode|removeCode(){}[0]
     final fun removeCodeSpan() // com.mohamedrejeb.richeditor.model/RichTextState.removeCodeSpan|removeCodeSpan(){}[0]
     final fun removeLink() // com.mohamedrejeb.richeditor.model/RichTextState.removeLink|removeLink(){}[0]
@@ -292,6 +370,7 @@ final class com.mohamedrejeb.richeditor.model/RichTextState { // com.mohamedreje
     final fun toggleRichSpan(com.mohamedrejeb.richeditor.model/RichSpanStyle) // com.mohamedrejeb.richeditor.model/RichTextState.toggleRichSpan|toggleRichSpan(com.mohamedrejeb.richeditor.model.RichSpanStyle){}[0]
     final fun toggleSpanStyle(androidx.compose.ui.text/SpanStyle) // com.mohamedrejeb.richeditor.model/RichTextState.toggleSpanStyle|toggleSpanStyle(androidx.compose.ui.text.SpanStyle){}[0]
     final fun toggleUnorderedList() // com.mohamedrejeb.richeditor.model/RichTextState.toggleUnorderedList|toggleUnorderedList(){}[0]
+    final fun unregisterTrigger(kotlin/String) // com.mohamedrejeb.richeditor.model/RichTextState.unregisterTrigger|unregisterTrigger(kotlin.String){}[0]
     final fun updateLink(kotlin/String) // com.mohamedrejeb.richeditor.model/RichTextState.updateLink|updateLink(kotlin.String){}[0]
     final inline fun <#A1: reified com.mohamedrejeb.richeditor.model/RichSpanStyle> isRichSpan(): kotlin/Boolean // com.mohamedrejeb.richeditor.model/RichTextState.isRichSpan|isRichSpan(){0§<com.mohamedrejeb.richeditor.model.RichSpanStyle>}[0]
 
@@ -370,6 +449,10 @@ final object com.mohamedrejeb.richeditor.ui.material3/RichTextEditorDefaults { /
     final fun richTextEditorWithoutLabelPadding(androidx.compose.ui.unit/Dp = ..., androidx.compose.ui.unit/Dp = ..., androidx.compose.ui.unit/Dp = ..., androidx.compose.ui.unit/Dp = ...): androidx.compose.foundation.layout/PaddingValues // com.mohamedrejeb.richeditor.ui.material3/RichTextEditorDefaults.richTextEditorWithoutLabelPadding|richTextEditorWithoutLabelPadding(androidx.compose.ui.unit.Dp;androidx.compose.ui.unit.Dp;androidx.compose.ui.unit.Dp;androidx.compose.ui.unit.Dp){}[0]
 }
 
+final val com.mohamedrejeb.richeditor.model.trigger/DefaultTriggerStopChars // com.mohamedrejeb.richeditor.model.trigger/DefaultTriggerStopChars|{}DefaultTriggerStopChars[0]
+    final fun <get-DefaultTriggerStopChars>(): kotlin.collections/Set<kotlin/Char> // com.mohamedrejeb.richeditor.model.trigger/DefaultTriggerStopChars.<get-DefaultTriggerStopChars>|<get-DefaultTriggerStopChars>(){}[0]
+final val com.mohamedrejeb.richeditor.model.trigger/com_mohamedrejeb_richeditor_model_trigger_Trigger$stableprop // com.mohamedrejeb.richeditor.model.trigger/com_mohamedrejeb_richeditor_model_trigger_Trigger$stableprop|#static{}com_mohamedrejeb_richeditor_model_trigger_Trigger$stableprop[0]
+final val com.mohamedrejeb.richeditor.model.trigger/com_mohamedrejeb_richeditor_model_trigger_TriggerQuery$stableprop // com.mohamedrejeb.richeditor.model.trigger/com_mohamedrejeb_richeditor_model_trigger_TriggerQuery$stableprop|#static{}com_mohamedrejeb_richeditor_model_trigger_TriggerQuery$stableprop[0]
 final val com.mohamedrejeb.richeditor.model/LocalImageLoader // com.mohamedrejeb.richeditor.model/LocalImageLoader|{}LocalImageLoader[0]
     final fun <get-LocalImageLoader>(): androidx.compose.runtime/ProvidableCompositionLocal<com.mohamedrejeb.richeditor.model/ImageLoader> // com.mohamedrejeb.richeditor.model/LocalImageLoader.<get-LocalImageLoader>|<get-LocalImageLoader>(){}[0]
 final val com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_DefaultImageLoader$stableprop // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_DefaultImageLoader$stableprop|#static{}com_mohamedrejeb_richeditor_model_DefaultImageLoader$stableprop[0]
@@ -378,6 +461,7 @@ final val com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_Ri
 final val com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Default$stableprop // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Default$stableprop|#static{}com_mohamedrejeb_richeditor_model_RichSpanStyle_Default$stableprop[0]
 final val com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Image$stableprop // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Image$stableprop|#static{}com_mohamedrejeb_richeditor_model_RichSpanStyle_Image$stableprop[0]
 final val com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Link$stableprop // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Link$stableprop|#static{}com_mohamedrejeb_richeditor_model_RichSpanStyle_Link$stableprop[0]
+final val com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Token$stableprop // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Token$stableprop|#static{}com_mohamedrejeb_richeditor_model_RichSpanStyle_Token$stableprop[0]
 final val com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichTextConfig$stableprop // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichTextConfig$stableprop|#static{}com_mohamedrejeb_richeditor_model_RichTextConfig$stableprop[0]
 final val com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichTextState$stableprop // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichTextState$stableprop|#static{}com_mohamedrejeb_richeditor_model_RichTextState$stableprop[0]
 final val com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_TextPaddingValues$stableprop // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_TextPaddingValues$stableprop|#static{}com_mohamedrejeb_richeditor_model_TextPaddingValues$stableprop[0]
@@ -397,12 +481,16 @@ final val com.mohamedrejeb.richeditor.ui.material3/com_mohamedrejeb_richeditor_u
 final fun (androidx.compose.ui.text.style/TextDecoration).com.mohamedrejeb.richeditor.utils/minus(androidx.compose.ui.text.style/TextDecoration): androidx.compose.ui.text.style/TextDecoration // com.mohamedrejeb.richeditor.utils/minus|minus@androidx.compose.ui.text.style.TextDecoration(androidx.compose.ui.text.style.TextDecoration){}[0]
 final fun (androidx.compose.ui.text/TextLayoutResult).com.mohamedrejeb.richeditor.utils/getBoundingBoxes(kotlin/Int, kotlin/Int, kotlin/Boolean = ...): kotlin.collections/List<androidx.compose.ui.geometry/Rect> // com.mohamedrejeb.richeditor.utils/getBoundingBoxes|getBoundingBoxes@androidx.compose.ui.text.TextLayoutResult(kotlin.Int;kotlin.Int;kotlin.Boolean){}[0]
 final fun (kotlin/Float).com.mohamedrejeb.richeditor.utils/maxDecimals(kotlin/Int): kotlin/Float // com.mohamedrejeb.richeditor.utils/maxDecimals|maxDecimals@kotlin.Float(kotlin.Int){}[0]
+final fun <#A: kotlin/Any?> com.mohamedrejeb.richeditor.ui.material3/TriggerSuggestions(com.mohamedrejeb.richeditor.model/RichTextState, kotlin/String, kotlin/Function1<kotlin/String, kotlin.collections/List<#A>>, kotlin/Function1<#A, com.mohamedrejeb.richeditor.model/RichSpanStyle.Token>, androidx.compose.ui/Modifier?, androidx.compose.ui.unit/Dp, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Shape?, kotlin/Int, kotlin/Function3<#A, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.mohamedrejeb.richeditor.ui.material3/TriggerSuggestions|TriggerSuggestions(com.mohamedrejeb.richeditor.model.RichTextState;kotlin.String;kotlin.Function1<kotlin.String,kotlin.collections.List<0:0>>;kotlin.Function1<0:0,com.mohamedrejeb.richeditor.model.RichSpanStyle.Token>;androidx.compose.ui.Modifier?;androidx.compose.ui.unit.Dp;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Shape?;kotlin.Int;kotlin.Function3<0:0,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){0§<kotlin.Any?>}[0]
+final fun com.mohamedrejeb.richeditor.model.trigger/com_mohamedrejeb_richeditor_model_trigger_Trigger$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.model.trigger/com_mohamedrejeb_richeditor_model_trigger_Trigger$stableprop_getter|com_mohamedrejeb_richeditor_model_trigger_Trigger$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.model.trigger/com_mohamedrejeb_richeditor_model_trigger_TriggerQuery$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.model.trigger/com_mohamedrejeb_richeditor_model_trigger_TriggerQuery$stableprop_getter|com_mohamedrejeb_richeditor_model_trigger_TriggerQuery$stableprop_getter(){}[0]
 final fun com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_DefaultImageLoader$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_DefaultImageLoader$stableprop_getter|com_mohamedrejeb_richeditor_model_DefaultImageLoader$stableprop_getter(){}[0]
 final fun com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_ImageData$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_ImageData$stableprop_getter|com_mohamedrejeb_richeditor_model_ImageData$stableprop_getter(){}[0]
 final fun com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Code$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Code$stableprop_getter|com_mohamedrejeb_richeditor_model_RichSpanStyle_Code$stableprop_getter(){}[0]
 final fun com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Default$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Default$stableprop_getter|com_mohamedrejeb_richeditor_model_RichSpanStyle_Default$stableprop_getter(){}[0]
 final fun com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Image$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Image$stableprop_getter|com_mohamedrejeb_richeditor_model_RichSpanStyle_Image$stableprop_getter(){}[0]
 final fun com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Link$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Link$stableprop_getter|com_mohamedrejeb_richeditor_model_RichSpanStyle_Link$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Token$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Token$stableprop_getter|com_mohamedrejeb_richeditor_model_RichSpanStyle_Token$stableprop_getter(){}[0]
 final fun com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichTextConfig$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichTextConfig$stableprop_getter|com_mohamedrejeb_richeditor_model_RichTextConfig$stableprop_getter(){}[0]
 final fun com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichTextState$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichTextState$stableprop_getter|com_mohamedrejeb_richeditor_model_RichTextState$stableprop_getter(){}[0]
 final fun com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_TextPaddingValues$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_TextPaddingValues$stableprop_getter|com_mohamedrejeb_richeditor_model_TextPaddingValues$stableprop_getter(){}[0]

@@ -30,6 +30,9 @@ import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.util.fastForEachReversed
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.model.trigger.Trigger
+import com.mohamedrejeb.richeditor.model.trigger.TriggerQuery
+import com.mohamedrejeb.richeditor.model.trigger.detectActiveTrigger
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.*
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startText
@@ -115,6 +118,204 @@ public class RichTextState internal constructor(
         }
 
     public val composition: TextRange? get() = textFieldValue.composition
+
+    // --- Triggers (mentions, hashtags, commands, ...) ---
+    //
+    // Triggers live on RichTextState (not on editor composables) so tokens
+    // render correctly in read-only views and so programmatic insertion
+    // works without a mounted editor.
+
+    private val _triggers: MutableList<Trigger> = mutableStateListOf()
+
+    /**
+     * Registered triggers on this state. Use [registerTrigger] and [unregisterTrigger] to mutate.
+     */
+    @ExperimentalRichTextApi
+    public val triggers: List<Trigger> get() = _triggers
+
+    private var _activeTriggerQuery: TriggerQuery? by mutableStateOf(null)
+
+    /**
+     * Snapshot of the in-progress trigger query, or `null` if no trigger is active.
+     *
+     * Observed by suggestion UI composables (e.g. `TriggerSuggestions`) to know when to render
+     * a popup, what trigger is active, what query text to match against, and where to anchor.
+     *
+     * Updated automatically after every text edit and selection change.
+     */
+    @ExperimentalRichTextApi
+    public val activeTriggerQuery: TriggerQuery? get() = _activeTriggerQuery
+
+    /**
+     * Text range that was dismissed by [cancelActiveTrigger]. Used to suppress
+     * immediate re-activation if the cursor is still within the dismissed range.
+     */
+    private var suppressedTriggerRange: TextRange? = null
+
+    /**
+     * Window-space position of the hosted [BasicTextField]. Captured via
+     * [androidx.compose.ui.layout.onGloballyPositioned] on the editor's modifier
+     * chain; used by suggestion popups to anchor relative to the caret in window coords.
+     */
+    internal var textFieldWindowPosition: Offset = Offset.Zero
+
+    /**
+     * Key handler installed by the currently-visible trigger suggestions popup.
+     * Consulted by [onPreviewKeyEvent] before the editor's default behavior, so
+     * ↑/↓/Enter/Esc can drive the popup instead of reaching the text field.
+     */
+    internal var triggerKeyHandler: ((KeyEvent) -> Boolean)? = null
+
+    /**
+     * Register a [trigger] on this state. Triggers that share a character with an already
+     * registered trigger are rejected with [IllegalArgumentException] to keep detection deterministic.
+     *
+     * Registering a trigger with a previously used [Trigger.id] replaces the previous registration.
+     */
+    @ExperimentalRichTextApi
+    public fun registerTrigger(trigger: Trigger) {
+        val charCollision = _triggers.firstOrNull { it.char == trigger.char && it.id != trigger.id }
+        require(charCollision == null) {
+            "Trigger char '${trigger.char}' is already registered by trigger id='${charCollision?.id}'"
+        }
+        val existingIndex = _triggers.indexOfFirst { it.id == trigger.id }
+        if (existingIndex >= 0) {
+            // Remove + add instead of set() — Trigger's equals compares by id, so
+            // list.set(i, trigger) may be a no-op under equality-tracking list
+            // implementations even though the values differ.
+            _triggers.removeAt(existingIndex)
+            _triggers.add(existingIndex, trigger)
+        } else {
+            _triggers.add(trigger)
+        }
+    }
+
+    /**
+     * Remove the trigger registered under [id]. No-op if not registered.
+     * If the currently active query belongs to [id], it is cleared.
+     */
+    @ExperimentalRichTextApi
+    public fun unregisterTrigger(id: String) {
+        _triggers.removeAll { it.id == id }
+        if (_activeTriggerQuery?.triggerId == id) {
+            _activeTriggerQuery = null
+        }
+    }
+
+    /**
+     * Internal lookup from trigger id to its [Trigger] definition, used by the render
+     * path to resolve token styling. Returns `null` for unknown ids (e.g. a [RichSpanStyle.Token]
+     * parsed from HTML whose trigger isn't registered on the receiving state).
+     */
+    internal fun findTrigger(id: String): Trigger? =
+        _triggers.firstOrNull { it.id == id }
+
+    /**
+     * Commit a token for the currently active trigger query.
+     *
+     * Replaces the active query's raw-text range (trigger char + query chars) with an
+     * atomic [RichSpanStyle.Token] span followed by a trailing space, then clears the query.
+     *
+     * @param triggerId Must match [activeTriggerQuery]'s triggerId.
+     * @param id Stable identity for the referenced entity (e.g. "u123").
+     * @param label Display text of the token. Must start with the trigger's character.
+     * @throws IllegalStateException if no matching query is active.
+     * @throws IllegalArgumentException if [label] does not start with the trigger character.
+     */
+    @ExperimentalRichTextApi
+    public fun insertToken(triggerId: String, id: String, label: String) {
+        val query = _activeTriggerQuery
+        checkNotNull(query) { "No active trigger query to commit" }
+        check(query.triggerId == triggerId) {
+            "Active query is for '${query.triggerId}', not '$triggerId'"
+        }
+        val trigger = findTrigger(triggerId)
+        checkNotNull(trigger) { "Trigger '$triggerId' is not registered" }
+        require(label.isNotEmpty() && label.first() == trigger.char) {
+            "Token label must start with trigger char '${trigger.char}', got '$label'"
+        }
+        performInsertToken(query = query, triggerId = triggerId, id = id, label = label)
+    }
+
+    /**
+     * Dismiss the active trigger query without inserting a token. Leaves the typed text in place
+     * (e.g. `@moh` stays as plain characters) and suppresses immediate re-detection until the
+     * cursor leaves the typed range.
+     */
+    @ExperimentalRichTextApi
+    public fun cancelActiveTrigger() {
+        val query = _activeTriggerQuery ?: return
+        suppressedTriggerRange = query.range
+        _activeTriggerQuery = null
+    }
+
+    /**
+     * Splice a [RichSpanStyle.Token] into the tree at [query]'s range in a single atomic edit:
+     *
+     *  1. remove the old query chars (e.g. "@moh") via the standard edit pipeline;
+     *  2. build an atomic Token span + trailing plain-text space span manually;
+     *  3. attach both as children of the span at the caret, which guarantees they
+     *     land in the same paragraph regardless of document structure;
+     *  4. update the raw text and caret in a single [updateTextFieldValue] pass.
+     *
+     * The earlier two-`addTextAtIndex` implementation was fragile around paragraph
+     * boundaries: the trailing-space call could route the space into the next
+     * paragraph when the Token sat at a paragraph end. `addRichSpanAtPosition`
+     * inherits the target paragraph from the span at the caret, so the space
+     * always lands next to the Token.
+     */
+    private fun performInsertToken(
+        query: TriggerQuery,
+        triggerId: String,
+        id: String,
+        label: String,
+    ) {
+        _activeTriggerQuery = null
+        suppressedTriggerRange = null
+
+        if (!query.range.collapsed) {
+            removeTextRange(query.range)
+        }
+
+        val insertIndex = query.range.min
+        val trigger = findTrigger(triggerId) ?: return
+        val triggerSpanStyle = trigger.style(config)
+
+        val anchor = getRichSpanByTextIndex(insertIndex - 1)
+        val targetParagraph = anchor?.paragraph
+            ?: richParagraphList.firstOrNull()
+            ?: return
+
+        val tokenSpan = RichSpan(
+            text = label,
+            paragraph = targetParagraph,
+            richSpanStyle = RichSpanStyle.Token(
+                triggerId = triggerId,
+                id = id,
+                label = label,
+            ),
+            spanStyle = triggerSpanStyle,
+        )
+        val spaceSpan = RichSpan(
+            text = " ",
+            paragraph = targetParagraph,
+        )
+
+        addRichSpanAtPosition(tokenSpan, spaceSpan, index = insertIndex)
+
+        val currentText = textFieldValue.text
+        val before = currentText.substring(0, insertIndex)
+        val after = currentText.substring(insertIndex)
+        val newText = before + label + " " + after
+        val newSelection = TextRange(insertIndex + label.length + 1)
+
+        updateTextFieldValue(
+            newTextFieldValue = textFieldValue.copy(
+                text = newText,
+                selection = newSelection,
+            )
+        )
+    }
 
     internal var singleParagraphMode by mutableStateOf(false)
 
@@ -1392,6 +1593,12 @@ public class RichTextState internal constructor(
      * @return true if the list level was increased or decreased, false otherwise.
      */
     internal fun onPreviewKeyEvent(event: KeyEvent): Boolean {
+        // Give trigger-suggestions popup first refusal on key events while a query is active.
+        // Popup handlers return true when they consume the event (↑/↓/Enter/Esc navigation).
+        triggerKeyHandler?.invoke(event)?.let { handled ->
+            if (handled) return true
+        }
+
         if (event.type != KeyEventType.KeyDown)
             return false
 
@@ -1701,8 +1908,58 @@ public class RichTextState internal constructor(
         // Update current paragraph style
         updateCurrentParagraphStyle()
 
+        // Re-detect active trigger query after every edit / selection change
+        refreshActiveTriggerQuery()
+
         // Clear [tempTextFieldValue]
         tempTextFieldValue = TextFieldValue()
+    }
+
+    /**
+     * Recompute [activeTriggerQuery] from the current text + caret + registered triggers.
+     * Called from [updateTextFieldValue] after every edit.
+     */
+    private fun refreshActiveTriggerQuery() {
+        if (_triggers.isEmpty()) {
+            _activeTriggerQuery = null
+            suppressedTriggerRange = null
+            return
+        }
+
+        val selection = textFieldValue.selection
+        if (!selection.collapsed) {
+            _activeTriggerQuery = null
+            return
+        }
+
+        // Clear suppression if the caret has left the suppressed range.
+        val suppress = suppressedTriggerRange
+        if (suppress != null) {
+            val caret = selection.min
+            val outside = caret < suppress.min || caret > suppress.max
+            if (outside) {
+                suppressedTriggerRange = null
+            }
+        }
+
+        val caret = selection.min
+        val text = textFieldValue.text
+
+        // Guard against detection inside an existing atomic Token span — tokens
+        // are atomic units and can't host a nested active trigger.
+        val spanAtCaret = getRichSpanByTextIndex(caret - 1)
+        if (spanAtCaret?.richSpanStyle is RichSpanStyle.Token) {
+            _activeTriggerQuery = null
+            return
+        }
+
+        _activeTriggerQuery = detectActiveTrigger(
+            text = text,
+            caretOffset = caret,
+            triggers = _triggers,
+            textLayoutResult = textLayoutResult,
+            suppressedRange = suppressedTriggerRange,
+        )
     }
 
     /**
@@ -1806,11 +2063,10 @@ public class RichTextState internal constructor(
 
         val candidateRichSpan = getOrCreateRichSpanByTextIndex(previousIndex)
 
-        // Image spans own a single placeholder char in the raw text; typed
-        // characters adjacent to an image must go into a new sibling span
-        // rather than be appended onto the image span's text. See #466.
+        // Atomic spans (Image, Token, ...) must not absorb adjacent typing;
+        // characters next to them go into a new sibling span instead. See #466.
         val activeRichSpan =
-            if (candidateRichSpan?.richSpanStyle is RichSpanStyle.Image)
+            if (candidateRichSpan?.richSpanStyle?.isAtomic == true)
                 null
             else
                 candidateRichSpan
@@ -1922,7 +2178,7 @@ public class RichTextState internal constructor(
             }
 
             val imageSibling =
-                candidateRichSpan?.takeIf { it.richSpanStyle is RichSpanStyle.Image }
+                candidateRichSpan?.takeIf { it.richSpanStyle.isAtomic }
             val paragraph = imageSibling?.paragraph ?: richParagraphList.last()
             val newRichSpan = RichSpan(
                 paragraph = paragraph,
@@ -3465,6 +3721,24 @@ public class RichTextState internal constructor(
         adjustRichParagraphLayout(
             density = density,
         )
+        // When the user adds characters, refreshActiveTriggerQuery runs against the
+        // OLD text layout (the new caret position is past the old layout's valid range),
+        // so caretRect ends up stale. Re-resolve it now that we have the fresh layout.
+        refreshActiveTriggerCaretRect()
+    }
+
+    /**
+     * Update the active query's [TriggerQuery.caretRect] using the current [textLayoutResult].
+     * No-op when there is no active query or no layout yet.
+     */
+    private fun refreshActiveTriggerCaretRect() {
+        val query = _activeTriggerQuery ?: return
+        val layout = textLayoutResult ?: return
+        val caret = textFieldValue.selection.min
+        val fresh = runCatching { layout.getCursorRect(caret) }.getOrNull()
+        if (fresh != query.caretRect) {
+            _activeTriggerQuery = query.copy(caretRect = fresh)
+        }
     }
 
     private fun adjustRichParagraphLayout(
@@ -4377,8 +4651,8 @@ public class RichTextState internal constructor(
             // Recursively trim children
             trimSpanList(span.children, rangeStart, rangeEnd)
 
-            // Mark empty spans for removal
-            if (span.text.isEmpty() && span.children.isEmpty() && span.richSpanStyle !is RichSpanStyle.Image) {
+            // Mark empty spans for removal (atomic spans like Image/Token keep their placeholder)
+            if (span.text.isEmpty() && span.children.isEmpty() && !span.richSpanStyle.isAtomic) {
                 toRemove.add(i)
             }
         }

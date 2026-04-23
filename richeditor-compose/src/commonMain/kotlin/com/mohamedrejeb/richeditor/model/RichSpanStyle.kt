@@ -41,6 +41,15 @@ public interface RichSpanStyle {
      */
     public val acceptNewTextInTheEdges: Boolean
 
+    /**
+     * If true, the span is treated as a single atomic unit for editing:
+     * backspace deletes the whole span, typing adjacent to it creates a sibling span
+     * instead of appending into it, and selections that straddle the span snap to its edges.
+     *
+     * Defaults to false. Overridden to true by [Image] and atomic token spans (e.g. mentions).
+     */
+    public val isAtomic: Boolean get() = false
+
     public fun DrawScope.drawCustomStyle(
         layoutResult: TextLayoutResult,
         textRange: TextRange,
@@ -276,6 +285,8 @@ public interface RichSpanStyle {
         override val acceptNewTextInTheEdges: Boolean =
             false
 
+        override val isAtomic: Boolean = true
+
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is Image) return false
@@ -293,6 +304,60 @@ public interface RichSpanStyle {
             result = 31 * result + height.hashCode()
             return result
         }
+    }
+
+    /**
+     * Atomic token produced by committing a trigger query (see [com.mohamedrejeb.richeditor.model.trigger.Trigger]).
+     *
+     * Tokens are single indivisible units for editing purposes:
+     * backspace removes the whole [label], typing adjacent to a token creates
+     * a sibling span, and selections that straddle a token snap to its edges.
+     *
+     * @property triggerId Id of the [com.mohamedrejeb.richeditor.model.trigger.Trigger] that produced this token.
+     * Used at render time to look up the trigger's style and at serialization
+     * time to round-trip the token through HTML/Markdown.
+     * @property id Stable identity for the referenced entity (e.g. user id, tag slug, command name).
+     * Preserved across HTML/Markdown round-trips.
+     * @property label Display text of the token, including the trigger character
+     * (e.g. "@mohamed", "#release", "/help"). This text becomes the raw text
+     * of the span.
+     */
+    public class Token(
+        public val triggerId: String,
+        public val id: String,
+        public val label: String,
+    ) : RichSpanStyle {
+        override val spanStyle: (RichTextConfig) -> SpanStyle = {
+            SpanStyle(color = it.linkColor)
+        }
+
+        override fun DrawScope.drawCustomStyle(
+            layoutResult: TextLayoutResult,
+            textRange: TextRange,
+            richTextConfig: RichTextConfig,
+            topPadding: Float,
+            startPadding: Float,
+        ): Unit = Unit
+
+        override val acceptNewTextInTheEdges: Boolean = false
+
+        override val isAtomic: Boolean = true
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is Token) return false
+            return triggerId == other.triggerId && id == other.id && label == other.label
+        }
+
+        override fun hashCode(): Int {
+            var result = triggerId.hashCode()
+            result = 31 * result + id.hashCode()
+            result = 31 * result + label.hashCode()
+            return result
+        }
+
+        override fun toString(): String =
+            "Token(triggerId='$triggerId', id='$id', label='$label')"
     }
 
     public data object Default : RichSpanStyle {

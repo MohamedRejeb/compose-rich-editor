@@ -30,6 +30,11 @@ import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.util.fastForEachReversed
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.model.history.CommitTrigger
+import com.mohamedrejeb.richeditor.model.history.RichTextHistory
+import com.mohamedrejeb.richeditor.model.history.RichTextHistoryHost
+import com.mohamedrejeb.richeditor.model.history.RichTextSnapshot
+import com.mohamedrejeb.richeditor.model.history.deepCopy
 import com.mohamedrejeb.richeditor.model.trigger.Trigger
 import com.mohamedrejeb.richeditor.model.trigger.TriggerQuery
 import com.mohamedrejeb.richeditor.model.trigger.detectActiveTrigger
@@ -47,18 +52,59 @@ import kotlin.math.absoluteValue
 import kotlin.math.max
 import kotlin.reflect.KClass
 
+private val RichTextStateHistoryClockStart = kotlin.time.TimeSource.Monotonic.markNow()
+
 @Composable
-public fun rememberRichTextState(): RichTextState {
+public fun rememberRichTextState(
+    historyLimit: Int = 100,
+    coalesceWindowMs: Long = 500L,
+): RichTextState {
     return rememberSaveable(saver = RichTextState.Saver) {
-        RichTextState()
+        RichTextState(historyLimit = historyLimit, coalesceWindowMs = coalesceWindowMs)
     }
 }
 
 @OptIn(ExperimentalRichTextApi::class)
 public class RichTextState internal constructor(
     initialRichParagraphList: List<RichParagraph>,
+    historyLimit: Int = 100,
+    coalesceWindowMs: Long = 500L,
 ) {
-    public constructor() : this(listOf(RichParagraph()))
+    public constructor(
+        historyLimit: Int = 100,
+        coalesceWindowMs: Long = 500L,
+    ) : this(listOf(RichParagraph()), historyLimit, coalesceWindowMs)
+
+    /**
+     * Undo/redo history for this editor. Snapshots the full rich-text tree
+     * (paragraphs, spans, list prefixes, selection, staged styles) and overrides
+     * `BasicTextField`'s native undo so rich content never desyncs from plain text.
+     */
+    public val history: RichTextHistory = RichTextHistory(
+        host = HistoryHostImpl(),
+        limit = historyLimit,
+        coalesceWindowMs = coalesceWindowMs,
+    )
+
+    /**
+     * When true, mutating entry points skip history capture. Used while restoring a
+     * snapshot (so the restore itself is not recorded) and as a public opt-out for
+     * internal replays.
+     */
+    private var suppressHistoryRecording: Boolean = false
+
+    /**
+     * Re-entrancy guard: prevents inner public-API calls from recording their own
+     * history entries when they happen inside an outer public call that is already
+     * recording.
+     */
+    private var historyRecordingDepth: Int = 0
+
+    /**
+     * When true, [onPreviewKeyEvent] does not intercept `Ctrl/Cmd+Z/Y`. Controlled
+     * by `BasicRichTextEditor`'s `undoBehavior` parameter.
+     */
+    internal var suppressUndoShortcuts: Boolean = false
 
     internal val richParagraphList = mutableStateListOf<RichParagraph>()
     internal var visualTransformation: VisualTransformation by mutableStateOf(VisualTransformation.None)
@@ -223,7 +269,7 @@ public class RichTextState internal constructor(
      * @throws IllegalArgumentException if [label] does not start with the trigger character.
      */
     @ExperimentalRichTextApi
-    public fun insertToken(triggerId: String, id: String, label: String) {
+    public fun insertToken(triggerId: String, id: String, label: String): Unit = recordHistory(CommitTrigger.Structural) {
         val query = _activeTriggerQuery
         checkNotNull(query) { "No active trigger query to commit" }
         check(query.triggerId == triggerId) {
@@ -479,6 +525,7 @@ public class RichTextState internal constructor(
         codeStrokeColor: Color = Color.Unspecified,
         listIndent: Int = -1
     ) {
+        history.onProgrammaticReplace()
         if (linkColor.isSpecified)
             config.linkColor = linkColor
 
@@ -703,7 +750,13 @@ public class RichTextState internal constructor(
      * @see [addSpanStyle]
      * @see [removeSpanStyle]
      */
-    public fun toggleSpanStyle(spanStyle: SpanStyle) {
+    public fun toggleSpanStyle(spanStyle: SpanStyle): Unit = recordHistory(
+        trigger = CommitTrigger.Formatting,
+        // Only record if the mutation actually applies to existing text; with a
+        // collapsed caret it only updates the staged-style bag for future typing,
+        // which undoes naturally via re-toggling.
+        enabled = !selection.collapsed,
+    ) {
         if (currentSpanStyle.isSpecifiedFieldsEquals(spanStyle))
             removeSpanStyle(spanStyle)
         else
@@ -724,7 +777,10 @@ public class RichTextState internal constructor(
      * @see [removeSpanStyle]
      * @see [toggleSpanStyle]
      */
-    public fun addSpanStyle(spanStyle: SpanStyle) {
+    public fun addSpanStyle(spanStyle: SpanStyle): Unit = recordHistory(
+        trigger = CommitTrigger.Formatting,
+        enabled = !selection.collapsed,
+    ) {
         if (!currentSpanStyle.isSpecifiedFieldsEquals(spanStyle)) {
             toAddSpanStyle = toAddSpanStyle.customMerge(spanStyle)
             toRemoveSpanStyle = toRemoveSpanStyle.unmerge(spanStyle)
@@ -746,7 +802,10 @@ public class RichTextState internal constructor(
      * @param spanStyle the span style that is going to be added to the rich span.
      * @param textRange the text range where the span style is going to be applied.
      */
-    public fun addSpanStyle(spanStyle: SpanStyle, textRange: TextRange) {
+    public fun addSpanStyle(spanStyle: SpanStyle, textRange: TextRange): Unit = recordHistory(
+        trigger = CommitTrigger.Formatting,
+        enabled = !textRange.collapsed,
+    ) {
         val oldToRemoveSpanStyle = toRemoveSpanStyle
         val oldToAddSpanStyle = toAddSpanStyle
 
@@ -773,7 +832,10 @@ public class RichTextState internal constructor(
      * @see [addSpanStyle]
      * @see [toggleSpanStyle]
      */
-    public fun removeSpanStyle(spanStyle: SpanStyle) {
+    public fun removeSpanStyle(spanStyle: SpanStyle): Unit = recordHistory(
+        trigger = CommitTrigger.Formatting,
+        enabled = !selection.collapsed,
+    ) {
         if (currentSpanStyle.isSpecifiedFieldsEquals(spanStyle)) {
             toRemoveSpanStyle = toRemoveSpanStyle.customMerge(spanStyle)
             toAddSpanStyle = toAddSpanStyle.unmerge(spanStyle)
@@ -795,7 +857,10 @@ public class RichTextState internal constructor(
      * @param spanStyle the span style that is going to be removed from the rich span.
      * @param textRange the text range where the span style is going to be removed.
      */
-    public fun removeSpanStyle(spanStyle: SpanStyle, textRange: TextRange) {
+    public fun removeSpanStyle(spanStyle: SpanStyle, textRange: TextRange): Unit = recordHistory(
+        trigger = CommitTrigger.Formatting,
+        enabled = !textRange.collapsed,
+    ) {
         val oldToRemoveSpanStyle = toRemoveSpanStyle
         val oldToAddSpanStyle = toAddSpanStyle
 
@@ -811,14 +876,20 @@ public class RichTextState internal constructor(
     /**
      * Clear all [SpanStyle]s.
      */
-    public fun clearSpanStyles() {
+    public fun clearSpanStyles(): Unit = recordHistory(
+        trigger = CommitTrigger.Formatting,
+        enabled = !selection.collapsed,
+    ) {
         removeSpanStyle(currentSpanStyle)
     }
 
     /**
      * Clear all [SpanStyle]s from a specific [TextRange].
      */
-    public fun clearSpanStyles(textRange: TextRange) {
+    public fun clearSpanStyles(textRange: TextRange): Unit = recordHistory(
+        trigger = CommitTrigger.Formatting,
+        enabled = !textRange.collapsed,
+    ) {
         removeSpanStyle(currentSpanStyle, textRange)
     }
 
@@ -834,10 +905,10 @@ public class RichTextState internal constructor(
     public fun addLink(
         text: String,
         url: String,
-    ) {
-        if (text.isEmpty()) return
+    ): Unit = recordHistory(CommitTrigger.Formatting) {
+        if (text.isEmpty()) return@recordHistory
 
-        val paragraph = richParagraphList.firstOrNull() ?: return
+        val paragraph = richParagraphList.firstOrNull() ?: return@recordHistory
         val linkStyle = RichSpanStyle.Link(
             url = url,
         )
@@ -870,8 +941,8 @@ public class RichTextState internal constructor(
      */
     public fun addLinkToSelection(
         url: String,
-    ) {
-        if (selection.collapsed) return
+    ): Unit = recordHistory(CommitTrigger.Formatting) {
+        if (selection.collapsed) return@recordHistory
 
         val linkStyle = RichSpanStyle.Link(
             url = url,
@@ -894,8 +965,8 @@ public class RichTextState internal constructor(
     public fun addLinkToTextRange(
         url: String,
         textRange: TextRange,
-    ) {
-        if (textRange.collapsed) return
+    ): Unit = recordHistory(CommitTrigger.Formatting) {
+        if (textRange.collapsed) return@recordHistory
 
         val linkStyle = RichSpanStyle.Link(
             url = url,
@@ -917,14 +988,14 @@ public class RichTextState internal constructor(
      */
     public fun updateLink(
         url: String,
-    ) {
-        if (!isLink) return
+    ): Unit = recordHistory(CommitTrigger.Formatting) {
+        if (!isLink) return@recordHistory
 
         val linkStyle = RichSpanStyle.Link(
             url = url,
         )
 
-        val richSpan = getSelectedLinkRichSpan() ?: return
+        val richSpan = getSelectedLinkRichSpan() ?: return@recordHistory
 
         richSpan.richSpanStyle = linkStyle
 
@@ -934,10 +1005,10 @@ public class RichTextState internal constructor(
     /**
      * Remove the link from the selected text.
      */
-    public fun removeLink() {
-        if (!isLink) return
+    public fun removeLink(): Unit = recordHistory(CommitTrigger.Formatting) {
+        if (!isLink) return@recordHistory
 
-        val richSpan = getSelectedLinkRichSpan() ?: return
+        val richSpan = getSelectedLinkRichSpan() ?: return@recordHistory
 
         richSpan.richSpanStyle = RichSpanStyle.Default
 
@@ -971,7 +1042,10 @@ public class RichTextState internal constructor(
 
     public fun removeCodeSpan(): Unit = removeRichSpan(RichSpanStyle.Code())
 
-    public fun toggleRichSpan(spanStyle: RichSpanStyle) {
+    public fun toggleRichSpan(spanStyle: RichSpanStyle): Unit = recordHistory(
+        trigger = CommitTrigger.Formatting,
+        enabled = !selection.collapsed,
+    ) {
         if (isRichSpan(spanStyle::class))
             removeRichSpan(spanStyle)
         else
@@ -984,7 +1058,10 @@ public class RichTextState internal constructor(
      *
      * @param spanStyle the rich span style that is going to be added.
      */
-    public fun addRichSpan(spanStyle: RichSpanStyle) {
+    public fun addRichSpan(spanStyle: RichSpanStyle): Unit = recordHistory(
+        trigger = CommitTrigger.Formatting,
+        enabled = !selection.collapsed,
+    ) {
         if (toRemoveRichSpanStyleKClass == spanStyle::class)
             toRemoveRichSpanStyleKClass = RichSpanStyle.Default::class
         toAddRichSpanStyle = spanStyle
@@ -1002,9 +1079,12 @@ public class RichTextState internal constructor(
     public fun addRichSpan(
         spanStyle: RichSpanStyle,
         textRange: TextRange,
+    ): Unit = recordHistory(
+        trigger = CommitTrigger.Formatting,
+        enabled = !textRange.collapsed,
     ) {
         if (textRange.collapsed)
-            return
+            return@recordHistory
 
         if (toRemoveRichSpanStyleKClass == spanStyle::class)
             toRemoveRichSpanStyleKClass = RichSpanStyle.Default::class
@@ -1019,7 +1099,10 @@ public class RichTextState internal constructor(
      *
      * @param spanStyle the rich span style that is going to be removed.
      */
-    public fun removeRichSpan(spanStyle: RichSpanStyle) {
+    public fun removeRichSpan(spanStyle: RichSpanStyle): Unit = recordHistory(
+        trigger = CommitTrigger.Formatting,
+        enabled = !selection.collapsed,
+    ) {
         if (toAddRichSpanStyle::class == spanStyle::class)
             toAddRichSpanStyle = RichSpanStyle.Default
         toRemoveRichSpanStyleKClass = spanStyle::class
@@ -1037,9 +1120,12 @@ public class RichTextState internal constructor(
     public fun removeRichSpan(
         spanStyle: RichSpanStyle,
         textRange: TextRange
+    ): Unit = recordHistory(
+        trigger = CommitTrigger.Formatting,
+        enabled = !textRange.collapsed,
     ) {
         if (textRange.collapsed)
-            return
+            return@recordHistory
 
         if (toAddRichSpanStyle::class == spanStyle::class)
             toAddRichSpanStyle = RichSpanStyle.Default
@@ -1051,14 +1137,20 @@ public class RichTextState internal constructor(
     /**
      * Clear all [RichSpanStyle]s.
      */
-    public fun clearRichSpans() {
+    public fun clearRichSpans(): Unit = recordHistory(
+        trigger = CommitTrigger.Formatting,
+        enabled = !selection.collapsed,
+    ) {
         removeRichSpan(currentRichSpanStyle)
     }
 
     /**
      * Clear all [RichSpanStyle]s from a specific [TextRange].
      */
-    public fun clearRichSpans(textRange: TextRange) {
+    public fun clearRichSpans(textRange: TextRange): Unit = recordHistory(
+        trigger = CommitTrigger.Formatting,
+        enabled = !textRange.collapsed,
+    ) {
         removeRichSpan(currentRichSpanStyle, textRange)
     }
 
@@ -1078,7 +1170,7 @@ public class RichTextState internal constructor(
      * @see [addParagraphStyle]
      * @see [removeParagraphStyle]
      */
-    public fun toggleParagraphStyle(paragraphStyle: ParagraphStyle) {
+    public fun toggleParagraphStyle(paragraphStyle: ParagraphStyle): Unit = recordHistory(CommitTrigger.Formatting) {
         if (currentParagraphStyle.isSpecifiedFieldsEquals(paragraphStyle))
             removeParagraphStyle(paragraphStyle)
         else
@@ -1099,18 +1191,18 @@ public class RichTextState internal constructor(
      * @see [removeParagraphStyle]
      * @see [toggleParagraphStyle]
      */
-    public fun addParagraphStyle(paragraphStyle: ParagraphStyle) {
+    public fun addParagraphStyle(paragraphStyle: ParagraphStyle): Unit = recordHistory(CommitTrigger.Formatting) {
         if (!currentParagraphStyle.isSpecifiedFieldsEquals(paragraphStyle)) {
             // If the selection is collapsed, we add the paragraph style to the paragraph containing the selection
             if (selection.collapsed) {
-                val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
+                val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return@recordHistory
                 paragraph.paragraphStyle = paragraph.paragraphStyle.merge(paragraphStyle)
                 clearLineBreakContinuations(paragraph)
             }
             // If the selection is not collapsed, we add the paragraph style to all the paragraphs in the selection
             else {
                 val paragraphs = getRichParagraphListByTextRange(selection)
-                if (paragraphs.isEmpty()) return
+                if (paragraphs.isEmpty()) return@recordHistory
                 paragraphs.fastForEach {
                     it.paragraphStyle = it.paragraphStyle.merge(paragraphStyle)
                     clearLineBreakContinuations(it)
@@ -1137,18 +1229,18 @@ public class RichTextState internal constructor(
      * @see [addParagraphStyle]
      * @see [toggleParagraphStyle]
      */
-    public fun removeParagraphStyle(paragraphStyle: ParagraphStyle) {
+    public fun removeParagraphStyle(paragraphStyle: ParagraphStyle): Unit = recordHistory(CommitTrigger.Formatting) {
         if (currentParagraphStyle.isSpecifiedFieldsEquals(paragraphStyle)) {
             // If the selection is collapsed, we remove the paragraph style from the paragraph containing the selection
             if (selection.collapsed) {
-                val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return
+                val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return@recordHistory
                 paragraph.paragraphStyle = paragraph.paragraphStyle.unmerge(paragraphStyle)
                 clearLineBreakContinuations(paragraph)
             }
             // If the selection is not collapsed, we remove the paragraph style from all the paragraphs in the selection
             else {
                 val paragraphs = getRichParagraphListByTextRange(selection)
-                if (paragraphs.isEmpty()) return
+                if (paragraphs.isEmpty()) return@recordHistory
                 paragraphs.fastForEach {
                     it.paragraphStyle = it.paragraphStyle.unmerge(paragraphStyle)
                     clearLineBreakContinuations(it)
@@ -1161,10 +1253,10 @@ public class RichTextState internal constructor(
         }
     }
 
-    public fun toggleUnorderedList() {
+    public fun toggleUnorderedList(): Unit = recordHistory(CommitTrigger.Structural) {
         val paragraphs = getRichParagraphListByTextRange(selection)
         if (paragraphs.isEmpty())
-            return
+            return@recordHistory
         val isFirstParagraphUnorderedList = paragraphs.first().type is UnorderedList
         paragraphs.fastForEach { paragraph ->
             if (isFirstParagraphUnorderedList)
@@ -1174,7 +1266,7 @@ public class RichTextState internal constructor(
         }
     }
 
-    public fun addUnorderedList() {
+    public fun addUnorderedList(): Unit = recordHistory(CommitTrigger.Structural) {
         val paragraphs = getRichParagraphListByTextRange(selection)
 
         paragraphs.fastForEach { paragraph ->
@@ -1182,7 +1274,7 @@ public class RichTextState internal constructor(
         }
     }
 
-    public fun removeUnorderedList() {
+    public fun removeUnorderedList(): Unit = recordHistory(CommitTrigger.Structural) {
         val paragraphs = getRichParagraphListByTextRange(selection)
 
         paragraphs.fastForEach { paragraph ->
@@ -1190,10 +1282,10 @@ public class RichTextState internal constructor(
         }
     }
 
-    public fun toggleOrderedList() {
+    public fun toggleOrderedList(): Unit = recordHistory(CommitTrigger.Structural) {
         val paragraphs = getRichParagraphListByTextRange(selection)
         if (paragraphs.isEmpty())
-            return
+            return@recordHistory
         val isFirstParagraphOrderedList = paragraphs.first().type is OrderedList
         paragraphs.fastForEach { paragraph ->
             if (isFirstParagraphOrderedList) {
@@ -1204,7 +1296,7 @@ public class RichTextState internal constructor(
         }
     }
 
-    public fun addOrderedList() {
+    public fun addOrderedList(): Unit = recordHistory(CommitTrigger.Structural) {
         val paragraphs = getRichParagraphListByTextRange(selection)
 
         paragraphs.fastForEach { paragraph ->
@@ -1212,7 +1304,7 @@ public class RichTextState internal constructor(
         }
     }
 
-    public fun removeOrderedList() {
+    public fun removeOrderedList(): Unit = recordHistory(CommitTrigger.Structural) {
         val paragraphs = getRichParagraphListByTextRange(selection)
 
         paragraphs.fastForEach { paragraph ->
@@ -1227,17 +1319,17 @@ public class RichTextState internal constructor(
      *
      * If multiple paragraphs are selected, they all must be lists.
      */
-    public fun increaseListLevel() {
+    public fun increaseListLevel(): Unit = recordHistory(CommitTrigger.Structural) {
         if (!isList)
-            return
+            return@recordHistory
 
         val paragraphs = getRichParagraphListByTextRange(selection)
 
         if (paragraphs.isEmpty())
-            return
+            return@recordHistory
 
         if (!canIncreaseListLevel(paragraphs))
-            return
+            return@recordHistory
 
         // Increase list level
         val levelNumberMap = mutableMapOf<Int, Int>()
@@ -1338,17 +1430,17 @@ public class RichTextState internal constructor(
      *
      * If multiple paragraphs are selected, they all must be lists.
      */
-    public fun decreaseListLevel() {
+    public fun decreaseListLevel(): Unit = recordHistory(CommitTrigger.Structural) {
         if (!isList)
-            return
+            return@recordHistory
 
         val paragraphs = getRichParagraphListByTextRange(selection)
 
         if (paragraphs.isEmpty())
-            return
+            return@recordHistory
 
         if (!canDecreaseListLevel(paragraphs))
-            return
+            return@recordHistory
 
         // Decrease list level
         val levelNumberMap = mutableMapOf<Int, Int>()
@@ -1593,6 +1685,24 @@ public class RichTextState internal constructor(
      * @return true if the list level was increased or decreased, false otherwise.
      */
     internal fun onPreviewKeyEvent(event: KeyEvent): Boolean {
+        // Undo/redo shortcuts — intercepted before BasicTextField's built-in handler
+        // so rich-model snapshots rewind instead of plain-text TextFieldValue state.
+        if (!suppressUndoShortcuts && event.type == KeyEventType.KeyDown && !event.isAltPressed) {
+            val modifier = event.isMetaPressed || event.isCtrlPressed
+            if (modifier) {
+                when (event.key) {
+                    Key.Z if !event.isShiftPressed -> {
+                        history.undo()
+                        return true
+                    }
+                    Key.Z if event.isShiftPressed -> {
+                        history.redo()
+                        return true
+                    }
+                }
+            }
+        }
+
         // Give trigger-suggestions popup first refusal on key events while a query is active.
         // Popup handlers return true when they consume the event (↑/↓/Enter/Esc navigation).
         triggerKeyHandler?.invoke(event)?.let { handled ->
@@ -1782,14 +1892,62 @@ public class RichTextState internal constructor(
      *
      * @param newTextFieldValue the new text field value.
      */
+    private fun classifyTextChange(newTextFieldValue: TextFieldValue): CommitTrigger? {
+        val oldText = textFieldValue.text
+        val newText = newTextFieldValue.text
+        return when {
+            newText.length > oldText.length -> {
+                val delta = newText.length - oldText.length
+                val caret = newTextFieldValue.selection.min
+                val start = (caret - delta).coerceAtLeast(0)
+                val added = newText.substring(start, caret.coerceAtMost(newText.length))
+                if (added.contains('\n')) CommitTrigger.LineBreak
+                else CommitTrigger.Typing(addedText = added, caret = caret)
+            }
+            newText.length < oldText.length ->
+                CommitTrigger.Delete(caret = newTextFieldValue.selection.min)
+            newText == oldText && newTextFieldValue.selection != textFieldValue.selection ->
+                CommitTrigger.SelectionJump
+            else -> null
+        }
+    }
+
     internal fun onTextFieldValueChange(newTextFieldValue: TextFieldValue) {
-        // Check for pending HTML from clipboard paste
+        // Classify the change for history before any mutation happens.
         val pendingHtml = pendingClipboardHtml
-        if (pendingHtml != null && newTextFieldValue.text.length > textFieldValue.text.length) {
+        val isPaste = pendingHtml != null &&
+            newTextFieldValue.text.length > textFieldValue.text.length
+        val trigger: CommitTrigger? = when {
+            isPaste -> CommitTrigger.Paste
+            else -> classifyTextChange(newTextFieldValue)
+        }
+        val before = if (trigger != null) beginHistoryRecord() else null
+
+        try {
+            onTextFieldValueChangeInner(newTextFieldValue, isPaste, pendingHtml)
+        } finally {
+            if (trigger != null) finishHistoryRecord(trigger, before)
+        }
+    }
+
+    private fun onTextFieldValueChangeInner(
+        newTextFieldValue: TextFieldValue,
+        isPaste: Boolean,
+        pendingHtml: String?,
+    ) {
+        if (isPaste) {
             pendingClipboardHtml = null
             val position = selection.min
-            removeSelectedText()
-            insertHtml(html = pendingHtml, position = position)
+            // Suppress nested history captures during the remove+insert so the entire
+            // paste is a single undo group attributable to the top-level trigger.
+            val wasSuppressed = suppressHistoryRecording
+            suppressHistoryRecording = true
+            try {
+                removeSelectedText()
+                insertHtml(html = pendingHtml!!, position = position)
+            } finally {
+                suppressHistoryRecording = wasSuppressed
+            }
             return
         }
         pendingClipboardHtml = null
@@ -1914,6 +2072,105 @@ public class RichTextState internal constructor(
         // Clear [tempTextFieldValue]
         tempTextFieldValue = TextFieldValue()
     }
+
+    private inner class HistoryHostImpl : RichTextHistoryHost {
+        override fun captureState(timestampMs: Long): RichTextSnapshot =
+            RichTextSnapshot.capture(
+                paragraphs = richParagraphList,
+                selection = textFieldValue.selection,
+                composition = textFieldValue.composition,
+                toAddSpanStyle = toAddSpanStyle,
+                toAddRichSpanStyle = toAddRichSpanStyle,
+                timestampMs = timestampMs,
+            )
+
+        override fun restoreState(snapshot: RichTextSnapshot) {
+            restoreSnapshot(snapshot)
+        }
+    }
+
+    private fun restoreSnapshot(snapshot: RichTextSnapshot) {
+        suppressHistoryRecording = true
+        try {
+            val copied = snapshot.paragraphs.map { it.deepCopy() }
+
+            // Delegate to the canonical rebuild path, which recomputes annotatedString
+            // and textFieldValue.text honoring each paragraph's startText (list prefix,
+            // etc.) and inter-paragraph separators. Hand-rolling this here previously
+            // caused text-length mismatches crashing [updateAnnotatedString].
+            updateRichParagraphList(copied)
+
+            // updateRichParagraphList resets selection to a single caret; restore the
+            // snapshot's selection, clamped to the rebuilt text.
+            val textLen = textFieldValue.text.length
+            val clampedSelection = TextRange(
+                snapshot.selection.start.coerceIn(0, textLen),
+                snapshot.selection.end.coerceIn(0, textLen),
+            )
+            textFieldValue = textFieldValue.copy(selection = clampedSelection)
+            tempTextFieldValue = textFieldValue
+
+            // Re-apply staged styles from the snapshot. updateRichParagraphList clears
+            // these to defaults; we want the caret to remember the user's staged formatting.
+            toAddSpanStyle = snapshot.toAddSpanStyle
+            toAddRichSpanStyle = snapshot.toAddRichSpanStyle
+
+            updateCurrentSpanStyle()
+            updateCurrentParagraphStyle()
+            refreshActiveTriggerQuery()
+
+            tempTextFieldValue = TextFieldValue()
+        } finally {
+            suppressHistoryRecording = false
+        }
+    }
+
+    /**
+     * Captures the pre-mutation snapshot if the caller is an outer public-API entry.
+     * Returns `null` if recording is suppressed or we are already inside a recording
+     * call (nested mutation, should be attributed to the outer commit).
+     */
+    private fun beginHistoryRecord(): RichTextSnapshot? {
+        if (suppressHistoryRecording || historyRecordingDepth > 0) return null
+        historyRecordingDepth++
+        return history.captureForCommit(timestampMs = currentMonotonicMs())
+    }
+
+    /**
+     * Completes a recording started by [beginHistoryRecord]. If [before] is `null`
+     * the call was nested / suppressed and nothing is committed.
+     */
+    private fun finishHistoryRecord(trigger: CommitTrigger, before: RichTextSnapshot?) {
+        if (before == null) return
+        historyRecordingDepth--
+        history.onCommit(trigger, before)
+        history.onAfterCommit(trigger)
+    }
+
+    private inline fun <T> recordHistory(
+        trigger: CommitTrigger,
+        enabled: Boolean = true,
+        block: () -> T,
+    ): T {
+        // When [enabled] is false the mutation is known a priori to only touch
+        // staged state (e.g. span styles bags) without changing the paragraph tree —
+        // recording it would produce a phantom undo step that confuses users. We
+        // still seal the pending coalesced typing group so the toggle acts as a
+        // natural break between typing bursts, matching how most editors behave.
+        val before = if (enabled) beginHistoryRecord() else null
+        return try {
+            block()
+        } finally {
+            if (before != null) {
+                finishHistoryRecord(trigger, before)
+            } else if (enabled.not() && !suppressHistoryRecording && historyRecordingDepth == 0) {
+                history.sealPendingGroup()
+            }
+        }
+    }
+
+    private fun currentMonotonicMs(): Long =
+        RichTextStateHistoryClockStart.elapsedNow().inWholeMilliseconds
 
     /**
      * Recompute [activeTriggerQuery] from the current text + caret + registered triggers.
@@ -4189,6 +4446,7 @@ public class RichTextState internal constructor(
      * @param html The html to update the [RichTextState] with.
      */
     public fun setHtml(html: String): RichTextState {
+        history.onProgrammaticReplace()
         val richParagraphList = RichTextStateHtmlParser.encode(html).richParagraphList
         updateRichParagraphList(richParagraphList)
         return this
@@ -4246,6 +4504,7 @@ public class RichTextState internal constructor(
      * @param markdown The markdown to update the [RichTextState] with.
      */
     public fun setMarkdown(markdown: String): RichTextState {
+        history.onProgrammaticReplace()
         val richParagraphList = RichTextStateMarkdownParser.encode(markdown).richParagraphList
         updateRichParagraphList(richParagraphList)
         return this

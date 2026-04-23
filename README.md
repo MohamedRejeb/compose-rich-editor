@@ -15,6 +15,7 @@ A rich text editor library for both Jetpack Compose and Compose Multiplatform, f
 - **Multiplatform**: Compose Rich Editor supports Compose Multiplatform (Android, iOS, Desktop, Web).
 - **Easy to use**: Compose Rich Editor's API leverages Kotlin's language features for simplicity and minimal boilerplate.
 - **WYSIWYG**: Compose Rich Editor is a WYSIWYG editor that supports the most common text styling features.
+- **Undo / Redo**: Built-in rich-text-aware undo/redo (`state.history`) that respects formatting, overriding `BasicTextField`'s default.
 
 ## Screenshots
 

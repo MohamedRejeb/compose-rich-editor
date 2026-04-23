@@ -62,6 +62,7 @@ venv/
 .claude
 
 CLAUDE.md
+AGENTS.md
 
 kotlin-js-store
 

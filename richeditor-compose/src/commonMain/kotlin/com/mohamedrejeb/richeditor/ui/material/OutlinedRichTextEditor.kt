@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
 import com.mohamedrejeb.richeditor.ui.RichTextChangedListener
+import com.mohamedrejeb.richeditor.ui.UndoBehavior
 
 /**
  * Material Design outlined rich text field
@@ -96,7 +97,8 @@ public fun OutlinedRichTextEditor(
     maxLength: Int = Int.MAX_VALUE,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape = MaterialTheme.shapes.small,
-    colors: TextFieldColors = TextFieldDefaults.outlinedTextFieldColors()
+    colors: TextFieldColors = TextFieldDefaults.outlinedTextFieldColors(),
+    undoBehavior: UndoBehavior = UndoBehavior.Enabled,
 ) {
     // If color is not provided via the text style, use content color as a default
     val textColor = textStyle.color.takeOrElse {
@@ -132,6 +134,7 @@ public fun OutlinedRichTextEditor(
         maxLines = maxLines,
         minLines = minLines,
         maxLength = maxLength,
+        undoBehavior = undoBehavior,
         decorationBox = @Composable { innerTextField ->
             TextFieldDefaults.OutlinedTextFieldDecorationBox(
                 value = state.textFieldValue.text,

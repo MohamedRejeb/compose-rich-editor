@@ -102,6 +102,7 @@ public fun BasicRichTextEditor(
     onTextLayout: (TextLayoutResult) -> Unit = {},
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     cursorBrush: Brush = SolidColor(Color.Black),
+    undoBehavior: UndoBehavior = UndoBehavior.Enabled,
     decorationBox: @Composable (innerTextField: @Composable () -> Unit) -> Unit =
         @Composable { innerTextField -> innerTextField() }
 ) {
@@ -120,6 +121,7 @@ public fun BasicRichTextEditor(
         onTextLayout = onTextLayout,
         interactionSource = interactionSource,
         cursorBrush = cursorBrush,
+        undoBehavior = undoBehavior,
         decorationBox = decorationBox,
         contentPadding = PaddingValues()
     )
@@ -195,6 +197,7 @@ public fun BasicRichTextEditor(
     onTextLayout: (TextLayoutResult) -> Unit = {},
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     cursorBrush: Brush = SolidColor(Color.Black),
+    undoBehavior: UndoBehavior = UndoBehavior.Enabled,
     decorationBox: @Composable (innerTextField: @Composable () -> Unit) -> Unit =
         @Composable { innerTextField -> innerTextField() },
     contentPadding: PaddingValues
@@ -213,6 +216,11 @@ public fun BasicRichTextEditor(
 
     LaunchedEffect(singleParagraph) {
         state.singleParagraphMode = singleParagraph
+    }
+
+    DisposableEffect(state, undoBehavior) {
+        state.suppressUndoShortcuts = (undoBehavior == UndoBehavior.Disabled)
+        onDispose { state.suppressUndoShortcuts = false }
     }
 
     if (!singleParagraph) {

@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.*
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
 import com.mohamedrejeb.richeditor.ui.RichTextChangedListener
+import com.mohamedrejeb.richeditor.ui.UndoBehavior
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -111,6 +112,7 @@ public fun OutlinedRichTextEditor(
     shape: Shape = RichTextEditorDefaults.outlinedShape,
     colors: RichTextEditorColors = RichTextEditorDefaults.outlinedRichTextEditorColors(),
     contentPadding: PaddingValues = RichTextEditorDefaults.outlinedRichTextEditorPadding(),
+    undoBehavior: UndoBehavior = UndoBehavior.Enabled,
 ) {
     // If color is not provided via the text style, use content color as a default
     val textColor = textStyle.color.takeOrElse {
@@ -147,6 +149,7 @@ public fun OutlinedRichTextEditor(
             minLines = minLines,
             maxLength = maxLength,
             onTextLayout = onTextLayout,
+            undoBehavior = undoBehavior,
             decorationBox = { innerTextField ->
                 RichTextEditorDefaults.OutlinedRichTextEditorDecorationBox(
                     value = state.textFieldValue.text,

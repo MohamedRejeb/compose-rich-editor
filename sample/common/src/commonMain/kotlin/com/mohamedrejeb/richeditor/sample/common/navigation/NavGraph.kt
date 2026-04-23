@@ -10,6 +10,7 @@ import com.mohamedrejeb.richeditor.sample.common.markdowneditor.MarkdownEditorCo
 import com.mohamedrejeb.richeditor.sample.common.mentions.MentionsSampleScreen
 import com.mohamedrejeb.richeditor.sample.common.richeditor.RichEditorScreen
 import com.mohamedrejeb.richeditor.sample.common.slack.SlackDemoScreen
+import com.mohamedrejeb.richeditor.sample.common.undoredo.UndoRedoSampleScreen
 
 private const val HOME_ROUTE = "home"
 private const val RICH_EDITOR_ROUTE = "richEditor"
@@ -17,6 +18,7 @@ private const val HTML_EDITOR_ROUTE = "htmlEditor"
 private const val MARKDOWN_EDITOR_ROUTE = "markdownEditor"
 private const val SLACK_ROUTE = "slack"
 private const val MENTIONS_ROUTE = "mentions"
+private const val UNDO_REDO_ROUTE = "undoRedo"
 
 @Composable
 fun NavGraph() {
@@ -33,6 +35,7 @@ fun NavGraph() {
                 navigateToMarkdownEditor = { navController.navigate(MARKDOWN_EDITOR_ROUTE) },
                 navigateToSlack = { navController.navigate(SLACK_ROUTE) },
                 navigateToMentions = { navController.navigate(MENTIONS_ROUTE) },
+                navigateToUndoRedo = { navController.navigate(UNDO_REDO_ROUTE) },
             )
         }
 
@@ -62,6 +65,12 @@ fun NavGraph() {
 
         composable(MENTIONS_ROUTE) {
             MentionsSampleScreen(
+                navigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(UNDO_REDO_ROUTE) {
+            UndoRedoSampleScreen(
                 navigateBack = { navController.popBackStack() }
             )
         }

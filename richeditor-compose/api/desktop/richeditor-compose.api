@@ -36,6 +36,7 @@ public abstract interface class com/mohamedrejeb/richeditor/model/RichSpanStyle 
 	public static synthetic fun drawCustomStyle-zdrCDHg$default (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;Landroidx/compose/ui/graphics/drawscope/DrawScope;Landroidx/compose/ui/text/TextLayoutResult;JLcom/mohamedrejeb/richeditor/model/RichTextConfig;FFILjava/lang/Object;)V
 	public abstract fun getAcceptNewTextInTheEdges ()Z
 	public abstract fun getSpanStyle ()Lkotlin/jvm/functions/Function1;
+	public fun isAtomic ()Z
 }
 
 public final class com/mohamedrejeb/richeditor/model/RichSpanStyle$Code : com/mohamedrejeb/richeditor/model/RichSpanStyle {
@@ -48,6 +49,7 @@ public final class com/mohamedrejeb/richeditor/model/RichSpanStyle$Code : com/mo
 	public fun getAcceptNewTextInTheEdges ()Z
 	public fun getSpanStyle ()Lkotlin/jvm/functions/Function1;
 	public fun hashCode ()I
+	public fun isAtomic ()Z
 }
 
 public final class com/mohamedrejeb/richeditor/model/RichSpanStyle$Companion {
@@ -62,12 +64,14 @@ public final class com/mohamedrejeb/richeditor/model/RichSpanStyle$Default : com
 	public fun getAcceptNewTextInTheEdges ()Z
 	public fun getSpanStyle ()Lkotlin/jvm/functions/Function1;
 	public fun hashCode ()I
+	public fun isAtomic ()Z
 	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/mohamedrejeb/richeditor/model/RichSpanStyle$DefaultImpls {
 	public static fun appendCustomContent (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;Landroidx/compose/ui/text/AnnotatedString$Builder;Lcom/mohamedrejeb/richeditor/model/RichTextState;)Landroidx/compose/ui/text/AnnotatedString$Builder;
 	public static synthetic fun drawCustomStyle-zdrCDHg$default (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;Landroidx/compose/ui/graphics/drawscope/DrawScope;Landroidx/compose/ui/text/TextLayoutResult;JLcom/mohamedrejeb/richeditor/model/RichTextConfig;FFILjava/lang/Object;)V
+	public static fun isAtomic (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;)Z
 }
 
 public final class com/mohamedrejeb/richeditor/model/RichSpanStyle$Image : com/mohamedrejeb/richeditor/model/RichSpanStyle {
@@ -84,6 +88,7 @@ public final class com/mohamedrejeb/richeditor/model/RichSpanStyle$Image : com/m
 	public fun getSpanStyle ()Lkotlin/jvm/functions/Function1;
 	public final fun getWidth-XSAIIZE ()J
 	public fun hashCode ()I
+	public fun isAtomic ()Z
 }
 
 public final class com/mohamedrejeb/richeditor/model/RichSpanStyle$Link : com/mohamedrejeb/richeditor/model/RichSpanStyle {
@@ -96,6 +101,23 @@ public final class com/mohamedrejeb/richeditor/model/RichSpanStyle$Link : com/mo
 	public fun getSpanStyle ()Lkotlin/jvm/functions/Function1;
 	public final fun getUrl ()Ljava/lang/String;
 	public fun hashCode ()I
+	public fun isAtomic ()Z
+}
+
+public final class com/mohamedrejeb/richeditor/model/RichSpanStyle$Token : com/mohamedrejeb/richeditor/model/RichSpanStyle {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public fun appendCustomContent (Landroidx/compose/ui/text/AnnotatedString$Builder;Lcom/mohamedrejeb/richeditor/model/RichTextState;)Landroidx/compose/ui/text/AnnotatedString$Builder;
+	public fun drawCustomStyle-zdrCDHg (Landroidx/compose/ui/graphics/drawscope/DrawScope;Landroidx/compose/ui/text/TextLayoutResult;JLcom/mohamedrejeb/richeditor/model/RichTextConfig;FF)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAcceptNewTextInTheEdges ()Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getLabel ()Ljava/lang/String;
+	public fun getSpanStyle ()Lkotlin/jvm/functions/Function1;
+	public final fun getTriggerId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun isAtomic ()Z
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
@@ -144,6 +166,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun addTextAfterSelection (Ljava/lang/String;)V
 	public final fun addTextAtIndex (ILjava/lang/String;)V
 	public final fun addUnorderedList ()V
+	public final fun cancelActiveTrigger ()V
 	public final fun clear ()V
 	public final fun clearRichSpans ()V
 	public final fun clearRichSpans-5zc-tL8 (J)V
@@ -151,6 +174,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun clearSpanStyles-5zc-tL8 (J)V
 	public final fun copy ()Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public final fun decreaseListLevel ()V
+	public final fun getActiveTriggerQuery ()Lcom/mohamedrejeb/richeditor/model/trigger/TriggerQuery;
 	public final fun getAnnotatedString ()Landroidx/compose/ui/text/AnnotatedString;
 	public final fun getCanDecreaseListLevel ()Z
 	public final fun getCanIncreaseListLevel ()Z
@@ -165,11 +189,13 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun getSelectedLinkUrl ()Ljava/lang/String;
 	public final fun getSelection-d9O1mEE ()J
 	public final fun getSpanStyle-5zc-tL8 (J)Landroidx/compose/ui/text/SpanStyle;
+	public final fun getTriggers ()Ljava/util/List;
 	public final fun increaseListLevel ()V
 	public final fun insertHtml (Ljava/lang/String;I)V
 	public final fun insertHtmlAfterSelection (Ljava/lang/String;)V
 	public final fun insertMarkdown (Ljava/lang/String;I)V
 	public final fun insertMarkdownAfterSelection (Ljava/lang/String;)V
+	public final fun insertToken (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
 	public final fun isCode ()Z
 	public final fun isCodeSpan ()Z
 	public final fun isLink ()Z
@@ -178,6 +204,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun isRichSpan (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;)Z
 	public final fun isRichSpan (Lkotlin/reflect/KClass;)Z
 	public final fun isUnorderedList ()Z
+	public final fun registerTrigger (Lcom/mohamedrejeb/richeditor/model/trigger/Trigger;)V
 	public final fun removeCode ()V
 	public final fun removeCodeSpan ()V
 	public final fun removeLink ()V
@@ -212,6 +239,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun toggleRichSpan (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;)V
 	public final fun toggleSpanStyle (Landroidx/compose/ui/text/SpanStyle;)V
 	public final fun toggleUnorderedList ()V
+	public final fun unregisterTrigger (Ljava/lang/String;)V
 	public final fun updateLink (Ljava/lang/String;)V
 }
 
@@ -234,6 +262,44 @@ public final class com/mohamedrejeb/richeditor/model/TextPaddingValues {
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getHorizontal-XSAIIZE ()J
 	public final fun getVertical-XSAIIZE ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/model/trigger/Trigger {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;CLkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function6;Ljava/util/Set;ZI)V
+	public synthetic fun <init> (Ljava/lang/String;CLkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function6;Ljava/util/Set;ZIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChar ()C
+	public final fun getDrawStyle ()Lkotlin/jvm/functions/Function6;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getMaxQueryLength ()I
+	public final fun getRequireWordBoundary ()Z
+	public final fun getStopChars ()Ljava/util/Set;
+	public final fun getStyle ()Lkotlin/jvm/functions/Function1;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/model/trigger/TriggerKt {
+	public static final fun getDefaultTriggerStopChars ()Ljava/util/Set;
+}
+
+public final class com/mohamedrejeb/richeditor/model/trigger/TriggerQuery {
+	public static final field $stable I
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;JLandroidx/compose/ui/geometry/Rect;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3-d9O1mEE ()J
+	public final fun component4 ()Landroidx/compose/ui/geometry/Rect;
+	public final fun copy-YmzfRxQ (Ljava/lang/String;Ljava/lang/String;JLandroidx/compose/ui/geometry/Rect;)Lcom/mohamedrejeb/richeditor/model/trigger/TriggerQuery;
+	public static synthetic fun copy-YmzfRxQ$default (Lcom/mohamedrejeb/richeditor/model/trigger/TriggerQuery;Ljava/lang/String;Ljava/lang/String;JLandroidx/compose/ui/geometry/Rect;ILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/model/trigger/TriggerQuery;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCaretRect ()Landroidx/compose/ui/geometry/Rect;
+	public final fun getQuery ()Ljava/lang/String;
+	public final fun getRange-d9O1mEE ()J
+	public final fun getTriggerId ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -391,6 +457,10 @@ public final class com/mohamedrejeb/richeditor/ui/material3/RichTextEditorKt {
 
 public final class com/mohamedrejeb/richeditor/ui/material3/RichTextKt {
 	public static final fun RichText-a0LXGaU (Lcom/mohamedrejeb/richeditor/model/RichTextState;Landroidx/compose/ui/Modifier;JJLandroidx/compose/ui/text/font/FontStyle;Landroidx/compose/ui/text/font/FontWeight;Landroidx/compose/ui/text/font/FontFamily;JLandroidx/compose/ui/text/style/TextDecoration;IJIZIILjava/util/Map;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/text/TextStyle;Lcom/mohamedrejeb/richeditor/model/ImageLoader;Landroidx/compose/runtime/Composer;III)V
+}
+
+public final class com/mohamedrejeb/richeditor/ui/material3/TriggerSuggestionsKt {
+	public static final fun TriggerSuggestions-aF7bR5A (Lcom/mohamedrejeb/richeditor/model/RichTextState;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;FJJJLandroidx/compose/ui/graphics/Shape;ILkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V
 }
 
 public final class com/mohamedrejeb/richeditor/utils/FloatUtilsKt {

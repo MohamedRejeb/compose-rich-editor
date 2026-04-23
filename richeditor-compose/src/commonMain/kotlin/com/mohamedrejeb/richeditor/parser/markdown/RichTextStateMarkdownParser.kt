@@ -532,14 +532,26 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     ?.toString()
                     .orEmpty()
 
-                if (isImage)
-                    RichSpanStyle.Image(
-                        model = destination,
-                        width = 0.sp,
-                        height = 0.sp,
-                    )
-                else
-                    RichSpanStyle.Link(url = destination)
+                val linkLabel = node
+                    .findChildOfType(MarkdownElementTypes.LINK_TEXT)
+                    ?.getTextInNode(markdown)
+                    ?.toString()
+                    ?.removeSurrounding("[", "]")
+                    .orEmpty()
+
+                val token = parseTokenDestination(destination, linkLabel)
+
+                when {
+                    token != null -> token
+                    isImage ->
+                        RichSpanStyle.Image(
+                            model = destination,
+                            width = 0.sp,
+                            height = 0.sp,
+                        )
+                    else ->
+                        RichSpanStyle.Link(url = destination)
+                }
             }
 
             MarkdownElementTypes.CODE_SPAN ->
@@ -574,9 +586,39 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         return when (richSpanStyle) {
             is RichSpanStyle.Link -> "[$text](${richSpanStyle.url})"
             is RichSpanStyle.Code -> "`$text`"
+            is RichSpanStyle.Token -> {
+                // Pseudo-link syntax: [label](trigger:triggerId:id)
+                val label = richSpanStyle.label.ifEmpty { text }
+                "[$label]($TokenDestinationPrefix${richSpanStyle.triggerId}:${richSpanStyle.id})"
+            }
             else -> text
         }
     }
+
+    /**
+     * Parses a link destination of the form `trigger:<triggerId>:<id>` into a [RichSpanStyle.Token].
+     * Returns `null` if the destination doesn't match the token shape.
+     */
+    @OptIn(ExperimentalRichTextApi::class)
+    private fun parseTokenDestination(
+        destination: String,
+        label: String,
+    ): RichSpanStyle.Token? {
+        if (!destination.startsWith(TokenDestinationPrefix)) return null
+        val payload = destination.removePrefix(TokenDestinationPrefix)
+        val separatorIndex = payload.indexOf(':')
+        if (separatorIndex <= 0) return null
+        val triggerId = payload.substring(0, separatorIndex)
+        val id = payload.substring(separatorIndex + 1)
+        if (triggerId.isEmpty() || id.isEmpty()) return null
+        return RichSpanStyle.Token(
+            triggerId = triggerId,
+            id = id,
+            label = label,
+        )
+    }
+
+    private const val TokenDestinationPrefix = "trigger:"
 
     /**
      * Returns the markdown line start text from the first [RichSpan].

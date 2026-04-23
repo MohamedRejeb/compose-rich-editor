@@ -121,7 +121,7 @@ internal fun AnnotatedString.Builder.append(
 ): Int {
     var index = startIndex
 
-    withStyle(richSpan.spanStyle.merge(richSpan.richSpanStyle.spanStyle(state.config))) {
+    withStyle(richSpan.spanStyle.merge(resolveRichSpanStyleStyle(state, richSpan.richSpanStyle))) {
         if (richSpan.richSpanStyle is RichSpanStyle.Image) {
             // Image owns a single placeholder char in the raw text;
             // appendCustomContent (via appendInlineContent) emits that
@@ -235,7 +235,7 @@ internal fun AnnotatedString.Builder.append(
 ): Int {
     var index = startIndex
 
-    withStyle(richSpan.spanStyle.merge(richSpan.richSpanStyle.spanStyle(state.config))) {
+    withStyle(richSpan.spanStyle.merge(resolveRichSpanStyleStyle(state, richSpan.richSpanStyle))) {
         richSpan.textRange = TextRange(index, index + richSpan.text.length)
 
         // Image owns a single placeholder char in the raw text;
@@ -267,4 +267,21 @@ internal fun AnnotatedString.Builder.append(
         }
     }
     return index
+}
+
+/**
+ * Resolve a span's render-time [SpanStyle], preferring the registered [Trigger]'s style
+ * for [RichSpanStyle.Token] spans when the trigger is known. Falls back to the style
+ * encoded on the [RichSpanStyle] itself (which, for Token, is a neutral default).
+ */
+@OptIn(ExperimentalRichTextApi::class)
+private fun resolveRichSpanStyleStyle(
+    state: RichTextState,
+    richSpanStyle: RichSpanStyle,
+): SpanStyle {
+    if (richSpanStyle is RichSpanStyle.Token) {
+        val trigger = state.findTrigger(richSpanStyle.triggerId)
+        if (trigger != null) return trigger.style(state.config)
+    }
+    return richSpanStyle.spanStyle(state.config)
 }

@@ -292,6 +292,25 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 if (name in skippedHtmlElements)
                     return@onCloseTag
 
+                // Finalize Token labels: the richSpanStyle was created at open-tag time
+                // with an empty label; fill it now that the inner text has accumulated.
+                val closingSpan = currentRichSpan
+                val closingStyle = closingSpan?.richSpanStyle
+                if (name == "span" && closingStyle is RichSpanStyle.Token && closingStyle.label.isEmpty()) {
+                    val label = closingSpan.text.ifEmpty {
+                        // Fall back to collecting text from any accumulated children
+                        // (rare: nested inline styling inside a token).
+                        closingSpan.children.joinToString("") { it.text }
+                    }
+                    if (label.isNotEmpty()) {
+                        closingSpan.richSpanStyle = RichSpanStyle.Token(
+                            triggerId = closingStyle.triggerId,
+                            id = closingStyle.id,
+                            label = label,
+                        )
+                    }
+                }
+
                 if (name != BrElement)
                     currentRichSpan = currentRichSpan?.parent
             }
@@ -524,10 +543,12 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         val tagName = spanHtml.first
         val tagAttributes = spanHtml.second
 
-        // Convert attributes map to HTML string
+        // Convert attributes map to HTML string. Values MUST be escaped to avoid producing
+        // malformed or XSS-capable HTML when attribute content comes from user data
+        // (e.g. Token ids, link hrefs, image alt text). See REVIEW.md §5.
         val tagAttributesStringBuilder = StringBuilder()
         tagAttributes.forEach { (key, value) ->
-            tagAttributesStringBuilder.append(" $key=\"$value\"")
+            tagAttributesStringBuilder.append(" $key=\"${escapeHtmlAttribute(value)}\"")
         }
 
         // Convert span style to CSS string
@@ -596,6 +617,21 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     contentDescription = attributes["alt"] ?: ""
                 )
 
+            "span" -> {
+                val triggerId = attributes["data-trigger"]
+                val tokenId = attributes["data-id"]
+                if (!triggerId.isNullOrEmpty() && !tokenId.isNullOrEmpty()) {
+                    // Label is filled in at close-tag time once the inner text has accumulated.
+                    RichSpanStyle.Token(
+                        triggerId = triggerId,
+                        id = tokenId,
+                        label = "",
+                    )
+                } else {
+                    RichSpanStyle.Default
+                }
+            }
+
             else ->
                 RichSpanStyle.Default
         }
@@ -626,6 +662,12 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     )
                 else
                     "span" to emptyMap()
+
+            is RichSpanStyle.Token ->
+                "span" to mapOf(
+                    "data-trigger" to richSpanStyle.triggerId,
+                    "data-id" to richSpanStyle.id,
+                )
 
             else ->
                 "span" to emptyMap()
@@ -668,6 +710,27 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
             is OrderedList -> "ol"
             else -> "p"
         }
+    }
+
+    /**
+     * Escape a value for inclusion inside a double-quoted HTML attribute.
+     * Replaces the characters that are unsafe in that context.
+     */
+    private fun escapeHtmlAttribute(value: String): String {
+        if (value.isEmpty()) return value
+        val needsEscape = value.any { it == '&' || it == '"' || it == '<' || it == '>' }
+        if (!needsEscape) return value
+        val sb = StringBuilder(value.length + 8)
+        for (ch in value) {
+            when (ch) {
+                '&' -> sb.append("&amp;")
+                '"' -> sb.append("&quot;")
+                '<' -> sb.append("&lt;")
+                '>' -> sb.append("&gt;")
+                else -> sb.append(ch)
+            }
+        }
+        return sb.toString()
     }
 
 }

@@ -237,6 +237,52 @@ val markdown = richTextState.toMarkdown()
 
 Check out Compose Rich Editor's [full documentation](https://mohamedrejeb.github.io/compose-rich-editor/) for more details.
 
+## Mentions, Hashtags, Slash Commands (Triggers)
+
+> Experimental — gated by `@ExperimentalRichTextApi`.
+
+A generic trigger system lets you add `@mentions`, `#hashtags`, `/commands` or any
+single-character trigger. A trigger activates a query mode; when the user selects a
+suggestion, an atomic `Token` span is inserted. Tokens are deleted, selected, and
+skipped as a single unit, and they round-trip through both HTML and Markdown.
+
+Register triggers on the state and observe `activeTriggerQuery`:
+
+```kotlin
+import com.mohamedrejeb.richeditor.model.trigger.Trigger
+import com.mohamedrejeb.richeditor.ui.material3.TriggerSuggestions
+
+val state = rememberRichTextState()
+
+LaunchedEffect(Unit) {
+    state.registerTrigger(Trigger(id = "mention", char = '@'))
+    state.registerTrigger(Trigger(id = "hashtag", char = '#'))
+}
+
+Box {
+    RichTextEditor(state = state)
+
+    // Drop in the built-in popup, or roll your own using state.activeTriggerQuery.
+    TriggerSuggestions(
+        state = state,
+        triggerId = "mention",
+        suggestions = { query -> users.filter { it.handle.contains(query) } },
+        onSelect = { user ->
+            RichSpanStyle.Token(
+                triggerId = "mention",
+                id = user.id,
+                label = "@${user.handle}",
+            )
+        },
+        item = { user -> Text(user.handle) },
+    )
+}
+```
+
+Tokens serialize as `<span data-trigger="mention" data-id="u123">@mohamed</span>` in HTML
+and `[@mohamed](trigger:mention:u123)` in Markdown, so content round-trips even in viewers
+that don't know about triggers.
+
 ## Web live demo
 You can try out the web demo [here](https://compose-richeditor.netlify.app/).
 

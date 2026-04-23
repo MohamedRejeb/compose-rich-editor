@@ -17,6 +17,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -235,6 +237,23 @@ public fun BasicRichTextEditor(
     }
 
     CompositionLocalProvider(LocalClipboard provides richClipboardManager) {
+        // Capture position on the innerTextField (the actual text content composable),
+        // not on the outer BasicTextField, so trigger-suggestion popups can anchor
+        // precisely at the text content's origin — not at the top of the decorated
+        // container (which for OutlinedRichTextEditor is ~16dp higher).
+        val positionCapturingDecorationBox: @Composable (innerTextField: @Composable () -> Unit) -> Unit =
+            { innerTextField ->
+                decorationBox {
+                    androidx.compose.foundation.layout.Box(
+                        modifier = Modifier.onGloballyPositioned { coords ->
+                            state.textFieldWindowPosition = coords.positionInWindow()
+                        }
+                    ) {
+                        innerTextField()
+                    }
+                }
+            }
+
         BasicTextField(
             value = state.textFieldValue,
             onValueChange = {
@@ -297,7 +316,7 @@ public fun BasicRichTextEditor(
             },
             interactionSource = interactionSource,
             cursorBrush = cursorBrush,
-            decorationBox = decorationBox,
+            decorationBox = positionCapturingDecorationBox,
         )
     }
 }

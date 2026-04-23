@@ -175,7 +175,7 @@ internal class RichSpan(
      *
      * @return True if the rich span is empty, false otherwise
      */
-    fun isEmpty(): Boolean = text.isEmpty() && isChildrenEmpty() && richSpanStyle !is RichSpanStyle.Image
+    fun isEmpty(): Boolean = text.isEmpty() && isChildrenEmpty() && !richSpanStyle.isAtomic
 
     /**
      * Check if the rich span is blank.
@@ -183,7 +183,7 @@ internal class RichSpan(
      *
      * @return True if the rich span is blank, false otherwise
      */
-    fun isBlank(): Boolean = text.isBlank() && isChildrenBlank() && richSpanStyle !is RichSpanStyle.Image
+    fun isBlank(): Boolean = text.isBlank() && isChildrenBlank() && !richSpanStyle.isAtomic
 
     /**
      * Check if the rich span children are empty
@@ -256,7 +256,7 @@ internal class RichSpan(
      * @return True if the rich span is empty after trimming, false otherwise
      */
     internal fun trimStart(): Boolean {
-        if (richSpanStyle is RichSpanStyle.Image)
+        if (richSpanStyle.isAtomic)
             return false
 
         if (isBlank()) {
@@ -295,12 +295,12 @@ internal class RichSpan(
     }
 
     internal fun trimEnd(): Boolean {
-        val isImage = richSpanStyle is RichSpanStyle.Image
+        val isAtomic = richSpanStyle.isAtomic
 
-        if (isImage)
+        if (isAtomic)
             return false
 
-        val isChildrenBlank = isChildrenBlank() && !isImage
+        val isChildrenBlank = isChildrenBlank() && !isAtomic
 
         if (text.isBlank() && isChildrenBlank) {
             text = ""

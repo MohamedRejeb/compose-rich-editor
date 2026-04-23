@@ -30,6 +30,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.*
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
+import com.mohamedrejeb.richeditor.ui.UndoBehavior
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -114,7 +115,8 @@ public fun RichTextEditor(
             RichTextEditorDefaults.richTextEditorWithoutLabelPadding()
         } else {
             RichTextEditorDefaults.richTextEditorWithLabelPadding()
-        }
+        },
+    undoBehavior: UndoBehavior = UndoBehavior.Enabled,
 ) {
     // If color is not provided via the text style, use content color as a default
     val textColor = textStyle.color.takeOrElse {
@@ -142,6 +144,7 @@ public fun RichTextEditor(
             onTextLayout = onTextLayout,
             interactionSource = interactionSource,
             cursorBrush = SolidColor(colors.cursorColor(isError).value),
+            undoBehavior = undoBehavior,
             decorationBox = @Composable { innerTextField ->
                 // places leading icon, text field with label and placeholder, trailing icon
                 RichTextEditorDefaults.RichTextEditorDecorationBox(

@@ -20,13 +20,20 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.gesture.detectTapGestures
 import com.mohamedrejeb.richeditor.model.ImageLoader
 import com.mohamedrejeb.richeditor.model.LocalImageLoader
 import com.mohamedrejeb.richeditor.model.LocalRichTextMaxImageWidthProvider
+import com.mohamedrejeb.richeditor.model.LocalTokenClickHandler
+import com.mohamedrejeb.richeditor.model.LocalTokenHoverHandler
+import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextMaxImageWidthProvider
 import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.model.TokenClickHandler
+import com.mohamedrejeb.richeditor.model.TokenHoverHandler
 
+@OptIn(ExperimentalRichTextApi::class)
 @Composable
 public fun BasicRichText(
     state: RichTextState,
@@ -39,9 +46,16 @@ public fun BasicRichText(
     minLines: Int = 1,
     inlineContent: Map<String, InlineTextContent> = mapOf(),
     imageLoader: ImageLoader = LocalImageLoader.current,
+    onTokenClick: TokenClickHandler? = null,
+    onTokenHover: TokenHoverHandler? = null,
 ) {
     val density = LocalDensity.current
     val uriHandler = LocalUriHandler.current
+    val localTokenClick = LocalTokenClickHandler.current
+    val localTokenHover = LocalTokenHoverHandler.current
+    val effectiveTokenClick = onTokenClick ?: localTokenClick
+    val effectiveTokenHover = onTokenHover ?: localTokenHover
+
     val pointerIcon = remember {
         mutableStateOf(PointerIcon.Default)
     }
@@ -63,26 +77,40 @@ public fun BasicRichText(
             modifier = modifier
                 .drawRichSpanStyle(state)
                 .pointerHoverIcon(pointerIcon.value)
-                .pointerInput(state) {
+                .pointerInput(state, effectiveTokenClick != null, effectiveTokenHover) {
+                    var lastHoveredToken: RichSpanStyle.Token? = null
                     try {
                         awaitEachGesture {
                             val event = awaitPointerEvent()
                             val position = event.changes.first().position
-                            val isLink = state.isLink(position)
+
+                            val tokenUnderPointer = state.getTokenByOffset(position)
+                            val isInteractive = state.isLink(position) ||
+                                (effectiveTokenClick != null && tokenUnderPointer != null)
 
                             pointerIcon.value =
-                                if (isLink)
+                                if (isInteractive)
                                     PointerIcon.Hand
                                 else
                                     PointerIcon.Default
+
+                            if (effectiveTokenHover != null && tokenUnderPointer != lastHoveredToken) {
+                                lastHoveredToken = tokenUnderPointer
+                                effectiveTokenHover.invoke(tokenUnderPointer, position)
+                            }
                         }
                     } catch (_: Exception) {
 
                     }
                 }
-                .pointerInput(state) {
+                .pointerInput(state, effectiveTokenClick) {
                     detectTapGestures(
                         onTap = { offset ->
+                            val token = state.getTokenByOffset(offset)
+                            if (token != null && effectiveTokenClick != null) {
+                                effectiveTokenClick.invoke(token, offset)
+                                return@detectTapGestures
+                            }
                             state.getLinkByOffset(offset)?.let { url ->
                                 try {
                                     uriHandler.openUri(url)
@@ -92,7 +120,8 @@ public fun BasicRichText(
                             }
                         },
                         consumeDown = { offset ->
-                            state.isLink(offset)
+                            state.isLink(offset) ||
+                                (effectiveTokenClick != null && state.isToken(offset))
                         },
                     )
                 }

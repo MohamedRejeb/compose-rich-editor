@@ -591,6 +591,21 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 val label = richSpanStyle.label.ifEmpty { text }
                 "[$label]($TokenDestinationPrefix${richSpanStyle.triggerId}:${richSpanStyle.id})"
             }
+            is RichSpanStyle.Image -> {
+                // Standard Markdown image syntax `![alt](url)`. Only models
+                // that are strings (URLs) round-trip to Markdown; other
+                // painter models have no representable form and are
+                // dropped. The raw `text` at this point is the inline-
+                // content placeholder char and must not leak into the
+                // output.
+                val model = richSpanStyle.model
+                if (model is String) {
+                    val alt = richSpanStyle.contentDescription.orEmpty()
+                    "![$alt]($model)"
+                } else {
+                    ""
+                }
+            }
             else -> text
         }
     }

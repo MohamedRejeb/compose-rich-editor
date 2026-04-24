@@ -24,6 +24,8 @@ import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.annotation.InternalRichTextApi
 import androidx.compose.ui.util.fastCoerceAtLeast
 import androidx.compose.ui.util.fastFirstOrNull
@@ -114,6 +116,16 @@ public class RichTextState internal constructor(
 
     internal val inlineContentMap = mutableStateMapOf<String, InlineTextContent>()
     internal val usedInlineContentMapKeys = mutableSetOf<String>()
+
+    /**
+     * Measured pixel widths (in `sp`) of list-prefix strings ("• ", "1. ", "10. ", etc.),
+     * captured by [adjustRichParagraphLayout] after each text layout. Used to pre-populate
+     * `startTextWidth` on freshly-created [ConfigurableStartTextWidth] paragraph types
+     * before the first paint, so toggle-list, setMarkdown, setHtml, and paste paths render
+     * the correct `TextIndent` on the very first frame instead of relying on the
+     * onTextLayout self-correction (which causes a one-frame "indent jump" flicker).
+     */
+    internal val startTextWidthCache: MutableMap<String, TextUnit> = mutableMapOf()
 
     /**
      * Pending HTML from clipboard, set by platform clipboard managers during [getClipEntry].
@@ -2286,6 +2298,12 @@ public class RichTextState internal constructor(
 
         usedInlineContentMapKeys.clear()
 
+        // Pre-fill `startTextWidth` on any freshly-added list paragraphs so the first
+        // frame uses the correct `TextIndent`. Without this, every toggle / setMarkdown
+        // / paste path renders one frame at `firstLine = base` before the layout pass
+        // measures the prefix and corrects it.
+        applyCachedStartTextWidths()
+
         annotatedString = buildAnnotatedString {
             var index = 0
             richParagraphList.fastForEachIndexed { i, richParagraph ->
@@ -4101,12 +4119,44 @@ public class RichTextState internal constructor(
                         paragraphType.startTextWidth = distanceSp
                         isParagraphUpdated = true
                     }
+                    // Remember the measured width for this prefix string so future
+                    // paragraphs with the same prefix can render correctly on the first
+                    // frame instead of relying on this self-correction pass.
+                    startTextWidthCache[paragraphType.startText] = distanceSp
                 }
             }
         }
 
         if (isParagraphUpdated)
             updateTextFieldValue(textFieldValue)
+    }
+
+    /**
+     * Pre-populates `startTextWidth` on any list-style paragraphs that were just
+     * created with `0.sp` (the default) using widths previously measured for the
+     * same prefix string. Called immediately before each render path rebuilds the
+     * annotated string so the first paint of a fresh list paragraph picks up the
+     * correct `TextIndent` instead of one frame at the indent origin.
+     */
+    private fun applyCachedStartTextWidths() {
+        if (startTextWidthCache.isEmpty()) return
+        richParagraphList.fastForEach { paragraph ->
+            val type = paragraph.type
+            if (type is ConfigurableStartTextWidth && type.startTextWidth == 0.sp) {
+                startTextWidthCache[type.startText]?.let { cached ->
+                    type.startTextWidth = cached
+                }
+            }
+        }
+    }
+
+    /**
+     * Test-only: simulates an `adjustRichParagraphLayout` pass having recorded a
+     * measured prefix width for [startText]. Used to verify the cache → render
+     * pipeline without spinning up a real Compose layout in unit tests.
+     */
+    internal fun recordMeasuredPrefixWidthForTest(startText: String, width: TextUnit) {
+        startTextWidthCache[startText] = width
     }
 
     internal fun getLinkByOffset(offset: Offset): String? {
@@ -4752,6 +4802,11 @@ public class RichTextState internal constructor(
         val newStyledRichSpanList = mutableListOf<RichSpan>()
 
         usedInlineContentMapKeys.clear()
+
+        // See [updateAnnotatedString] for why this runs before the rebuild — same
+        // reason: ensures freshly-parsed list paragraphs from setMarkdown / setHtml
+        // get the cached prefix width before their first frame.
+        applyCachedStartTextWidths()
 
         annotatedString = buildAnnotatedString {
             var index = 0

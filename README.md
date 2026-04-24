@@ -17,6 +17,10 @@ A rich text editor library for both Jetpack Compose and Compose Multiplatform, f
 - **WYSIWYG**: Compose Rich Editor is a WYSIWYG editor that supports the most common text styling features.
 - **Undo / Redo**: Built-in rich-text-aware undo/redo (`state.history`) that respects formatting, overriding `BasicTextField`'s default.
 
+---
+
+<div align="center"><a href="https://github.com/Safouene1/support-palestine-banner/blob/master/Markdown-pages/Support.md"><img src="https://raw.githubusercontent.com/Safouene1/support-palestine-banner/master/banner-project.svg" alt="Support Palestine" style="width: 100%;"></a></div>
+
 ## Screenshots
 
 ### Slack Demo

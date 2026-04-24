@@ -35,6 +35,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -97,6 +98,18 @@ fun ClaudeDemoScreen(
         if (messages.isNotEmpty()) {
             listState.animateScrollToItem(messages.size + 1)
         }
+    }
+
+    // While the current Claude reply is streaming, its body grows but `messages.size`
+    // doesn't change, so the effect above never re-fires. Observe the last message's
+    // length and keep the list pinned to the bottom-pad item on every chunk.
+    LaunchedEffect(isStreaming, messages.size) {
+        if (!isStreaming || messages.isEmpty()) return@LaunchedEffect
+        val lastMessage = messages.last()
+        snapshotFlow { lastMessage.body.annotatedString.text.length }
+            .collect {
+                listState.scrollToItem(messages.size + 1)
+            }
     }
 
     val send: () -> Unit = send@{

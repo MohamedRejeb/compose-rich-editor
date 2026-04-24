@@ -94,4 +94,5 @@ object BrandColors {
     val Medium = Color(0xFF1A8917)
     val X = Color(0xFF000000)
     val Linear = Color(0xFF5E6AD2)
+    val Claude = Color(0xFFC96442)
 }

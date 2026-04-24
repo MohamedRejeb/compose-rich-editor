@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.mohamedrejeb.richeditor.sample.common.claude.ClaudeDemoScreen
 import com.mohamedrejeb.richeditor.sample.common.examples.RealExamplesScreen
 import com.mohamedrejeb.richeditor.sample.common.github.GitHubDemoScreen
 import com.mohamedrejeb.richeditor.sample.common.headings.HeadingsSampleScreen
@@ -33,6 +34,7 @@ private const val IMAGES_ROUTE = "images"
 private const val GITHUB_ROUTE = "github"
 private const val NOTION_ROUTE = "notion"
 private const val HEADINGS_ROUTE = "headings"
+private const val CLAUDE_ROUTE = "claude"
 
 @Composable
 fun NavGraph() {
@@ -57,6 +59,7 @@ fun NavGraph() {
                 navigateToGithub = { navController.navigate(GITHUB_ROUTE) },
                 navigateToNotion = { navController.navigate(NOTION_ROUTE) },
                 navigateToHeadings = { navController.navigate(HEADINGS_ROUTE) },
+                navigateToClaude = { navController.navigate(CLAUDE_ROUTE) },
             )
         }
 
@@ -108,6 +111,13 @@ fun NavGraph() {
                 navigateToSlack = { navController.navigate(SLACK_ROUTE) },
                 navigateToGithub = { navController.navigate(GITHUB_ROUTE) },
                 navigateToNotion = { navController.navigate(NOTION_ROUTE) },
+                navigateToClaude = { navController.navigate(CLAUDE_ROUTE) },
+            )
+        }
+
+        composable(CLAUDE_ROUTE) {
+            ClaudeDemoScreen(
+                navigateBack = { navController.popBackStack() }
             )
         }
 

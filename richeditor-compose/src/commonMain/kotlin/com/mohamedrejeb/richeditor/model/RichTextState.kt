@@ -4009,13 +4009,17 @@ public class RichTextState internal constructor(
             // Skip if the layout result is stale (text changed since layout was computed)
             if (layoutTextLength != annotatedString.text.length) return
 
+            val multiParagraph = textLayoutResult.multiParagraph
             val offsetLimit =
                 if (
-                    textLayoutResult.multiParagraph.didExceedMaxLines &&
-                    textLayoutResult.multiParagraph.maxLines > 0 &&
-                    textLayoutResult.multiParagraph.maxLines != Int.MAX_VALUE
+                    multiParagraph.didExceedMaxLines &&
+                    multiParagraph.maxLines > 0 &&
+                    multiParagraph.maxLines != Int.MAX_VALUE &&
+                    multiParagraph.lineCount > 0
                 )
-                    textLayoutResult.getLineEnd(textLayoutResult.multiParagraph.maxLines - 1)
+                    textLayoutResult.getLineEnd(
+                        minOf(multiParagraph.maxLines, multiParagraph.lineCount) - 1
+                    )
                 else
                     layoutTextLength
 

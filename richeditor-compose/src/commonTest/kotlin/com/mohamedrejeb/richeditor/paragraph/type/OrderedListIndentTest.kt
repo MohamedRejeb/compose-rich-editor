@@ -36,17 +36,19 @@ class OrderedListIndentTest {
     }
 
     @Test
-    fun indentSmallerThanPrefixKeepsPrefixVisible() {
+    fun indentSmallerThanPrefixClampsFirstLineToZero() {
         val config = config(indent = 10)
         val list = OrderedList(number = 1, config = config, startTextWidth = 50.sp)
 
         val textIndent = list.getStyle(config).textIndent
         assertNotNull(textIndent)
 
-        // 10 < 50: prefix would not fit in the gutter, so it moves inside.
-        assertEquals(10f, textIndent.firstLine.value)
-        assertEquals(60f, textIndent.restLine.value)
-        assertTrue(textIndent.firstLine.value >= 0f) // no clipping
+        // base (10) < prefix (50): the natural base - prefix would be -40, which would
+        // clip the marker. Clamp firstLine at 0 instead of flipping formulas — keeps
+        // every item in the list on the same layout regardless of per-item marker width.
+        assertEquals(0f, textIndent.firstLine.value)
+        assertEquals(10f, textIndent.restLine.value)
+        assertTrue(textIndent.firstLine.value >= 0f)
     }
 
     @Test
@@ -57,25 +59,47 @@ class OrderedListIndentTest {
         val textIndent = list.getStyle(config).textIndent
         assertNotNull(textIndent)
 
-        // Edge case: indent = 0 (from the original bug report).
+        // Edge case: indent = 0. firstLine clamps to 0; restLine stays at the base.
         assertEquals(0f, textIndent.firstLine.value)
-        assertEquals(20f, textIndent.restLine.value)
+        assertEquals(0f, textIndent.restLine.value)
     }
 
     @Test
     fun deeperLevelGrowsTheGutterAndRestoresDotAlignment() {
         val config = config(indent = 10)
-        // Level 2 multiplies base (10*2 = 20), which is still < prefix (50) → fallback.
+        // Level 2: base (20) < prefix (50) → firstLine clamps to 0.
         val listLevel2 = OrderedList(number = 1, config = config, startTextWidth = 50.sp, initialLevel = 2)
         val level2Indent = listLevel2.getStyle(config).textIndent!!
-        assertEquals(20f, level2Indent.firstLine.value)
-        assertEquals(70f, level2Indent.restLine.value)
+        assertEquals(0f, level2Indent.firstLine.value)
+        assertEquals(20f, level2Indent.restLine.value)
 
-        // At level 6, base (60) >= prefix (50) → we flip back to the dot-aligned layout.
+        // At level 6, base (60) >= prefix (50) → the dot-aligned layout is restored naturally.
         val listLevel6 = OrderedList(number = 1, config = config, startTextWidth = 50.sp, initialLevel = 6)
         val level6Indent = listLevel6.getStyle(config).textIndent!!
         assertEquals(10f, level6Indent.firstLine.value)
         assertEquals(60f, level6Indent.restLine.value)
+    }
+
+    @Test
+    fun endAlignmentAppliesConsistentFormulaRegardlessOfMarkerWidth() {
+        // Two items in the "same list" (same indent config) with different marker widths
+        // (e.g. "1." vs "viii."). Both must use the End formula so they render
+        // consistently; the old fallback would switch one to Start and make the list
+        // visually uneven.
+        val config = config(indent = 30)
+        val narrowMarker = OrderedList(number = 1, config = config, startTextWidth = 10.sp)
+        val wideMarker = OrderedList(number = 8, config = config, startTextWidth = 40.sp)
+
+        val narrowIndent = narrowMarker.getStyle(config).textIndent!!
+        val wideIndent = wideMarker.getStyle(config).textIndent!!
+
+        // Both items use the End formula with restLine = base.
+        assertEquals(30f, narrowIndent.restLine.value)
+        assertEquals(30f, wideIndent.restLine.value)
+
+        // Narrow marker fits in the gutter; wide marker clamps firstLine to 0.
+        assertEquals(20f, narrowIndent.firstLine.value)
+        assertEquals(0f, wideIndent.firstLine.value)
     }
 
     @Test

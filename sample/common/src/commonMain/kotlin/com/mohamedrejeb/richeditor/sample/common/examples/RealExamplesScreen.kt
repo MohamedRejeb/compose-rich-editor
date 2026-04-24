@@ -55,10 +55,10 @@ private val examples = listOf(
     ),
     RealExample(
         name = "GitHub",
-        tagline = "Issue and PR composer with code blocks, mentions and task lists.",
+        tagline = "Issue thread with composer: headings, code blocks, mentions, links and lists.",
         monogram = "G",
         brandColor = BrandColors.GitHub,
-        status = ExampleStatus.ComingSoon,
+        status = ExampleStatus.Live,
     ),
     RealExample(
         name = "Discord",
@@ -94,6 +94,7 @@ private val examples = listOf(
 fun RealExamplesScreen(
     navigateBack: () -> Unit,
     navigateToSlack: () -> Unit,
+    navigateToGithub: () -> Unit,
 ) {
     var pendingComingSoon by remember { mutableStateOf<RealExample?>(null) }
 
@@ -124,7 +125,10 @@ fun RealExamplesScreen(
                         status = example.status,
                         onClick = {
                             when (example.status) {
-                                ExampleStatus.Live -> if (example.name == "Slack") navigateToSlack()
+                                ExampleStatus.Live -> when (example.name) {
+                                    "Slack" -> navigateToSlack()
+                                    "GitHub" -> navigateToGithub()
+                                }
                                 ExampleStatus.ComingSoon -> pendingComingSoon = example
                             }
                         },

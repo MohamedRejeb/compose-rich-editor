@@ -94,6 +94,32 @@ class ImageAcrossSetHtmlTest {
         }
     }
 
+    /**
+     * Configurable intrinsic-size version of [FakeAsyncPainter] — so we can
+     * simulate a large (600x400) image rather than the default 200x100.
+     */
+    private class FakeAsyncPainterSized(
+        private val w: Float,
+        private val h: Float,
+    ) : Painter() {
+        var resolved by mutableStateOf(false)
+        override val intrinsicSize: Size
+            get() = if (resolved) Size(w, h) else Size.Unspecified
+        override fun DrawScope.onDraw() { /* no-op */ }
+    }
+
+    private class SizedFreshLoader(
+        private val w: Float,
+        private val h: Float,
+    ) : ImageLoader {
+        @Composable
+        override fun load(model: Any): ImageData? {
+            val painter = remember(model) { FakeAsyncPainterSized(w, h) }
+            LaunchedEffect(painter) { painter.resolved = true }
+            return ImageData(painter = painter)
+        }
+    }
+
     @Test
     fun imageStillPresentAfterSecondSetHtmlWithAddedText() = runDesktopComposeUiTest(
         width = 800,
@@ -316,6 +342,97 @@ class ImageAcrossSetHtmlTest {
                     "The Placeholder flashed through a 0x0 state - image invisible.",
             )
         }
+    }
+
+    /**
+     * Repro for: in the Images sample, adding a new `<img>` via setHtml
+     * makes the previously-rendered images jump back to their HTML-attr
+     * size (wider than the container). Resizing the window clamps them
+     * again.
+     *
+     * Scenario:
+     *  1. setHtml(`<img width="600">`). Container is 400sp wide. LaunchedEffect
+     *     clamps Image.width to 400 on the initial render.
+     *  2. setHtml(`<img width="600"><img width="1600">`). Both images are
+     *     FRESH instances with width=600 / 1600 from the HTML. The first
+     *     image's width should still end up at 400 after the second render
+     *     settles; otherwise it visibly grows from 400 back to 600.
+     */
+    @Test
+    fun addingSecondImageDoesNotReEnlargeFirstImage() = runDesktopComposeUiTest(
+        width = 800,
+        height = 600,
+    ) {
+        var html by mutableStateOf(
+            """<p><img src="http://x/a.png" width="600" height="400"/></p>"""
+        )
+        var state: RichTextState by mutableStateOf(RichTextState())
+
+        setContent {
+            state = remember { RichTextState() }
+            CompositionLocalProvider(
+                // Intrinsic 600x400 — matches the HTML-attr width the sample
+                // uses for the Landscape preset. The container is 400sp wide
+                // so a correctly-clamped Image.width must end up <= 400.
+                LocalImageLoader provides SizedFreshLoader(w = 600f, h = 400f),
+            ) {
+                LaunchedEffect(html) {
+                    state.setHtml(html)
+                }
+                BasicRichText(
+                    state = state,
+                    modifier = Modifier.width(400.dp),
+                )
+            }
+        }
+        waitForIdle()
+
+        val firstImage = findImageSpan(state)
+        val clampedWidth = firstImage.width.value
+        assertTrue(
+            clampedWidth <= 401f,
+            "first render must clamp image to the 400sp container. " +
+                "Got ${clampedWidth}sp - Image.width should be <= 400.",
+        )
+
+        // Now add a second image - the exact action the user takes in the
+        // Images sample when clicking a preset.
+        runOnUiThread {
+            html = """<p><img src="http://x/a.png" width="600" height="400"/></p>""" +
+                """<p><img src="http://y/b.png" width="1600" height="900"/></p>"""
+        }
+        waitForIdle()
+
+        val images = collectAllImages(state)
+        assertEquals(2, images.size, "should have two image spans now")
+        val firstImageAfter = images[0]
+        assertTrue(
+            firstImageAfter.width.value <= 401f,
+            "after adding a second image, the first image must stay clamped. " +
+                "Got ${firstImageAfter.width.value}sp - it grew back to its HTML-attr size.",
+        )
+        val secondImageAfter = images[1]
+        assertTrue(
+            secondImageAfter.width.value <= 401f,
+            "the newly-added image must also be clamped to the container. " +
+                "Got ${secondImageAfter.width.value}sp.",
+        )
+    }
+
+    private fun collectAllImages(state: RichTextState): List<RichSpanStyle.Image> {
+        val result = mutableListOf<RichSpanStyle.Image>()
+        for (paragraph in state.richParagraphList) {
+            for (child in paragraph.children) {
+                collectImagesRecursive(child, result)
+            }
+        }
+        return result
+    }
+
+    private fun collectImagesRecursive(span: RichSpan, into: MutableList<RichSpanStyle.Image>) {
+        val style = span.richSpanStyle
+        if (style is RichSpanStyle.Image) into.add(style)
+        for (c in span.children) collectImagesRecursive(c, into)
     }
 
     /**

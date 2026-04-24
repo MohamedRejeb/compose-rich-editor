@@ -198,23 +198,19 @@ public interface RichSpanStyle {
         /**
          * Initial `(width, height)` for this Image span.
          *
-         * If the caller supplied explicit non-zero dimensions (e.g.
-         * `<img width="200" height="100">`), use them verbatim.
-         *
-         * Otherwise consult [resolvedDimensionsCache]: a previously-rendered
+         * Consult [resolvedDimensionsCache] first: a previously-rendered
          * Image with the same [model] (same src) will have populated the
-         * cache with its intrinsic+clamped size. Adopting that value here
-         * means fresh Image instances for already-seen URLs start with the
-         * correct Placeholder size instead of blinking through 0x0 every
-         * time `setHtml(...)` is called - which happens on every keystroke
-         * in an HTML source-editor like `HtmlToRichText`.
+         * cache with its post-clamp size. Using that eliminates the
+         * big-then-small flicker that otherwise happens when HTML attrs
+         * overstate the display size (e.g. `<img width="600">` on a 2x
+         * density screen would reserve a 600sp slot that later shrinks to
+         * the 300sp intrinsic once the painter resolves).
+         *
+         * Falls back to the caller-supplied dimensions on the first-ever
+         * render of a given model, where the cache is still empty.
          */
         private val initialDimensions: Pair<TextUnit, TextUnit> =
-            if (width.value <= 0f && height.value <= 0f) {
-                resolvedDimensionsCache[model] ?: (width to height)
-            } else {
-                width to height
-            }
+            resolvedDimensionsCache[model] ?: (width to height)
 
         public var width: TextUnit by mutableStateOf(initialDimensions.first)
             private set
@@ -281,7 +277,18 @@ public interface RichSpanStyle {
                     // Placeholder at 0x0 forever.
                     val intrinsicSize = data.painter.intrinsicSize
 
-                    LaunchedEffect(data, intrinsicSize, maxImageWidth) {
+                    // [id] is included in the key so that each fresh Image
+                    // instance (new id) retriggers the clamp. BasicText's
+                    // inline-content subcomposition is sometimes reused across
+                    // `setHtml(...)` calls even when the Image instance and
+                    // inlineContentMap key change — the remembered [data] and
+                    // the remembered `imageData` state in ImageLoaders that
+                    // cache painters (e.g. Coil3) end up identical to the
+                    // previous scope, so without a fresh key the effect would
+                    // see unchanged (data, intrinsicSize, maxImageWidth) and
+                    // skip its body, leaving the new Image's dimensions
+                    // un-clamped until the next container resize.
+                    LaunchedEffect(id, data, intrinsicSize, maxImageWidth) {
                         if (intrinsicSize.isUnspecified)
                             return@LaunchedEffect
 

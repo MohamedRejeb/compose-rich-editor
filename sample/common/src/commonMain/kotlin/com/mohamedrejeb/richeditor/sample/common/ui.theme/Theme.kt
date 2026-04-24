@@ -5,7 +5,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import com.mohamedrejeb.richeditor.sample.common.coil.setSingletonImageLoaderFactory
 
 private val LightColors = lightColorScheme(
@@ -75,20 +79,27 @@ private val DarkColors = darkColorScheme(
 
 @Composable
 internal fun ComposeRichEditorTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
     setSingletonImageLoaderFactory()
 
-    val colorScheme = if (darkTheme) {
-        DarkColors
-    } else {
-        LightColors
+    val systemDark = isSystemInDarkTheme()
+    var darkTheme by remember(systemDark) { mutableStateOf(systemDark) }
+
+    val controller = remember(darkTheme) {
+        ThemeController(
+            darkTheme = darkTheme,
+            toggle = { darkTheme = !darkTheme },
+        )
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    val colorScheme = if (darkTheme) DarkColors else LightColors
+
+    CompositionLocalProvider(LocalThemeController provides controller) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content,
+        )
+    }
 }

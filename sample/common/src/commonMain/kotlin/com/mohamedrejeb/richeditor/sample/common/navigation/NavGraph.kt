@@ -5,6 +5,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.mohamedrejeb.richeditor.sample.common.examples.RealExamplesScreen
+import com.mohamedrejeb.richeditor.sample.common.github.GitHubDemoScreen
 import com.mohamedrejeb.richeditor.sample.common.home.HomeScreen
 import com.mohamedrejeb.richeditor.sample.common.htmleditor.HtmlEditorContent
 import com.mohamedrejeb.richeditor.sample.common.images.ImagesSampleScreen
@@ -27,6 +28,7 @@ private const val LISTS_CONFIG_ROUTE = "listsConfig"
 private const val REAL_EXAMPLES_ROUTE = "realExamples"
 private const val LINKS_ROUTE = "links"
 private const val IMAGES_ROUTE = "images"
+private const val GITHUB_ROUTE = "github"
 
 @Composable
 fun NavGraph() {
@@ -48,6 +50,7 @@ fun NavGraph() {
                 navigateToRealExamples = { navController.navigate(REAL_EXAMPLES_ROUTE) },
                 navigateToLinks = { navController.navigate(LINKS_ROUTE) },
                 navigateToImages = { navController.navigate(IMAGES_ROUTE) },
+                navigateToGithub = { navController.navigate(GITHUB_ROUTE) },
             )
         }
 
@@ -97,6 +100,13 @@ fun NavGraph() {
             RealExamplesScreen(
                 navigateBack = { navController.popBackStack() },
                 navigateToSlack = { navController.navigate(SLACK_ROUTE) },
+                navigateToGithub = { navController.navigate(GITHUB_ROUTE) },
+            )
+        }
+
+        composable(GITHUB_ROUTE) {
+            GitHubDemoScreen(
+                navigateBack = { navController.popBackStack() }
             )
         }
 

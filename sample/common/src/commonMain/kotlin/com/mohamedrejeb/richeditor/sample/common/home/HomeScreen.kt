@@ -56,6 +56,7 @@ fun HomeScreen(
     navigateToRealExamples: () -> Unit,
     navigateToLinks: () -> Unit,
     navigateToImages: () -> Unit,
+    navigateToGithub: () -> Unit,
 ) {
     SampleScaffold(
         title = "Compose Rich Editor",
@@ -203,7 +204,7 @@ fun HomeScreen(
                 SectionHeader(
                     eyebrow = "Real examples",
                     title = "See it in production-style apps",
-                    subtitle = "Slack is live. Notion, GitHub, Discord, Medium and X are on the way.",
+                    subtitle = "Slack and GitHub are live. Notion, Discord, Medium and X are on the way.",
                     accent = SampleAccents.Emerald,
                 )
             }
@@ -211,6 +212,7 @@ fun HomeScreen(
             item {
                 RealExamplesTeaser(
                     onSlackClick = navigateToSlack,
+                    onGithubClick = navigateToGithub,
                     onSeeAllClick = navigateToRealExamples,
                 )
             }
@@ -232,6 +234,7 @@ private fun SectionSpacer() {
 @Composable
 private fun RealExamplesTeaser(
     onSlackClick: () -> Unit,
+    onGithubClick: () -> Unit,
     onSeeAllClick: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -242,6 +245,15 @@ private fun RealExamplesTeaser(
             brandColor = BrandColors.Slack,
             status = ExampleStatus.Live,
             onClick = onSlackClick,
+        )
+
+        RealExampleCard(
+            name = "GitHub",
+            tagline = "Issue thread with composer: headings, code blocks, mentions, links and lists.",
+            monogram = "G",
+            brandColor = BrandColors.GitHub,
+            status = ExampleStatus.Live,
+            onClick = onGithubClick,
         )
 
         SeeAllExamplesRow(onClick = onSeeAllClick)
@@ -284,7 +296,7 @@ private fun SeeAllExamplesRow(onClick: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                text = "Slack live · Notion, GitHub, Discord, Medium, X coming soon",
+                text = "Slack & GitHub live · Notion, Discord, Medium, X coming soon",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

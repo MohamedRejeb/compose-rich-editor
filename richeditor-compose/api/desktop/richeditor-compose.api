@@ -193,6 +193,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun getSelectedLinkUrl ()Ljava/lang/String;
 	public final fun getSelection-d9O1mEE ()J
 	public final fun getSpanStyle-5zc-tL8 (J)Landroidx/compose/ui/text/SpanStyle;
+	public final fun getTokenByTextIndex (I)Lcom/mohamedrejeb/richeditor/model/RichSpanStyle$Token;
 	public final fun getTriggers ()Ljava/util/List;
 	public final fun increaseListLevel ()V
 	public final fun insertHtml (Ljava/lang/String;I)V
@@ -268,6 +269,19 @@ public final class com/mohamedrejeb/richeditor/model/TextPaddingValues {
 	public final fun getVertical-XSAIIZE ()J
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/mohamedrejeb/richeditor/model/TokenClickHandler {
+	public abstract fun invoke-Uv8p0NA (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle$Token;J)V
+}
+
+public abstract interface class com/mohamedrejeb/richeditor/model/TokenHoverHandler {
+	public abstract fun invoke-Uv8p0NA (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle$Token;J)V
+}
+
+public final class com/mohamedrejeb/richeditor/model/TokenInteractionHandlersKt {
+	public static final fun getLocalTokenClickHandler ()Landroidx/compose/runtime/ProvidableCompositionLocal;
+	public static final fun getLocalTokenHoverHandler ()Landroidx/compose/runtime/ProvidableCompositionLocal;
 }
 
 public final class com/mohamedrejeb/richeditor/model/history/RichTextHistory {
@@ -427,7 +441,7 @@ public final class com/mohamedrejeb/richeditor/ui/BasicRichTextEditorKt {
 }
 
 public final class com/mohamedrejeb/richeditor/ui/BasicRichTextKt {
-	public static final fun BasicRichText-RWo7tUw (Lcom/mohamedrejeb/richeditor/model/RichTextState;Landroidx/compose/ui/Modifier;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function1;IZIILjava/util/Map;Lcom/mohamedrejeb/richeditor/model/ImageLoader;Landroidx/compose/runtime/Composer;II)V
+	public static final fun BasicRichText-Jzo1Dmk (Lcom/mohamedrejeb/richeditor/model/RichTextState;Landroidx/compose/ui/Modifier;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function1;IZIILjava/util/Map;Lcom/mohamedrejeb/richeditor/model/ImageLoader;Lcom/mohamedrejeb/richeditor/model/TokenClickHandler;Lcom/mohamedrejeb/richeditor/model/TokenHoverHandler;Landroidx/compose/runtime/Composer;III)V
 }
 
 public final class com/mohamedrejeb/richeditor/ui/ComposableSingletons$BasicRichTextEditorKt {
@@ -454,7 +468,7 @@ public final class com/mohamedrejeb/richeditor/ui/material/RichTextEditorKt {
 }
 
 public final class com/mohamedrejeb/richeditor/ui/material/RichTextKt {
-	public static final fun RichText-a0LXGaU (Lcom/mohamedrejeb/richeditor/model/RichTextState;Landroidx/compose/ui/Modifier;JJLandroidx/compose/ui/text/font/FontStyle;Landroidx/compose/ui/text/font/FontWeight;Landroidx/compose/ui/text/font/FontFamily;JLandroidx/compose/ui/text/style/TextDecoration;IJIZIILjava/util/Map;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/text/TextStyle;Lcom/mohamedrejeb/richeditor/model/ImageLoader;Landroidx/compose/runtime/Composer;III)V
+	public static final fun RichText-mQfddtU (Lcom/mohamedrejeb/richeditor/model/RichTextState;Landroidx/compose/ui/Modifier;JJLandroidx/compose/ui/text/font/FontStyle;Landroidx/compose/ui/text/font/FontWeight;Landroidx/compose/ui/text/font/FontFamily;JLandroidx/compose/ui/text/style/TextDecoration;IJIZIILjava/util/Map;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/text/TextStyle;Lcom/mohamedrejeb/richeditor/model/ImageLoader;Lcom/mohamedrejeb/richeditor/model/TokenClickHandler;Lcom/mohamedrejeb/richeditor/model/TokenHoverHandler;Landroidx/compose/runtime/Composer;IIII)V
 }
 
 public final class com/mohamedrejeb/richeditor/ui/material3/OutlinedRichTextEditorKt {
@@ -497,7 +511,7 @@ public final class com/mohamedrejeb/richeditor/ui/material3/RichTextEditorKt {
 }
 
 public final class com/mohamedrejeb/richeditor/ui/material3/RichTextKt {
-	public static final fun RichText-a0LXGaU (Lcom/mohamedrejeb/richeditor/model/RichTextState;Landroidx/compose/ui/Modifier;JJLandroidx/compose/ui/text/font/FontStyle;Landroidx/compose/ui/text/font/FontWeight;Landroidx/compose/ui/text/font/FontFamily;JLandroidx/compose/ui/text/style/TextDecoration;IJIZIILjava/util/Map;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/text/TextStyle;Lcom/mohamedrejeb/richeditor/model/ImageLoader;Landroidx/compose/runtime/Composer;III)V
+	public static final fun RichText-mQfddtU (Lcom/mohamedrejeb/richeditor/model/RichTextState;Landroidx/compose/ui/Modifier;JJLandroidx/compose/ui/text/font/FontStyle;Landroidx/compose/ui/text/font/FontWeight;Landroidx/compose/ui/text/font/FontFamily;JLandroidx/compose/ui/text/style/TextDecoration;IJIZIILjava/util/Map;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/text/TextStyle;Lcom/mohamedrejeb/richeditor/model/ImageLoader;Lcom/mohamedrejeb/richeditor/model/TokenClickHandler;Lcom/mohamedrejeb/richeditor/model/TokenHoverHandler;Landroidx/compose/runtime/Composer;IIII)V
 }
 
 public final class com/mohamedrejeb/richeditor/ui/material3/TriggerSuggestionsKt {

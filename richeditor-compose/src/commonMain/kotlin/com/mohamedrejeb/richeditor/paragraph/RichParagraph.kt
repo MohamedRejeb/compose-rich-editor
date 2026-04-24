@@ -8,6 +8,7 @@ import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.util.fastForEachReversed
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.model.HeadingStyle
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
@@ -15,6 +16,8 @@ import com.mohamedrejeb.richeditor.paragraph.type.ListMarkerStyleBehavior
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startText
 import com.mohamedrejeb.richeditor.ui.test.getRichTextStyleTreeRepresentation
+import com.mohamedrejeb.richeditor.utils.customMerge
+import com.mohamedrejeb.richeditor.utils.unmerge
 
 internal class RichParagraph(
     val key: Int = 0,
@@ -27,7 +30,20 @@ internal class RichParagraph(
      * rather than being wrapped in its own `<p>` tag.
      */
     var isFromLineBreak: Boolean = false,
+    headingStyle: HeadingStyle = HeadingStyle.Normal,
 ) {
+
+    /**
+     * Heading level applied to this paragraph (Normal | H1..H6).
+     *
+     * Heading is paragraph-level, so we store it directly on the paragraph rather than detecting
+     * it back from span fingerprints. Public assignment goes through [setHeadingStyle] which
+     * keeps children's [SpanStyle] and the paragraph's [ParagraphStyle] in sync with the chosen
+     * level. Direct field mutation (parsers seeding state from HTML/Markdown) bypasses the
+     * side effects and is intentional for code paths that already apply the visual styles
+     * via the parser's tag-style maps.
+     */
+    var headingStyle: HeadingStyle = headingStyle
 
     @OptIn(ExperimentalRichTextApi::class)
     fun getRichSpanByTextIndex(
@@ -237,6 +253,46 @@ internal class RichParagraph(
         return deepFirstChild.spanStyle
     }
 
+    /**
+     * Apply [newHeadingStyle] to this paragraph idempotently. The previous heading's visual
+     * [SpanStyle] / [ParagraphStyle] are stripped from children before the new ones are applied,
+     * so toggling H1 -> H2 -> H1 does not stack font sizes. Passing [HeadingStyle.Normal] clears
+     * the visual style entirely.
+     *
+     * Direct assignment to [headingStyle] is reserved for parsers that already applied the visual
+     * style via tag-style maps; user-facing mutations should go through this function.
+     */
+    fun applyHeadingStyle(newHeadingStyle: HeadingStyle) {
+        if (newHeadingStyle == headingStyle) return
+
+        // Strip the previously applied heading visuals (no-op if Normal).
+        if (headingStyle != HeadingStyle.Normal) {
+            removeHeadingVisuals(headingStyle.defaultSpanStyle, headingStyle.defaultParagraphStyle)
+        }
+
+        headingStyle = newHeadingStyle
+
+        // Apply the new heading visuals (no-op if Normal).
+        if (newHeadingStyle != HeadingStyle.Normal) {
+            addHeadingVisuals(newHeadingStyle.defaultSpanStyle, newHeadingStyle.defaultParagraphStyle)
+        }
+    }
+
+    private fun addHeadingVisuals(spanStyle: SpanStyle, paragraphStyle: ParagraphStyle) {
+        children.fastForEach { richSpan ->
+            richSpan.spanStyle = richSpan.spanStyle.customMerge(spanStyle)
+        }
+        this.paragraphStyle = this.paragraphStyle.merge(paragraphStyle)
+    }
+
+    private fun removeHeadingVisuals(spanStyle: SpanStyle, paragraphStyle: ParagraphStyle) {
+        children.fastForEach { richSpan ->
+            richSpan.spanStyle = richSpan.spanStyle.unmerge(spanStyle)
+        }
+        this.paragraphStyle = this.paragraphStyle.unmerge(paragraphStyle)
+    }
+
+
     fun getFirstNonEmptyChild(offset: Int = -1): RichSpan? {
         children.fastForEach { richSpan ->
             if (richSpan.text.isNotEmpty()) {
@@ -354,6 +410,7 @@ internal class RichParagraph(
         val newParagraph = RichParagraph(
             paragraphStyle = paragraphStyle.copy(),
             type = type.copy(),
+            headingStyle = headingStyle,
         )
         children.fastForEach { childRichSpan ->
             val newRichSpan = childRichSpan.copy(newParagraph)

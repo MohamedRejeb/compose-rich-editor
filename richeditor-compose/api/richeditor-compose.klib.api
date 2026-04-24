@@ -14,6 +14,28 @@ open annotation class com.mohamedrejeb.richeditor.annotation/InternalRichTextApi
     constructor <init>() // com.mohamedrejeb.richeditor.annotation/InternalRichTextApi.<init>|<init>(){}[0]
 }
 
+final enum class com.mohamedrejeb.richeditor.model/HeadingStyle : kotlin/Enum<com.mohamedrejeb.richeditor.model/HeadingStyle> { // com.mohamedrejeb.richeditor.model/HeadingStyle|null[0]
+    enum entry H1 // com.mohamedrejeb.richeditor.model/HeadingStyle.H1|null[0]
+    enum entry H2 // com.mohamedrejeb.richeditor.model/HeadingStyle.H2|null[0]
+    enum entry H3 // com.mohamedrejeb.richeditor.model/HeadingStyle.H3|null[0]
+    enum entry H4 // com.mohamedrejeb.richeditor.model/HeadingStyle.H4|null[0]
+    enum entry H5 // com.mohamedrejeb.richeditor.model/HeadingStyle.H5|null[0]
+    enum entry H6 // com.mohamedrejeb.richeditor.model/HeadingStyle.H6|null[0]
+    enum entry Normal // com.mohamedrejeb.richeditor.model/HeadingStyle.Normal|null[0]
+
+    final val entries // com.mohamedrejeb.richeditor.model/HeadingStyle.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.mohamedrejeb.richeditor.model/HeadingStyle> // com.mohamedrejeb.richeditor.model/HeadingStyle.entries.<get-entries>|<get-entries>#static(){}[0]
+    final val level // com.mohamedrejeb.richeditor.model/HeadingStyle.level|{}level[0]
+        final fun <get-level>(): kotlin/Int // com.mohamedrejeb.richeditor.model/HeadingStyle.level.<get-level>|<get-level>(){}[0]
+
+    final fun valueOf(kotlin/String): com.mohamedrejeb.richeditor.model/HeadingStyle // com.mohamedrejeb.richeditor.model/HeadingStyle.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.mohamedrejeb.richeditor.model/HeadingStyle> // com.mohamedrejeb.richeditor.model/HeadingStyle.values|values#static(){}[0]
+
+    final object Companion { // com.mohamedrejeb.richeditor.model/HeadingStyle.Companion|null[0]
+        final fun fromLevel(kotlin/Int): com.mohamedrejeb.richeditor.model/HeadingStyle // com.mohamedrejeb.richeditor.model/HeadingStyle.Companion.fromLevel|fromLevel(kotlin.Int){}[0]
+    }
+}
+
 final enum class com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehavior : kotlin/Enum<com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehavior> { // com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehavior|null[0]
     enum entry AlwaysDefault // com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehavior.AlwaysDefault|null[0]
     enum entry InheritFromText // com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehavior.InheritFromText|null[0]
@@ -333,6 +355,8 @@ final class com.mohamedrejeb.richeditor.model/RichTextState { // com.mohamedreje
         final fun <get-composition>(): androidx.compose.ui.text/TextRange? // com.mohamedrejeb.richeditor.model/RichTextState.composition.<get-composition>|<get-composition>(){}[0]
     final val config // com.mohamedrejeb.richeditor.model/RichTextState.config|{}config[0]
         final fun <get-config>(): com.mohamedrejeb.richeditor.model/RichTextConfig // com.mohamedrejeb.richeditor.model/RichTextState.config.<get-config>|<get-config>(){}[0]
+    final val currentHeadingStyle // com.mohamedrejeb.richeditor.model/RichTextState.currentHeadingStyle|{}currentHeadingStyle[0]
+        final fun <get-currentHeadingStyle>(): com.mohamedrejeb.richeditor.model/HeadingStyle // com.mohamedrejeb.richeditor.model/RichTextState.currentHeadingStyle.<get-currentHeadingStyle>|<get-currentHeadingStyle>(){}[0]
     final val currentParagraphStyle // com.mohamedrejeb.richeditor.model/RichTextState.currentParagraphStyle|{}currentParagraphStyle[0]
         final fun <get-currentParagraphStyle>(): androidx.compose.ui.text/ParagraphStyle // com.mohamedrejeb.richeditor.model/RichTextState.currentParagraphStyle.<get-currentParagraphStyle>|<get-currentParagraphStyle>(){}[0]
     final val currentRichSpanStyle // com.mohamedrejeb.richeditor.model/RichTextState.currentRichSpanStyle|{}currentRichSpanStyle[0]
@@ -420,6 +444,7 @@ final class com.mohamedrejeb.richeditor.model/RichTextState { // com.mohamedreje
     final fun replaceSelectedText(kotlin/String) // com.mohamedrejeb.richeditor.model/RichTextState.replaceSelectedText|replaceSelectedText(kotlin.String){}[0]
     final fun replaceTextRange(androidx.compose.ui.text/TextRange, kotlin/String) // com.mohamedrejeb.richeditor.model/RichTextState.replaceTextRange|replaceTextRange(androidx.compose.ui.text.TextRange;kotlin.String){}[0]
     final fun setConfig(androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.text.style/TextDecoration? = ..., androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ..., kotlin/Int = ...) // com.mohamedrejeb.richeditor.model/RichTextState.setConfig|setConfig(androidx.compose.ui.graphics.Color;androidx.compose.ui.text.style.TextDecoration?;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;kotlin.Int){}[0]
+    final fun setHeadingStyle(com.mohamedrejeb.richeditor.model/HeadingStyle) // com.mohamedrejeb.richeditor.model/RichTextState.setHeadingStyle|setHeadingStyle(com.mohamedrejeb.richeditor.model.HeadingStyle){}[0]
     final fun setHtml(kotlin/String): com.mohamedrejeb.richeditor.model/RichTextState // com.mohamedrejeb.richeditor.model/RichTextState.setHtml|setHtml(kotlin.String){}[0]
     final fun setMarkdown(kotlin/String): com.mohamedrejeb.richeditor.model/RichTextState // com.mohamedrejeb.richeditor.model/RichTextState.setMarkdown|setMarkdown(kotlin.String){}[0]
     final fun setText(kotlin/String, androidx.compose.ui.text/TextRange = ...): com.mohamedrejeb.richeditor.model/RichTextState // com.mohamedrejeb.richeditor.model/RichTextState.setText|setText(kotlin.String;androidx.compose.ui.text.TextRange){}[0]

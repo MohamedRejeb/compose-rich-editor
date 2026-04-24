@@ -7,6 +7,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.model.HeadingStyle
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
@@ -129,6 +130,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 }
 
                 val tagSpanStyle = markdownElementsSpanStyleEncodeMap[node.type]
+                val tagParagraphStyle = markdownElementsParagraphStyleEncodeMap[node.type]
 
                 if (node.type in markdownBlockElements) {
                     val currentRichParagraph = richParagraphList.last()
@@ -152,6 +154,23 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                         }
 
                         currentRichParagraph.type = currentRichParagraphType
+                    }
+
+                    // Apply paragraph style (if applicable)
+                    tagParagraphStyle?.let {
+                        currentRichParagraph.paragraphStyle = currentRichParagraph.paragraphStyle.merge(it)
+                    }
+                    // Record heading level so encoding stays semantic instead of fingerprinting.
+                    if (node.type in HeadingStyle.markdownHeadingNodes) {
+                        currentRichParagraph.headingStyle = when (node.type) {
+                            MarkdownElementTypes.ATX_1 -> HeadingStyle.H1
+                            MarkdownElementTypes.ATX_2 -> HeadingStyle.H2
+                            MarkdownElementTypes.ATX_3 -> HeadingStyle.H3
+                            MarkdownElementTypes.ATX_4 -> HeadingStyle.H4
+                            MarkdownElementTypes.ATX_5 -> HeadingStyle.H5
+                            MarkdownElementTypes.ATX_6 -> HeadingStyle.H6
+                            else -> HeadingStyle.Normal
+                        }
                     }
 
                     val newRichSpan = RichSpan(paragraph = currentRichParagraph)
@@ -386,20 +405,18 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
             // Append paragraph start text
             builder.appendParagraphStartText(richParagraph)
 
-            var isHeading = false
-
-            richParagraph.getFirstNonEmptyChild()?.let { firstNonEmptyChild ->
-                if (firstNonEmptyChild.text.isNotEmpty()) {
-                    // Append markdown line start text
-                    val lineStartText = getMarkdownLineStartTextFromFirstRichSpan(firstNonEmptyChild)
-                    builder.append(lineStartText)
-                    isHeading = lineStartText.startsWith('#')
-                }
+            // Read the heading prefix from the first-class field rather than fingerprinting
+            // the first child's SpanStyle.
+            if (richParagraph.headingStyle != HeadingStyle.Normal) {
+                builder.append(richParagraph.headingStyle.markdownPrefix)
             }
 
-            // Append paragraph children
+            // Append paragraph children. Inside a heading paragraph the heading defaults already
+            // imply bold/font-size/etc., so suppress redundant ** formatting on heading-implied
+            // attributes.
+            val isHeading = richParagraph.headingStyle != HeadingStyle.Normal
             richParagraph.children.fastForEach { richSpan ->
-                builder.append(decodeRichSpanToMarkdown(richSpan, isHeading))
+                builder.append(decodeRichSpanToMarkdown(richSpan, isHeading = isHeading))
             }
 
             // Append line break if needed
@@ -422,7 +439,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     @OptIn(ExperimentalRichTextApi::class)
     private fun decodeRichSpanToMarkdown(
         richSpan: RichSpan,
-        isHeading: Boolean,
+        isHeading: Boolean = false,
     ): String {
         val stringBuilder = StringBuilder()
 
@@ -436,8 +453,10 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         val markdownOpen = mutableListOf<String>()
         val markdownClose = mutableListOf<String>()
 
-        // Ignore adding bold `**` for heading since it's already bold
-        if ((richSpan.spanStyle.fontWeight?.weight ?: 400) > 400 && !isHeading) {
+        // Bold is based off fontWeight. Skip the ** markers inside headings since headings
+        // already imply bold; emitting ** would produce `# **Title**` which round-trips back to
+        // a double-bold span.
+        if (!isHeading && (richSpan.spanStyle.fontWeight?.weight ?: 400) > 400) {
             markdownOpen += "**"
             markdownClose += "**"
         }
@@ -469,7 +488,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
         // Append children
         richSpan.children.fastForEach { child ->
-            stringBuilder.append(decodeRichSpanToMarkdown(child, isHeading))
+            stringBuilder.append(decodeRichSpanToMarkdown(child, isHeading = isHeading))
         }
 
         // Append markdown close
@@ -494,7 +513,10 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
     /**
      * Encodes Markdown elements to [SpanStyle].
-     *
+     * Some Markdown elements have both an associated SpanStyle and ParagraphStyle.
+     * Ensure both the [SpanStyle] (via [markdownElementsSpanStyleEncodeMap] - if applicable) and
+     * [androidx.compose.ui.text.ParagraphStyle] (via [markdownElementsParagraphStyleEncodeMap] - if applicable)
+     * are applied to the text.
      * @see <a href="https://www.w3schools.com/html/html_formatting.asp">HTML formatting</a>
      */
     private val markdownElementsSpanStyleEncodeMap = mapOf(
@@ -507,6 +529,23 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         MarkdownElementTypes.ATX_4 to H4SpanStyle,
         MarkdownElementTypes.ATX_5 to H5SpanStyle,
         MarkdownElementTypes.ATX_6 to H6SpanStyle,
+    )
+
+    /**
+     * Encodes the Markdown elements to [androidx.compose.ui.text.ParagraphStyle].
+     * Some Markdown elements have both an associated SpanStyle and ParagraphStyle.
+     * Ensure both the [SpanStyle] (via [markdownElementsSpanStyleEncodeMap] - if applicable) and
+     * [androidx.compose.ui.text.ParagraphStyle] (via [markdownElementsParagraphStyleEncodeMap] if applicable)
+     * are applied to the text.
+     * @see <a href="https://github.com/chrisalley/markdown-garden/blob/master/source/guides/headers/atx-headers.md">ATX Header formatting</a>
+     */
+    private val markdownElementsParagraphStyleEncodeMap = mapOf(
+        MarkdownElementTypes.ATX_1 to H1ParagraphStyle,
+        MarkdownElementTypes.ATX_2 to H2ParagraphStyle,
+        MarkdownElementTypes.ATX_3 to H3ParagraphStyle,
+        MarkdownElementTypes.ATX_4 to H4ParagraphStyle,
+        MarkdownElementTypes.ATX_5 to H5ParagraphStyle,
+        MarkdownElementTypes.ATX_6 to H6ParagraphStyle,
     )
 
     /**
@@ -634,38 +673,6 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     }
 
     private const val TokenDestinationPrefix = "trigger:"
-
-    /**
-     * Returns the markdown line start text from the first [RichSpan].
-     * This is used to determine the markdown line start text from the first [RichSpan] spanStyle.
-     * For example, if the first [RichSpan] spanStyle is [H1SpanStyle], the markdown line start text will be "# ".
-     */
-    private fun getMarkdownLineStartTextFromFirstRichSpan(firstRichSpan: RichSpan): String {
-        if ((firstRichSpan.spanStyle.fontWeight?.weight ?: 400) <= 400) return ""
-        val fontSize = firstRichSpan.spanStyle.fontSize
-
-        return if (fontSize.isEm) {
-            when {
-                fontSize >= H1SpanStyle.fontSize -> "# "
-                fontSize >= H2SpanStyle.fontSize -> "## "
-                fontSize >= H3SpanStyle.fontSize -> "### "
-                fontSize >= H4SpanStyle.fontSize -> "#### "
-                fontSize >= H5SpanStyle.fontSize -> "##### "
-                fontSize >= H6SpanStyle.fontSize -> "###### "
-                else -> ""
-            }
-        } else {
-            when {
-                fontSize.value >= H1SpanStyle.fontSize.value * 16 -> "# "
-                fontSize.value >= H2SpanStyle.fontSize.value * 16 -> "## "
-                fontSize.value >= H3SpanStyle.fontSize.value * 16 -> "### "
-                fontSize.value >= H4SpanStyle.fontSize.value * 16 -> "#### "
-                fontSize.value >= H5SpanStyle.fontSize.value * 16 -> "##### "
-                fontSize.value >= H6SpanStyle.fontSize.value * 16 -> "###### "
-                else -> ""
-            }
-        }
-    }
 
     /**
      * Markdown block elements.

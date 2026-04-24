@@ -1,6 +1,9 @@
 package com.mohamedrejeb.richeditor.parser.html
 
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.FontWeight
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.model.HeadingStyle
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
@@ -332,7 +335,73 @@ class RichTextStateHtmlParserEncodeTest {
     }
 
     @Test
-    fun testEncodeSpanWithOnlySpace() {
+    fun testEncodeHeadingParagraphStyles() {
+        val html = """
+            <h1>Heading 1</h1>
+            <p>Some text</p>
+            <h2>Heading 2</h2>
+            <p>More text</p>
+        """.trimIndent()
+
+        val state = RichTextStateHtmlParser.encode(html)
+
+        assertEquals(4, state.richParagraphList.size)
+
+        // Paragraph 0: H1
+        val p0 = state.richParagraphList[0]
+        assertEquals(HeadingStyle.H1, p0.headingStyle)
+        assertEquals("Heading 1", p0.getFirstNonEmptyChild()?.text)
+        assertEquals(HeadingStyle.H1.getSpanStyle(), p0.getFirstNonEmptyChild()?.spanStyle)
+
+        // Paragraph 1: Normal
+        val p1 = state.richParagraphList[1]
+        assertEquals(HeadingStyle.Normal, p1.headingStyle)
+        assertEquals("Some text", p1.getFirstNonEmptyChild()?.text)
+        assertEquals(SpanStyle(), p1.getFirstNonEmptyChild()?.spanStyle) // Default SpanStyle
+
+        // Paragraph 2: H2
+        val p2 = state.richParagraphList[2]
+        assertEquals(HeadingStyle.H2, p2.headingStyle)
+        assertEquals("Heading 2", p2.getFirstNonEmptyChild()?.text)
+        assertEquals(HeadingStyle.H2.getSpanStyle(), p2.getFirstNonEmptyChild()?.spanStyle)
+
+        // Paragraph 3: Normal
+        val p3 = state.richParagraphList[3]
+        assertEquals(HeadingStyle.Normal, p3.headingStyle)
+        assertEquals("More text", p3.getFirstNonEmptyChild()?.text)
+        assertEquals(SpanStyle(), p3.getFirstNonEmptyChild()?.spanStyle) // Default SpanStyle
+    }
+
+    @Test
+    fun testEncodeHeadingParagraphStylesWithInlineStyles() {
+        val html = """
+            <h1 style="color: red;">Red Heading 1</h1>
+            <h2 style="font-weight: bold;">Bold Heading 2</h2>
+        """.trimIndent()
+
+        val state = RichTextStateHtmlParser.encode(html)
+
+        assertEquals(2, state.richParagraphList.size)
+
+        // Paragraph 0: H1 with red color
+        val p0 = state.richParagraphList[0]
+        assertEquals(HeadingStyle.H1, p0.headingStyle)
+        assertEquals("Red Heading 1", p0.getFirstNonEmptyChild()?.text)
+        // Check that the base H1 style is applied AND the red color
+        val expectedH1Style = HeadingStyle.H1.getSpanStyle().merge(SpanStyle(color = androidx.compose.ui.graphics.Color.Red))
+        assertEquals(expectedH1Style, p0.getFirstNonEmptyChild()?.spanStyle)
+
+        // Paragraph 1: H2 with bold font weight
+        val p1 = state.richParagraphList[1]
+        assertEquals(HeadingStyle.H2, p1.headingStyle)
+        assertEquals("Bold Heading 2", p1.getFirstNonEmptyChild()?.text)
+        // Check that the base H2 style is applied AND the bold font weight
+        val expectedH2Style = HeadingStyle.H2.getSpanStyle().merge(SpanStyle(fontWeight = FontWeight.Bold))
+        assertEquals(expectedH2Style, p1.getFirstNonEmptyChild()?.spanStyle)
+    }
+    
+    @Test
+      fun testEncodeSpanWithOnlySpace() {
         val html = "<meta charset='utf-8'><span style=\"box-sizing: border-box; color: rgb(240, 246, 252); font-family: -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, &quot;Noto Sans&quot;, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(1, 4, 9); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;\">results in the</span><span style=\"color: rgb(240, 246, 252); font-family: -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, &quot;Noto Sans&quot;, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(1, 4, 9); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;\"><span> </span></span><b style=\"box-sizing: border-box; font-weight: var(--base-text-weight-semibold, 600); color: rgb(240, 246, 252); font-family: -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, &quot;Noto Sans&quot;, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(1, 4, 9); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;\">Horizon-School</b>"
         val richTextState = RichTextStateHtmlParser.encode(html)
 
@@ -340,6 +409,6 @@ class RichTextStateHtmlParserEncodeTest {
             "results in the Horizon-School",
             richTextState.annotatedString.text
         )
-    }
+      }
 
 }

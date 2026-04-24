@@ -900,7 +900,35 @@ public class RichTextState internal constructor(
         removeSpanStyle(currentSpanStyle, textRange)
     }
 
-    // RichSpanStyle
+    /**
+     * Heading style of the paragraph at the current selection start, or [HeadingStyle.Normal]
+     * if the caret is not in any paragraph. Mirrors the [currentParagraphStyle] pattern so
+     * toolbars can highlight the active heading level.
+     */
+    public val currentHeadingStyle: HeadingStyle
+        get() = getRichParagraphByTextIndex(selection.min - 1)?.headingStyle ?: HeadingStyle.Normal
+
+    /**
+     * Sets the heading style for the currently selected paragraphs.
+     *
+     * Applied to every paragraph that intersects the current [selection]. If [headingStyle] is
+     * [HeadingStyle.Normal], any existing heading style is removed from those paragraphs;
+     * otherwise the specified heading style replaces any previous one. Wrapped in
+     * [recordHistory] so undo/redo restores heading changes alongside other formatting.
+     */
+    public fun setHeadingStyle(headingStyle: HeadingStyle): Unit =
+        recordHistory(CommitTrigger.Formatting) {
+            val paragraphs = getRichParagraphListByTextRange(selection)
+            if (paragraphs.isEmpty()) return@recordHistory
+
+            paragraphs.forEach { paragraph ->
+                paragraph.applyHeadingStyle(headingStyle)
+            }
+
+            updateAnnotatedString()
+            updateCurrentSpanStyle()
+            updateCurrentParagraphStyle()
+        }
 
     /**
      * Add a link to the text field.

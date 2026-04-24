@@ -500,7 +500,13 @@ public class RichTextState internal constructor(
 
     public val config: RichTextConfig = RichTextConfig(
         updateText = {
-            updateTextFieldValue(textFieldValue)
+            // Config changes can alter paragraph prefix widths (e.g. switching
+            // orderedListStyleType from Decimal to LowerRoman changes "10. " to
+            // "x. "). Rebuild from the RichParagraph tree so the raw text and
+            // the rendered prefixes stay in sync; `updateAnnotatedString` relies
+            // on substring(...) against the current raw text and would read out
+            // of bounds when the prefix width has shifted.
+            updateRichParagraphList()
         }
     )
 

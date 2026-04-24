@@ -200,7 +200,7 @@ public class RichTextState internal constructor(
 
     /**
      * Window-space position of the hosted [BasicTextField]. Captured via
-     * [androidx.compose.ui.layout.onGloballyPositioned] on the editor's modifier
+     * [androidx.compose.ui.layout.onPlaced] on the editor's modifier
      * chain; used by suggestion popups to anchor relative to the caret in window coords.
      */
     internal var textFieldWindowPosition: Offset = Offset.Zero

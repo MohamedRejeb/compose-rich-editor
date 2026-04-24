@@ -21,7 +21,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +31,7 @@ import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -132,7 +132,7 @@ public fun <T> TriggerSuggestions(
 
     val scrollState = rememberScrollState()
     // Row y-positions (within the scrolling Column) and heights, populated via
-    // onGloballyPositioned as each row lays out. Used to scroll the highlighted
+    // onPlaced as each row lays out. Used to scroll the highlighted
     // row into view when the user navigates with arrow keys.
     val rowYs = remember(items) { mutableStateListOf<Int>().apply { repeat(items.size) { add(0) } } }
     val rowHeights = remember(items) { mutableStateListOf<Int>().apply { repeat(items.size) { add(0) } } }
@@ -219,7 +219,7 @@ public fun <T> TriggerSuggestions(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .onGloballyPositioned { coords ->
+                            .onPlaced { coords ->
                                 if (index < rowYs.size) {
                                     rowYs[index] = coords.positionInParent().y.toInt()
                                     rowHeights[index] = coords.size.height

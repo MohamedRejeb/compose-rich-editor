@@ -17,7 +17,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.onPreviewKeyEvent
-import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
@@ -252,12 +253,16 @@ public fun BasicRichTextEditor(
         val positionCapturingDecorationBox: @Composable (innerTextField: @Composable () -> Unit) -> Unit =
             { innerTextField ->
                 decorationBox {
-                    androidx.compose.foundation.layout.Box(
-                        modifier = Modifier.onGloballyPositioned { coords ->
+                    Layout(
+                        content = { innerTextField() },
+                        modifier = Modifier.onPlaced { coords ->
                             state.textFieldWindowPosition = coords.positionInWindow()
                         }
-                    ) {
-                        innerTextField()
+                    ) { measurables, constraints ->
+                        val placeable = measurables.first().measure(constraints)
+                        layout(placeable.width, placeable.height) {
+                            placeable.place(0, 0)
+                        }
                     }
                 }
             }

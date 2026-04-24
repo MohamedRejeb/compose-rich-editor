@@ -112,7 +112,7 @@ internal class OrderedList private constructor(
     private fun getNewParagraphStyle(): ParagraphStyle {
         val base = (indent * level).toFloat()
         val prefix = startTextWidth.value
-        // End: HTML-style alignment — prefix lives in the indent "gutter" and dots align
+        // End: HTML-style alignment - prefix lives in the indent "gutter" and dots align
         // vertically. Clamp firstLine at 0 so the prefix stays visible when the indent is
         // smaller than the prefix width; clamping per-item keeps all paragraphs on the
         // same formula so items with different marker widths stay visually consistent.

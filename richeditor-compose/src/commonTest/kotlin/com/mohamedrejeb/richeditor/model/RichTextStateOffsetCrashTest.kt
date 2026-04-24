@@ -91,7 +91,7 @@ class RichTextStateOffsetCrashTest {
         val text = state.annotatedString.text
         val firstItemEnd = text.indexOf("Hello") + "Hello".length
 
-        // Backspace — remove the separator between the two list items
+        // Backspace - remove the separator between the two list items
         state.selection = TextRange(firstItemEnd + 1)
         val newText = text.substring(0, firstItemEnd) + text.substring(firstItemEnd + 1)
         state.onTextFieldValueChange(

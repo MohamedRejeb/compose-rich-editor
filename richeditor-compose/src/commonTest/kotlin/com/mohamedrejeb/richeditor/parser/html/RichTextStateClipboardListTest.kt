@@ -26,7 +26,7 @@ import kotlin.test.assertTrue
 class RichTextStateClipboardListTest {
 
     // =========================================================================
-    // SECTION 1: toHtml(range) — Copy scenarios with ordered lists
+    // SECTION 1: toHtml(range) - Copy scenarios with ordered lists
     // =========================================================================
 
     @Test
@@ -161,7 +161,7 @@ class RichTextStateClipboardListTest {
     }
 
     // =========================================================================
-    // SECTION 2: toHtml(range) — Copy scenarios with unordered lists
+    // SECTION 2: toHtml(range) - Copy scenarios with unordered lists
     // =========================================================================
 
     @Test
@@ -209,7 +209,7 @@ class RichTextStateClipboardListTest {
     }
 
     // =========================================================================
-    // SECTION 3: toHtml(range) — Copy across mixed content (paragraphs + lists)
+    // SECTION 3: toHtml(range) - Copy across mixed content (paragraphs + lists)
     // =========================================================================
 
     @Test
@@ -307,7 +307,7 @@ class RichTextStateClipboardListTest {
     }
 
     // =========================================================================
-    // SECTION 4: toHtml(range) — Copy with mixed list types (OL + UL)
+    // SECTION 4: toHtml(range) - Copy with mixed list types (OL + UL)
     // =========================================================================
 
     @Test
@@ -345,7 +345,7 @@ class RichTextStateClipboardListTest {
     }
 
     // =========================================================================
-    // SECTION 5: toHtml(range) — Copy with nested lists
+    // SECTION 5: toHtml(range) - Copy with nested lists
     // =========================================================================
 
     @Test
@@ -427,7 +427,7 @@ class RichTextStateClipboardListTest {
     }
 
     // =========================================================================
-    // SECTION 6: toHtml(range) — Copy with styled list items
+    // SECTION 6: toHtml(range) - Copy with styled list items
     // =========================================================================
 
     @Test
@@ -475,7 +475,7 @@ class RichTextStateClipboardListTest {
     }
 
     // =========================================================================
-    // SECTION 7: toHtml(range) — Edge cases
+    // SECTION 7: toHtml(range) - Edge cases
     // =========================================================================
 
     @Test
@@ -537,7 +537,7 @@ class RichTextStateClipboardListTest {
     }
 
     // =========================================================================
-    // SECTION 8: toHtml(range) — List with only prefix (selecting prefix area)
+    // SECTION 8: toHtml(range) - List with only prefix (selecting prefix area)
     // =========================================================================
 
     @Test
@@ -571,7 +571,7 @@ class RichTextStateClipboardListTest {
     }
 
     // =========================================================================
-    // SECTION 9: insertHtml — Paste list into regular text
+    // SECTION 9: insertHtml - Paste list into regular text
     // =========================================================================
 
     @Test
@@ -644,7 +644,7 @@ class RichTextStateClipboardListTest {
     }
 
     // =========================================================================
-    // SECTION 10: insertHtml — Paste regular text into list
+    // SECTION 10: insertHtml - Paste regular text into list
     // =========================================================================
 
     @Test
@@ -690,7 +690,7 @@ class RichTextStateClipboardListTest {
     }
 
     // =========================================================================
-    // SECTION 11: insertHtml — Paste list into existing list
+    // SECTION 11: insertHtml - Paste list into existing list
     // =========================================================================
 
     @Test
@@ -761,7 +761,7 @@ class RichTextStateClipboardListTest {
     }
 
     // =========================================================================
-    // SECTION 12: insertHtml — Edge cases
+    // SECTION 12: insertHtml - Edge cases
     // =========================================================================
 
     @Test
@@ -1135,7 +1135,7 @@ class RichTextStateClipboardListTest {
     }
 
     // =========================================================================
-    // SECTION 17: insertHtml — Paragraph type preservation
+    // SECTION 17: insertHtml - Paragraph type preservation
     // =========================================================================
 
     @Test

@@ -16,7 +16,7 @@ import kotlin.test.Ignore
 
 /**
  * Reproduction tests for HTML parser bugs from GitHub issues.
- * These tests document the expected behavior — failing tests indicate bugs to fix.
+ * These tests document the expected behavior - failing tests indicate bugs to fix.
  *
  * Issues covered:
  * - #391: setHtml removes spaces between separately-bolded words
@@ -115,7 +115,7 @@ class RichTextStateHtmlParserBugTest {
             "#610: Should contain 'second line'. Got: '$text'"
         )
 
-        // Both lines should be bold — check that the second line's span has bold
+        // Both lines should be bold - check that the second line's span has bold
         val secondLineStart = text.indexOf("second line")
         assertTrue(secondLineStart >= 0, "#610: 'second line' not found in text")
 
@@ -251,7 +251,7 @@ class RichTextStateHtmlParserBugTest {
         )
 
         // Ideally they should be in the same paragraph with <br>, not separate <p> tags
-        // Count <p> tags — if there are 3 <p> tags for what was 1 paragraph, that's the bug
+        // Count <p> tags - if there are 3 <p> tags for what was 1 paragraph, that's the bug
         val pCount = "<p>".toRegex().findAll(html).count()
         assertEquals(
             1,
@@ -352,7 +352,7 @@ class RichTextStateHtmlParserBugTest {
         state.selection = TextRange(lineTwoStart, lineTwoStart + "Line two".length)
         state.toggleSpanStyle(SpanStyle(fontWeight = FontWeight.Bold))
 
-        // isFromLineBreak should still be true — bold doesn't change paragraph structure
+        // isFromLineBreak should still be true - bold doesn't change paragraph structure
         assertTrue(state.richParagraphList[1].isFromLineBreak, "isFromLineBreak should survive span style changes")
 
         // HTML should still use <br>
@@ -412,7 +412,7 @@ class RichTextStateHtmlParserBugTest {
 
     @Test
     fun testIssue569_orderedListItemsHaveCorrectPrefixLength() {
-        // The bug manifests as misalignment — items 1-9 have prefix "N. " (3 chars)
+        // The bug manifests as misalignment - items 1-9 have prefix "N. " (3 chars)
         // but items 10+ have prefix "NN. " (4 chars). Verify prefixes are correct.
         val html = "<ol>" +
             (1..15).joinToString("") { "<li>Item</li>" } +

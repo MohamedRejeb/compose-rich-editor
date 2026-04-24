@@ -158,7 +158,7 @@ private fun Header() {
         Spacer(Modifier.height(4.dp))
         Text(
             text = "These showcase how Compose Rich Editor maps onto familiar product UX. " +
-                "Slack is fully functional today; the others are scaffolds we're building out — open an " +
+                "Slack is fully functional today; the others are scaffolds we're building out - open an " +
                 "issue or PR if you want to help.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

@@ -101,7 +101,7 @@ public fun <T> TriggerSuggestions(
 
     // Hold rendering until the caret rect has been resolved against the fresh text
     // layout. Without this, the first frame after query activation renders the popup
-    // at (0,0) — the old layout's `getCursorRect` answer — before `onTextLayout`
+    // at (0,0) - the old layout's `getCursorRect` answer - before `onTextLayout`
     // patches it one frame later. That produces a visible flicker.
     //
     // NOTE: a cursor rect has zero width (left == right), so we can't use Rect.isEmpty.
@@ -112,7 +112,7 @@ public fun <T> TriggerSuggestions(
     val items = remember(query.query) { suggestions(query.query) }
     if (items.isEmpty()) return
 
-    // `highlighted` state is read inside the key handler — we pass the delegate reference
+    // `highlighted` state is read inside the key handler - we pass the delegate reference
     // via a separate ref so the handler always sees the latest value, never a stale closure.
     val highlightedState = remember(query.query) { mutableStateOf(0) }
     val safeHighlighted = highlightedState.value.coerceIn(0, items.lastIndex)

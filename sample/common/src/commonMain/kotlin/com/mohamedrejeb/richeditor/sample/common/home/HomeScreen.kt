@@ -22,6 +22,8 @@ import androidx.compose.material.icons.outlined.AlternateEmail
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Image
+import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -52,6 +54,8 @@ fun HomeScreen(
     navigateToUndoRedo: () -> Unit,
     navigateToListsConfig: () -> Unit,
     navigateToRealExamples: () -> Unit,
+    navigateToLinks: () -> Unit,
+    navigateToImages: () -> Unit,
 ) {
     SampleScaffold(
         title = "Compose Rich Editor",
@@ -75,7 +79,7 @@ fun HomeScreen(
                 SectionHeader(
                     eyebrow = "Editor variants",
                     title = "Pick the right surface",
-                    subtitle = "Three Material flavours plus the basic primitive — same state, different chrome.",
+                    subtitle = "Three Material flavours plus the basic primitive - same state, different chrome.",
                     accent = SampleAccents.Indigo,
                 )
             }
@@ -104,6 +108,37 @@ fun HomeScreen(
 
             item {
                 SectionHeader(
+                    eyebrow = "Inline content",
+                    title = "Embed beyond plain text",
+                    subtitle = "Hyperlinks and images live inline, round-trip through HTML/Markdown, and stay editable.",
+                    accent = SampleAccents.Violet,
+                )
+            }
+
+            item {
+                FeatureCard(
+                    title = "Links",
+                    description = "Add, edit and remove hyperlinks; inspect the caret status; wrap arbitrary ranges programmatically.",
+                    icon = Icons.Outlined.Link,
+                    accent = SampleAccents.Sky,
+                    onClick = navigateToLinks,
+                )
+            }
+
+            item {
+                FeatureCard(
+                    title = "Images",
+                    description = "Inline images via Coil3 with width/height controls - oversized assets clamp to container width.",
+                    icon = Icons.Outlined.Image,
+                    accent = SampleAccents.Violet,
+                    onClick = navigateToImages,
+                )
+            }
+
+            item { SectionSpacer() }
+
+            item {
+                SectionHeader(
                     eyebrow = "Format conversion",
                     title = "Round-trip everywhere",
                     subtitle = "HTML and Markdown encode/decode against the same RichTextState.",
@@ -114,7 +149,7 @@ fun HomeScreen(
             item {
                 FeatureCard(
                     title = "HTML editor",
-                    description = "Type rich text and watch HTML stream out — or paste HTML and see it parsed live.",
+                    description = "Type rich text and watch HTML stream out - or paste HTML and see it parsed live.",
                     icon = Icons.Outlined.Code,
                     accent = SampleAccents.Coral,
                     onClick = navigateToHtmlEditor,

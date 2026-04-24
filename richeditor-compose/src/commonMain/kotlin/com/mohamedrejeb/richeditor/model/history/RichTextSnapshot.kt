@@ -8,7 +8,7 @@ import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 
 /**
  * Immutable point-in-time snapshot of a `RichTextState`. All stored paragraphs are
- * detached deep copies — safe to hold and safe to restore from repeatedly.
+ * detached deep copies - safe to hold and safe to restore from repeatedly.
  */
 @OptIn(ExperimentalRichTextApi::class)
 internal class RichTextSnapshot private constructor(

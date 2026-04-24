@@ -64,7 +64,7 @@ private val PresetUnorderedStyles: List<Pair<String, UnorderedListStyleType>> = 
 )
 
 private const val SampleHtml: String = """
-<p>Try the toggles above — watch how the pre-filled lists react.</p>
+<p>Try the toggles above - watch how the pre-filled lists react.</p>
 <ol>
     <li>First item</li>
     <li>Second item</li>
@@ -75,7 +75,7 @@ private const val SampleHtml: String = """
     <li>Seventh item</li>
     <li>Eighth item</li>
     <li>Ninth item</li>
-    <li>Tenth item — watch the jump from single to double digits</li>
+    <li>Tenth item - watch the jump from single to double digits</li>
     <li>Eleventh item</li>
     <li>Twelfth item</li>
 </ol>
@@ -151,7 +151,7 @@ fun ListsConfigSampleScreen(navigateBack: () -> Unit) {
             }
 
             ConfigCard(
-                title = "Ordered list indent — ${orderedIndent.toInt()} sp",
+                title = "Ordered list indent - ${orderedIndent.toInt()} sp",
                 accent = SampleAccents.Indigo,
             ) {
                 Slider(
@@ -166,7 +166,7 @@ fun ListsConfigSampleScreen(navigateBack: () -> Unit) {
             }
 
             ConfigCard(
-                title = "Unordered list indent — ${unorderedIndent.toInt()} sp",
+                title = "Unordered list indent - ${unorderedIndent.toInt()} sp",
                 accent = SampleAccents.Indigo,
             ) {
                 Slider(

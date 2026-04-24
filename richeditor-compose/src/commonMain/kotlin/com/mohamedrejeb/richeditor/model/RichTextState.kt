@@ -226,7 +226,7 @@ public class RichTextState internal constructor(
         }
         val existingIndex = _triggers.indexOfFirst { it.id == trigger.id }
         if (existingIndex >= 0) {
-            // Remove + add instead of set() — Trigger's equals compares by id, so
+            // Remove + add instead of set() - Trigger's equals compares by id, so
             // list.set(i, trigger) may be a no-op under equality-tracking list
             // implementations even though the values differ.
             _triggers.removeAt(existingIndex)
@@ -1691,7 +1691,7 @@ public class RichTextState internal constructor(
      * @return true if the list level was increased or decreased, false otherwise.
      */
     internal fun onPreviewKeyEvent(event: KeyEvent): Boolean {
-        // Undo/redo shortcuts — intercepted before BasicTextField's built-in handler
+        // Undo/redo shortcuts - intercepted before BasicTextField's built-in handler
         // so rich-model snapshots rewind instead of plain-text TextFieldValue state.
         if (!suppressUndoShortcuts && event.type == KeyEventType.KeyDown && !event.isAltPressed) {
             val modifier = event.isMetaPressed || event.isCtrlPressed
@@ -2159,7 +2159,7 @@ public class RichTextState internal constructor(
         block: () -> T,
     ): T {
         // When [enabled] is false the mutation is known a priori to only touch
-        // staged state (e.g. span styles bags) without changing the paragraph tree —
+        // staged state (e.g. span styles bags) without changing the paragraph tree -
         // recording it would produce a phantom undo step that confuses users. We
         // still seal the pending coalesced typing group so the toggle acts as a
         // natural break between typing bursts, matching how most editors behave.
@@ -2208,7 +2208,7 @@ public class RichTextState internal constructor(
         val caret = selection.min
         val text = textFieldValue.text
 
-        // Guard against detection inside an existing atomic Token span — tokens
+        // Guard against detection inside an existing atomic Token span - tokens
         // are atomic units and can't host a nested active trigger.
         val spanAtCaret = getRichSpanByTextIndex(caret - 1)
         if (spanAtCaret?.richSpanStyle is RichSpanStyle.Token) {

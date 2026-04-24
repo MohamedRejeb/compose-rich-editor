@@ -150,7 +150,7 @@ into a single undo step. The following always start a new group:
 - Formatting toggles (bold, color, link, list, paragraph style, rich span style)
 - Structural changes (image/token insert, list level changes)
 - Paste operations
-- Programmatic replacements (`setHtml`, `setMarkdown`, `setConfig` — these also
+- Programmatic replacements (`setHtml`, `setMarkdown`, `setConfig` - these also
   clear the stacks entirely since they typically mean "load a new document")
 - Caret moves (do not push a snapshot but seal the pending group, so the next
   typed character starts a fresh undo step)

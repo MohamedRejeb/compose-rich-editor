@@ -34,7 +34,7 @@ class RichTextStateUndoRedoTest {
     fun collapsedSelectionToggleDoesNotPushUndoStep() {
         // Toggling a style while the caret is collapsed only updates the staged-style
         // bag (i.e. what the NEXT typed character gets). It should NOT create a phantom
-        // undo step — undoing a "stage bold" would be confusing since it has no visible
+        // undo step - undoing a "stage bold" would be confusing since it has no visible
         // effect. The toggle DOES seal the pending typing group so the burst before
         // and the burst after the toggle are separate undo steps (matches VS Code / Word).
         val s = RichTextState()

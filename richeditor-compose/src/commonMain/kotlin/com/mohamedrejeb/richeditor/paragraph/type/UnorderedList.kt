@@ -91,7 +91,7 @@ internal class UnorderedList private constructor(
     private fun getNewParagraphStyle(): ParagraphStyle {
         val base = (indent * level).toFloat()
         val prefix = startTextWidth.value
-        // End: HTML-style alignment — prefix lives in the indent "gutter". Clamp firstLine
+        // End: HTML-style alignment - prefix lives in the indent "gutter". Clamp firstLine
         // at 0 so the prefix stays visible when the indent is smaller than the prefix;
         // clamping (instead of switching formulas) keeps the layout consistent across items.
         // Start: every item's prefix starts at the indent origin.

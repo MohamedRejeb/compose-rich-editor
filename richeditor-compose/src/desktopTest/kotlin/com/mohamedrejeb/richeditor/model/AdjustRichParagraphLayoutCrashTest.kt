@@ -14,11 +14,11 @@ import org.junit.Test
 
 /**
  * Reproduction attempts for the `adjustRichParagraphLayout` crash family:
- *   #667 — "addTextAtIndex lineIndex(2) is out of bounds [0, 2)"
+ *   #667 - "addTextAtIndex lineIndex(2) is out of bounds [0, 2)"
  *          (real frame: getLineEnd(maxLines - 1) when maxLines > lineCount)
- *   #627 — "IndexOutOfBoundsException: index: 18, size: 0"
+ *   #627 - "IndexOutOfBoundsException: index: 18, size: 0"
  *          (StateListIterator.next during iteration)
- *   #631 — "IllegalArgumentException at findParagraphByIndex via getHorizontalPosition"
+ *   #631 - "IllegalArgumentException at findParagraphByIndex via getHorizontalPosition"
  */
 class AdjustRichParagraphLayoutCrashTest {
 

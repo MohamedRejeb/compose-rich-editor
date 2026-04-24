@@ -190,7 +190,7 @@ class TriggerDetectorTest {
 
     @Test
     fun `suppressed range does not block after caret leaves`() {
-        // Caret is past the suppressed range — but a stop char is needed to
+        // Caret is past the suppressed range - but a stop char is needed to
         // end the token; this case ensures suppression clears when outside.
         val result = detectActiveTrigger(
             text = "@moh after",

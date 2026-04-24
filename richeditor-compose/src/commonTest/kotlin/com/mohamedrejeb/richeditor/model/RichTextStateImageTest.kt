@@ -7,7 +7,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * Regression tests for issue #466 — typing on a text field renders
+ * Regression tests for issue #466 - typing on a text field renders
  * broken characters when an image exists.
  *
  * Root cause hypothesis: an `<img>` span inserts an
@@ -17,7 +17,7 @@ import kotlin.test.assertEquals
  * [RichTextState.textFieldValue] text gets no corresponding
  * character. This desyncs their lengths, and because the
  * [OffsetMapping] is [OffsetMapping.Identity], Compose uses the
- * annotated length to compute offsets while the raw text is shorter —
+ * annotated length to compute offsets while the raw text is shorter -
  * so subsequent edits land at the wrong positions and typed
  * characters appear garbled.
  */

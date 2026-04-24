@@ -17,7 +17,7 @@ import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
  *
  * When a trigger character is found, the function additionally validates:
  *  - word-boundary requirement, if [Trigger.requireWordBoundary] is true;
- *  - the suppressed range guard — if [suppressedRange] contains the trigger
+ *  - the suppressed range guard - if [suppressedRange] contains the trigger
  *    position, activation is skipped. This prevents a just-cancelled query
  *    from immediately re-activating while the caret is still within its range.
  */
@@ -86,7 +86,7 @@ internal fun detectActiveTrigger(
         }
 
         // A char at the current scan position is a stop char if ANY registered
-        // trigger treats it as a stop char — once hit, no trigger can resume
+        // trigger treats it as a stop char - once hit, no trigger can resume
         // backwards through this char. This matches user intuition (whitespace
         // always breaks a query regardless of which trigger is involved).
         val isAnyStopChar = triggers.any { ch in it.stopChars }

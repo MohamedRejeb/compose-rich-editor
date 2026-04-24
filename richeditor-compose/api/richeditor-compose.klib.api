@@ -25,6 +25,17 @@ final enum class com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehav
     final fun values(): kotlin/Array<com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehavior> // com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehavior.values|values#static(){}[0]
 }
 
+final enum class com.mohamedrejeb.richeditor.paragraph.type/ListPrefixAlignment : kotlin/Enum<com.mohamedrejeb.richeditor.paragraph.type/ListPrefixAlignment> { // com.mohamedrejeb.richeditor.paragraph.type/ListPrefixAlignment|null[0]
+    enum entry End // com.mohamedrejeb.richeditor.paragraph.type/ListPrefixAlignment.End|null[0]
+    enum entry Start // com.mohamedrejeb.richeditor.paragraph.type/ListPrefixAlignment.Start|null[0]
+
+    final val entries // com.mohamedrejeb.richeditor.paragraph.type/ListPrefixAlignment.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.mohamedrejeb.richeditor.paragraph.type/ListPrefixAlignment> // com.mohamedrejeb.richeditor.paragraph.type/ListPrefixAlignment.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.mohamedrejeb.richeditor.paragraph.type/ListPrefixAlignment // com.mohamedrejeb.richeditor.paragraph.type/ListPrefixAlignment.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.mohamedrejeb.richeditor.paragraph.type/ListPrefixAlignment> // com.mohamedrejeb.richeditor.paragraph.type/ListPrefixAlignment.values|values#static(){}[0]
+}
+
 final enum class com.mohamedrejeb.richeditor.ui/UndoBehavior : kotlin/Enum<com.mohamedrejeb.richeditor.ui/UndoBehavior> { // com.mohamedrejeb.richeditor.ui/UndoBehavior|null[0]
     enum entry Disabled // com.mohamedrejeb.richeditor.ui/UndoBehavior.Disabled|null[0]
     enum entry Enabled // com.mohamedrejeb.richeditor.ui/UndoBehavior.Enabled|null[0]
@@ -287,6 +298,9 @@ final class com.mohamedrejeb.richeditor.model/RichTextConfig { // com.mohamedrej
     final var listMarkerStyleBehavior // com.mohamedrejeb.richeditor.model/RichTextConfig.listMarkerStyleBehavior|{}listMarkerStyleBehavior[0]
         final fun <get-listMarkerStyleBehavior>(): com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehavior // com.mohamedrejeb.richeditor.model/RichTextConfig.listMarkerStyleBehavior.<get-listMarkerStyleBehavior>|<get-listMarkerStyleBehavior>(){}[0]
         final fun <set-listMarkerStyleBehavior>(com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehavior) // com.mohamedrejeb.richeditor.model/RichTextConfig.listMarkerStyleBehavior.<set-listMarkerStyleBehavior>|<set-listMarkerStyleBehavior>(com.mohamedrejeb.richeditor.paragraph.type.ListMarkerStyleBehavior){}[0]
+    final var listPrefixAlignment // com.mohamedrejeb.richeditor.model/RichTextConfig.listPrefixAlignment|{}listPrefixAlignment[0]
+        final fun <get-listPrefixAlignment>(): com.mohamedrejeb.richeditor.paragraph.type/ListPrefixAlignment // com.mohamedrejeb.richeditor.model/RichTextConfig.listPrefixAlignment.<get-listPrefixAlignment>|<get-listPrefixAlignment>(){}[0]
+        final fun <set-listPrefixAlignment>(com.mohamedrejeb.richeditor.paragraph.type/ListPrefixAlignment) // com.mohamedrejeb.richeditor.model/RichTextConfig.listPrefixAlignment.<set-listPrefixAlignment>|<set-listPrefixAlignment>(com.mohamedrejeb.richeditor.paragraph.type.ListPrefixAlignment){}[0]
     final var orderedListIndent // com.mohamedrejeb.richeditor.model/RichTextConfig.orderedListIndent|{}orderedListIndent[0]
         final fun <get-orderedListIndent>(): kotlin/Int // com.mohamedrejeb.richeditor.model/RichTextConfig.orderedListIndent.<get-orderedListIndent>|<get-orderedListIndent>(){}[0]
         final fun <set-orderedListIndent>(kotlin/Int) // com.mohamedrejeb.richeditor.model/RichTextConfig.orderedListIndent.<set-orderedListIndent>|<set-orderedListIndent>(kotlin.Int){}[0]

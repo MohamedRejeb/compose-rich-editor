@@ -8,9 +8,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.key
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.isUnspecified
@@ -18,7 +15,6 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.*
 import androidx.compose.ui.unit.TextUnit
@@ -243,29 +239,40 @@ public interface RichSpanStyle {
                 children = {
                     val density = LocalDensity.current
                     val imageLoader = LocalImageLoader.current
+                    val maxImageWidth = LocalRichTextMaxImageWidthProvider.current.maxWidth
                     val data = imageLoader.load(model) ?: return@InlineTextContent
 
-                    LaunchedEffect(id, data) {
+                    LaunchedEffect(id, data, maxImageWidth) {
                         if (data.painter.intrinsicSize.isUnspecified)
                             return@LaunchedEffect
 
-                        val newWidth = with(density) {
+                        val intrinsicWidth = with(density) {
                             data.painter.intrinsicSize.width.coerceAtLeast(0f).toSp()
                         }
-                        val newHeight = with(density) {
+                        val intrinsicHeight = with(density) {
                             data.painter.intrinsicSize.height.coerceAtLeast(0f).toSp()
                         }
 
-                        if (width == newWidth && height == newHeight)
+                        val (clampedWidth, clampedHeight) = clampToMaxWidth(
+                            width = intrinsicWidth,
+                            height = intrinsicHeight,
+                            maxWidth = maxImageWidth,
+                        )
+
+                        val shouldSetWidth = width.isUnspecified ||
+                            width.value <= 0 ||
+                            width != clampedWidth
+                        val shouldSetHeight = height.isUnspecified ||
+                            height.value <= 0 ||
+                            height != clampedHeight
+
+                        if (!shouldSetWidth && !shouldSetHeight)
                             return@LaunchedEffect
 
                         richTextState.inlineContentMap.remove(id)
 
-                        if (width.isUnspecified || width.value <= 0)
-                            width = newWidth
-
-                        if (height.isUnspecified || height.value <= 0)
-                            height = newHeight
+                        if (shouldSetWidth) width = clampedWidth
+                        if (shouldSetHeight) height = clampedHeight
 
                         richTextState.inlineContentMap[id] = createInlineTextContent(richTextState = richTextState)
                         richTextState.updateAnnotatedString()
@@ -286,6 +293,29 @@ public interface RichSpanStyle {
             false
 
         override val isAtomic: Boolean = true
+
+        internal companion object {
+            /**
+             * Scale [width]/[height] down proportionally so [width] is at most
+             * [maxWidth]. Returns the input unchanged when [maxWidth] is
+             * unspecified, non-positive, or already wider than [width].
+             */
+            internal fun clampToMaxWidth(
+                width: TextUnit,
+                height: TextUnit,
+                maxWidth: TextUnit,
+            ): Pair<TextUnit, TextUnit> {
+                if (!maxWidth.isSpecified || maxWidth.value <= 0f) return width to height
+                if (!width.isSpecified || width.value <= maxWidth.value) return width to height
+
+                val scale = maxWidth.value / width.value
+                val clampedHeight = if (height.isSpecified)
+                    (height.value * scale).sp
+                else
+                    height
+                return maxWidth to clampedHeight
+            }
+        }
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true

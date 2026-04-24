@@ -46,6 +46,7 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+*.xcuserstate
 
 ### Android ###
 local.properties
@@ -56,3 +57,14 @@ site
 
 ### Python ###
 venv/
+
+.junie
+.claude
+
+CLAUDE.md
+AGENTS.md
+
+kotlin-js-store
+
+### Plans ###
+plans/

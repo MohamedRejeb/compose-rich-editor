@@ -1,34 +1,52 @@
 [versions]
-agp = "8.8.2"
-kotlin = "2.1.20"
-compose = "1.8.0-alpha03"
-dokka = "2.0.0"
+agp = "8.13.2"
+kotlin = "2.3.21"
+compose = "1.10.3"
+material3 = "1.10.0-alpha05"
+material-icons-extended = "1.7.3"
+dokka = "2.2.0"
 
-ksoup = "0.5.0"
+ksoup = "0.6.0"
 jetbrainsMarkdown = "0.7.3"
-coil = "3.1.0"
+coil = "3.4.0"
 
-nexus-publish = "2.0.0"
+vanniktech-maven-publish = "0.36.0"
+
+java = "17"
 
 # For sample
-androidx-appcompat = "1.7.0"
-activity-compose = "1.10.1"
-richeditor = "1.0.0-rc10"
-coroutines = "1.10.1"
-ktor = "3.1.1"
-android-minSdk = "21"
-android-compileSdk = "35"
-lifecycle = "2.9.0-alpha03"
-navigation = "2.8.0-alpha13"
+androidx-appcompat = "1.7.1"
+activity-compose = "1.13.0"
+richeditor = "1.0.0-rc13"
+coroutines = "1.10.2"
+ktor = "3.4.3"
+android-minSdk = "23"
+android-compileSdk = "37"
+lifecycle = "2.10.0"
+navigation = "2.9.2"
 
 [libraries]
 ksoup-html = { module = "com.mohamedrejeb.ksoup:ksoup-html", version.ref = "ksoup" }
 ksoup-entities = { module = "com.mohamedrejeb.ksoup:ksoup-entities", version.ref = "ksoup" }
 jetbrains-markdown = { module = "org.jetbrains:markdown", version.ref = "jetbrainsMarkdown" }
 
+compose-runtime = { group = "org.jetbrains.compose.runtime", name = "runtime", version.ref = "compose" }
+compose-foundation = { group = "org.jetbrains.compose.foundation", name = "foundation", version.ref = "compose" }
+compose-ui = { group = "org.jetbrains.compose.ui", name = "ui", version.ref = "compose" }
+compose-material = { group = "org.jetbrains.compose.material", name = "material", version.ref = "compose" }
+compose-material3 = { group = "org.jetbrains.compose.material3", name = "material3", version.ref = "material3" }
+compose-material-icons-extended = { group = "org.jetbrains.compose.material", name = "material-icons-extended", version.ref = "material-icons-extended" }
+compose-components-resources = { group = "org.jetbrains.compose.components", name = "components-resources", version.ref = "compose" }
+compose-ui-test = { group = "org.jetbrains.compose.ui", name = "ui-test", version.ref = "compose" }
+compose-ui-test-junit4 = { group = "org.jetbrains.compose.ui", name = "ui-test-junit4", version.ref = "compose" }
+
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 
-nexus-publish = { module = "io.github.gradle-nexus.publish-plugin:io.github.gradle-nexus.publish-plugin.gradle.plugin", version.ref = "nexus-publish" }
+gradlePlugin-android = { module = "com.android.tools.build:gradle", version.ref = "agp" }
+gradlePlugin-jetbrainsCompose = { module = "org.jetbrains.compose:compose-gradle-plugin", version.ref = "compose" }
+gradlePlugin-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+gradlePlugin-composeCompiler = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlin" }
+vanniktech-maven-publish = { module = "com.vanniktech.maven.publish:com.vanniktech.maven.publish.gradle.plugin", version.ref = "vanniktech-maven-publish" }
 
 # For sample
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
@@ -58,4 +76,4 @@ kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref =
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
-bcv = "org.jetbrains.kotlinx.binary-compatibility-validator:0.17.0"
+bcv = "org.jetbrains.kotlinx.binary-compatibility-validator:0.18.1"

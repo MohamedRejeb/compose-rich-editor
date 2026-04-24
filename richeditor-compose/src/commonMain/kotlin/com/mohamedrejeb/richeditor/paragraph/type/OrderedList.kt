@@ -12,21 +12,30 @@ import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichTextConfig
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 
+@OptIn(ExperimentalRichTextApi::class)
 internal class OrderedList private constructor(
     number: Int,
     initialIndent: Int = DefaultListIndent,
     startTextWidth: TextUnit = 0.sp,
     initialLevel: Int = 1,
     initialStyleType: OrderedListStyleType = DefaultOrderedListStyleType,
+    initialPrefixAlignment: ListPrefixAlignment = ListPrefixAlignment.End,
+    /**
+     * The start number for the first item in this list group.
+     * Defaults to 1. When > 1, the HTML output includes `start="N"` on the `<ol>` tag.
+     */
+    val startFrom: Int = 1,
 ) : ParagraphType, ConfigurableStartTextWidth, ConfigurableListLevel {
 
     constructor(
         number: Int,
         initialLevel: Int = 1,
+        startFrom: Int = 1,
     ) : this(
         number = number,
         initialIndent = DefaultListIndent,
         initialLevel = initialLevel,
+        startFrom = startFrom,
     )
 
     constructor(
@@ -34,12 +43,15 @@ internal class OrderedList private constructor(
         config: RichTextConfig,
         startTextWidth: TextUnit = 0.sp,
         initialLevel: Int = 1,
+        startFrom: Int = 1,
     ) : this(
         number = number,
         initialIndent = config.orderedListIndent,
         startTextWidth = startTextWidth,
         initialLevel = initialLevel,
         initialStyleType = config.orderedListStyleType,
+        initialPrefixAlignment = config.listPrefixAlignment,
+        startFrom = startFrom,
     )
 
     var number = number
@@ -72,6 +84,12 @@ internal class OrderedList private constructor(
             startRichSpan = getNewStartRichSpan(startRichSpan.textRange)
         }
 
+    private var prefixAlignment = initialPrefixAlignment
+        set(value) {
+            field = value
+            style = getNewParagraphStyle()
+        }
+
     private var style: ParagraphStyle =
         getNewParagraphStyle()
 
@@ -84,16 +102,29 @@ internal class OrderedList private constructor(
             styleType = config.orderedListStyleType
         }
 
+        if (config.listPrefixAlignment != prefixAlignment) {
+            prefixAlignment = config.listPrefixAlignment
+        }
+
         return style
     }
 
-    private fun getNewParagraphStyle() =
-        ParagraphStyle(
-            textIndent = TextIndent(
-                firstLine = ((indent * level) - startTextWidth.value).sp,
-                restLine = (indent * level).sp
-            )
-        )
+    private fun getNewParagraphStyle(): ParagraphStyle {
+        val base = (indent * level).toFloat()
+        val prefix = startTextWidth.value
+        // End: HTML-style alignment - prefix lives in the indent "gutter" and dots align
+        // vertically. Clamp firstLine at 0 so the prefix stays visible when the indent is
+        // smaller than the prefix width; clamping per-item keeps all paragraphs on the
+        // same formula so items with different marker widths stay visually consistent.
+        // Start: every item's prefix starts at the indent origin, giving a uniform left edge.
+        val textIndent =
+            if (prefixAlignment == ListPrefixAlignment.End)
+                TextIndent(firstLine = (base - prefix).coerceAtLeast(0f).sp, restLine = base.sp)
+            else
+                TextIndent(firstLine = base.sp, restLine = (base + prefix).sp)
+
+        return ParagraphStyle(textIndent = textIndent)
+    }
 
     override var startRichSpan: RichSpan =
         getNewStartRichSpan()
@@ -119,6 +150,7 @@ internal class OrderedList private constructor(
             startTextWidth = startTextWidth,
             initialLevel = level,
             initialStyleType = styleType,
+            initialPrefixAlignment = prefixAlignment,
         )
 
     override fun copy(): ParagraphType =
@@ -128,6 +160,7 @@ internal class OrderedList private constructor(
             startTextWidth = startTextWidth,
             initialLevel = level,
             initialStyleType = styleType,
+            initialPrefixAlignment = prefixAlignment,
         )
 
     override fun equals(other: Any?): Boolean {
@@ -139,6 +172,7 @@ internal class OrderedList private constructor(
         if (startTextWidth != other.startTextWidth) return false
         if (level != other.level) return false
         if (styleType != other.styleType) return false
+        if (prefixAlignment != other.prefixAlignment) return false
 
         return true
     }
@@ -150,6 +184,7 @@ internal class OrderedList private constructor(
         result = 31 * result + startTextWidth.hashCode()
         result = 31 * result + level
         result = 31 * result + styleType.hashCode()
+        result = 31 * result + prefixAlignment.hashCode()
         return result
     }
 }

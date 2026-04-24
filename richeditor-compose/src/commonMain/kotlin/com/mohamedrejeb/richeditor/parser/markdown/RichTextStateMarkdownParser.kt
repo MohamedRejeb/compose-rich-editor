@@ -22,6 +22,7 @@ import com.mohamedrejeb.richeditor.parser.html.BrElement
 import com.mohamedrejeb.richeditor.parser.html.RichTextStateHtmlParser
 import com.mohamedrejeb.richeditor.parser.html.htmlElementsSpanStyleEncodeMap
 import com.mohamedrejeb.richeditor.parser.utils.*
+import com.mohamedrejeb.richeditor.utils.InlineContentPlaceholder
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.MarkdownTokenTypes
 import org.intellij.markdown.ast.ASTNode
@@ -105,16 +106,23 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                         contentDescription = text
                     )
 
-                currentRichSpan?.text = ""
+                // Image owns a single placeholder char in the raw text so span
+                // textRanges line up with the rendered annotated string. See #466.
+                currentRichSpan?.text = InlineContentPlaceholder
             }
         }
 
+        // Correct the markdown text first so we can use it in callbacks
+        val correctedMarkdown = correctMarkdownText(input)
+
         encodeMarkdownToRichText(
-            markdown = input,
+            markdown = correctedMarkdown,
             onText = { text ->
                 onText(text)
             },
             onOpenNode = { node ->
+                val lastOpenedNode = openedNodes.lastOrNull()
+
                 openedNodes.add(node)
 
                 if (node.type == MarkdownElementTypes.LIST_ITEM) {
@@ -127,9 +135,13 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 if (node.type in markdownBlockElements) {
                     val currentRichParagraph = richParagraphList.last()
 
+                    val isList =
+                        lastOpenedNode?.type == MarkdownElementTypes.ORDERED_LIST ||
+                                lastOpenedNode?.type == MarkdownElementTypes.UNORDERED_LIST
+
                     // Get paragraph type from markdown element
-                    if (currentRichParagraphType is DefaultParagraph) {
-                        val paragraphType = encodeRichParagraphTypeFromMarkdownElement(node)
+                    if (currentRichParagraphType is DefaultParagraph || isList) {
+                        val paragraphType = encodeRichParagraphTypeFromMarkdownElement(lastOpenedNode ?: node)
                         currentRichParagraphType = paragraphType
                     }
 
@@ -159,7 +171,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                         currentRichSpan = null
                     }
                 } else if (node.type != MarkdownTokenTypes.EOL) {
-                    val richSpanStyle = encodeMarkdownElementToRichSpanStyle(node, input)
+                    val richSpanStyle = encodeMarkdownElementToRichSpanStyle(node, correctedMarkdown)
 
                     if (richParagraphList.isEmpty())
                         richParagraphList.add(RichParagraph())
@@ -208,7 +220,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     node.type == GFMTokenTypes.GFM_AUTOLINK ||
                     node.type == MarkdownTokenTypes.CODE_LINE
                 ) {
-                    onText(node.getTextInNode(input).toString())
+                    onText(node.getTextInNode(correctedMarkdown).toString())
                 }
             },
             onCloseNode = { node ->
@@ -259,17 +271,17 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     currentRichSpan = null
                 }
 
-                val lastOpenedNodes = openedNodes.lastOrNull()
+                val lastOpenedNode = openedNodes.lastOrNull()
 
                 val isList =
                     node.type == MarkdownElementTypes.ORDERED_LIST ||
                             node.type == MarkdownElementTypes.UNORDERED_LIST
 
                 val isLastList =
-                    lastOpenedNodes != null &&
-                            (lastOpenedNodes.type == MarkdownElementTypes.ORDERED_LIST ||
-                                    lastOpenedNodes.type == MarkdownElementTypes.UNORDERED_LIST ||
-                                    lastOpenedNodes.type == MarkdownElementTypes.LIST_ITEM)
+                    lastOpenedNode != null &&
+                            (lastOpenedNode.type == MarkdownElementTypes.ORDERED_LIST ||
+                                    lastOpenedNode.type == MarkdownElementTypes.UNORDERED_LIST ||
+                                    lastOpenedNode.type == MarkdownElementTypes.LIST_ITEM)
 
                 // Reset paragraph type
                 if (isList && !isLastList) {
@@ -543,14 +555,26 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     ?.toString()
                     .orEmpty()
 
-                if (isImage)
-                    RichSpanStyle.Image(
-                        model = destination,
-                        width = 0.sp,
-                        height = 0.sp,
-                    )
-                else
-                    RichSpanStyle.Link(url = destination)
+                val linkLabel = node
+                    .findChildOfType(MarkdownElementTypes.LINK_TEXT)
+                    ?.getTextInNode(markdown)
+                    ?.toString()
+                    ?.removeSurrounding("[", "]")
+                    .orEmpty()
+
+                val token = parseTokenDestination(destination, linkLabel)
+
+                when {
+                    token != null -> token
+                    isImage ->
+                        RichSpanStyle.Image(
+                            model = destination,
+                            width = 0.sp,
+                            height = 0.sp,
+                        )
+                    else ->
+                        RichSpanStyle.Link(url = destination)
+                }
             }
 
             MarkdownElementTypes.CODE_SPAN ->
@@ -585,9 +609,54 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         return when (richSpanStyle) {
             is RichSpanStyle.Link -> "[$text](${richSpanStyle.url})"
             is RichSpanStyle.Code -> "`$text`"
+            is RichSpanStyle.Token -> {
+                // Pseudo-link syntax: [label](trigger:triggerId:id)
+                val label = richSpanStyle.label.ifEmpty { text }
+                "[$label]($TokenDestinationPrefix${richSpanStyle.triggerId}:${richSpanStyle.id})"
+            }
+            is RichSpanStyle.Image -> {
+                // Standard Markdown image syntax `![alt](url)`. Only models
+                // that are strings (URLs) round-trip to Markdown; other
+                // painter models have no representable form and are
+                // dropped. The raw `text` at this point is the inline-
+                // content placeholder char and must not leak into the
+                // output.
+                val model = richSpanStyle.model
+                if (model is String) {
+                    val alt = richSpanStyle.contentDescription.orEmpty()
+                    "![$alt]($model)"
+                } else {
+                    ""
+                }
+            }
             else -> text
         }
     }
+
+    /**
+     * Parses a link destination of the form `trigger:<triggerId>:<id>` into a [RichSpanStyle.Token].
+     * Returns `null` if the destination doesn't match the token shape.
+     */
+    @OptIn(ExperimentalRichTextApi::class)
+    private fun parseTokenDestination(
+        destination: String,
+        label: String,
+    ): RichSpanStyle.Token? {
+        if (!destination.startsWith(TokenDestinationPrefix)) return null
+        val payload = destination.removePrefix(TokenDestinationPrefix)
+        val separatorIndex = payload.indexOf(':')
+        if (separatorIndex <= 0) return null
+        val triggerId = payload.substring(0, separatorIndex)
+        val id = payload.substring(separatorIndex + 1)
+        if (triggerId.isEmpty() || id.isEmpty()) return null
+        return RichSpanStyle.Token(
+            triggerId = triggerId,
+            id = id,
+            label = label,
+        )
+    }
+
+    private const val TokenDestinationPrefix = "trigger:"
 
     /**
      * Returns the markdown line start text from the first [RichSpan].

@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -26,13 +27,37 @@ import androidx.compose.ui.window.Dialog
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.common.generated.resources.Res
 import com.mohamedrejeb.richeditor.common.generated.resources.slack_logo
+import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
+import com.mohamedrejeb.richeditor.model.trigger.Trigger
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditorDefaults
+import com.mohamedrejeb.richeditor.ui.material3.TriggerSuggestions
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
+
+private data class SlackUser(val id: String, val name: String, val handle: String)
+private data class SlackChannel(val id: String, val name: String)
+
+private val slackUsers = listOf(
+    SlackUser("u-mohamed", "Mohamed Rejeb", "@mohamed"),
+    SlackUser("u-alice", "Alice Johnson", "@alice"),
+    SlackUser("u-bob", "Bob Smith", "@bob"),
+    SlackUser("u-carol", "Carol Diaz", "@carol"),
+    SlackUser("u-david", "David Lee", "@david"),
+    SlackUser("u-elena", "Elena Park", "@elena"),
+)
+
+private val slackChannels = listOf(
+    SlackChannel("c-general", "general"),
+    SlackChannel("c-compose-rich-text-editor", "compose-rich-text-editor"),
+    SlackChannel("c-kmp", "kotlin-multiplatform"),
+    SlackChannel("c-android", "android"),
+    SlackChannel("c-design", "design"),
+    SlackChannel("c-random", "random"),
+)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalRichTextApi::class, ExperimentalResourceApi::class)
 @Composable
@@ -55,6 +80,23 @@ fun SlackDemoScreen(
         richTextState.config.codeSpanStrokeColor = Color(0xFF494b4d)
         richTextState.config.unorderedListIndent = 40
         richTextState.config.orderedListIndent = 50
+
+        // Register Slack-style triggers so users can @-mention teammates and link
+        // #channels. The popup UI is wired up below, over the RichTextEditor.
+        richTextState.registerTrigger(
+            Trigger(
+                id = "mention",
+                char = '@',
+                style = { SpanStyle(color = Color(0xFFECB22E), fontWeight = FontWeight.Medium) },
+            )
+        )
+        richTextState.registerTrigger(
+            Trigger(
+                id = "channel",
+                char = '#',
+                style = { SpanStyle(color = Color(0xFF1d9bd1), fontWeight = FontWeight.Medium) },
+            )
+        )
     }
 
     Box(
@@ -164,25 +206,88 @@ fun SlackDemoScreen(
                                 .padding(horizontal = 20.dp)
                         )
 
-                        RichTextEditor(
-                            state = richTextState,
-                            placeholder = {
-                                Text(
-                                    text = "Message #compose-rich-text-editor",
-                                )
-                            },
-                            colors = RichTextEditorDefaults.richTextEditorColors(
-                                textColor = Color(0xFFCBCCCD),
-                                containerColor = Color.Transparent,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                placeholderColor = Color.White.copy(alpha = .6f),
-                            ),
-                            textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp)
-                        )
+                        Box(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            RichTextEditor(
+                                state = richTextState,
+                                placeholder = {
+                                    Text(
+                                        text = "Message #compose-rich-text-editor",
+                                    )
+                                },
+                                colors = RichTextEditorDefaults.richTextEditorColors(
+                                    textColor = Color(0xFFCBCCCD),
+                                    containerColor = Color.Transparent,
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent,
+                                    placeholderColor = Color.White.copy(alpha = .6f),
+                                ),
+                                textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp)
+                            )
+
+                            // @-mention popup
+                            TriggerSuggestions(
+                                state = richTextState,
+                                triggerId = "mention",
+                                suggestions = { query ->
+                                    slackUsers.filter {
+                                        query.isEmpty() ||
+                                            it.handle.contains(query, ignoreCase = true) ||
+                                            it.name.contains(query, ignoreCase = true)
+                                    }
+                                },
+                                onSelect = { user ->
+                                    RichSpanStyle.Token(
+                                        triggerId = "mention",
+                                        id = user.id,
+                                        label = user.handle,
+                                    )
+                                },
+                                item = { user ->
+                                    Column {
+                                        Text(
+                                            text = user.handle,
+                                            color = Color(0xFFECB22E),
+                                            fontWeight = FontWeight.Medium,
+                                        )
+                                        Text(
+                                            text = user.name,
+                                            color = Color(0xFFCBCCCD),
+                                            style = MaterialTheme.typography.bodySmall,
+                                        )
+                                    }
+                                },
+                            )
+
+                            // #-channel popup
+                            TriggerSuggestions(
+                                state = richTextState,
+                                triggerId = "channel",
+                                suggestions = { query ->
+                                    slackChannels.filter {
+                                        query.isEmpty() || it.name.contains(query, ignoreCase = true)
+                                    }
+                                },
+                                onSelect = { channel ->
+                                    RichSpanStyle.Token(
+                                        triggerId = "channel",
+                                        id = channel.id,
+                                        label = "#${channel.name}",
+                                    )
+                                },
+                                item = { channel ->
+                                    Text(
+                                        text = "#${channel.name}",
+                                        color = Color(0xFF1d9bd1),
+                                        fontWeight = FontWeight.Medium,
+                                    )
+                                },
+                            )
+                        }
 
                         Box(
                             modifier = Modifier

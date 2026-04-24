@@ -2,6 +2,10 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.TextUnit
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.paragraph.type.ListMarkerStyleBehavior
+import com.mohamedrejeb.richeditor.paragraph.type.ListPrefixAlignment
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedListStyleType
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedListStyleType
 
@@ -93,6 +97,43 @@ public class RichTextConfig internal constructor(
         }
 
     public var orderedListStyleType: OrderedListStyleType = DefaultOrderedListStyleType
+        set(value) {
+            field = value
+            updateText()
+        }
+
+    /**
+     * Controls how list markers ("•", "1.", etc.) inherit span styles from the
+     * list item's text.
+     *
+     * Default is [ListMarkerStyleBehavior.InheritFromText], which keeps bold /
+     * italic / color / font size on the marker but drops underline, strikethrough,
+     * background, baseline shift, shadow, and geometric transforms. Matches
+     * Google Docs.
+     *
+     * Set to [ListMarkerStyleBehavior.AlwaysDefault] to render every marker with
+     * the default span style regardless of the item's content.
+     */
+    @ExperimentalRichTextApi
+    public var listMarkerStyleBehavior: ListMarkerStyleBehavior = ListMarkerStyleBehavior.InheritFromText
+        set(value) {
+            field = value
+            updateText()
+        }
+
+    /**
+     * Controls where list markers ("1.", "10.", "•", ...) sit relative to the
+     * indent gutter in ordered and unordered lists.
+     *
+     * Default is [ListPrefixAlignment.End], which matches HTML: the marker sits
+     * inside the gutter and ends at the content start, so "1." and "10." have
+     * their dots aligned vertically.
+     *
+     * Set to [ListPrefixAlignment.Start] to make every item's marker start at
+     * the same left edge instead.
+     */
+    @ExperimentalRichTextApi
+    public var listPrefixAlignment: ListPrefixAlignment = ListPrefixAlignment.End
         set(value) {
             field = value
             updateText()

@@ -115,6 +115,57 @@ richTextState.setHtml(savedHtml)
 richTextState.setMarkdown(savedMarkdown)
 ```
 
+## Undo / Redo
+
+`RichTextState` ships its own undo/redo stack that snapshots the full rich-text
+tree (paragraphs, spans, list prefixes, link/image/token spans, selection, and
+pending styles). It overrides `BasicTextField`'s built-in undo so rich content
+never gets out of sync with plain text.
+
+```kotlin
+val state = rememberRichTextState(
+    historyLimit = 100,
+    coalesceWindowMs = 500L,
+)
+
+IconButton(onClick = { state.history.undo() }, enabled = state.history.canUndo) {
+    Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = "Undo")
+}
+IconButton(onClick = { state.history.redo() }, enabled = state.history.canRedo) {
+    Icon(Icons.AutoMirrored.Filled.Redo, contentDescription = "Redo")
+}
+```
+
+### Keyboard shortcuts (hardware keyboard)
+
+- Undo: `Ctrl+Z` (Windows/Linux) / `Cmd+Z` (macOS)
+- Redo: `Ctrl+Shift+Z` (Windows/Linux) / `Cmd+Shift+Z` (macOS)
+
+### Coalescing
+
+Consecutive typing / deletion within `coalesceWindowMs` (default 500ms) collapses
+into a single undo step. The following always start a new group:
+
+- Line breaks (Enter)
+- Formatting toggles (bold, color, link, list, paragraph style, rich span style)
+- Structural changes (image/token insert, list level changes)
+- Paste operations
+- Programmatic replacements (`setHtml`, `setMarkdown`, `setConfig` - these also
+  clear the stacks entirely since they typically mean "load a new document")
+- Caret moves (do not push a snapshot but seal the pending group, so the next
+  typed character starts a fresh undo step)
+
+### Opt out
+
+Pass `undoBehavior = UndoBehavior.Disabled` to any editor composable to fall
+back to `BasicTextField`'s native shortcuts. You can still call
+`state.history.undo()` directly from your own UI.
+
+### Limits
+
+`state.history.limit` caps the undo stack (default 100 entries; oldest are
+evicted FIFO). `state.history.clear()` empties both stacks.
+
 ## Related Documentation
 
 - For styling text spans, see [Span Style](span_style.md)

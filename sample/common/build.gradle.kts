@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalWasmDsl::class)
+
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -15,19 +17,18 @@ kotlin {
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_1_8)
+            jvmTarget.set(JvmTarget.JVM_17)
         }
     }
 
     jvm("desktop") {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
+            jvmTarget.set(JvmTarget.JVM_17)
         }
     }
 
     js(IR).browser()
-    @OptIn(ExperimentalWasmDsl::class)
     wasmJs().browser()
 
     listOf(
@@ -42,14 +43,13 @@ kotlin {
     }
 
     sourceSets.commonMain.dependencies {
-        api(compose.runtime)
-        api(compose.foundation)
-        api(compose.ui)
-        api(compose.material)
-        api(compose.material3)
-        api(compose.materialIconsExtended)
-        @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
-        implementation(compose.components.resources)
+        api(libs.compose.runtime)
+        api(libs.compose.foundation)
+        api(libs.compose.ui)
+        api(libs.compose.material)
+        api(libs.compose.material3)
+        api(libs.compose.material.icons.extended)
+        implementation(libs.compose.components.resources)
 
         implementation(projects.richeditorCompose)
         implementation(projects.richeditorComposeCoil3)
@@ -106,7 +106,7 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }

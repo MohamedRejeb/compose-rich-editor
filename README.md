@@ -5,7 +5,7 @@
 [![MohamedRejeb](https://raw.githubusercontent.com/MohamedRejeb/MohamedRejeb/main/badges/mohamedrejeb.svg)](https://github.com/MohamedRejeb)
 [![Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
 [![API](https://img.shields.io/badge/API-21%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=21)
-[![Maven Central](https://img.shields.io/maven-central/v/com.mohamedrejeb.richeditor/richeditor-compose/1.0.0-rc12)](https://search.maven.org/search?q=g:%22com.mohamedrejeb.richeditor%22%20AND%20a:%22richeditor-compose%22)
+[![Maven Central](https://img.shields.io/maven-central/v/com.mohamedrejeb.richeditor/richeditor-compose/1.0.0-rc13)](https://search.maven.org/search?q=g:%22com.mohamedrejeb.richeditor%22%20AND%20a:%22richeditor-compose%22)
 
 ![Compose Rich Editor](docs/images/logo-large-light.svg#gh-light-mode-only)
 ![Compose Rich Editor](docs/images/logo-large-dark.svg#gh-dark-mode-only)
@@ -15,6 +15,11 @@ A rich text editor library for both Jetpack Compose and Compose Multiplatform, f
 - **Multiplatform**: Compose Rich Editor supports Compose Multiplatform (Android, iOS, Desktop, Web).
 - **Easy to use**: Compose Rich Editor's API leverages Kotlin's language features for simplicity and minimal boilerplate.
 - **WYSIWYG**: Compose Rich Editor is a WYSIWYG editor that supports the most common text styling features.
+- **Undo / Redo**: Built-in rich-text-aware undo/redo (`state.history`) that respects formatting, overriding `BasicTextField`'s default.
+
+---
+
+<div align="center"><a href="https://github.com/Safouene1/support-palestine-banner/blob/master/Markdown-pages/Support.md"><img src="https://raw.githubusercontent.com/Safouene1/support-palestine-banner/master/banner-project.svg" alt="Support Palestine" style="width: 100%;"></a></div>
 
 ## Screenshots
 
@@ -29,21 +34,21 @@ A rich text editor library for both Jetpack Compose and Compose Multiplatform, f
 
 ## Download
 
-[![Maven Central](https://img.shields.io/maven-central/v/com.mohamedrejeb.richeditor/richeditor-compose/1.0.0-rc12)](https://search.maven.org/search?q=g:%22com.mohamedrejeb.richeditor%22%20AND%20a:%22richeditor-compose%22)
+[![Maven Central](https://img.shields.io/maven-central/v/com.mohamedrejeb.richeditor/richeditor-compose/1.0.0-rc13)](https://search.maven.org/search?q=g:%22com.mohamedrejeb.richeditor%22%20AND%20a:%22richeditor-compose%22)
 
 Compose Rich Editor is available on `mavenCentral()`.
 
 ```kotlin
-implementation("com.mohamedrejeb.richeditor:richeditor-compose:1.0.0-rc12")
+implementation("com.mohamedrejeb.richeditor:richeditor-compose:1.0.0-rc13")
 ```
 
 ## Compatibility
 
-[![Maven Central](https://img.shields.io/maven-central/v/com.mohamedrejeb.richeditor/richeditor-compose/1.0.0-rc12)](https://search.maven.org/search?q=g:%22com.mohamedrejeb.richeditor%22%20AND%20a:%22richeditor-compose%22)
+[![Maven Central](https://img.shields.io/maven-central/v/com.mohamedrejeb.richeditor/richeditor-compose/1.0.0-rc13)](https://search.maven.org/search?q=g:%22com.mohamedrejeb.richeditor%22%20AND%20a:%22richeditor-compose%22)
 
 | Kotlin version | Compose version | Compose Rich Editor version |
 |----------------|-----------------|-----------------------------|
-| 2.1.10         | 1.8.0-alpha03   | 1.0.0-rc12                  |
+| 2.1.21         | 1.8.2           | 1.0.0-rc13                  |
 | 2.1.10         | 1.7.3           | 1.0.0-rc11                  |
 | 2.0.21         | 1.7.0           | 1.0.0-rc10                  |
 | 2.0.20         | 1.6.11          | 1.0.0-rc09                  |
@@ -237,6 +242,52 @@ val markdown = richTextState.toMarkdown()
 
 Check out Compose Rich Editor's [full documentation](https://mohamedrejeb.github.io/compose-rich-editor/) for more details.
 
+## Mentions, Hashtags, Slash Commands (Triggers)
+
+> Experimental — gated by `@ExperimentalRichTextApi`.
+
+A generic trigger system lets you add `@mentions`, `#hashtags`, `/commands` or any
+single-character trigger. A trigger activates a query mode; when the user selects a
+suggestion, an atomic `Token` span is inserted. Tokens are deleted, selected, and
+skipped as a single unit, and they round-trip through both HTML and Markdown.
+
+Register triggers on the state and observe `activeTriggerQuery`:
+
+```kotlin
+import com.mohamedrejeb.richeditor.model.trigger.Trigger
+import com.mohamedrejeb.richeditor.ui.material3.TriggerSuggestions
+
+val state = rememberRichTextState()
+
+LaunchedEffect(Unit) {
+    state.registerTrigger(Trigger(id = "mention", char = '@'))
+    state.registerTrigger(Trigger(id = "hashtag", char = '#'))
+}
+
+Box {
+    RichTextEditor(state = state)
+
+    // Drop in the built-in popup, or roll your own using state.activeTriggerQuery.
+    TriggerSuggestions(
+        state = state,
+        triggerId = "mention",
+        suggestions = { query -> users.filter { it.handle.contains(query) } },
+        onSelect = { user ->
+            RichSpanStyle.Token(
+                triggerId = "mention",
+                id = user.id,
+                label = "@${user.handle}",
+            )
+        },
+        item = { user -> Text(user.handle) },
+    )
+}
+```
+
+Tokens serialize as `<span data-trigger="mention" data-id="u123">@mohamed</span>` in HTML
+and `[@mohamed](trigger:mention:u123)` in Markdown, so content round-trips even in viewers
+that don't know about triggers.
+
 ## Web live demo
 You can try out the web demo [here](https://compose-richeditor.netlify.app/).
 
@@ -250,8 +301,7 @@ Feel free to help out by sending a pull request :heart:.
 Support it by joining __[stargazers](https://github.com/MohamedRejeb/Compose-Rich-Editor/stargazers)__ for this repository. :star: <br>
 Also, __[follow me](https://github.com/MohamedRejeb)__ on GitHub for more libraries! 🤩
 
-You can always <a href="https://www.buymeacoffee.com/MohamedRejeb" target="_blank"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=MohamedRejeb&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff"></a>
-
+You can always <a href="https://www.buymeacoffee.com/MohamedRejeb" target="_blank"><img style="display: block; height: 60px;" src="docs/images/bmc-yellow-button.png"></a>
 # License
 ```markdown
 Copyright 2023 Mohamed Rejeb

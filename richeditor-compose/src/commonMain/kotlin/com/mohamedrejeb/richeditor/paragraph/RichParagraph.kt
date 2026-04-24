@@ -1,5 +1,6 @@
 package com.mohamedrejeb.richeditor.paragraph
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
@@ -9,7 +10,9 @@ import androidx.compose.ui.util.fastForEachReversed
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.HeadingStyle
 import com.mohamedrejeb.richeditor.model.RichSpan
+import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
+import com.mohamedrejeb.richeditor.paragraph.type.ListMarkerStyleBehavior
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startText
 import com.mohamedrejeb.richeditor.ui.test.getRichTextStyleTreeRepresentation
@@ -21,6 +24,12 @@ internal class RichParagraph(
     val children: MutableList<RichSpan> = mutableListOf(),
     var paragraphStyle: ParagraphStyle = DefaultParagraphStyle,
     var type: ParagraphType = DefaultParagraph(),
+    /**
+     * When true, this paragraph was created from a `<br>` tag during HTML parsing
+     * and should be joined with the previous paragraph using `<br>` in HTML output
+     * rather than being wrapped in its own `<p>` tag.
+     */
+    var isFromLineBreak: Boolean = false,
 ) {
 
     @OptIn(ExperimentalRichTextApi::class)
@@ -177,6 +186,29 @@ internal class RichParagraph(
 
     fun isNotBlank(ignoreStartRichSpan: Boolean = true): Boolean = !isBlank(ignoreStartRichSpan)
 
+    /**
+     * Compute the [SpanStyle] used for the list marker (the "•", "1.", etc.
+     * prefix appended by [ParagraphType.startText]) based on the chosen
+     * [behavior] and the paragraph's content.
+     *
+     * See [ListMarkerStyleBehavior] for what is kept versus stripped.
+     */
+    @OptIn(ExperimentalRichTextApi::class)
+    fun getListMarkerSpanStyle(behavior: ListMarkerStyleBehavior): SpanStyle =
+        when (behavior) {
+            ListMarkerStyleBehavior.InheritFromText ->
+                getStartTextSpanStyle()?.copy(
+                    textDecoration = null,
+                    background = Color.Unspecified,
+                    baselineShift = null,
+                    shadow = null,
+                    textGeometricTransform = null,
+                ) ?: RichSpanStyle.DefaultSpanStyle
+            ListMarkerStyleBehavior.AlwaysDefault ->
+                RichSpanStyle.DefaultSpanStyle
+        }
+
+    @OptIn(ExperimentalRichTextApi::class)
     fun getStartTextSpanStyle(): SpanStyle? {
         children.fastForEach { richSpan ->
             if (richSpan.text.isNotEmpty()) {
@@ -189,17 +221,23 @@ internal class RichParagraph(
             }
         }
 
-        val firstChild = children.firstOrNull()
+        var deepFirstChild = children.firstOrNull() ?: return null
+        var childChildren = deepFirstChild.children
 
-        children.clear()
-
-        if (firstChild != null) {
-            firstChild.children.clear()
-
-            children.add(firstChild)
+        while (childChildren.isNotEmpty()) {
+            deepFirstChild = childChildren.firstOrNull() ?: break
+            childChildren = deepFirstChild.children
         }
 
-        return firstChild?.spanStyle
+        deepFirstChild.spanStyle = deepFirstChild.fullSpanStyle
+        deepFirstChild.richSpanStyle = deepFirstChild.fullStyle
+        deepFirstChild.children.clear()
+        deepFirstChild.parent = null
+
+        children.clear()
+        children.add(deepFirstChild)
+
+        return deepFirstChild.spanStyle
     }
 
     /**
@@ -395,7 +433,7 @@ internal class RichParagraph(
 
     fun copy(): RichParagraph {
         val newParagraph = RichParagraph(
-            paragraphStyle = paragraphStyle,
+            paragraphStyle = paragraphStyle.copy(),
             type = type.copy(),
         )
         children.fastForEach { childRichSpan ->

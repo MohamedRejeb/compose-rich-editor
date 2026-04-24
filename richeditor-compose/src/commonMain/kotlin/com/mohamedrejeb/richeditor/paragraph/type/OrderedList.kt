@@ -12,12 +12,14 @@ import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichTextConfig
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 
+@OptIn(ExperimentalRichTextApi::class)
 internal class OrderedList private constructor(
     number: Int,
     initialIndent: Int = DefaultListIndent,
     startTextWidth: TextUnit = 0.sp,
     initialLevel: Int = 1,
     initialStyleType: OrderedListStyleType = DefaultOrderedListStyleType,
+    initialPrefixAlignment: ListPrefixAlignment = ListPrefixAlignment.End,
     /**
      * The start number for the first item in this list group.
      * Defaults to 1. When > 1, the HTML output includes `start="N"` on the `<ol>` tag.
@@ -48,6 +50,7 @@ internal class OrderedList private constructor(
         startTextWidth = startTextWidth,
         initialLevel = initialLevel,
         initialStyleType = config.orderedListStyleType,
+        initialPrefixAlignment = config.listPrefixAlignment,
         startFrom = startFrom,
     )
 
@@ -81,6 +84,12 @@ internal class OrderedList private constructor(
             startRichSpan = getNewStartRichSpan(startRichSpan.textRange)
         }
 
+    private var prefixAlignment = initialPrefixAlignment
+        set(value) {
+            field = value
+            style = getNewParagraphStyle()
+        }
+
     private var style: ParagraphStyle =
         getNewParagraphStyle()
 
@@ -93,17 +102,23 @@ internal class OrderedList private constructor(
             styleType = config.orderedListStyleType
         }
 
+        if (config.listPrefixAlignment != prefixAlignment) {
+            prefixAlignment = config.listPrefixAlignment
+        }
+
         return style
     }
 
     private fun getNewParagraphStyle(): ParagraphStyle {
         val base = (indent * level).toFloat()
         val prefix = startTextWidth.value
-        // Keep HTML-style alignment (prefix lives in the indent "gutter", dots align vertically)
-        // when there is room; fall back to placing the prefix inside so it stays visible when
-        // the indent is smaller than the prefix width.
+        // End: HTML-style alignment — prefix lives in the indent "gutter" and dots align
+        // vertically, but fall back to Start when the indent is too small so the prefix
+        // doesn't get clipped off the left edge.
+        // Start: every item's prefix starts at the indent origin, giving a uniform left edge.
+        val useEnd = prefixAlignment == ListPrefixAlignment.End && base >= prefix
         val textIndent =
-            if (base >= prefix)
+            if (useEnd)
                 TextIndent(firstLine = (base - prefix).sp, restLine = base.sp)
             else
                 TextIndent(firstLine = base.sp, restLine = (base + prefix).sp)
@@ -135,6 +150,7 @@ internal class OrderedList private constructor(
             startTextWidth = startTextWidth,
             initialLevel = level,
             initialStyleType = styleType,
+            initialPrefixAlignment = prefixAlignment,
         )
 
     override fun copy(): ParagraphType =
@@ -144,6 +160,7 @@ internal class OrderedList private constructor(
             startTextWidth = startTextWidth,
             initialLevel = level,
             initialStyleType = styleType,
+            initialPrefixAlignment = prefixAlignment,
         )
 
     override fun equals(other: Any?): Boolean {
@@ -155,6 +172,7 @@ internal class OrderedList private constructor(
         if (startTextWidth != other.startTextWidth) return false
         if (level != other.level) return false
         if (styleType != other.styleType) return false
+        if (prefixAlignment != other.prefixAlignment) return false
 
         return true
     }
@@ -166,6 +184,7 @@ internal class OrderedList private constructor(
         result = 31 * result + startTextWidth.hashCode()
         result = 31 * result + level
         result = 31 * result + styleType.hashCode()
+        result = 31 * result + prefixAlignment.hashCode()
         return result
     }
 }

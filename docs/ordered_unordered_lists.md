@@ -7,6 +7,7 @@
   - [Ordered Lists](#ordered-lists)
   - [Unordered Lists](#unordered-lists)
 - [List Indentation](#list-indentation)
+- [List Prefix Alignment](#list-prefix-alignment)
 - [List Marker Style](#list-marker-style)
 - [Common Operations](#common-operations)
   - [Default Values](#default-values)
@@ -107,6 +108,32 @@ richTextState.config.orderedListIndent = 20
 richTextState.config.unorderedListIndent = 20
 ```
 
+## List Prefix Alignment
+
+> **Note:** This API is marked `@ExperimentalRichTextApi` and may change in a future release.
+
+You can control where the list marker (`1.`, `10.`, `•`, ...) sits relative to the
+indent "gutter" using `ListPrefixAlignment`:
+
+```kotlin
+// Default: HTML-style — the marker sits inside the gutter and ends at the content
+// start, so "1." and "10." have their dots aligned vertically.
+richTextState.config.listPrefixAlignment = ListPrefixAlignment.End
+
+// Alternative: every item's marker starts at the same left edge, giving a uniform
+// left edge even when item widths differ (e.g. "1." vs "10.").
+richTextState.config.listPrefixAlignment = ListPrefixAlignment.Start
+```
+
+| Alignment | Layout | Example |
+|---|---|---|
+| `End` (default) | marker right-aligned to content start, dots align vertically | `` 1.`` / ``10.`` / ``11.`` — dots stacked |
+| `Start` | marker left-aligned to the indent origin, marker left edges stack | ``1.`` / ``10. `` / ``11. `` — numbers stacked |
+
+If the configured indent is smaller than the marker width (for example
+`orderedListIndent = 0`), `End` automatically falls back to `Start` for that
+paragraph so the marker stays visible.
+
 ## List Marker Style
 
 > **Note:** This API is marked `@ExperimentalRichTextApi` and may change in a future release.
@@ -152,6 +179,7 @@ By default, the Rich Text Editor uses these configurations:
   - Second level: `◦` (circle)
   - Third level: `▪` (square)
 - List Indentation: 38
+- List Prefix Alignment: `ListPrefixAlignment.End` (HTML-style, dots aligned)
 - List Marker Style: `ListMarkerStyleBehavior.InheritFromText`
 - Exit List on Empty Item: `true` (configurable via `richTextState.config.exitListOnEmptyItem`)
 

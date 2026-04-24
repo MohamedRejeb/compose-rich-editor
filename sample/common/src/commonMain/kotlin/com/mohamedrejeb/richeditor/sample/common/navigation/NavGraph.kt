@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.mohamedrejeb.richeditor.sample.common.home.HomeScreen
 import com.mohamedrejeb.richeditor.sample.common.htmleditor.HtmlEditorContent
+import com.mohamedrejeb.richeditor.sample.common.listsconfig.ListsConfigSampleScreen
 import com.mohamedrejeb.richeditor.sample.common.markdowneditor.MarkdownEditorContent
 import com.mohamedrejeb.richeditor.sample.common.mentions.MentionsSampleScreen
 import com.mohamedrejeb.richeditor.sample.common.richeditor.RichEditorScreen
@@ -19,6 +20,7 @@ private const val MARKDOWN_EDITOR_ROUTE = "markdownEditor"
 private const val SLACK_ROUTE = "slack"
 private const val MENTIONS_ROUTE = "mentions"
 private const val UNDO_REDO_ROUTE = "undoRedo"
+private const val LISTS_CONFIG_ROUTE = "listsConfig"
 
 @Composable
 fun NavGraph() {
@@ -36,6 +38,7 @@ fun NavGraph() {
                 navigateToSlack = { navController.navigate(SLACK_ROUTE) },
                 navigateToMentions = { navController.navigate(MENTIONS_ROUTE) },
                 navigateToUndoRedo = { navController.navigate(UNDO_REDO_ROUTE) },
+                navigateToListsConfig = { navController.navigate(LISTS_CONFIG_ROUTE) },
             )
         }
 
@@ -71,6 +74,12 @@ fun NavGraph() {
 
         composable(UNDO_REDO_ROUTE) {
             UndoRedoSampleScreen(
+                navigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(LISTS_CONFIG_ROUTE) {
+            ListsConfigSampleScreen(
                 navigateBack = { navController.popBackStack() }
             )
         }

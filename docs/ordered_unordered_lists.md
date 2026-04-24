@@ -116,7 +116,7 @@ You can control where the list marker (`1.`, `10.`, `•`, ...) sits relative to
 indent "gutter" using `ListPrefixAlignment`:
 
 ```kotlin
-// Default: HTML-style — the marker sits inside the gutter and ends at the content
+// Default: HTML-style - the marker sits inside the gutter and ends at the content
 // start, so "1." and "10." have their dots aligned vertically.
 richTextState.config.listPrefixAlignment = ListPrefixAlignment.End
 
@@ -127,8 +127,8 @@ richTextState.config.listPrefixAlignment = ListPrefixAlignment.Start
 
 | Alignment | Layout | Example |
 |---|---|---|
-| `End` (default) | marker right-aligned to content start, dots align vertically | `` 1.`` / ``10.`` / ``11.`` — dots stacked |
-| `Start` | marker left-aligned to the indent origin, marker left edges stack | ``1.`` / ``10. `` / ``11. `` — numbers stacked |
+| `End` (default) | marker right-aligned to content start, dots align vertically | `` 1.`` / ``10.`` / ``11.`` - dots stacked |
+| `Start` | marker left-aligned to the indent origin, marker left edges stack | ``1.`` / ``10. `` / ``11. `` - numbers stacked |
 
 If the configured indent is smaller than the marker width (for example
 `orderedListIndent = 0`), `End` clamps the first-line indent at `0` so the

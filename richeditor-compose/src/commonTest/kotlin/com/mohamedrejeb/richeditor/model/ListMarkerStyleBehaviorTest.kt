@@ -19,14 +19,14 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
- * Regression tests for issue #668 — list markers should not inherit every
+ * Regression tests for issue #668 - list markers should not inherit every
  * inline style from the first span of the list item.
  *
  * Default ([ListMarkerStyleBehavior.InheritFromText]):
  *   - Keep: color, fontSize, fontWeight, fontStyle, fontFamily, letterSpacing
  *   - Strip: textDecoration, background, baselineShift, shadow, textGeometricTransform
  *
- * [ListMarkerStyleBehavior.AlwaysDefault] strips everything — useful for editors
+ * [ListMarkerStyleBehavior.AlwaysDefault] strips everything - useful for editors
  * that want every bullet identical regardless of content.
  */
 @OptIn(ExperimentalRichTextApi::class)

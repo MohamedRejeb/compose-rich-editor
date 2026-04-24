@@ -93,7 +93,7 @@ class RichTextStateUndoRedoCrashTest {
         s.typeRaw("\n")
         s.typeRaw("child")
         s.selection = TextRange(s.annotatedString.text.length)
-        // Try to increase level — may or may not succeed depending on state, must not crash
+        // Try to increase level - may or may not succeed depending on state, must not crash
         s.increaseListLevel()
         assertInternallyConsistent(s)
         s.history.undo()
@@ -278,7 +278,7 @@ class RichTextStateUndoRedoCrashTest {
         val s = RichTextState()
         s.setHtml("<ol><li>a</li><li>b</li><li>c</li></ol>")
         val afterSet = s.annotatedString.text
-        // History should be empty after setHtml — undo is a no-op.
+        // History should be empty after setHtml - undo is a no-op.
         assertFalse(s.history.canUndo)
         s.history.undo()
         assertEquals(afterSet, s.annotatedString.text)
@@ -331,7 +331,7 @@ class RichTextStateUndoRedoCrashTest {
     fun collapsedSelectionSpanTogglesHaveNoNetEffectOnUndoStack() {
         // Starting from a fresh state: type "hello" (pushes 1 group). Then a long
         // sequence of collapsed-selection style toggles. None of them should push
-        // an entry — so exactly 1 undo pops us back to empty.
+        // an entry - so exactly 1 undo pops us back to empty.
         val s = RichTextState()
         s.typeRaw("hello")
         assertTrue(s.history.canUndo)
@@ -356,7 +356,7 @@ class RichTextStateUndoRedoCrashTest {
     @Test
     fun collapsedSelectionToggleSealsCoalescingBoundary() {
         // type "x", toggle bold (collapsed, no push but seals pending group),
-        // type "y". A single undo should remove only "y" — the toggle breaks the
+        // type "y". A single undo should remove only "y" - the toggle breaks the
         // coalesced typing burst, matching VS Code / Word behavior.
         val s = RichTextState()
         s.typeRaw("x")
@@ -379,7 +379,7 @@ class RichTextStateUndoRedoCrashTest {
         s.toggleSpanStyle(SpanStyle(fontWeight = FontWeight.Bold))
 
         // There are now two groups on the stack: "type hello" and "bold it".
-        s.history.undo()        // undo bold — text unchanged
+        s.history.undo()        // undo bold - text unchanged
         assertEquals("hello", s.annotatedString.text)
         assertTrue(s.history.canUndo, "should still have the typing undo available")
         s.history.undo()        // undo typing

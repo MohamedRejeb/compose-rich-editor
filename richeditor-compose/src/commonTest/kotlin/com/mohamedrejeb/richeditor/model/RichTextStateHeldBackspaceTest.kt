@@ -7,7 +7,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * Regression tests for issue #624 — held backspace cascades into
+ * Regression tests for issue #624 - held backspace cascades into
  * end-trimming subsequent paragraph contents in long, styled content.
  *
  * The expected behavior: N consecutive backspaces with a collapsed
@@ -175,7 +175,7 @@ class RichTextStateHeldBackspaceTest {
 
     @Test
     fun testHeldBackspaceOnLineBreakContent() {
-        // Paragraphs created from <br> within a <p> — isFromLineBreak = true
+        // Paragraphs created from <br> within a <p> - isFromLineBreak = true
         val state = RichTextState()
         state.setHtml("<p>Line one<br>Line two<br>Line three<br>Line four</p>")
 

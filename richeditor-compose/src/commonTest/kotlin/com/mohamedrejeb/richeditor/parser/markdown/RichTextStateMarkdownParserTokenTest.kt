@@ -58,7 +58,7 @@ class RichTextStateMarkdownParserTokenTest {
 
     @Test
     fun `malformed trigger destination is not treated as token`() {
-        // Missing id portion — invariant: we must not fabricate a Token with an empty id.
+        // Missing id portion - invariant: we must not fabricate a Token with an empty id.
         val state = com.mohamedrejeb.richeditor.model.RichTextState()
         state.setMarkdown("[x](trigger:mention:)")
 

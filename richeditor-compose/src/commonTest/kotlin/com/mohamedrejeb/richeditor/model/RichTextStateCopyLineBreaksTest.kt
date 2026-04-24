@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * Regression tests for issue #626 — copied plain text loses line
+ * Regression tests for issue #626 - copied plain text loses line
  * breaks when the selection spans multiple paragraphs or line-break
  * ([isFromLineBreak]) paragraphs produced from HTML `<br>`.
  *

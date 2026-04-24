@@ -114,7 +114,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 val isCurrentTagBlockElement = name in htmlBlockElements
                 val isLastOpenedTagBlockElement = lastOpenedTag in htmlBlockElements
 
-                // Handle <li value="N"> attribute — overrides the counter for this item
+                // Handle <li value="N"> attribute - overrides the counter for this item
                 if (name == "li" && lastOpenedTag == "ol") {
                     val valueAttr = attributes["value"]?.toIntOrNull()
                     if (valueAttr != null) {
@@ -122,7 +122,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     }
                 }
 
-                // For <li> tags inside <ul> or <ol> tags — reuse blank current paragraph
+                // For <li> tags inside <ul> or <ol> tags - reuse blank current paragraph
                 val isFirstLiInBlankParagraph =
                     lastOpenedTag != null &&
                     isCurrentTagBlockElement &&
@@ -504,7 +504,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     }
                 }
 
-                // Check if the next paragraph is also a <br> continuation — if so, don't close yet
+                // Check if the next paragraph is also a <br> continuation - if so, don't close yet
                 val nextParagraph = richTextState.richParagraphList.getOrNull(index + 1)
                 val nextIsLineBreakContinuation = nextParagraph != null &&
                     nextParagraph.isFromLineBreak &&

@@ -24,7 +24,7 @@ import kotlin.test.assertTrue
  * These tests lock in the invariants that prevent those symptoms:
  *   1. `id` is stable across dimension mutations.
  *   2. Updating dimensions replaces the map entry in place (same key).
- *   3. `equals`/`hashCode` are identity-based — two distinct `<img>` tags
+ *   3. `equals`/`hashCode` are identity-based - two distinct `<img>` tags
  *      never compare equal, so the consecutive-span merge pass cannot
  *      collapse them into one.
  *   4. Text around images keeps a consistent, predictable state through edits.
@@ -51,7 +51,7 @@ class ImageStabilityTest {
         state2.setHtml("""<p><img src="test.png" width="999" height="999"/></p>""")
 
         // Each `Image` instance has its own id, so state and state2 keys
-        // differ — but within one state the key set shape is 1 entry.
+        // differ - but within one state the key set shape is 1 entry.
         assertEquals(1, state2.inlineContentMap.keys.size)
     }
 

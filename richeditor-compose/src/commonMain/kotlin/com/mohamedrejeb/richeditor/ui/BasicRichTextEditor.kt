@@ -248,7 +248,7 @@ public fun BasicRichTextEditor(
     CompositionLocalProvider(LocalClipboard provides richClipboardManager) {
         // Capture position on the innerTextField (the actual text content composable),
         // not on the outer BasicTextField, so trigger-suggestion popups can anchor
-        // precisely at the text content's origin — not at the top of the decorated
+        // precisely at the text content's origin - not at the top of the decorated
         // container (which for OutlinedRichTextEditor is ~16dp higher).
         val positionCapturingDecorationBox: @Composable (innerTextField: @Composable () -> Unit) -> Unit =
             { innerTextField ->

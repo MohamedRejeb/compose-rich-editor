@@ -37,7 +37,7 @@ class RichTextStateIMETest {
     }
 
     // ========================================================================
-    // Normal Enter (no composition) — baseline
+    // Normal Enter (no composition) - baseline
     // ========================================================================
 
     @Test
@@ -63,7 +63,7 @@ class RichTextStateIMETest {
     }
 
     // ========================================================================
-    // IME composition + Enter — the #640 scenario
+    // IME composition + Enter - the #640 scenario
     // ========================================================================
 
     @Test
@@ -76,7 +76,7 @@ class RichTextStateIMETest {
         val text = state.annotatedString.text
         val cursorPos = text.length
 
-        // Step 1: Simulate IME composition starting — user starts typing "wor"
+        // Step 1: Simulate IME composition starting - user starts typing "wor"
         // The composed text is part of the text but has a composition range
         state.onTextFieldValueChange(
             TextFieldValue(
@@ -277,7 +277,7 @@ class RichTextStateIMETest {
         // Exact reproduction from device logs:
         // 1. User types "brot" char by char with composition in an ordered list
         // 2. Enter → "1. brot\n" → creates "2. " prefix → "1. brot 2. " (11 chars)
-        // 3. IME sends "1. brot\n" (8 chars) — removes "2. " prefix it doesn't know about
+        // 3. IME sends "1. brot\n" (8 chars) - removes "2. " prefix it doesn't know about
         val state = RichTextState()
         state.setHtml("<ol><li>brot</li></ol>")
 
@@ -289,7 +289,7 @@ class RichTextStateIMETest {
         // Move cursor to end
         state.selection = TextRange(textBeforeEnter.length)
 
-        // Enter pressed — newline added at end
+        // Enter pressed - newline added at end
         state.onTextFieldValueChange(
             TextFieldValue(
                 text = textBeforeEnter + "\n",
@@ -302,7 +302,7 @@ class RichTextStateIMETest {
 
         val textAfterEnter = state.annotatedString.text // "1. brot 2. " (11 chars)
 
-        // IME sends its own version — doesn't know about "2. " prefix, sends "1. brot\n"
+        // IME sends its own version - doesn't know about "2. " prefix, sends "1. brot\n"
         state.onTextFieldValueChange(
             TextFieldValue(
                 text = textBeforeEnter + "\n", // "1. brot\n" (8 chars)
@@ -410,7 +410,7 @@ class RichTextStateIMETest {
 
     @Test
     fun testCompositionCommitWithoutEnter_noNewParagraph() {
-        // IME commits text without Enter — should NOT create a new paragraph
+        // IME commits text without Enter - should NOT create a new paragraph
         val state = RichTextState()
         state.setHtml("<ol><li>Hello </li></ol>")
 
@@ -443,7 +443,7 @@ class RichTextStateIMETest {
 
     @Test
     fun testEnterOnEmptyListItemWithComposition() {
-        // User has composition on empty list item, presses Enter — should exit list
+        // User has composition on empty list item, presses Enter - should exit list
         val state = RichTextState()
         state.setHtml("<ol><li>Hello</li><li></li></ol>")
 
@@ -472,7 +472,7 @@ class RichTextStateIMETest {
     fun testReplacingParagraphWithEnter() {
         val state = RichTextState()
         state.setHtml("<ol><li>Hello</li><li>World</li></ol>")
-        // Non-collapsed selection — should NOT trigger IME revert
+        // Non-collapsed selection - should NOT trigger IME revert
         state.selection = TextRange(5, 11)
         state.onTextFieldValueChange(
             TextFieldValue(
@@ -485,7 +485,7 @@ class RichTextStateIMETest {
 
     @Test
     fun testBackspaceAtListBoundaryDoesNotTriggerMerge() {
-        // Backspace between two list items — text gets shorter, no new newlines
+        // Backspace between two list items - text gets shorter, no new newlines
         // Should NOT trigger IME revert (no new newlines in the text)
         val state = RichTextState()
         state.setHtml("<ol><li>Hello</li><li>World</li></ol>")
@@ -507,7 +507,7 @@ class RichTextStateIMETest {
 
     @Test
     fun testSelectAllDeleteOnMultiParagraph() {
-        // Select all + delete — non-collapsed selection, should NOT trigger
+        // Select all + delete - non-collapsed selection, should NOT trigger
         val state = RichTextState()
         state.setHtml("<ol><li>Hello</li><li>World</li></ol>")
 
@@ -521,7 +521,7 @@ class RichTextStateIMETest {
 
     @Test
     fun testIMERevertOnThreeItemList() {
-        // Same as #640 but with 3 list items — ensure merge + rebuild handles 3 paragraphs
+        // Same as #640 but with 3 list items - ensure merge + rebuild handles 3 paragraphs
         val state = RichTextState()
         state.setHtml("<ol><li>AAA</li><li>BBB</li></ol>")
 
@@ -539,7 +539,7 @@ class RichTextStateIMETest {
 
         val textAfterEnter = state.annotatedString.text
 
-        // IME reverts — removes "3. " prefix
+        // IME reverts - removes "3. " prefix
         state.onTextFieldValueChange(
             TextFieldValue(
                 text = textBefore + "\n",
@@ -631,7 +631,7 @@ class RichTextStateIMETest {
 
     @Test
     fun testReplacingSelectionWithNewlineAcrossParagraphs() {
-        // Select across two paragraphs and replace with text+newline — non-collapsed
+        // Select across two paragraphs and replace with text+newline - non-collapsed
         val state = RichTextState()
         state.setHtml("<p>First paragraph</p><p>Second paragraph</p>")
 
@@ -653,7 +653,7 @@ class RichTextStateIMETest {
     @Test
     fun testCursorAtEndThenDeleteAll() {
         // Cursor collapsed at end, then text becomes empty (shorter + no newlines)
-        // Should NOT trigger IME revert — no new newlines
+        // Should NOT trigger IME revert - no new newlines
         val state = RichTextState()
         state.setHtml("<ol><li>Hi</li><li>There</li></ol>")
 
@@ -774,7 +774,7 @@ class RichTextStateIMETest {
 
     @Test
     fun testSelectAcrossNumberedItemsAndType() {
-        // 10-item list — select across items 3-7 and type
+        // 10-item list - select across items 3-7 and type
         val state = RichTextState()
         state.setHtml(
             "<ol>" + (1..10).joinToString("") { "<li>Item $it</li>" } + "</ol>"

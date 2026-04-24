@@ -10,7 +10,7 @@ import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import kotlin.test.*
 
 /**
- * Tests for OffsetMapping consistency — verifies that `annotatedString.text.length`
+ * Tests for OffsetMapping consistency - verifies that `annotatedString.text.length`
  * and `textFieldValue.text.length` always stay in sync after every operation.
  *
  * When these diverge, Compose crashes with:
@@ -111,7 +111,7 @@ class RichTextStateOffsetMappingTest {
     }
 
     // ========================================================================
-    // #3: updateParagraphType — list prefix text surgery
+    // #3: updateParagraphType - list prefix text surgery
     // ========================================================================
 
     @Test
@@ -186,7 +186,7 @@ class RichTextStateOffsetMappingTest {
     }
 
     // ========================================================================
-    // #4: checkForParagraphs — Enter key creating new list items
+    // #4: checkForParagraphs - Enter key creating new list items
     // ========================================================================
 
     @Test
@@ -277,7 +277,7 @@ class RichTextStateOffsetMappingTest {
     }
 
     // ========================================================================
-    // #5: adjustOrderedListsNumbers — chained renumbering
+    // #5: adjustOrderedListsNumbers - chained renumbering
     // ========================================================================
 
     @Test

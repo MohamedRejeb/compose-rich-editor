@@ -206,7 +206,7 @@ public interface RichSpanStyle {
          * cache with its intrinsic+clamped size. Adopting that value here
          * means fresh Image instances for already-seen URLs start with the
          * correct Placeholder size instead of blinking through 0x0 every
-         * time `setHtml(...)` is called — which happens on every keystroke
+         * time `setHtml(...)` is called - which happens on every keystroke
          * in an HTML source-editor like `HtmlToRichText`.
          */
         private val initialDimensions: Pair<TextUnit, TextUnit> =

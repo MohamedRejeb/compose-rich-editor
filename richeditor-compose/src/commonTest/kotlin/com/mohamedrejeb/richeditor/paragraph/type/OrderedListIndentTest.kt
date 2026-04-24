@@ -29,7 +29,7 @@ class OrderedListIndentTest {
         val textIndent = list.getStyle(config).textIndent
         assertNotNull(textIndent)
 
-        // 38 >= 20: classic hanging indent — prefix sits in the gutter, dots align.
+        // 38 >= 20: classic hanging indent - prefix sits in the gutter, dots align.
         assertEquals(18f, textIndent.firstLine.value)
         assertEquals(38f, textIndent.restLine.value)
         assertTrue(textIndent.firstLine.value < textIndent.restLine.value)
@@ -44,7 +44,7 @@ class OrderedListIndentTest {
         assertNotNull(textIndent)
 
         // base (10) < prefix (50): the natural base - prefix would be -40, which would
-        // clip the marker. Clamp firstLine at 0 instead of flipping formulas — keeps
+        // clip the marker. Clamp firstLine at 0 instead of flipping formulas - keeps
         // every item in the list on the same layout regardless of per-item marker width.
         assertEquals(0f, textIndent.firstLine.value)
         assertEquals(10f, textIndent.restLine.value)

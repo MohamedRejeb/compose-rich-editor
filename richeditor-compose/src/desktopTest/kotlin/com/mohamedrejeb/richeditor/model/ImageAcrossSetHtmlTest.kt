@@ -133,7 +133,7 @@ class ImageAcrossSetHtmlTest {
             .toSet()
         assertEquals(markerIdsAfterFirst, state.inlineContentMap.keys)
 
-        // Change the html — same img + trailing text.
+        // Change the html - same img + trailing text.
         runOnUiThread {
             state.setHtml("""<p><img src="http://x/a.png"/> some text</p>""")
         }
@@ -165,7 +165,7 @@ class ImageAcrossSetHtmlTest {
 
         // The Image span's width must have been resolved from the painter's
         // intrinsic size after the LaunchedEffect ran. If it's still 0, the
-        // Placeholder is zero-sized and the image is not visible — which is
+        // Placeholder is zero-sized and the image is not visible - which is
         // exactly the reported "image disappears" symptom.
         val imageSpan = findImageSpan(state)
         assertNotEquals(
@@ -240,7 +240,7 @@ class ImageAcrossSetHtmlTest {
             0f,
             imageSpanAfterSecond.width.value,
             "After second setHtml, Image.width must resolve again. " +
-                "Got ${imageSpanAfterSecond.width.value} — image is currently invisible.",
+                "Got ${imageSpanAfterSecond.width.value} - image is currently invisible.",
         )
     }
 
@@ -313,7 +313,7 @@ class ImageAcrossSetHtmlTest {
                 0f,
                 imageSpan.width.value,
                 "After keystroke-style edit to '$edit', Image.width dropped to 0. " +
-                    "The Placeholder flashed through a 0x0 state — image invisible.",
+                    "The Placeholder flashed through a 0x0 state - image invisible.",
             )
         }
     }
@@ -357,7 +357,7 @@ class ImageAcrossSetHtmlTest {
             0f,
             imageSpan.width.value,
             "Image.width must become non-zero once the painter's intrinsicSize resolves. " +
-                "Currently ${imageSpan.width.value}sp — the LaunchedEffect exited early on " +
+                "Currently ${imageSpan.width.value}sp - the LaunchedEffect exited early on " +
                 "first run (intrinsicSize was Unspecified) and never re-ran when it resolved.",
         )
     }

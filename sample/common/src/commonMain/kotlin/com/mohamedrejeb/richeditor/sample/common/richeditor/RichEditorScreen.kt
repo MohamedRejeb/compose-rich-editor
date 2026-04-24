@@ -79,7 +79,7 @@ fun RichEditorScreen(
             item {
                 EditorSection(
                     label = "BasicRichTextEditor",
-                    caption = "The minimal primitive — bring your own chrome.",
+                    caption = "The minimal primitive - bring your own chrome.",
                 ) {
                     Spacer(Modifier.height(8.dp))
                     RichTextStyleRow(
@@ -117,7 +117,7 @@ fun RichEditorScreen(
             item {
                 EditorSection(
                     label = "OutlinedRichTextEditor",
-                    caption = "Outlined Material3 variant — works great as a form input.",
+                    caption = "Outlined Material3 variant - works great as a form input.",
                 ) {
                     Spacer(Modifier.height(8.dp))
                     RichTextStyleRow(
@@ -136,7 +136,7 @@ fun RichEditorScreen(
             item {
                 EditorSection(
                     label = "RichText (read-only)",
-                    caption = "Render the same state as immutable text — perfect for chat bubbles, comments, etc.",
+                    caption = "Render the same state as immutable text - perfect for chat bubbles, comments, etc.",
                 ) {
                     Spacer(Modifier.height(8.dp))
                     RichText(

@@ -4,7 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * Regression tests for issue #637 — `correctMarkdownText` mangles
+ * Regression tests for issue #637 - `correctMarkdownText` mangles
  * star-style unordered list markers (`* item`) by treating the `*` as
  * a possible emphasis marker and rewriting the surrounding spaces.
  */

@@ -557,12 +557,21 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         val htmlTags = htmlStyleFormat.htmlTags.filter { it !in parentFormattingTags }
 
         val isRequireOpeningTag = tagName != "span" || tagAttributes.isNotEmpty() || spanCss.isNotEmpty()
+        // Image spans map to `<img>`, which is a void element in HTML: no
+        // content and no closing tag. The raw text of an Image span is the
+        // inline-content placeholder char (see #466), which must never
+        // leak into the serialized HTML.
+        val isVoidElement = richSpan.richSpanStyle is RichSpanStyle.Image
 
         if (isRequireOpeningTag) {
             // Append HTML element with attributes and style
             stringBuilder.append("<$tagName$tagAttributesStringBuilder")
             if (spanCss.isNotEmpty()) stringBuilder.append(" style=\"$spanCss\"")
             stringBuilder.append(">")
+        }
+
+        if (isVoidElement) {
+            return stringBuilder.toString()
         }
 
         htmlTags.forEach {

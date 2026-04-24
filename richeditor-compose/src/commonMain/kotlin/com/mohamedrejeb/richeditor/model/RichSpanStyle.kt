@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEachIndexed
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.utils.getBoundingBoxes
+import kotlin.random.Random
 
 @ExperimentalRichTextApi
 public interface RichSpanStyle {
@@ -194,13 +195,43 @@ public interface RichSpanStyle {
             }
         }
 
-        public var width: TextUnit by mutableStateOf(width)
+        /**
+         * Initial `(width, height)` for this Image span.
+         *
+         * If the caller supplied explicit non-zero dimensions (e.g.
+         * `<img width="200" height="100">`), use them verbatim.
+         *
+         * Otherwise consult [resolvedDimensionsCache]: a previously-rendered
+         * Image with the same [model] (same src) will have populated the
+         * cache with its intrinsic+clamped size. Adopting that value here
+         * means fresh Image instances for already-seen URLs start with the
+         * correct Placeholder size instead of blinking through 0x0 every
+         * time `setHtml(...)` is called — which happens on every keystroke
+         * in an HTML source-editor like `HtmlToRichText`.
+         */
+        private val initialDimensions: Pair<TextUnit, TextUnit> =
+            if (width.value <= 0f && height.value <= 0f) {
+                resolvedDimensionsCache[model] ?: (width to height)
+            } else {
+                width to height
+            }
+
+        public var width: TextUnit by mutableStateOf(initialDimensions.first)
             private set
 
-        public var height: TextUnit by mutableStateOf(height)
+        public var height: TextUnit by mutableStateOf(initialDimensions.second)
             private set
 
-        private val id get() = "$model-${width.value}-${height.value}"
+        /**
+         * Stable, per-instance id used as the key into
+         * [RichTextState.inlineContentMap]. Deliberately independent of
+         * [width]/[height] so that updating dimensions (from intrinsic size,
+         * from the container-width clamp, etc.) replaces the map entry in
+         * place instead of routing through a different key, which would
+         * briefly desync the annotated string's inline-content marker from
+         * the map and cause the image to disappear for a frame.
+         */
+        private val id: String = "richtext-img-${Random.nextLong().toULong().toString(16)}"
 
         override val spanStyle: (RichTextConfig) -> SpanStyle =
             { SpanStyle() }
@@ -241,16 +272,24 @@ public interface RichSpanStyle {
                     val imageLoader = LocalImageLoader.current
                     val maxImageWidth = LocalRichTextMaxImageWidthProvider.current.maxWidth
                     val data = imageLoader.load(model) ?: return@InlineTextContent
+                    // Read intrinsicSize in composable scope so we observe its
+                    // state. Async painters (Coil, etc.) start with
+                    // [Size.Unspecified] and flip to a real size once the
+                    // image decodes. Including it in the effect key ensures
+                    // the effect re-runs when the size becomes available,
+                    // instead of exiting early on first run and leaving the
+                    // Placeholder at 0x0 forever.
+                    val intrinsicSize = data.painter.intrinsicSize
 
-                    LaunchedEffect(id, data, maxImageWidth) {
-                        if (data.painter.intrinsicSize.isUnspecified)
+                    LaunchedEffect(data, intrinsicSize, maxImageWidth) {
+                        if (intrinsicSize.isUnspecified)
                             return@LaunchedEffect
 
                         val intrinsicWidth = with(density) {
-                            data.painter.intrinsicSize.width.coerceAtLeast(0f).toSp()
+                            intrinsicSize.width.coerceAtLeast(0f).toSp()
                         }
                         val intrinsicHeight = with(density) {
-                            data.painter.intrinsicSize.height.coerceAtLeast(0f).toSp()
+                            intrinsicSize.height.coerceAtLeast(0f).toSp()
                         }
 
                         val (clampedWidth, clampedHeight) = clampToMaxWidth(
@@ -269,13 +308,23 @@ public interface RichSpanStyle {
                         if (!shouldSetWidth && !shouldSetHeight)
                             return@LaunchedEffect
 
-                        richTextState.inlineContentMap.remove(id)
-
                         if (shouldSetWidth) width = clampedWidth
                         if (shouldSetHeight) height = clampedHeight
 
-                        richTextState.inlineContentMap[id] = createInlineTextContent(richTextState = richTextState)
-                        richTextState.updateAnnotatedString()
+                        // Remember the resolved dimensions for this model so
+                        // the next Image span with the same src (created by
+                        // a later setHtml, e.g. every keystroke in an HTML
+                        // source-editor) starts with the right Placeholder
+                        // size instead of blinking through 0x0.
+                        resolvedDimensionsCache[model] = width to height
+
+                        // Overwrite the InlineTextContent at the same stable [id]
+                        // so BasicText observes the new Placeholder dimensions on
+                        // the next frame. The annotated string's inline-content
+                        // marker does not change, so no rebuild is needed.
+                        richTextState.inlineContentMap[id] = createInlineTextContent(
+                            richTextState = richTextState,
+                        )
                     }
 
                     Image(
@@ -295,6 +344,20 @@ public interface RichSpanStyle {
         override val isAtomic: Boolean = true
 
         internal companion object {
+            /**
+             * Process-wide cache of resolved `(width, height)` per image
+             * [model]. Populated when the painter's intrinsic size has been
+             * clamped and applied; consulted in [Image.init] so that a fresh
+             * Image constructed from the same src (e.g. a later `setHtml`)
+             * starts at the already-known Placeholder size.
+             *
+             * Not thread-safe; Compose edits run on the main thread. Grows
+             * unboundedly in pathological cases; acceptable for realistic
+             * document sizes.
+             */
+            internal val resolvedDimensionsCache: MutableMap<Any, Pair<TextUnit, TextUnit>> =
+                mutableMapOf()
+
             /**
              * Scale [width]/[height] down proportionally so [width] is at most
              * [maxWidth]. Returns the input unchanged when [maxWidth] is
@@ -317,23 +380,13 @@ public interface RichSpanStyle {
             }
         }
 
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is Image) return false
-
-            if (model != other.model) return false
-            if (width != other.width) return false
-            if (height != other.height) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = model.hashCode()
-            result = 31 * result + width.hashCode()
-            result = 31 * result + height.hashCode()
-            return result
-        }
+        // Image intentionally does not override equals/hashCode. It relies
+        // on identity: two `<img>` tags are two distinct visual slots in
+        // the document and must never be collapsed by the consecutive-span
+        // merging that runs on `richSpanStyle ==` (see
+        // AnnotatedStringExt.appendRichSpanList). Content-based equality
+        // would also have been a footgun once [width]/[height] resolve from
+        // intrinsic size, since those are mutable state.
     }
 
     /**

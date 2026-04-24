@@ -96,13 +96,20 @@ internal class OrderedList private constructor(
         return style
     }
 
-    private fun getNewParagraphStyle() =
-        ParagraphStyle(
-            textIndent = TextIndent(
-                firstLine = (indent * level).sp,
-                restLine = ((indent * level) + startTextWidth.value).sp
-            )
-        )
+    private fun getNewParagraphStyle(): ParagraphStyle {
+        val base = (indent * level).toFloat()
+        val prefix = startTextWidth.value
+        // Keep HTML-style alignment (prefix lives in the indent "gutter", dots align vertically)
+        // when there is room; fall back to placing the prefix inside so it stays visible when
+        // the indent is smaller than the prefix width.
+        val textIndent =
+            if (base >= prefix)
+                TextIndent(firstLine = (base - prefix).sp, restLine = base.sp)
+            else
+                TextIndent(firstLine = base.sp, restLine = (base + prefix).sp)
+
+        return ParagraphStyle(textIndent = textIndent)
+    }
 
     override var startRichSpan: RichSpan =
         getNewStartRichSpan()

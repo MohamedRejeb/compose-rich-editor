@@ -129,6 +129,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public final fun getLinkColor-0d7_KjU ()J
 	public final fun getLinkTextDecoration ()Landroidx/compose/ui/text/style/TextDecoration;
 	public final fun getListIndent ()I
+	public final fun getListMarkerStyleBehavior ()Lcom/mohamedrejeb/richeditor/paragraph/type/ListMarkerStyleBehavior;
 	public final fun getOrderedListIndent ()I
 	public final fun getOrderedListStyleType ()Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType;
 	public final fun getPreserveStyleOnEmptyLine ()Z
@@ -141,6 +142,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public final fun setLinkColor-8_81llA (J)V
 	public final fun setLinkTextDecoration (Landroidx/compose/ui/text/style/TextDecoration;)V
 	public final fun setListIndent (I)V
+	public final fun setListMarkerStyleBehavior (Lcom/mohamedrejeb/richeditor/paragraph/type/ListMarkerStyleBehavior;)V
 	public final fun setOrderedListIndent (I)V
 	public final fun setOrderedListStyleType (Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType;)V
 	public final fun setPreserveStyleOnEmptyLine (Z)V
@@ -317,6 +319,14 @@ public final class com/mohamedrejeb/richeditor/model/trigger/TriggerQuery {
 	public final fun getTriggerId ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/paragraph/type/ListMarkerStyleBehavior : java/lang/Enum {
+	public static final field AlwaysDefault Lcom/mohamedrejeb/richeditor/paragraph/type/ListMarkerStyleBehavior;
+	public static final field InheritFromText Lcom/mohamedrejeb/richeditor/paragraph/type/ListMarkerStyleBehavior;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/paragraph/type/ListMarkerStyleBehavior;
+	public static fun values ()[Lcom/mohamedrejeb/richeditor/paragraph/type/ListMarkerStyleBehavior;
 }
 
 public abstract interface class com/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType {

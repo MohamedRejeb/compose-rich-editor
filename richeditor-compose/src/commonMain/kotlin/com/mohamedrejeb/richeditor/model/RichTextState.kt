@@ -2248,7 +2248,7 @@ public class RichTextState internal constructor(
                 }
 
                 withStyle(richParagraph.paragraphStyle.merge(richParagraph.type.getStyle(config))) {
-                    withStyle(richParagraph.getStartTextSpanStyle() ?: RichSpanStyle.DefaultSpanStyle) {
+                    withStyle(richParagraph.getListMarkerSpanStyle(config.listMarkerStyleBehavior)) {
                         append(richParagraph.type.startText)
                     }
                     val richParagraphStartTextLength = richParagraph.type.startText.length
@@ -4687,7 +4687,7 @@ public class RichTextState internal constructor(
             richParagraphList.fastForEachIndexed { i, richParagraph ->
                 withStyle(richParagraph.paragraphStyle.merge(richParagraph.type.getStyle(config))) {
                     withStyle(
-                        richParagraph.getStartTextSpanStyle() ?: RichSpanStyle.DefaultSpanStyle
+                        richParagraph.getListMarkerSpanStyle(config.listMarkerStyleBehavior)
                     ) {
                         append(richParagraph.type.startText)
                     }

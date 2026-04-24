@@ -46,7 +46,7 @@ internal val sampleIssueBodyHtml: String = """
 <p>The Real Examples hub still lists GitHub as <i>Coming Soon</i>. Let's promote it
 by shipping a working composer that mirrors the issue UX, including
 <code>code spans</code>, fenced blocks and references to other issues like
-<a href="https://github.com/MohamedRejeb/Compose-Rich-Editor/issues/423">#423</a>.</p>
+<span data-trigger="issueRef" data-id="issue-423">#423</span>.</p>
 <p>Acceptance:</p>
 <ul>
     <li>Threaded comment list rendered through <b>RichText</b>.</li>
@@ -61,7 +61,8 @@ internal val sampleComments: List<GitHubComment> = listOf(
         author = sampleUsers[2],
         timeAgo = "5 hours ago",
         html = """
-        <p>Strong +1 from me. The library can already render every piece needed,
+        <p><span data-trigger="mention" data-id="u-mohamed">@mohamedrejeb</span>
+        strong +1 from me. The library can already render every piece needed,
         we just need to compose them in one screen. I'd reuse the trigger system
         from <code>MentionsSampleScreen</code> for both <code>@</code> and
         <code>#</code> popups.</p>
@@ -71,10 +72,11 @@ internal val sampleComments: List<GitHubComment> = listOf(
         author = sampleUsers[0],
         timeAgo = "2 hours ago",
         html = """
-        <p>Drafted the composer, going with GitHub Dark for the visual identity.
-        Code blocks render via <code>toggleCode()</code>, code spans via
+        <p>Thanks <span data-trigger="mention" data-id="u-bob">@bob</span>, drafted
+        the composer, going with GitHub Dark for the visual identity. Code blocks
+        render via <code>toggleCode()</code>, code spans via
         <code>toggleCodeSpan()</code>. Linking
-        <a href="https://github.com/MohamedRejeb/Compose-Rich-Editor/issues/593">#593</a>
+        <span data-trigger="issueRef" data-id="issue-593">#593</span>
         for context on markdown round-trips.</p>
         <ol>
             <li>Composer toolbar wired up.</li>

@@ -24,9 +24,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 
+@OptIn(ExperimentalRichTextApi::class)
 @Composable
 internal fun GitHubCommentCard(
     comment: GitHubComment,
@@ -34,6 +36,8 @@ internal fun GitHubCommentCard(
     modifier: Modifier = Modifier,
 ) {
     val state = rememberRichTextState()
+
+    RegisterGitHubTriggers(state)
 
     LaunchedEffect(comment.html) {
         state.config.linkColor = GitHubColors.Link
@@ -56,15 +60,17 @@ internal fun GitHubCommentCard(
             isOriginalPost = isOriginalPost,
         )
 
-        Box(
+        GitHubTokenInteractionBox(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 12.dp),
-        ) {
+        ) { onTokenClick, onTokenHover ->
             RichText(
                 state = state,
                 color = GitHubColors.Text,
                 modifier = Modifier.fillMaxWidth(),
+                onTokenClick = onTokenClick,
+                onTokenHover = onTokenHover,
             )
         }
     }

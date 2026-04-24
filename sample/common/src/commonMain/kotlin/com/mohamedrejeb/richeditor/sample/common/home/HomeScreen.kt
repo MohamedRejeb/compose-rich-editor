@@ -21,6 +21,7 @@ fun HomeScreen(
     navigateToSlack: () -> Unit,
     navigateToMentions: () -> Unit,
     navigateToUndoRedo: () -> Unit,
+    navigateToListsConfig: () -> Unit,
 ) {
     val richTextState = rememberRichTextState()
 
@@ -109,6 +110,14 @@ fun HomeScreen(
                     onClick = navigateToUndoRedo,
                 ) {
                     Text("Undo / Redo Demo")
+                }
+            }
+
+            item {
+                Button(
+                    onClick = navigateToListsConfig,
+                ) {
+                    Text("Lists Configuration Demo")
                 }
             }
         }

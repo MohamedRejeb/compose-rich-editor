@@ -51,9 +51,9 @@ val md_theme_dark_error = Color(0xFFFFB4AB)
 val md_theme_dark_errorContainer = Color(0xFF93000A)
 val md_theme_dark_onError = Color(0xFF690005)
 val md_theme_dark_onErrorContainer = Color(0xFFFFDAD6)
-val md_theme_dark_background = Color(0xFF1B1B1F)
+val md_theme_dark_background = Color(0xFF11131A)
 val md_theme_dark_onBackground = Color(0xFFE4E2E6)
-val md_theme_dark_surface = Color(0xFF1B1B1F)
+val md_theme_dark_surface = Color(0xFF11131A)
 val md_theme_dark_onSurface = Color(0xFFE4E2E6)
 val md_theme_dark_surfaceVariant = Color(0xFF45464F)
 val md_theme_dark_onSurfaceVariant = Color(0xFFC5C6D0)
@@ -66,5 +66,32 @@ val md_theme_dark_surfaceTint = Color(0xFFB4C5FF)
 val md_theme_dark_outlineVariant = Color(0xFF45464F)
 val md_theme_dark_scrim = Color(0xFF000000)
 
-
 val seed = Color(0xFF4572E8)
+
+/* ─────────────────────────  Sample accent palette  ───────────────────────── */
+/* Vibrant accents used for category badges, gradient chips, and example tiles.
+ * Tuned to read against both light and dark surfaces. */
+
+object SampleAccents {
+    val Indigo = Color(0xFF6366F1)
+    val Violet = Color(0xFF8B5CF6)
+    val Magenta = Color(0xFFEC4899)
+    val Coral = Color(0xFFFB7185)
+    val Amber = Color(0xFFF59E0B)
+    val Emerald = Color(0xFF10B981)
+    val Teal = Color(0xFF14B8A6)
+    val Sky = Color(0xFF0EA5E9)
+    val Slate = Color(0xFF64748B)
+}
+
+/* ─────────────────────────  Brand colors for example apps  ───────────────────────── */
+
+object BrandColors {
+    val Slack = Color(0xFF4A154B)
+    val Notion = Color(0xFF111111)
+    val GitHub = Color(0xFF24292F)
+    val Discord = Color(0xFF5865F2)
+    val Medium = Color(0xFF1A8917)
+    val X = Color(0xFF000000)
+    val Linear = Color(0xFF5E6AD2)
+}

@@ -13,26 +13,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,12 +36,12 @@ import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.model.trigger.Trigger
+import com.mohamedrejeb.richeditor.sample.common.components.SampleScaffold
+import com.mohamedrejeb.richeditor.sample.common.ui.theme.SampleAccents
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.TriggerSuggestions
 
-/** One sample user / tag / command, keyed by stable id. */
 private data class MentionUser(val id: String, val name: String, val handle: String)
-private data class HashtagSuggestion(val slug: String)
 private data class SlashCommand(val id: String, val label: String, val description: String)
 
 private val sampleUsers = listOf(
@@ -84,24 +75,23 @@ fun MentionsSampleScreen(
             Trigger(
                 id = "mention",
                 char = '@',
-                style = { SpanStyle(color = Color(0xFF1E88E5), fontWeight = FontWeight.Medium) },
+                style = { SpanStyle(color = SampleAccents.Sky, fontWeight = FontWeight.Medium) },
             )
         )
         state.registerTrigger(
             Trigger(
                 id = "hashtag",
                 char = '#',
-                style = { SpanStyle(color = Color(0xFF8E24AA), fontWeight = FontWeight.Medium) },
+                style = { SpanStyle(color = SampleAccents.Magenta, fontWeight = FontWeight.Medium) },
             )
         )
         state.registerTrigger(
             Trigger(
                 id = "command",
                 char = '/',
-                style = { SpanStyle(color = Color(0xFF00897B), fontFamily = FontFamily.Monospace) },
+                style = { SpanStyle(color = SampleAccents.Teal, fontFamily = FontFamily.Monospace) },
             )
         )
-        // Pre-populate one token of each kind so the styling is visible without typing.
         state.setMarkdown(
             "Hi [@mohamed](trigger:mention:u-mohamed), see " +
                 "[#release](trigger:hashtag:release) and " +
@@ -110,34 +100,28 @@ fun MentionsSampleScreen(
         )
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Mentions / Triggers Demo") },
-                navigationIcon = {
-                    IconButton(onClick = navigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-            )
-        },
-        modifier = Modifier.fillMaxSize(),
+    SampleScaffold(
+        title = "Mentions & triggers",
+        navigateBack = navigateBack,
     ) { paddingValues ->
         Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .windowInsetsPadding(WindowInsets.ime)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(horizontal = 20.dp),
         ) {
+            Spacer(Modifier.height(4.dp))
+
+            TriggerLegend()
+
             Box {
                 OutlinedRichTextEditor(
                     state = state,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 140.dp),
                 )
 
-                // Popup for each trigger — only renders when its triggerId is active.
                 TriggerSuggestions(
                     state = state,
                     triggerId = "mention",
@@ -212,7 +196,57 @@ fun MentionsSampleScreen(
                 title = "Markdown",
                 content = remember(state.annotatedString) { state.toMarkdown() },
             )
+
+            Spacer(Modifier.height(12.dp))
         }
+    }
+}
+
+@Composable
+private fun TriggerLegend() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .padding(16.dp),
+    ) {
+        Text(
+            text = "Active triggers",
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            color = SampleAccents.Magenta,
+        )
+        Spacer(Modifier.height(10.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            TriggerChip("@", "mention", SampleAccents.Sky)
+            TriggerChip("#", "hashtag", SampleAccents.Magenta)
+            TriggerChip("/", "command", SampleAccents.Teal)
+        }
+    }
+}
+
+@Composable
+private fun TriggerChip(symbol: String, label: String, color: Color) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(color.copy(alpha = 0.14f))
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+    ) {
+        Text(
+            text = symbol,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            color = color,
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
     }
 }
 
@@ -224,23 +258,23 @@ private fun ExportPanel(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
             .padding(12.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.SemiBold,
-            )
-        }
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
         Spacer(Modifier.height(6.dp))
         val scroll = rememberScrollState()
         Text(
             text = content,
             fontFamily = FontFamily.Monospace,
             style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(max = 140.dp)

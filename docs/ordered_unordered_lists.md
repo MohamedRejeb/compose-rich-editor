@@ -7,6 +7,7 @@
   - [Ordered Lists](#ordered-lists)
   - [Unordered Lists](#unordered-lists)
 - [List Indentation](#list-indentation)
+- [List Marker Style](#list-marker-style)
 - [Common Operations](#common-operations)
   - [Default Values](#default-values)
   - [Keyboard Shortcuts](#keyboard-shortcuts)
@@ -106,6 +107,38 @@ richTextState.config.orderedListIndent = 20
 richTextState.config.unorderedListIndent = 20
 ```
 
+## List Marker Style
+
+> **Note:** This API is marked `@ExperimentalRichTextApi` and may change in a future release.
+
+You can control how list markers (`•`, `1.`, etc.) inherit styles from the list item's text using `ListMarkerStyleBehavior`:
+
+```kotlin
+// Default: marker inherits typography from the item's text but drops decorations.
+richTextState.config.listMarkerStyleBehavior = ListMarkerStyleBehavior.InheritFromText
+
+// Alternative: every marker renders with the default span style regardless of content.
+richTextState.config.listMarkerStyleBehavior = ListMarkerStyleBehavior.AlwaysDefault
+```
+
+With `InheritFromText` (the default), markers match the paragraph's typography so they stay visually aligned with the text. This matches Google Docs behavior:
+
+| Attribute | Applied to marker |
+|---|---|
+| `color` | yes |
+| `fontSize` | yes |
+| `fontWeight` (bold) | yes |
+| `fontStyle` (italic) | yes |
+| `fontFamily` | yes |
+| `letterSpacing` | yes |
+| `textDecoration` (underline, strikethrough) | no |
+| `background` (highlight) | no |
+| `baselineShift` (super/subscript) | no |
+| `shadow` | no |
+| `textGeometricTransform` | no |
+
+Use `AlwaysDefault` when you want bullets that look identical no matter how the line is formatted (for example, editors that style markers entirely through a separate theme).
+
 ## Common Operations
 
 ### Default Values
@@ -119,6 +152,7 @@ By default, the Rich Text Editor uses these configurations:
   - Second level: `◦` (circle)
   - Third level: `▪` (square)
 - List Indentation: 38
+- List Marker Style: `ListMarkerStyleBehavior.InheritFromText`
 - Exit List on Empty Item: `true` (configurable via `richTextState.config.exitListOnEmptyItem`)
 
 ### Keyboard Shortcuts

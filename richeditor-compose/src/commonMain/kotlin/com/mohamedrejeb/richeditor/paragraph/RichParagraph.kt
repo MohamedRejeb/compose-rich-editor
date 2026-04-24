@@ -1,5 +1,6 @@
 package com.mohamedrejeb.richeditor.paragraph
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
@@ -8,7 +9,9 @@ import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.util.fastForEachReversed
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpan
+import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
+import com.mohamedrejeb.richeditor.paragraph.type.ListMarkerStyleBehavior
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startText
 import com.mohamedrejeb.richeditor.ui.test.getRichTextStyleTreeRepresentation
@@ -179,6 +182,28 @@ internal class RichParagraph(
     }
 
     fun isNotBlank(ignoreStartRichSpan: Boolean = true): Boolean = !isBlank(ignoreStartRichSpan)
+
+    /**
+     * Compute the [SpanStyle] used for the list marker (the "•", "1.", etc.
+     * prefix appended by [ParagraphType.startText]) based on the chosen
+     * [behavior] and the paragraph's content.
+     *
+     * See [ListMarkerStyleBehavior] for what is kept versus stripped.
+     */
+    @OptIn(ExperimentalRichTextApi::class)
+    fun getListMarkerSpanStyle(behavior: ListMarkerStyleBehavior): SpanStyle =
+        when (behavior) {
+            ListMarkerStyleBehavior.InheritFromText ->
+                getStartTextSpanStyle()?.copy(
+                    textDecoration = null,
+                    background = Color.Unspecified,
+                    baselineShift = null,
+                    shadow = null,
+                    textGeometricTransform = null,
+                ) ?: RichSpanStyle.DefaultSpanStyle
+            ListMarkerStyleBehavior.AlwaysDefault ->
+                RichSpanStyle.DefaultSpanStyle
+        }
 
     @OptIn(ExperimentalRichTextApi::class)
     fun getStartTextSpanStyle(): SpanStyle? {

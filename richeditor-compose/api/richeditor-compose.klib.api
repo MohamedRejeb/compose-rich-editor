@@ -14,6 +14,17 @@ open annotation class com.mohamedrejeb.richeditor.annotation/InternalRichTextApi
     constructor <init>() // com.mohamedrejeb.richeditor.annotation/InternalRichTextApi.<init>|<init>(){}[0]
 }
 
+final enum class com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehavior : kotlin/Enum<com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehavior> { // com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehavior|null[0]
+    enum entry AlwaysDefault // com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehavior.AlwaysDefault|null[0]
+    enum entry InheritFromText // com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehavior.InheritFromText|null[0]
+
+    final val entries // com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehavior.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehavior> // com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehavior.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehavior // com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehavior.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehavior> // com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehavior.values|values#static(){}[0]
+}
+
 final enum class com.mohamedrejeb.richeditor.ui/UndoBehavior : kotlin/Enum<com.mohamedrejeb.richeditor.ui/UndoBehavior> { // com.mohamedrejeb.richeditor.ui/UndoBehavior|null[0]
     enum entry Disabled // com.mohamedrejeb.richeditor.ui/UndoBehavior.Disabled|null[0]
     enum entry Enabled // com.mohamedrejeb.richeditor.ui/UndoBehavior.Enabled|null[0]
@@ -273,6 +284,9 @@ final class com.mohamedrejeb.richeditor.model/RichTextConfig { // com.mohamedrej
     final var listIndent // com.mohamedrejeb.richeditor.model/RichTextConfig.listIndent|{}listIndent[0]
         final fun <get-listIndent>(): kotlin/Int // com.mohamedrejeb.richeditor.model/RichTextConfig.listIndent.<get-listIndent>|<get-listIndent>(){}[0]
         final fun <set-listIndent>(kotlin/Int) // com.mohamedrejeb.richeditor.model/RichTextConfig.listIndent.<set-listIndent>|<set-listIndent>(kotlin.Int){}[0]
+    final var listMarkerStyleBehavior // com.mohamedrejeb.richeditor.model/RichTextConfig.listMarkerStyleBehavior|{}listMarkerStyleBehavior[0]
+        final fun <get-listMarkerStyleBehavior>(): com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehavior // com.mohamedrejeb.richeditor.model/RichTextConfig.listMarkerStyleBehavior.<get-listMarkerStyleBehavior>|<get-listMarkerStyleBehavior>(){}[0]
+        final fun <set-listMarkerStyleBehavior>(com.mohamedrejeb.richeditor.paragraph.type/ListMarkerStyleBehavior) // com.mohamedrejeb.richeditor.model/RichTextConfig.listMarkerStyleBehavior.<set-listMarkerStyleBehavior>|<set-listMarkerStyleBehavior>(com.mohamedrejeb.richeditor.paragraph.type.ListMarkerStyleBehavior){}[0]
     final var orderedListIndent // com.mohamedrejeb.richeditor.model/RichTextConfig.orderedListIndent|{}orderedListIndent[0]
         final fun <get-orderedListIndent>(): kotlin/Int // com.mohamedrejeb.richeditor.model/RichTextConfig.orderedListIndent.<get-orderedListIndent>|<get-orderedListIndent>(){}[0]
         final fun <set-orderedListIndent>(kotlin/Int) // com.mohamedrejeb.richeditor.model/RichTextConfig.orderedListIndent.<set-orderedListIndent>|<set-orderedListIndent>(kotlin.Int){}[0]

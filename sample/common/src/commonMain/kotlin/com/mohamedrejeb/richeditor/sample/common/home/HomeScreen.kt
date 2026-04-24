@@ -60,6 +60,7 @@ fun HomeScreen(
     navigateToGithub: () -> Unit,
     navigateToNotion: () -> Unit,
     navigateToHeadings: () -> Unit,
+    navigateToClaude: () -> Unit,
 ) {
     SampleScaffold(
         title = "Compose Rich Editor",
@@ -217,7 +218,7 @@ fun HomeScreen(
                 SectionHeader(
                     eyebrow = "Real examples",
                     title = "See it in production-style apps",
-                    subtitle = "Slack, GitHub and Notion are live. Discord, Medium, X and Linear are on the way.",
+                    subtitle = "Slack, GitHub, Notion and Claude are live. Discord, Medium, X and Linear are on the way.",
                     accent = SampleAccents.Emerald,
                 )
             }
@@ -227,6 +228,7 @@ fun HomeScreen(
                     onSlackClick = navigateToSlack,
                     onGithubClick = navigateToGithub,
                     onNotionClick = navigateToNotion,
+                    onClaudeClick = navigateToClaude,
                     onSeeAllClick = navigateToRealExamples,
                 )
             }
@@ -250,6 +252,7 @@ private fun RealExamplesTeaser(
     onSlackClick: () -> Unit,
     onGithubClick: () -> Unit,
     onNotionClick: () -> Unit,
+    onClaudeClick: () -> Unit,
     onSeeAllClick: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -278,6 +281,15 @@ private fun RealExamplesTeaser(
             brandColor = BrandColors.Notion,
             status = ExampleStatus.Live,
             onClick = onNotionClick,
+        )
+
+        RealExampleCard(
+            name = "Claude",
+            tagline = "AI chat with streamed markdown replies, mentions, slash commands and inline formatting.",
+            monogram = "C",
+            brandColor = BrandColors.Claude,
+            status = ExampleStatus.Live,
+            onClick = onClaudeClick,
         )
 
         SeeAllExamplesRow(onClick = onSeeAllClick)
@@ -320,7 +332,7 @@ private fun SeeAllExamplesRow(onClick: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                text = "Slack, GitHub & Notion live · Discord, Medium, X, Linear coming soon",
+                text = "Slack, GitHub, Notion & Claude live · Discord, Medium, X, Linear coming soon",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

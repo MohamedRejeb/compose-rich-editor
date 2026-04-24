@@ -61,6 +61,13 @@ private val examples = listOf(
         status = ExampleStatus.Live,
     ),
     RealExample(
+        name = "Claude",
+        tagline = "AI chat with streamed markdown replies, mentions, slash commands and inline formatting.",
+        monogram = "C",
+        brandColor = BrandColors.Claude,
+        status = ExampleStatus.Live,
+    ),
+    RealExample(
         name = "Discord",
         tagline = "Chat input with markdown, emojis, mentions and rich link previews.",
         monogram = "D",
@@ -96,6 +103,7 @@ fun RealExamplesScreen(
     navigateToSlack: () -> Unit,
     navigateToGithub: () -> Unit,
     navigateToNotion: () -> Unit,
+    navigateToClaude: () -> Unit,
 ) {
     var pendingComingSoon by remember { mutableStateOf<RealExample?>(null) }
 
@@ -130,6 +138,7 @@ fun RealExamplesScreen(
                                     "Slack" -> navigateToSlack()
                                     "GitHub" -> navigateToGithub()
                                     "Notion" -> navigateToNotion()
+                                    "Claude" -> navigateToClaude()
                                 }
                                 ExampleStatus.ComingSoon -> pendingComingSoon = example
                             }
@@ -164,7 +173,7 @@ private fun Header() {
         Spacer(Modifier.height(4.dp))
         Text(
             text = "These showcase how Compose Rich Editor maps onto familiar product UX. " +
-                "Slack, GitHub and Notion are fully functional today; the others are scaffolds we're " +
+                "Slack, GitHub, Notion and Claude are fully functional today; the others are scaffolds we're " +
                 "building out - open an issue or PR if you want to help.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

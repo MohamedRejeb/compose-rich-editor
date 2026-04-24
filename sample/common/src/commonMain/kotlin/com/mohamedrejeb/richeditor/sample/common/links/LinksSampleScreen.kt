@@ -57,6 +57,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
+import com.mohamedrejeb.richeditor.sample.common.components.CopyButton
 import com.mohamedrejeb.richeditor.sample.common.components.SampleScaffold
 import com.mohamedrejeb.richeditor.sample.common.components.StatusBadge
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.SampleAccents
@@ -565,12 +566,19 @@ private fun ExportCard(
             .background(MaterialTheme.colorScheme.surfaceContainerLow)
             .padding(12.dp),
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.SemiBold,
-            color = accent,
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = accent,
+                modifier = Modifier.weight(1f),
+            )
+            CopyButton(content = content)
+        }
         Spacer(Modifier.height(6.dp))
         val scroll = rememberScrollState()
         SelectionContainer {

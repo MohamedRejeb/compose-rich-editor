@@ -2267,7 +2267,6 @@ public class RichTextState internal constructor(
                             richSpanList = richParagraph.children,
                             startIndex = index,
                             text = newText,
-                            selection = newTextFieldValue.selection,
                             onStyledRichSpan = {
                                 newStyledRichSpanList.add(it)
                             },

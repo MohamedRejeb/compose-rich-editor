@@ -430,11 +430,27 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
             if (index < richTextState.richParagraphList.lastIndex) {
                 // Append new line
                 builder.appendLine()
+
+                // CommonMark requires a list block to be preceded by a blank line when it
+                // follows a non-list paragraph; otherwise a lone `-` underneath a non-empty
+                // line is parsed as a setext H2 underline (turning the paragraph into a
+                // heading and dropping the list). See #441.
+                val nextParagraph = richTextState.richParagraphList[index + 1]
+                if (
+                    !isBlank &&
+                    !richParagraph.type.isList() &&
+                    nextParagraph.type.isList()
+                ) {
+                    builder.appendLine()
+                }
             }
         }
 
         return correctMarkdownText(builder.toString())
     }
+
+    private fun ParagraphType.isList(): Boolean =
+        this is OrderedList || this is UnorderedList
 
     @OptIn(ExperimentalRichTextApi::class)
     private fun decodeRichSpanToMarkdown(

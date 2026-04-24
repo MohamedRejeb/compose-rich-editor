@@ -2053,8 +2053,20 @@ public class RichTextState internal constructor(
             tempTextFieldValue.text == textFieldValue.text &&
             tempTextFieldValue.selection != textFieldValue.selection
         ) {
-            // Update selection
-            textFieldValue = tempTextFieldValue
+            // Pure selection change: normally we only reassign textFieldValue and skip
+            // rebuilding annotatedString. But the annotatedString carries a
+            // selection-dependent mask that drops background colors underneath the live
+            // selection (see AnnotatedStringExt.append — prevents an opaque span
+            // background from hiding the system selection highlight). If either the
+            // previous or the new selection is non-collapsed, the mask set differs and
+            // the cached annotatedString is stale — so force a rebuild. See #635.
+            val maskAffected =
+                !textFieldValue.selection.collapsed || !tempTextFieldValue.selection.collapsed
+            if (maskAffected) {
+                updateAnnotatedString(tempTextFieldValue)
+            } else {
+                textFieldValue = tempTextFieldValue
+            }
         } else {
             // Update the annotatedString and the textFieldValue with the new values
             updateAnnotatedString(tempTextFieldValue)
@@ -2267,6 +2279,7 @@ public class RichTextState internal constructor(
                             richSpanList = richParagraph.children,
                             startIndex = index,
                             text = newText,
+                            selection = newTextFieldValue.selection,
                             onStyledRichSpan = {
                                 newStyledRichSpanList.add(it)
                             },

@@ -1,5 +1,6 @@
 package com.mohamedrejeb.richeditor.sample.common.listsconfig
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -14,19 +15,14 @@ import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,12 +30,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.paragraph.type.ListPrefixAlignment
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedListStyleType
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedListStyleType
+import com.mohamedrejeb.richeditor.sample.common.components.SampleScaffold
+import com.mohamedrejeb.richeditor.sample.common.ui.theme.SampleAccents
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
 
 private val PresetOrderedStyles: List<Pair<String, OrderedListStyleType>> = listOf(
@@ -109,105 +110,107 @@ fun ListsConfigSampleScreen(navigateBack: () -> Unit) {
     var orderedStyleIndex by remember { mutableStateOf(PresetOrderedStyles.lastIndex) }
     var unorderedStyleIndex by remember { mutableStateOf(0) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Lists configuration") },
-                navigationIcon = {
-                    IconButton(onClick = navigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
-        },
-        modifier = Modifier.fillMaxSize(),
+    SampleScaffold(
+        title = "Lists configuration",
+        navigateBack = navigateBack,
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .windowInsetsPadding(WindowInsets.ime)
-                .padding(16.dp)
+                .padding(horizontal = 20.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(
-                text = "Adjust the controls to see how each config affects ordered and unordered lists.",
-                style = MaterialTheme.typography.bodyMedium,
-            )
+            Spacer(Modifier.height(4.dp))
 
-            SectionLabel("Prefix alignment")
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ListPrefixAlignment.entries.forEach { option ->
-                    FilterChip(
-                        selected = alignment == option,
-                        onClick = {
-                            alignment = option
-                            state.config.listPrefixAlignment = option
-                        },
-                        label = { Text(option.name) },
-                    )
+            HelpCard()
+
+            ConfigCard(title = "Prefix alignment", accent = SampleAccents.Sky) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ListPrefixAlignment.entries.forEach { option ->
+                        FilterChip(
+                            selected = alignment == option,
+                            onClick = {
+                                alignment = option
+                                state.config.listPrefixAlignment = option
+                            },
+                            label = { Text(option.name) },
+                            colors = chipColors(SampleAccents.Sky),
+                        )
+                    }
                 }
-            }
-            Text(
-                text = "End (default) aligns the dots of 1. and 10. vertically. Start gives every item a " +
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "End (default) aligns the dots of 1. and 10. vertically. Start gives every item a " +
                         "uniform left edge. Try indent = 0 to see the safety fallback.",
-                style = MaterialTheme.typography.bodySmall,
-            )
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
 
-            SectionLabel("Ordered list indent — ${orderedIndent.toInt()} sp")
-            Slider(
-                value = orderedIndent,
-                valueRange = 0f..80f,
-                steps = 79,
-                onValueChange = {
-                    orderedIndent = it
-                    state.config.orderedListIndent = it.toInt()
-                },
-            )
+            ConfigCard(
+                title = "Ordered list indent — ${orderedIndent.toInt()} sp",
+                accent = SampleAccents.Indigo,
+            ) {
+                Slider(
+                    value = orderedIndent,
+                    valueRange = 0f..80f,
+                    steps = 79,
+                    onValueChange = {
+                        orderedIndent = it
+                        state.config.orderedListIndent = it.toInt()
+                    },
+                )
+            }
 
-            SectionLabel("Unordered list indent — ${unorderedIndent.toInt()} sp")
-            Slider(
-                value = unorderedIndent,
-                valueRange = 0f..80f,
-                steps = 79,
-                onValueChange = {
-                    unorderedIndent = it
-                    state.config.unorderedListIndent = it.toInt()
-                },
-            )
+            ConfigCard(
+                title = "Unordered list indent — ${unorderedIndent.toInt()} sp",
+                accent = SampleAccents.Indigo,
+            ) {
+                Slider(
+                    value = unorderedIndent,
+                    valueRange = 0f..80f,
+                    steps = 79,
+                    onValueChange = {
+                        unorderedIndent = it
+                        state.config.unorderedListIndent = it.toInt()
+                    },
+                )
+            }
 
-            SectionLabel("Ordered list style type")
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PresetOrderedStyles.forEachIndexed { index, (label, styleType) ->
-                    FilterChip(
-                        selected = orderedStyleIndex == index,
-                        onClick = {
-                            orderedStyleIndex = index
-                            state.config.orderedListStyleType = styleType
-                        },
-                        label = { Text(label) },
-                    )
+            ConfigCard(title = "Ordered list style type", accent = SampleAccents.Coral) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    PresetOrderedStyles.forEachIndexed { index, (label, styleType) ->
+                        FilterChip(
+                            selected = orderedStyleIndex == index,
+                            onClick = {
+                                orderedStyleIndex = index
+                                state.config.orderedListStyleType = styleType
+                            },
+                            label = { Text(label) },
+                            colors = chipColors(SampleAccents.Coral),
+                        )
+                    }
                 }
             }
 
-            SectionLabel("Unordered list style type")
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PresetUnorderedStyles.forEachIndexed { index, (label, styleType) ->
-                    FilterChip(
-                        selected = unorderedStyleIndex == index,
-                        onClick = {
-                            unorderedStyleIndex = index
-                            state.config.unorderedListStyleType = styleType
-                        },
-                        label = { Text(label) },
-                    )
+            ConfigCard(title = "Unordered list style type", accent = SampleAccents.Amber) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    PresetUnorderedStyles.forEachIndexed { index, (label, styleType) ->
+                        FilterChip(
+                            selected = unorderedStyleIndex == index,
+                            onClick = {
+                                unorderedStyleIndex = index
+                                state.config.unorderedListStyleType = styleType
+                            },
+                            label = { Text(label) },
+                            colors = chipColors(SampleAccents.Amber),
+                        )
+                    }
                 }
             }
-
-            Spacer(Modifier.height(4.dp))
-            HorizontalDivider()
-            Spacer(Modifier.height(4.dp))
 
             OutlinedRichTextEditor(
                 state = state,
@@ -215,14 +218,64 @@ fun ListsConfigSampleScreen(navigateBack: () -> Unit) {
                     .fillMaxWidth()
                     .height(420.dp),
             )
+
+            Spacer(Modifier.height(16.dp))
         }
     }
 }
 
 @Composable
-private fun SectionLabel(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleSmall,
-    )
+private fun HelpCard() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .padding(16.dp),
+    ) {
+        Text(
+            text = "Live tuning",
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            color = SampleAccents.Sky,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = "Adjust each control and watch the editor below update without reloading. " +
+                "Useful for picking sensible defaults for your own product.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+    }
 }
+
+@Composable
+private fun ConfigCard(
+    title: String,
+    accent: Color,
+    content: @Composable () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .padding(16.dp),
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = accent,
+        )
+        Spacer(Modifier.height(8.dp))
+        content()
+    }
+}
+
+@Composable
+private fun chipColors(accent: Color) =
+    FilterChipDefaults.filterChipColors(
+        selectedContainerColor = accent.copy(alpha = 0.18f),
+        selectedLabelColor = MaterialTheme.colorScheme.onSurface,
+    )

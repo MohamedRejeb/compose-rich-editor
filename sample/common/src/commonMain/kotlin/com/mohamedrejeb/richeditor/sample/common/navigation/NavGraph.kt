@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.mohamedrejeb.richeditor.sample.common.examples.RealExamplesScreen
 import com.mohamedrejeb.richeditor.sample.common.home.HomeScreen
 import com.mohamedrejeb.richeditor.sample.common.htmleditor.HtmlEditorContent
 import com.mohamedrejeb.richeditor.sample.common.listsconfig.ListsConfigSampleScreen
@@ -21,6 +22,7 @@ private const val SLACK_ROUTE = "slack"
 private const val MENTIONS_ROUTE = "mentions"
 private const val UNDO_REDO_ROUTE = "undoRedo"
 private const val LISTS_CONFIG_ROUTE = "listsConfig"
+private const val REAL_EXAMPLES_ROUTE = "realExamples"
 
 @Composable
 fun NavGraph() {
@@ -39,6 +41,7 @@ fun NavGraph() {
                 navigateToMentions = { navController.navigate(MENTIONS_ROUTE) },
                 navigateToUndoRedo = { navController.navigate(UNDO_REDO_ROUTE) },
                 navigateToListsConfig = { navController.navigate(LISTS_CONFIG_ROUTE) },
+                navigateToRealExamples = { navController.navigate(REAL_EXAMPLES_ROUTE) },
             )
         }
 
@@ -81,6 +84,13 @@ fun NavGraph() {
         composable(LISTS_CONFIG_ROUTE) {
             ListsConfigSampleScreen(
                 navigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(REAL_EXAMPLES_ROUTE) {
+            RealExamplesScreen(
+                navigateBack = { navController.popBackStack() },
+                navigateToSlack = { navController.navigate(SLACK_ROUTE) },
             )
         }
     }

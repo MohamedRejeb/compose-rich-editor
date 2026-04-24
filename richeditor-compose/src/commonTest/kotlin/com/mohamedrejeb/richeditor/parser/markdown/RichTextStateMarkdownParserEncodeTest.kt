@@ -107,6 +107,26 @@ class RichTextStateMarkdownParserEncodeTest {
         )
     }
 
+    /**
+     * Regression for #593: markdown round-trip should preserve underline
+     * (markdown has no standard underline syntax, so we emit `<u>...</u>`).
+     */
+    @Test
+    fun testUnderlineRoundTrip() {
+        val markdown = "<u>Hello World!</u>"
+        val state = RichTextStateMarkdownParser.encode(markdown)
+
+        assertEquals(
+            expected = SpanStyle(textDecoration = TextDecoration.Underline),
+            actual = state.richParagraphList.first().children.first().spanStyle
+        )
+
+        assertEquals(
+            expected = markdown,
+            actual = RichTextStateMarkdownParser.decode(state),
+        )
+    }
+
     @Test
     fun testLineThrough() {
         val markdown = "~~Hello World!~~"

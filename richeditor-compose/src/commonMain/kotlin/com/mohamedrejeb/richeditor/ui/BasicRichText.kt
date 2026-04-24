@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerInput
@@ -83,10 +84,14 @@ public fun BasicRichText(
                         awaitEachGesture {
                             val event = awaitPointerEvent()
                             val position = event.changes.first().position
+                            val exited = event.type == PointerEventType.Exit
 
-                            val tokenUnderPointer = state.getTokenByOffset(position)
-                            val isInteractive = state.isLink(position) ||
-                                (effectiveTokenClick != null && tokenUnderPointer != null)
+                            val tokenUnderPointer =
+                                if (exited) null else state.getTokenByOffset(position)
+                            val isInteractive = !exited && (
+                                state.isLink(position) ||
+                                    (effectiveTokenClick != null && tokenUnderPointer != null)
+                                )
 
                             pointerIcon.value =
                                 if (isInteractive)

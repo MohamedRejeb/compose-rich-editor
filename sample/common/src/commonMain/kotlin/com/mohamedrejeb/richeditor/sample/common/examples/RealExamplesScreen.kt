@@ -48,10 +48,10 @@ private val examples = listOf(
     ),
     RealExample(
         name = "Notion",
-        tagline = "Block editor with slash commands, headings and inline formatting.",
+        tagline = "Block editor with slash commands, headings, lists, quote, divider and mentions.",
         monogram = "N",
         brandColor = BrandColors.Notion,
-        status = ExampleStatus.ComingSoon,
+        status = ExampleStatus.Live,
     ),
     RealExample(
         name = "GitHub",
@@ -95,6 +95,7 @@ fun RealExamplesScreen(
     navigateBack: () -> Unit,
     navigateToSlack: () -> Unit,
     navigateToGithub: () -> Unit,
+    navigateToNotion: () -> Unit,
 ) {
     var pendingComingSoon by remember { mutableStateOf<RealExample?>(null) }
 
@@ -128,6 +129,7 @@ fun RealExamplesScreen(
                                 ExampleStatus.Live -> when (example.name) {
                                     "Slack" -> navigateToSlack()
                                     "GitHub" -> navigateToGithub()
+                                    "Notion" -> navigateToNotion()
                                 }
                                 ExampleStatus.ComingSoon -> pendingComingSoon = example
                             }
@@ -162,8 +164,8 @@ private fun Header() {
         Spacer(Modifier.height(4.dp))
         Text(
             text = "These showcase how Compose Rich Editor maps onto familiar product UX. " +
-                "Slack is fully functional today; the others are scaffolds we're building out - open an " +
-                "issue or PR if you want to help.",
+                "Slack, GitHub and Notion are fully functional today; the others are scaffolds we're " +
+                "building out - open an issue or PR if you want to help.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

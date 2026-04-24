@@ -56,6 +56,9 @@ The following Markdown syntax elements are supported:
 - `~~text~~` - Strikethrough text
 - `` `code` `` - Code spans
 
+### Headings
+- `# Title` through `###### Title` - ATX headings H1..H6 (see [Headings](headings.md))
+
 ### Lists
 - `* item` or `- item` - Unordered list items
 - `1. item` - Ordered list items
@@ -64,9 +67,14 @@ The following Markdown syntax elements are supported:
 ### Links
 - `[text](url)` - Hyperlinks
 
+### Rich Content
+- `![alt](url)` - Inline images (see [Images](images.md))
+- `[label](trigger:<triggerId>:<tokenId>)` - Mention/hashtag/command tokens (see [Mentions & Triggers](mentions_and_triggers.md))
+
 ## Notes
 
 - Unsupported Markdown syntax will be preserved as plain text
 - Nested lists are supported with proper indentation
 - The Markdown output is clean and properly formatted
-- Tables and images are planned for future releases
+- Markdown has no native width/height syntax for images, so explicit dimensions are lost in a Markdown round-trip. Use HTML if you need to preserve them
+- Tables are planned for future releases

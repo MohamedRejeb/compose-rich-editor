@@ -58,6 +58,7 @@ fun HomeScreen(
     navigateToLinks: () -> Unit,
     navigateToImages: () -> Unit,
     navigateToGithub: () -> Unit,
+    navigateToNotion: () -> Unit,
     navigateToHeadings: () -> Unit,
 ) {
     SampleScaffold(
@@ -216,7 +217,7 @@ fun HomeScreen(
                 SectionHeader(
                     eyebrow = "Real examples",
                     title = "See it in production-style apps",
-                    subtitle = "Slack and GitHub are live. Notion, Discord, Medium and X are on the way.",
+                    subtitle = "Slack, GitHub and Notion are live. Discord, Medium, X and Linear are on the way.",
                     accent = SampleAccents.Emerald,
                 )
             }
@@ -225,6 +226,7 @@ fun HomeScreen(
                 RealExamplesTeaser(
                     onSlackClick = navigateToSlack,
                     onGithubClick = navigateToGithub,
+                    onNotionClick = navigateToNotion,
                     onSeeAllClick = navigateToRealExamples,
                 )
             }
@@ -247,12 +249,13 @@ private fun SectionSpacer() {
 private fun RealExamplesTeaser(
     onSlackClick: () -> Unit,
     onGithubClick: () -> Unit,
+    onNotionClick: () -> Unit,
     onSeeAllClick: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         RealExampleCard(
             name = "Slack",
-            tagline = "Channel messaging composer with @mentions, #channels, code spans and links.",
+            tagline = "Channel with grouped messages, reactions, thread hints, mentions and a full composer.",
             monogram = "S",
             brandColor = BrandColors.Slack,
             status = ExampleStatus.Live,
@@ -266,6 +269,15 @@ private fun RealExamplesTeaser(
             brandColor = BrandColors.GitHub,
             status = ExampleStatus.Live,
             onClick = onGithubClick,
+        )
+
+        RealExampleCard(
+            name = "Notion",
+            tagline = "Block editor with / slash commands, headings, lists, quote, divider and mentions.",
+            monogram = "N",
+            brandColor = BrandColors.Notion,
+            status = ExampleStatus.Live,
+            onClick = onNotionClick,
         )
 
         SeeAllExamplesRow(onClick = onSeeAllClick)
@@ -308,7 +320,7 @@ private fun SeeAllExamplesRow(onClick: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                text = "Slack & GitHub live · Notion, Discord, Medium, X coming soon",
+                text = "Slack, GitHub & Notion live · Discord, Medium, X, Linear coming soon",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

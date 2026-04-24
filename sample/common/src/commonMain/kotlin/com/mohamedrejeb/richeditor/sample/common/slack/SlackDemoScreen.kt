@@ -1,334 +1,180 @@
 package com.mohamedrejeb.richeditor.sample.common.slack
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.outlined.Send
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
-import com.mohamedrejeb.richeditor.common.generated.resources.Res
-import com.mohamedrejeb.richeditor.common.generated.resources.slack_logo
-import com.mohamedrejeb.richeditor.model.RichSpanStyle
-import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.model.trigger.Trigger
-import com.mohamedrejeb.richeditor.ui.material3.RichText
-import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
-import com.mohamedrejeb.richeditor.ui.material3.RichTextEditorDefaults
-import com.mohamedrejeb.richeditor.ui.material3.TriggerSuggestions
-import org.jetbrains.compose.resources.ExperimentalResourceApi
-import org.jetbrains.compose.resources.painterResource
 
-private data class SlackUser(val id: String, val name: String, val handle: String)
-private data class SlackChannel(val id: String, val name: String)
-
-private val slackUsers = listOf(
-    SlackUser("u-mohamed", "Mohamed Rejeb", "@mohamed"),
-    SlackUser("u-alice", "Alice Johnson", "@alice"),
-    SlackUser("u-bob", "Bob Smith", "@bob"),
-    SlackUser("u-carol", "Carol Diaz", "@carol"),
-    SlackUser("u-david", "David Lee", "@david"),
-    SlackUser("u-elena", "Elena Park", "@elena"),
-)
-
-private val slackChannels = listOf(
-    SlackChannel("c-general", "general"),
-    SlackChannel("c-compose-rich-text-editor", "compose-rich-text-editor"),
-    SlackChannel("c-kmp", "kotlin-multiplatform"),
-    SlackChannel("c-android", "android"),
-    SlackChannel("c-design", "design"),
-    SlackChannel("c-random", "random"),
-)
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalRichTextApi::class, ExperimentalResourceApi::class)
+@OptIn(ExperimentalRichTextApi::class)
 @Composable
 fun SlackDemoScreen(
-    navigateBack: () -> Unit
+    navigateBack: () -> Unit,
 ) {
-    val richTextState = rememberRichTextState()
-
-    val messages = remember {
-        mutableStateListOf<RichTextState>()
-    }
-
+    val composerState = rememberRichTextState()
+    val seedMessages = rememberSeededMessages()
+    val messages = remember(seedMessages) { mutableStateListOf<SlackMessage>().apply { addAll(seedMessages) } }
     val openLinkDialog = remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
 
     LaunchedEffect(Unit) {
-        richTextState.config.linkColor = Color(0xFF1d9bd1)
-        richTextState.config.linkTextDecoration = TextDecoration.None
-        richTextState.config.codeSpanColor = Color(0xFFd7882d)
-        richTextState.config.codeSpanBackgroundColor = Color.Transparent
-        richTextState.config.codeSpanStrokeColor = Color(0xFF494b4d)
-        richTextState.config.unorderedListIndent = 40
-        richTextState.config.orderedListIndent = 50
+        composerState.config.linkColor = SlackColors.LinkBlue
+        composerState.config.linkTextDecoration = TextDecoration.None
+        composerState.config.codeSpanColor = SlackColors.CodeSpan
+        composerState.config.codeSpanBackgroundColor = Color.Transparent
+        composerState.config.codeSpanStrokeColor = SlackColors.CodeSpanStroke
+        composerState.config.unorderedListIndent = 40
+        composerState.config.orderedListIndent = 50
 
-        // Register Slack-style triggers so users can @-mention teammates and link
-        // #channels. The popup UI is wired up below, over the RichTextEditor.
-        richTextState.registerTrigger(
+        composerState.registerTrigger(
             Trigger(
-                id = "mention",
+                id = MENTION_TRIGGER_ID,
                 char = '@',
-                style = { SpanStyle(color = Color(0xFFECB22E), fontWeight = FontWeight.Medium) },
+                style = { SpanStyle(color = SlackColors.MentionYellow, fontWeight = FontWeight.Medium) },
             )
         )
-        richTextState.registerTrigger(
+        composerState.registerTrigger(
             Trigger(
-                id = "channel",
+                id = CHANNEL_TRIGGER_ID,
                 char = '#',
-                style = { SpanStyle(color = Color(0xFF1d9bd1), fontWeight = FontWeight.Medium) },
+                style = { SpanStyle(color = SlackColors.ChannelBlue, fontWeight = FontWeight.Medium) },
             )
         )
     }
 
-    Box(
-        modifier = Modifier
-            .background(Color(0xFF1a1d21))
-    ) {
-        Scaffold(
-            topBar = {
-                Column(
-                    modifier = Modifier
-                ) {
-                    TopAppBar(
-                        title = { Text("Slack Demo") },
-                        navigationIcon = {
-                            IconButton(
-                                onClick = navigateBack
-                            ) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                            }
-                        },
-                        colors = TopAppBarDefaults.mediumTopAppBarColors(
-                            containerColor = Color(0xFF1a1d21),
-                            titleContentColor = Color.White,
-                            navigationIconContentColor = Color.White,
-                        )
-                    )
+    // Keep the newest message in view - matches Slack's default "pinned to bottom"
+    // behaviour. Triggers once on open (to land at the latest seeded message) and
+    // every time a new message is sent.
+    LaunchedEffect(messages.size) {
+        val lastIndex = messages.size  // intro=0, messages at 1..size, pad at size+1
+        if (lastIndex > 0) listState.animateScrollToItem(lastIndex)
+    }
 
-                    HorizontalDivider(color = Color(0xFFCBCCCD))
-                }
-            },
-            containerColor = Color(0xFF1a1d21),
+    Scaffold(
+        topBar = {
+            SlackChannelHeader(
+                channel = currentChannel,
+                onBack = navigateBack,
+            )
+        },
+        containerColor = SlackColors.Background,
+        contentColor = SlackColors.TextPrimary,
+        modifier = Modifier.fillMaxSize(),
+    ) { paddingValues ->
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-        ) { paddingValues ->
-            Box(
+                .padding(paddingValues)
+                .windowInsetsPadding(WindowInsets.ime)
+                .background(SlackColors.Background),
+        ) {
+            LazyColumn(
+                state = listState,
                 modifier = Modifier
-                    .padding(paddingValues)
-                    .windowInsetsPadding(WindowInsets.ime)
-                    .fillMaxSize()
+                    .weight(1f)
+                    .fillMaxWidth(),
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(20.dp)
-                ) {
-                    LazyColumn(
-                        modifier = Modifier
-                            .weight(1f)
-                    ) {
-                        items(messages) { message ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 20.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(Color.White)
-                                ) {
-                                    Image(
-                                        painterResource(Res.drawable.slack_logo),
-                                        contentDescription = "Slack Logo",
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .padding(6.dp)
-                                    )
-                                }
-                                Column(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(start = 12.dp)
-                                ) {
-                                    Text(
-                                        text = "Mohamed Rejeb",
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Spacer(Modifier.height(4.dp))
-                                    RichText(
-                                        state = message,
-                                        color = Color.White,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    Spacer(Modifier.height(8.dp))
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFF222528))
-                            .border(1.dp, Color(0xFFCBCCCD), RoundedCornerShape(10.dp))
-                    ) {
-                        SlackDemoPanel(
-                            state = richTextState,
-                            openLinkDialog = openLinkDialog,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 20.dp)
-                                .padding(horizontal = 20.dp)
-                        )
-
-                        Box(
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            RichTextEditor(
-                                state = richTextState,
-                                placeholder = {
-                                    Text(
-                                        text = "Message #compose-rich-text-editor",
-                                    )
-                                },
-                                colors = RichTextEditorDefaults.richTextEditorColors(
-                                    textColor = Color(0xFFCBCCCD),
-                                    containerColor = Color.Transparent,
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent,
-                                    placeholderColor = Color.White.copy(alpha = .6f),
-                                ),
-                                textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(8.dp)
-                            )
-
-                            // @-mention popup
-                            TriggerSuggestions(
-                                state = richTextState,
-                                triggerId = "mention",
-                                suggestions = { query ->
-                                    slackUsers.filter {
-                                        query.isEmpty() ||
-                                            it.handle.contains(query, ignoreCase = true) ||
-                                            it.name.contains(query, ignoreCase = true)
-                                    }
-                                },
-                                onSelect = { user ->
-                                    RichSpanStyle.Token(
-                                        triggerId = "mention",
-                                        id = user.id,
-                                        label = user.handle,
-                                    )
-                                },
-                                item = { user ->
-                                    Column {
-                                        Text(
-                                            text = user.handle,
-                                            color = Color(0xFFECB22E),
-                                            fontWeight = FontWeight.Medium,
-                                        )
-                                        Text(
-                                            text = user.name,
-                                            color = Color(0xFFCBCCCD),
-                                            style = MaterialTheme.typography.bodySmall,
-                                        )
-                                    }
-                                },
-                            )
-
-                            // #-channel popup
-                            TriggerSuggestions(
-                                state = richTextState,
-                                triggerId = "channel",
-                                suggestions = { query ->
-                                    slackChannels.filter {
-                                        query.isEmpty() || it.name.contains(query, ignoreCase = true)
-                                    }
-                                },
-                                onSelect = { channel ->
-                                    RichSpanStyle.Token(
-                                        triggerId = "channel",
-                                        id = channel.id,
-                                        label = "#${channel.name}",
-                                    )
-                                },
-                                item = { channel ->
-                                    Text(
-                                        text = "#${channel.name}",
-                                        color = Color(0xFF1d9bd1),
-                                        fontWeight = FontWeight.Medium,
-                                    )
-                                },
-                            )
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .align(Alignment.End)
-                                .clip(RoundedCornerShape(10.dp))
-                                .clickable(
-                                    onClick = {
-                                        messages.add(richTextState.copy())
-                                        richTextState.clear()
-                                    },
-                                    enabled = true,
-                                    role = Role.Button,
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Outlined.Send,
-                                contentDescription = "Send",
-                                tint = Color.White,
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(Color(0xFF007a5a))
-                                    .padding(6.dp)
-                            )
-                        }
-                    }
+                item(key = "intro") {
+                    SlackChannelIntro(channel = currentChannel)
                 }
 
-                if (openLinkDialog.value)
-                    Dialog(
-                        onDismissRequest = {
-                            openLinkDialog.value = false
-                        }
-                    ) {
-                        SlackDemoLinkDialog(
-                            state = richTextState,
-                            openLinkDialog = openLinkDialog
-                        )
+                items(messages.size) { index ->
+                    val message = messages[index]
+                    val prev = messages.getOrNull(index - 1)
+                    val showHeader = prev == null ||
+                        prev.author.id != message.author.id ||
+                        !sameSendBucket(prev.timestamp, message.timestamp)
+
+                    if (index == 1) {
+                        // Surface an unread divider just below the channel owner's
+                        // first message so the demo shows off the "new" affordance.
+                        SlackUnreadDivider(count = messages.size - 1)
                     }
+
+                    SlackMessageRow(
+                        message = message,
+                        showHeader = showHeader,
+                    )
+                }
+
+                item(key = "bottom-pad") {
+                    Spacer(Modifier.height(12.dp))
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+            ) {
+                SlackComposer(
+                    state = composerState,
+                    channel = currentChannel,
+                    openLinkDialog = openLinkDialog,
+                    onSend = {
+                        if (composerState.annotatedString.text.isNotBlank()) {
+                            val snapshot = composerState.copy()
+                            messages.add(
+                                SlackMessage(
+                                    author = currentUser,
+                                    timestamp = "Now",
+                                    body = snapshot,
+                                ),
+                            )
+                            composerState.clear()
+                        }
+                    },
+                )
+            }
+        }
+
+        if (openLinkDialog.value) {
+            Dialog(onDismissRequest = { openLinkDialog.value = false }) {
+                SlackDemoLinkDialog(
+                    state = composerState,
+                    openLinkDialog = openLinkDialog,
+                )
             }
         }
     }
+
+}
+
+/**
+ * True when two timestamps land in the same "send bucket" so the second message
+ * should group under the first (Slack uses ~3-minute windows). The demo's
+ * timestamps are free-form strings, so this is a conservative "same 'at HH:'
+ * prefix" match, which is good enough for seeded demo data.
+ */
+private fun sameSendBucket(a: String, b: String): Boolean {
+    val hourA = a.substringAfter("at ", "").substringBefore(':', "")
+    val hourB = b.substringAfter("at ", "").substringBefore(':', "")
+    return hourA.isNotEmpty() && hourA == hourB
 }

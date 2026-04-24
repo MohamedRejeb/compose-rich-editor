@@ -5,20 +5,26 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.TextUnit
 import com.mohamedrejeb.richeditor.gesture.detectTapGestures
 import com.mohamedrejeb.richeditor.model.ImageLoader
 import com.mohamedrejeb.richeditor.model.LocalImageLoader
+import com.mohamedrejeb.richeditor.model.LocalRichTextMaxImageWidthProvider
+import com.mohamedrejeb.richeditor.model.RichTextMaxImageWidthProvider
 import com.mohamedrejeb.richeditor.model.RichTextState
 
 @Composable
@@ -39,6 +45,7 @@ public fun BasicRichText(
     val pointerIcon = remember {
         mutableStateOf(PointerIcon.Default)
     }
+    val maxImageWidthProvider = remember { RichTextMaxImageWidthProvider() }
 
     val text = remember(
         state.visualTransformation,
@@ -48,7 +55,8 @@ public fun BasicRichText(
     }
 
     CompositionLocalProvider(
-        LocalImageLoader provides imageLoader
+        LocalImageLoader provides imageLoader,
+        LocalRichTextMaxImageWidthProvider provides maxImageWidthProvider,
     ) {
         BasicText(
             text = text,
@@ -87,6 +95,12 @@ public fun BasicRichText(
                             state.isLink(offset)
                         },
                     )
+                }
+                .onSizeChanged { size ->
+                    val newWidth = with(density) { size.width.toSp() }
+                    if (newWidth != maxImageWidthProvider.maxWidth) {
+                        maxImageWidthProvider.maxWidth = newWidth
+                    }
                 },
             style = style,
             onTextLayout = {

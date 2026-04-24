@@ -130,6 +130,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public final fun getLinkTextDecoration ()Landroidx/compose/ui/text/style/TextDecoration;
 	public final fun getListIndent ()I
 	public final fun getListMarkerStyleBehavior ()Lcom/mohamedrejeb/richeditor/paragraph/type/ListMarkerStyleBehavior;
+	public final fun getListPrefixAlignment ()Lcom/mohamedrejeb/richeditor/paragraph/type/ListPrefixAlignment;
 	public final fun getOrderedListIndent ()I
 	public final fun getOrderedListStyleType ()Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType;
 	public final fun getPreserveStyleOnEmptyLine ()Z
@@ -143,6 +144,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public final fun setLinkTextDecoration (Landroidx/compose/ui/text/style/TextDecoration;)V
 	public final fun setListIndent (I)V
 	public final fun setListMarkerStyleBehavior (Lcom/mohamedrejeb/richeditor/paragraph/type/ListMarkerStyleBehavior;)V
+	public final fun setListPrefixAlignment (Lcom/mohamedrejeb/richeditor/paragraph/type/ListPrefixAlignment;)V
 	public final fun setOrderedListIndent (I)V
 	public final fun setOrderedListStyleType (Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType;)V
 	public final fun setPreserveStyleOnEmptyLine (Z)V
@@ -327,6 +329,14 @@ public final class com/mohamedrejeb/richeditor/paragraph/type/ListMarkerStyleBeh
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/paragraph/type/ListMarkerStyleBehavior;
 	public static fun values ()[Lcom/mohamedrejeb/richeditor/paragraph/type/ListMarkerStyleBehavior;
+}
+
+public final class com/mohamedrejeb/richeditor/paragraph/type/ListPrefixAlignment : java/lang/Enum {
+	public static final field End Lcom/mohamedrejeb/richeditor/paragraph/type/ListPrefixAlignment;
+	public static final field Start Lcom/mohamedrejeb/richeditor/paragraph/type/ListPrefixAlignment;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/paragraph/type/ListPrefixAlignment;
+	public static fun values ()[Lcom/mohamedrejeb/richeditor/paragraph/type/ListPrefixAlignment;
 }
 
 public abstract interface class com/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType {

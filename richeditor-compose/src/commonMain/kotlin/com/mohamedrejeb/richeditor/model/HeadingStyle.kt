@@ -24,8 +24,8 @@ import org.intellij.markdown.MarkdownElementTypes
  */
 public enum class HeadingStyle(
     public val level: Int,
-    public val markdownPrefix: String,
-    public val htmlTag: String?,
+    internal val markdownPrefix: String,
+    internal val htmlTag: String?,
     internal val defaultSpanStyle: SpanStyle,
     internal val defaultParagraphStyle: ParagraphStyle = ParagraphStyle(),
 ) {
@@ -51,10 +51,10 @@ public enum class HeadingStyle(
     H6(6, "###### ", "h6", SpanStyle(fontSize = 0.75.em, fontWeight = FontWeight.Bold));
 
     /** Visual [SpanStyle] applied to spans inside a paragraph carrying this heading level. */
-    public fun getSpanStyle(): SpanStyle = defaultSpanStyle
+    internal fun getSpanStyle(): SpanStyle = defaultSpanStyle
 
     /** Visual [ParagraphStyle] applied to a paragraph carrying this heading level. */
-    public fun getParagraphStyle(): ParagraphStyle = defaultParagraphStyle
+    internal fun getParagraphStyle(): ParagraphStyle = defaultParagraphStyle
 
     public companion object {
         /** HTML heading tag names (`h1`..`h6`). */
@@ -75,7 +75,7 @@ public enum class HeadingStyle(
             entries.firstOrNull { it.level == level } ?: Normal
 
         /** Returns the [HeadingStyle] for an HTML heading [tag] (`h1`..`h6`), or [Normal]. */
-        public fun fromHtmlTag(tag: String): HeadingStyle =
+        internal fun fromHtmlTag(tag: String): HeadingStyle =
             entries.firstOrNull { it.htmlTag == tag } ?: Normal
     }
 }

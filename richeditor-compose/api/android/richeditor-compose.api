@@ -10,6 +10,25 @@ public final class com/mohamedrejeb/richeditor/model/DefaultImageLoader : com/mo
 	public fun load (Ljava/lang/Object;Landroidx/compose/runtime/Composer;I)Lcom/mohamedrejeb/richeditor/model/ImageData;
 }
 
+public final class com/mohamedrejeb/richeditor/model/HeadingStyle : java/lang/Enum {
+	public static final field Companion Lcom/mohamedrejeb/richeditor/model/HeadingStyle$Companion;
+	public static final field H1 Lcom/mohamedrejeb/richeditor/model/HeadingStyle;
+	public static final field H2 Lcom/mohamedrejeb/richeditor/model/HeadingStyle;
+	public static final field H3 Lcom/mohamedrejeb/richeditor/model/HeadingStyle;
+	public static final field H4 Lcom/mohamedrejeb/richeditor/model/HeadingStyle;
+	public static final field H5 Lcom/mohamedrejeb/richeditor/model/HeadingStyle;
+	public static final field H6 Lcom/mohamedrejeb/richeditor/model/HeadingStyle;
+	public static final field Normal Lcom/mohamedrejeb/richeditor/model/HeadingStyle;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getLevel ()I
+	public static fun valueOf (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/model/HeadingStyle;
+	public static fun values ()[Lcom/mohamedrejeb/richeditor/model/HeadingStyle;
+}
+
+public final class com/mohamedrejeb/richeditor/model/HeadingStyle$Companion {
+	public final fun fromLevel (I)Lcom/mohamedrejeb/richeditor/model/HeadingStyle;
+}
+
 public final class com/mohamedrejeb/richeditor/model/ImageData {
 	public static final field $stable I
 	public fun <init> (Landroidx/compose/ui/graphics/painter/Painter;Ljava/lang/String;Landroidx/compose/ui/Alignment;Landroidx/compose/ui/layout/ContentScale;Landroidx/compose/ui/Modifier;)V
@@ -183,6 +202,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun getCanIncreaseListLevel ()Z
 	public final fun getComposition-MzsxiRA ()Landroidx/compose/ui/text/TextRange;
 	public final fun getConfig ()Lcom/mohamedrejeb/richeditor/model/RichTextConfig;
+	public final fun getCurrentHeadingStyle ()Lcom/mohamedrejeb/richeditor/model/HeadingStyle;
 	public final fun getCurrentParagraphStyle ()Landroidx/compose/ui/text/ParagraphStyle;
 	public final fun getCurrentRichSpanStyle ()Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;
 	public final fun getCurrentSpanStyle ()Landroidx/compose/ui/text/SpanStyle;
@@ -226,6 +246,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun replaceTextRange-72CqOWE (JLjava/lang/String;)V
 	public final fun setConfig-kmsmbh4 (JLandroidx/compose/ui/text/style/TextDecoration;JJJI)V
 	public static synthetic fun setConfig-kmsmbh4$default (Lcom/mohamedrejeb/richeditor/model/RichTextState;JLandroidx/compose/ui/text/style/TextDecoration;JJJIILjava/lang/Object;)V
+	public final fun setHeadingStyle (Lcom/mohamedrejeb/richeditor/model/HeadingStyle;)V
 	public final fun setHtml (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public final fun setMarkdown (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public final fun setSelection-5zc-tL8 (J)V

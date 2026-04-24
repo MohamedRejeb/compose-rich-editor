@@ -323,7 +323,7 @@ private fun Footer() {
         )
         Spacer(Modifier.height(4.dp))
         Text(
-            text = "MIT licensed · Built with Compose Multiplatform",
+            text = "Apache-2.0 licensed · Built with Compose Multiplatform",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

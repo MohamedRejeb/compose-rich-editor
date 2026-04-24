@@ -12,8 +12,10 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -29,8 +31,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -186,11 +191,59 @@ internal fun GitHubComposer(
                             fontSize = 14.sp,
                         )
                     } else {
-                        RichText(
-                            state = state,
-                            color = GitHubColors.Text,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
+                        var hoveredToken by remember {
+                            mutableStateOf<Pair<RichSpanStyle.Token, Offset>?>(null)
+                        }
+                        var clickedToken by remember {
+                            mutableStateOf<Pair<RichSpanStyle.Token, Offset>?>(null)
+                        }
+                        val uriHandler = LocalUriHandler.current
+
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            RichText(
+                                state = state,
+                                color = GitHubColors.Text,
+                                modifier = Modifier.fillMaxWidth(),
+                                onTokenClick = { token, offset ->
+                                    when (token.triggerId) {
+                                        "issueRef" -> {
+                                            val issue = sampleIssueRefs.firstOrNull { it.id == token.id }
+                                            if (issue != null) {
+                                                uriHandler.openUri(
+                                                    "https://github.com/$GITHUB_SAMPLE_REPO_URL/issues/${issue.number}"
+                                                )
+                                            }
+                                        }
+                                        else -> {
+                                            clickedToken = token to offset
+                                        }
+                                    }
+                                },
+                                onTokenHover = { token, offset ->
+                                    hoveredToken = token?.let { it to offset }
+                                },
+                            )
+
+                            val preview = hoveredToken
+                            if (preview != null && clickedToken == null) {
+                                TokenPreviewCard(
+                                    token = preview.first,
+                                    anchor = preview.second,
+                                    persistent = false,
+                                    onDismiss = null,
+                                )
+                            }
+
+                            val clicked = clickedToken
+                            if (clicked != null) {
+                                TokenPreviewCard(
+                                    token = clicked.first,
+                                    anchor = clicked.second,
+                                    persistent = true,
+                                    onDismiss = { clickedToken = null },
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -339,3 +392,101 @@ private fun IssueRefRow(ref: GitHubIssueRef) {
     }
 }
 
+@OptIn(ExperimentalRichTextApi::class)
+@Composable
+private fun TokenPreviewCard(
+    token: RichSpanStyle.Token,
+    anchor: Offset,
+    persistent: Boolean,
+    onDismiss: (() -> Unit)?,
+) {
+    val density = LocalDensity.current
+    val xDp = with(density) { anchor.x.toDp() }
+    val yDp = with(density) { (anchor.y + 18f).toDp() }
+
+    Box(
+        modifier = Modifier
+            .offset(x = xDp, y = yDp)
+            .clip(RoundedCornerShape(6.dp))
+            .background(GitHubColors.Surface)
+            .border(1.dp, GitHubColors.Border, RoundedCornerShape(6.dp))
+            .widthIn(max = 280.dp)
+            .padding(12.dp),
+    ) {
+        Column {
+            when (token.triggerId) {
+                "mention" -> {
+                    val user = sampleUsers.firstOrNull { it.id == token.id }
+                    if (user != null) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Avatar(user, size = 32)
+                            Spacer(Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = user.displayName,
+                                    color = GitHubColors.Text,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp,
+                                )
+                                Text(
+                                    text = user.handle,
+                                    color = GitHubColors.TextMuted,
+                                    fontSize = 12.sp,
+                                )
+                            }
+                        }
+                    } else {
+                        Text(
+                            text = "Unknown user",
+                            color = GitHubColors.TextMuted,
+                            fontSize = 12.sp,
+                        )
+                    }
+                }
+                "issueRef" -> {
+                    val issue = sampleIssueRefs.firstOrNull { it.id == token.id }
+                    if (issue != null) {
+                        Text(
+                            text = "#${issue.number}",
+                            color = GitHubColors.IssueRef,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 12.sp,
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = issue.title,
+                            color = GitHubColors.Text,
+                            fontSize = 13.sp,
+                        )
+                    } else {
+                        Text(
+                            text = "Unknown issue",
+                            color = GitHubColors.TextMuted,
+                            fontSize = 12.sp,
+                        )
+                    }
+                }
+                else -> {
+                    Text(
+                        text = "${token.triggerId}: ${token.label}",
+                        color = GitHubColors.Text,
+                        fontSize = 13.sp,
+                    )
+                }
+            }
+
+            if (persistent && onDismiss != null) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = "Close",
+                    color = GitHubColors.Link,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .clickable(onClick = onDismiss)
+                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                )
+            }
+        }
+    }
+}

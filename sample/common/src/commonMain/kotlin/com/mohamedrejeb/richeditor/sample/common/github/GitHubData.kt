@@ -39,6 +39,9 @@ internal const val SAMPLE_ISSUE_NUMBER = 624
 internal const val SAMPLE_ISSUE_TITLE = "Add Compose Rich Editor demo for GitHub"
 internal val sampleIssueAuthor: GitHubUser = sampleUsers[1]
 
+/** Repository path used when opening sample issue URLs. Purely cosmetic - these are not real issues. */
+internal const val GITHUB_SAMPLE_REPO_URL: String = "MohamedRejeb/compose-richeditor"
+
 internal val sampleIssueBodyHtml: String = """
 <p>The Real Examples hub still lists GitHub as <i>Coming Soon</i>. Let's promote it
 by shipping a working composer that mirrors the issue UX, including

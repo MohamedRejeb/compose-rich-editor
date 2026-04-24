@@ -899,7 +899,31 @@ public class RichTextState internal constructor(
         removeSpanStyle(currentSpanStyle, textRange)
     }
 
-    // RichSpanStyle
+    /**
+     * Sets the heading style for the currently selected paragraphs.
+     *
+     * This function applies the specified [headerParagraphStyle] to all paragraphs
+     * that are fully or partially within the current [selection].
+     *
+     * If the specified style is [HeadingStyle.Normal], any existing heading
+     * style (H1-H6) is removed from the selected paragraphs. Otherwise, the specified
+     * heading style is applied, replacing any previous heading style on those paragraphs.
+     * Heading styles are applied to the entire paragraph, if the selection is collapsed -
+     * consistent with common rich text editor behavior. If the selection is not collapsed,
+     * heading styles will be applied to each paragraph in the selection.
+     */
+    public fun setHeadingStyle(headerParagraphStyle: HeadingStyle) {
+        val paragraphs = getRichParagraphListByTextRange(selection)
+        if (paragraphs.isEmpty()) return
+
+        paragraphs.forEach { paragraph ->
+            paragraph.setHeadingStyle(headerParagraphStyle)
+        }
+
+        updateAnnotatedString()
+        updateCurrentSpanStyle()
+        updateCurrentParagraphStyle()
+    }
 
     /**
      * Add a link to the text field.
@@ -3035,8 +3059,8 @@ public class RichTextState internal constructor(
                         newType = DefaultParagraph(),
                         textFieldValue = tempTextFieldValue,
                     )
-                    newParagraphFirstRichSpan.spanStyle = SpanStyle()
-                    newParagraphFirstRichSpan.richSpanStyle = RichSpanStyle.Default
+                    newParagraphFirstRichSpan?.spanStyle = SpanStyle()
+                    newParagraphFirstRichSpan?.richSpanStyle = RichSpanStyle.Default
 
                     // Ignore adding the new paragraph
                     index--
@@ -3045,14 +3069,14 @@ public class RichTextState internal constructor(
                     (!config.preserveStyleOnEmptyLine || richSpan.paragraph.isEmpty()) &&
                     isSelectionAtNewRichSpan
                 ) {
-                    newParagraphFirstRichSpan.spanStyle = SpanStyle()
-                    newParagraphFirstRichSpan.richSpanStyle = RichSpanStyle.Default
+                    newParagraphFirstRichSpan?.spanStyle = SpanStyle()
+                    newParagraphFirstRichSpan?.richSpanStyle = RichSpanStyle.Default
                 } else if (
                     config.preserveStyleOnEmptyLine &&
                     isSelectionAtNewRichSpan
                 ) {
-                    newParagraphFirstRichSpan.spanStyle = currentSpanStyle
-                    newParagraphFirstRichSpan.richSpanStyle = currentRichSpanStyle
+                    newParagraphFirstRichSpan?.spanStyle = currentSpanStyle
+                    newParagraphFirstRichSpan?.richSpanStyle = currentRichSpanStyle
                 }
             }
 

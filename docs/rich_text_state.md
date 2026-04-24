@@ -170,6 +170,9 @@ evicted FIFO). `state.history.clear()` empties both stacks.
 
 - For styling text spans, see [Span Style](span_style.md)
 - For styling paragraphs, see [Paragraph Style](paragraph_style.md)
+- For headings (H1..H6), see [Headings](headings.md)
 - For working with lists, see [Ordered and Unordered Lists](ordered_unordered_lists.md)
+- For inline images, see [Images](images.md)
+- For mentions, hashtags, and slash commands, see [Mentions & Triggers](mentions_and_triggers.md)
 - For HTML conversion, see [HTML Import and Export](html_import_export.md)
 - For Markdown conversion, see [Markdown Import and Export](markdown_import_export.md)

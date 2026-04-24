@@ -14,6 +14,7 @@ import com.mohamedrejeb.richeditor.sample.common.links.LinksSampleScreen
 import com.mohamedrejeb.richeditor.sample.common.listsconfig.ListsConfigSampleScreen
 import com.mohamedrejeb.richeditor.sample.common.markdowneditor.MarkdownEditorContent
 import com.mohamedrejeb.richeditor.sample.common.mentions.MentionsSampleScreen
+import com.mohamedrejeb.richeditor.sample.common.notion.NotionDemoScreen
 import com.mohamedrejeb.richeditor.sample.common.richeditor.RichEditorScreen
 import com.mohamedrejeb.richeditor.sample.common.slack.SlackDemoScreen
 import com.mohamedrejeb.richeditor.sample.common.undoredo.UndoRedoSampleScreen
@@ -30,6 +31,7 @@ private const val REAL_EXAMPLES_ROUTE = "realExamples"
 private const val LINKS_ROUTE = "links"
 private const val IMAGES_ROUTE = "images"
 private const val GITHUB_ROUTE = "github"
+private const val NOTION_ROUTE = "notion"
 private const val HEADINGS_ROUTE = "headings"
 
 @Composable
@@ -53,6 +55,7 @@ fun NavGraph() {
                 navigateToLinks = { navController.navigate(LINKS_ROUTE) },
                 navigateToImages = { navController.navigate(IMAGES_ROUTE) },
                 navigateToGithub = { navController.navigate(GITHUB_ROUTE) },
+                navigateToNotion = { navController.navigate(NOTION_ROUTE) },
                 navigateToHeadings = { navController.navigate(HEADINGS_ROUTE) },
             )
         }
@@ -104,11 +107,18 @@ fun NavGraph() {
                 navigateBack = { navController.popBackStack() },
                 navigateToSlack = { navController.navigate(SLACK_ROUTE) },
                 navigateToGithub = { navController.navigate(GITHUB_ROUTE) },
+                navigateToNotion = { navController.navigate(NOTION_ROUTE) },
             )
         }
 
         composable(GITHUB_ROUTE) {
             GitHubDemoScreen(
+                navigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(NOTION_ROUTE) {
+            NotionDemoScreen(
                 navigateBack = { navController.popBackStack() }
             )
         }

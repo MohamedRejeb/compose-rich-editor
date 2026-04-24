@@ -113,13 +113,13 @@ internal class OrderedList private constructor(
         val base = (indent * level).toFloat()
         val prefix = startTextWidth.value
         // End: HTML-style alignment — prefix lives in the indent "gutter" and dots align
-        // vertically, but fall back to Start when the indent is too small so the prefix
-        // doesn't get clipped off the left edge.
+        // vertically. Clamp firstLine at 0 so the prefix stays visible when the indent is
+        // smaller than the prefix width; clamping per-item keeps all paragraphs on the
+        // same formula so items with different marker widths stay visually consistent.
         // Start: every item's prefix starts at the indent origin, giving a uniform left edge.
-        val useEnd = prefixAlignment == ListPrefixAlignment.End && base >= prefix
         val textIndent =
-            if (useEnd)
-                TextIndent(firstLine = (base - prefix).sp, restLine = base.sp)
+            if (prefixAlignment == ListPrefixAlignment.End)
+                TextIndent(firstLine = (base - prefix).coerceAtLeast(0f).sp, restLine = base.sp)
             else
                 TextIndent(firstLine = base.sp, restLine = (base + prefix).sp)
 

@@ -91,13 +91,13 @@ internal class UnorderedList private constructor(
     private fun getNewParagraphStyle(): ParagraphStyle {
         val base = (indent * level).toFloat()
         val prefix = startTextWidth.value
-        // End: HTML-style alignment — prefix lives in the indent "gutter"; fall back to
-        // Start when the indent is too small so the prefix doesn't get clipped.
+        // End: HTML-style alignment — prefix lives in the indent "gutter". Clamp firstLine
+        // at 0 so the prefix stays visible when the indent is smaller than the prefix;
+        // clamping (instead of switching formulas) keeps the layout consistent across items.
         // Start: every item's prefix starts at the indent origin.
-        val useEnd = prefixAlignment == ListPrefixAlignment.End && base >= prefix
         val textIndent =
-            if (useEnd)
-                TextIndent(firstLine = (base - prefix).sp, restLine = base.sp)
+            if (prefixAlignment == ListPrefixAlignment.End)
+                TextIndent(firstLine = (base - prefix).coerceAtLeast(0f).sp, restLine = base.sp)
             else
                 TextIndent(firstLine = base.sp, restLine = (base + prefix).sp)
 

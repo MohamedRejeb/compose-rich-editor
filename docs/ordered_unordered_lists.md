@@ -131,8 +131,10 @@ richTextState.config.listPrefixAlignment = ListPrefixAlignment.Start
 | `Start` | marker left-aligned to the indent origin, marker left edges stack | ``1.`` / ``10. `` / ``11. `` — numbers stacked |
 
 If the configured indent is smaller than the marker width (for example
-`orderedListIndent = 0`), `End` automatically falls back to `Start` for that
-paragraph so the marker stays visible.
+`orderedListIndent = 0`), `End` clamps the first-line indent at `0` so the
+marker stays visible. Clamping (rather than switching formulas per item) keeps
+the whole list on a single layout so paragraphs with different marker widths
+stay visually consistent.
 
 ## List Marker Style
 

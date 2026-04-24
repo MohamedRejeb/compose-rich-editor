@@ -24,6 +24,7 @@ import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Density
+import com.mohamedrejeb.richeditor.annotation.InternalRichTextApi
 import androidx.compose.ui.util.fastCoerceAtLeast
 import androidx.compose.ui.util.fastFirstOrNull
 import androidx.compose.ui.util.fastForEach
@@ -4125,6 +4126,30 @@ public class RichTextState internal constructor(
             richSpan = richSpan.parent
         }
 
+        return richSpan
+    }
+
+    internal fun getTokenByOffset(offset: Offset): RichSpanStyle.Token? {
+        val richSpan = getRichSpanByOffset(offset)
+        return getTokenRichSpan(richSpan)?.richSpanStyle as? RichSpanStyle.Token
+    }
+
+    internal fun isToken(offset: Offset): Boolean {
+        val richSpan = getRichSpanByOffset(offset)
+        return getTokenRichSpan(richSpan) != null
+    }
+
+    @InternalRichTextApi
+    public fun getTokenByTextIndex(textIndex: Int): RichSpanStyle.Token? {
+        val richSpan = getRichSpanByTextIndex(textIndex, true) ?: return null
+        return getTokenRichSpan(richSpan)?.richSpanStyle as? RichSpanStyle.Token
+    }
+
+    private fun getTokenRichSpan(initialRichSpan: RichSpan?): RichSpan? {
+        var richSpan = initialRichSpan
+        while (richSpan != null && richSpan.richSpanStyle !is RichSpanStyle.Token) {
+            richSpan = richSpan.parent
+        }
         return richSpan
     }
 

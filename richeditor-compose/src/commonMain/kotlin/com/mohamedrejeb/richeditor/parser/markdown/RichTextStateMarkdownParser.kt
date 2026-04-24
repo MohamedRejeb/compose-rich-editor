@@ -160,6 +160,18 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                     tagParagraphStyle?.let {
                         currentRichParagraph.paragraphStyle = currentRichParagraph.paragraphStyle.merge(it)
                     }
+                    // Record heading level so encoding stays semantic instead of fingerprinting.
+                    if (node.type in HeadingStyle.markdownHeadingNodes) {
+                        currentRichParagraph.headingStyle = when (node.type) {
+                            MarkdownElementTypes.ATX_1 -> HeadingStyle.H1
+                            MarkdownElementTypes.ATX_2 -> HeadingStyle.H2
+                            MarkdownElementTypes.ATX_3 -> HeadingStyle.H3
+                            MarkdownElementTypes.ATX_4 -> HeadingStyle.H4
+                            MarkdownElementTypes.ATX_5 -> HeadingStyle.H5
+                            MarkdownElementTypes.ATX_6 -> HeadingStyle.H6
+                            else -> HeadingStyle.Normal
+                        }
+                    }
 
                     val newRichSpan = RichSpan(paragraph = currentRichParagraph)
                     newRichSpan.spanStyle = tagSpanStyle ?: SpanStyle()
@@ -393,17 +405,18 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
             // Append paragraph start text
             builder.appendParagraphStartText(richParagraph)
 
-            richParagraph.getFirstNonEmptyChild()?.let { firstNonEmptyChild ->
-                if (firstNonEmptyChild.text.isNotEmpty()) {
-                    // Append markdown line start text
-                    val lineStartText = getMarkdownLineStartTextFromFirstRichSpan(firstNonEmptyChild)
-                    builder.append(lineStartText)
-                }
+            // Read the heading prefix from the first-class field rather than fingerprinting
+            // the first child's SpanStyle.
+            if (richParagraph.headingStyle != HeadingStyle.Normal) {
+                builder.append(richParagraph.headingStyle.markdownPrefix)
             }
 
-            // Append paragraph children
+            // Append paragraph children. Inside a heading paragraph the heading defaults already
+            // imply bold/font-size/etc., so suppress redundant ** formatting on heading-implied
+            // attributes.
+            val isHeading = richParagraph.headingStyle != HeadingStyle.Normal
             richParagraph.children.fastForEach { richSpan ->
-                builder.append(decodeRichSpanToMarkdown(richSpan))
+                builder.append(decodeRichSpanToMarkdown(richSpan, isHeading = isHeading))
             }
 
             // Append line break if needed
@@ -426,6 +439,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     @OptIn(ExperimentalRichTextApi::class)
     private fun decodeRichSpanToMarkdown(
         richSpan: RichSpan,
+        isHeading: Boolean = false,
     ): String {
         val stringBuilder = StringBuilder()
 
@@ -439,8 +453,10 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         val markdownOpen = mutableListOf<String>()
         val markdownClose = mutableListOf<String>()
 
-        // Bold is based off fontWeight
-        if ((richSpan.spanStyle.fontWeight?.weight ?: 400) > 400) {
+        // Bold is based off fontWeight. Skip the ** markers inside headings since headings
+        // already imply bold; emitting ** would produce `# **Title**` which round-trips back to
+        // a double-bold span.
+        if (!isHeading && (richSpan.spanStyle.fontWeight?.weight ?: 400) > 400) {
             markdownOpen += "**"
             markdownClose += "**"
         }
@@ -472,7 +488,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
         // Append children
         richSpan.children.fastForEach { child ->
-            stringBuilder.append(decodeRichSpanToMarkdown(child))
+            stringBuilder.append(decodeRichSpanToMarkdown(child, isHeading = isHeading))
         }
 
         // Append markdown close
@@ -657,15 +673,6 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     }
 
     private const val TokenDestinationPrefix = "trigger:"
-
-    /**
-     * Returns the markdown line start text from the first [RichSpan].
-     * This is used to determine the markdown line start text from the first [RichSpan] spanStyle.
-     * For example, if the first [RichSpan] spanStyle is [H1SpanStyle], the markdown line start text will be "# ".
-     */
-    private fun getMarkdownLineStartTextFromFirstRichSpan(firstRichSpan: RichSpan): String {
-        return HeadingStyle.fromRichSpan(firstRichSpan).markdownElement
-    }
 
     /**
      * Markdown block elements.

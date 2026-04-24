@@ -445,13 +445,13 @@ class RichTextStateMarkdownParserEncodeTest {
         val firstParagraph = state.richParagraphList[0]
 
         // Check paragraph type and heading style
-        assertEquals(HeadingStyle.H1, firstParagraph.getHeadingStyle())
+        assertEquals(HeadingStyle.H1, firstParagraph.headingStyle)
         // Check span style applied by the parser
         assertEquals(HeadingStyle.H1.getSpanStyle(), firstParagraph.getFirstNonEmptyChild()!!.spanStyle)
 
 
         val secondParagraph = state.richParagraphList[1]
-        assertEquals(HeadingStyle.H2, secondParagraph.getHeadingStyle())
+        assertEquals(HeadingStyle.H2, secondParagraph.headingStyle)
         assertEquals(HeadingStyle.H2.getSpanStyle(), secondParagraph.getFirstNonEmptyChild()!!.spanStyle)
 
 
@@ -587,25 +587,25 @@ class RichTextStateMarkdownParserEncodeTest {
 
         // Paragraph 0: H1
         val p0 = state.richParagraphList[0]
-        assertEquals(HeadingStyle.H1, p0.getHeadingStyle())
+        assertEquals(HeadingStyle.H1, p0.headingStyle)
         assertEquals("Heading 1", p0.getFirstNonEmptyChild()?.text)
         assertEquals(HeadingStyle.H1.getSpanStyle(), p0.getFirstNonEmptyChild()?.spanStyle)
 
         // Paragraph 1: Normal
         val p1 = state.richParagraphList[1]
-        assertEquals(HeadingStyle.Normal, p1.getHeadingStyle())
+        assertEquals(HeadingStyle.Normal, p1.headingStyle)
         assertEquals("Some text", p1.getFirstNonEmptyChild()?.text)
         assertEquals(SpanStyle(), p1.getFirstNonEmptyChild()?.spanStyle) // Default SpanStyle
 
         // Paragraph 2: H2
         val p2 = state.richParagraphList[2]
-        assertEquals(HeadingStyle.H2, p2.getHeadingStyle())
+        assertEquals(HeadingStyle.H2, p2.headingStyle)
         assertEquals("Heading 2", p2.getFirstNonEmptyChild()?.text)
         assertEquals(HeadingStyle.H2.getSpanStyle(), p2.getFirstNonEmptyChild()?.spanStyle)
 
         // Paragraph 3: Normal
         val p3 = state.richParagraphList[3]
-        assertEquals(HeadingStyle.Normal, p3.getHeadingStyle())
+        assertEquals(HeadingStyle.Normal, p3.headingStyle)
         assertEquals("More text", p3.getFirstNonEmptyChild()?.text)
         assertEquals(SpanStyle(), p3.getFirstNonEmptyChild()?.spanStyle) // Default SpanStyle
     }

@@ -161,7 +161,16 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     val cssParagraphStyle = CssEncoder.parseCssStyleMapToParagraphStyle(cssStyleMap, attributes)
 
                     newRichParagraph.paragraphStyle = newRichParagraph.paragraphStyle.merge(cssParagraphStyle)
+                    // Apply the heading tag's default ParagraphStyle (line-height etc.) if any.
+                    if (tagParagraphStyle != null) {
+                        newRichParagraph.paragraphStyle = newRichParagraph.paragraphStyle.merge(tagParagraphStyle)
+                    }
                     newRichParagraph.type = paragraphType
+                    // Record heading level as a first-class field so we don't need to fingerprint
+                    // the span style on decode.
+                    if (name in HeadingStyle.headingTags) {
+                        newRichParagraph.headingStyle = HeadingStyle.fromHtmlTag(name)
+                    }
 
                     // A block element (<p>, <h1>, etc.) opening on a blank paragraph
                     // from a <br> should not carry the linebreak flag
@@ -269,9 +278,18 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 if (isCurrentTagBlockElement && !isCurrentRichParagraphBlank) {
                     stringBuilder.append(' ')
 
-                    //TODO - This was causing the paragraph style from heading tags to be applied to
-                    // subsequent paragraphs. Verify that this isn't crucial (all the tests still pass)
-                    val newParagraph = RichParagraph()
+                    // Inherit the previous paragraph's ParagraphStyle so user-applied alignment
+                    // (text-align, line-height, etc.) carries across implicit paragraph breaks.
+                    // We deliberately do NOT inherit the heading style: leaking H1's font-size
+                    // visuals into the trailing <p> was the symptom that prompted the
+                    // upstream PR's TODO. Now that headingStyle is a first-class field, the
+                    // paragraph just inherits the bare ParagraphStyle.
+                    val previousParagraph = richParagraphList.lastOrNull()
+                    val newParagraph =
+                        if (previousParagraph != null && previousParagraph.headingStyle == HeadingStyle.Normal)
+                            RichParagraph(paragraphStyle = previousParagraph.paragraphStyle)
+                        else
+                            RichParagraph()
 
                     richParagraphList.add(newParagraph)
 
@@ -481,16 +499,29 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     if (paragraphGroupTagName == "ol" || paragraphGroupTagName == "ul") "li"
                     else paragraphGroupTagName
 
+                // If this paragraph carries a heading, the <hN> tag is meant to imply the
+                // heading's typography. Strip the heading defaults from the paragraph CSS and the
+                // child span CSS via diff so user-added styles ride on top, but the heading
+                // visuals stay implied by the tag alone.
+                val headingStyle = richParagraph.headingStyle
+
                 // If this paragraph came from a <br>, emit <br> + content inline
                 // without opening a new <p> tag (the previous <p> is still open)
                 if (richParagraph.isFromLineBreak && index > 0) {
                     builder.append("<$BrElement>")
                     richParagraph.children.fastForEach { richSpan ->
-                        builder.append(decodeRichSpanToHtml(richSpan))
+                        builder.append(decodeRichSpanToHtml(richSpan, headingStyle = headingStyle))
                     }
                 } else {
-                    // Create paragraph css
-                    val paragraphCssMap = CssDecoder.decodeParagraphStyleToCssStyleMap(richParagraph.paragraphStyle)
+                    // Create paragraph css. If the paragraph is a heading, strip the heading's
+                    // base ParagraphStyle so the tag carries the visual weight on its own.
+                    val effectiveParagraphStyle =
+                        if (headingStyle == HeadingStyle.Normal)
+                            richParagraph.paragraphStyle
+                        else
+                            richParagraph.paragraphStyle.diff(headingStyle.defaultParagraphStyle)
+
+                    val paragraphCssMap = CssDecoder.decodeParagraphStyleToCssStyleMap(effectiveParagraphStyle)
                     val paragraphCss = CssDecoder.decodeCssStyleMap(paragraphCssMap)
 
                     // Append paragraph opening tag
@@ -500,7 +531,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
                     // Append paragraph children
                     richParagraph.children.fastForEach { richSpan ->
-                        builder.append(decodeRichSpanToHtml(richSpan))
+                        builder.append(decodeRichSpanToHtml(richSpan, headingStyle = headingStyle))
                     }
                 }
 
@@ -535,7 +566,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
     private fun decodeRichSpanToHtml(
         richSpan: RichSpan,
         parentFormattingTags: List<String> = emptyList(),
-        headingType: HeadingStyle = HeadingStyle.Normal,
+        headingStyle: HeadingStyle = HeadingStyle.Normal,
     ): String {
         val stringBuilder = StringBuilder()
 
@@ -555,17 +586,14 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
             tagAttributesStringBuilder.append(" $key=\"${escapeHtmlAttribute(value)}\"")
         }
 
-        // Convert span style to CSS string
-        val htmlStyleFormat =
-            /**
-             * If the heading type is normal, follow the previous behavior of encoding the SpanStyle to the
-             * Css span style. If it is a heading paragraph style, remove the Heading-specific [SpanStyle] features via
-             * [diff] but retain the non-heading associated [SpanStyle] properties.
-             */
-            if (headingType == HeadingStyle.Normal)
-                CssDecoder.decodeSpanStyleToHtmlStylingFormat(richSpan.spanStyle)
+        // Convert span style to CSS. For headings we subtract the heading's default span style
+        // so the inline CSS only carries user-added properties on top of what the <hN> tag implies.
+        val effectiveSpanStyle =
+            if (headingStyle == HeadingStyle.Normal)
+                richSpan.spanStyle
             else
-                CssDecoder.decodeSpanStyleToHtmlStylingFormat(richSpan.spanStyle.diff(headingType.getSpanStyle()))
+                richSpan.spanStyle.diff(headingStyle.defaultSpanStyle)
+        val htmlStyleFormat = CssDecoder.decodeSpanStyleToHtmlStylingFormat(effectiveSpanStyle)
         val spanCss = CssDecoder.decodeCssStyleMap(htmlStyleFormat.cssStyleMap)
         val htmlTags = htmlStyleFormat.htmlTags.filter { it !in parentFormattingTags }
 
@@ -594,12 +622,14 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         // Append text
         stringBuilder.append(KsoupEntities.encodeHtml(richSpan.text))
 
-        // Append children
+        // Append children, threading the heading style down so nested spans also strip their
+        // base heading visuals from inline CSS.
         richSpan.children.fastForEach { child ->
             stringBuilder.append(
                 decodeRichSpanToHtml(
                     richSpan = child,
                     parentFormattingTags = parentFormattingTags + htmlTags,
+                    headingStyle = headingStyle,
                 )
             )
         }
@@ -731,7 +761,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         return when (paragraphType) {
             is UnorderedList -> "ul"
             is OrderedList -> "ol"
-            else -> richParagraph.getHeadingStyle().htmlTag ?: "p"
+            else -> richParagraph.headingStyle.htmlTag ?: "p"
         }
     }
 

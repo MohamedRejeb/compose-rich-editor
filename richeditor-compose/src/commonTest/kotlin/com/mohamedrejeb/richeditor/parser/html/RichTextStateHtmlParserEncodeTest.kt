@@ -349,25 +349,25 @@ class RichTextStateHtmlParserEncodeTest {
 
         // Paragraph 0: H1
         val p0 = state.richParagraphList[0]
-        assertEquals(HeadingStyle.H1, p0.getHeadingStyle())
+        assertEquals(HeadingStyle.H1, p0.headingStyle)
         assertEquals("Heading 1", p0.getFirstNonEmptyChild()?.text)
         assertEquals(HeadingStyle.H1.getSpanStyle(), p0.getFirstNonEmptyChild()?.spanStyle)
 
         // Paragraph 1: Normal
         val p1 = state.richParagraphList[1]
-        assertEquals(HeadingStyle.Normal, p1.getHeadingStyle())
+        assertEquals(HeadingStyle.Normal, p1.headingStyle)
         assertEquals("Some text", p1.getFirstNonEmptyChild()?.text)
         assertEquals(SpanStyle(), p1.getFirstNonEmptyChild()?.spanStyle) // Default SpanStyle
 
         // Paragraph 2: H2
         val p2 = state.richParagraphList[2]
-        assertEquals(HeadingStyle.H2, p2.getHeadingStyle())
+        assertEquals(HeadingStyle.H2, p2.headingStyle)
         assertEquals("Heading 2", p2.getFirstNonEmptyChild()?.text)
         assertEquals(HeadingStyle.H2.getSpanStyle(), p2.getFirstNonEmptyChild()?.spanStyle)
 
         // Paragraph 3: Normal
         val p3 = state.richParagraphList[3]
-        assertEquals(HeadingStyle.Normal, p3.getHeadingStyle())
+        assertEquals(HeadingStyle.Normal, p3.headingStyle)
         assertEquals("More text", p3.getFirstNonEmptyChild()?.text)
         assertEquals(SpanStyle(), p3.getFirstNonEmptyChild()?.spanStyle) // Default SpanStyle
     }
@@ -385,7 +385,7 @@ class RichTextStateHtmlParserEncodeTest {
 
         // Paragraph 0: H1 with red color
         val p0 = state.richParagraphList[0]
-        assertEquals(HeadingStyle.H1, p0.getHeadingStyle())
+        assertEquals(HeadingStyle.H1, p0.headingStyle)
         assertEquals("Red Heading 1", p0.getFirstNonEmptyChild()?.text)
         // Check that the base H1 style is applied AND the red color
         val expectedH1Style = HeadingStyle.H1.getSpanStyle().merge(SpanStyle(color = androidx.compose.ui.graphics.Color.Red))
@@ -393,7 +393,7 @@ class RichTextStateHtmlParserEncodeTest {
 
         // Paragraph 1: H2 with bold font weight
         val p1 = state.richParagraphList[1]
-        assertEquals(HeadingStyle.H2, p1.getHeadingStyle())
+        assertEquals(HeadingStyle.H2, p1.headingStyle)
         assertEquals("Bold Heading 2", p1.getFirstNonEmptyChild()?.text)
         // Check that the base H2 style is applied AND the bold font weight
         val expectedH2Style = HeadingStyle.H2.getSpanStyle().merge(SpanStyle(fontWeight = FontWeight.Bold))

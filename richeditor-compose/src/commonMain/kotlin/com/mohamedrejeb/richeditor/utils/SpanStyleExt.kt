@@ -84,8 +84,20 @@ internal fun SpanStyle.diff(
             this.textGeometricTransform else null,
         localeList = if (this.localeList != other.localeList) this.localeList else null,
         background = if (this.background != other.background) this.background else Color.Unspecified,
-        // For TextDecoration, we want the decorations present in 'this' but not in 'other'
-        textDecoration = other.textDecoration?.let { this.textDecoration?.minus(it) },
+        // For TextDecoration, we want the decorations present in 'this' but not in 'other'.
+        // When `other` has no decoration, just keep this unchanged so user-added underlines etc.
+        // survive a diff against a base style that has no decoration of its own.
+        // Locals here so the compiler can smart-cast across the cross-module public API boundary.
+        textDecoration = run {
+            val mine = this.textDecoration
+            val theirs = other.textDecoration
+            when {
+                theirs == null -> mine
+                mine == null -> null
+                mine == theirs -> null
+                else -> mine.minus(theirs)
+            }
+        },
         shadow = if (this.shadow != other.shadow) this.shadow else null,
     )
 }

@@ -628,27 +628,27 @@ class RichTextStateHtmlParserDecodeTest {
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 1", paragraph = it))
-                    it.setHeadingStyle(HeadingStyle.H1)
+                    it.applyHeadingStyle(HeadingStyle.H1)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 2", paragraph = it))
-                    it.setHeadingStyle(HeadingStyle.H2)
+                    it.applyHeadingStyle(HeadingStyle.H2)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 3", paragraph = it))
-                    it.setHeadingStyle(HeadingStyle.H3)
+                    it.applyHeadingStyle(HeadingStyle.H3)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 4", paragraph = it))
-                    it.setHeadingStyle(HeadingStyle.H4)
+                    it.applyHeadingStyle(HeadingStyle.H4)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 5", paragraph = it))
-                    it.setHeadingStyle(HeadingStyle.H5)
+                    it.applyHeadingStyle(HeadingStyle.H5)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 6", paragraph = it))
-                    it.setHeadingStyle(HeadingStyle.H6)
+                    it.applyHeadingStyle(HeadingStyle.H6)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Another Normal Paragraph", paragraph = it))
@@ -676,27 +676,39 @@ class RichTextStateHtmlParserDecodeTest {
     fun testDecodeHeadingParagraphStylesWithAdditionalSpanStyle() {
         val state = RichTextState(
             initialRichParagraphList = listOf(
-                RichParagraph(type = DefaultParagraph()).also {
-                    val span = RichSpan(text = "Bold Heading 1", paragraph = it)
-                    span.spanStyle = span.spanStyle.merge(SpanStyle(fontWeight = FontWeight.Bold))
-                    it.children.add(span)
-                    it.setHeadingStyle(HeadingStyle.H1)
-                },
+                // Italic is NOT part of any heading's default style, so it must survive as <i>.
                 RichParagraph(type = DefaultParagraph()).also {
                     val span = RichSpan(text = "Italic Heading 2", paragraph = it)
                     span.spanStyle = span.spanStyle.merge(SpanStyle(fontStyle = FontStyle.Italic))
                     it.children.add(span)
-                    it.setHeadingStyle(HeadingStyle.H2)
+                    it.applyHeadingStyle(HeadingStyle.H2)
+                },
+                // Underline is also NOT part of any heading's default style.
+                RichParagraph(type = DefaultParagraph()).also {
+                    val span = RichSpan(text = "Underlined Heading 3", paragraph = it)
+                    span.spanStyle = span.spanStyle.merge(
+                        SpanStyle(textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline)
+                    )
+                    it.children.add(span)
+                    it.applyHeadingStyle(HeadingStyle.H3)
+                },
+                // Bold IS part of every heading's default — re-applying it on top should NOT
+                // produce a redundant <b> wrapper, because the heading tag already implies bold.
+                RichParagraph(type = DefaultParagraph()).also {
+                    val span = RichSpan(text = "Bold on H1 is redundant", paragraph = it)
+                    span.spanStyle = span.spanStyle.merge(SpanStyle(fontWeight = FontWeight.Bold))
+                    it.children.add(span)
+                    it.applyHeadingStyle(HeadingStyle.H1)
                 }
             )
         )
 
         val html = RichTextStateHtmlParser.decode(state)
 
-        // Expected HTML should have the heading tag and the additional style in the span's style attribute
         val expectedHtml = """
-            <h1><b>Bold Heading 1</b></h1>
             <h2><i>Italic Heading 2</i></h2>
+            <h3><u>Underlined Heading 3</u></h3>
+            <h1>Bold on H1 is redundant</h1>
         """.trimIndent().replace("\n", "")
 
         assertEquals(expectedHtml, html.replace("\n", ""))
@@ -718,9 +730,9 @@ class RichTextStateHtmlParserDecodeTest {
 
         // Verify the second paragraph is now H2
         assertEquals(3, state.richParagraphList.size)
-        assertEquals(HeadingStyle.Normal, state.richParagraphList[0].getHeadingStyle())
-        assertEquals(HeadingStyle.H2, state.richParagraphList[1].getHeadingStyle())
-        assertEquals(HeadingStyle.Normal, state.richParagraphList[2].getHeadingStyle())
+        assertEquals(HeadingStyle.Normal, state.richParagraphList[0].headingStyle)
+        assertEquals(HeadingStyle.H2, state.richParagraphList[1].headingStyle)
+        assertEquals(HeadingStyle.Normal, state.richParagraphList[2].headingStyle)
 
         // Verify the text content is unchanged
         assertEquals(initialText.replace("\n", " "), state.annotatedString.text)

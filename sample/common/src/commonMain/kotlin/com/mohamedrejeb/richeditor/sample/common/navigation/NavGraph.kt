@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.mohamedrejeb.richeditor.sample.common.examples.RealExamplesScreen
 import com.mohamedrejeb.richeditor.sample.common.github.GitHubDemoScreen
+import com.mohamedrejeb.richeditor.sample.common.headings.HeadingsSampleScreen
 import com.mohamedrejeb.richeditor.sample.common.home.HomeScreen
 import com.mohamedrejeb.richeditor.sample.common.htmleditor.HtmlEditorContent
 import com.mohamedrejeb.richeditor.sample.common.images.ImagesSampleScreen
@@ -29,6 +30,7 @@ private const val REAL_EXAMPLES_ROUTE = "realExamples"
 private const val LINKS_ROUTE = "links"
 private const val IMAGES_ROUTE = "images"
 private const val GITHUB_ROUTE = "github"
+private const val HEADINGS_ROUTE = "headings"
 
 @Composable
 fun NavGraph() {
@@ -51,6 +53,7 @@ fun NavGraph() {
                 navigateToLinks = { navController.navigate(LINKS_ROUTE) },
                 navigateToImages = { navController.navigate(IMAGES_ROUTE) },
                 navigateToGithub = { navController.navigate(GITHUB_ROUTE) },
+                navigateToHeadings = { navController.navigate(HEADINGS_ROUTE) },
             )
         }
 
@@ -118,6 +121,12 @@ fun NavGraph() {
 
         composable(IMAGES_ROUTE) {
             ImagesSampleScreen(
+                navigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(HEADINGS_ROUTE) {
+            HeadingsSampleScreen(
                 navigateBack = { navController.popBackStack() }
             )
         }

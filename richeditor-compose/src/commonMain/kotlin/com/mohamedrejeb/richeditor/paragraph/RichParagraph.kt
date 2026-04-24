@@ -30,7 +30,20 @@ internal class RichParagraph(
      * rather than being wrapped in its own `<p>` tag.
      */
     var isFromLineBreak: Boolean = false,
+    headingStyle: HeadingStyle = HeadingStyle.Normal,
 ) {
+
+    /**
+     * Heading level applied to this paragraph (Normal | H1..H6).
+     *
+     * Heading is paragraph-level, so we store it directly on the paragraph rather than detecting
+     * it back from span fingerprints. Public assignment goes through [setHeadingStyle] which
+     * keeps children's [SpanStyle] and the paragraph's [ParagraphStyle] in sync with the chosen
+     * level. Direct field mutation (parsers seeding state from HTML/Markdown) bypasses the
+     * side effects and is intentional for code paths that already apply the visual styles
+     * via the parser's tag-style maps.
+     */
+    var headingStyle: HeadingStyle = headingStyle
 
     @OptIn(ExperimentalRichTextApi::class)
     fun getRichSpanByTextIndex(
@@ -241,80 +254,42 @@ internal class RichParagraph(
     }
 
     /**
-     * Retrieves the [HeadingStyle] applied to this paragraph.
+     * Apply [newHeadingStyle] to this paragraph idempotently. The previous heading's visual
+     * [SpanStyle] / [ParagraphStyle] are stripped from children before the new ones are applied,
+     * so toggling H1 -> H2 -> H1 does not stack font sizes. Passing [HeadingStyle.Normal] clears
+     * the visual style entirely.
      *
-     * In Rich Text editors like Google Docs, heading styles (H1-H6) are
-     * applied to the entire paragraph. This function reflects that behavior
-     * by checking all child [RichSpan]s for a non-default [HeadingStyle].
-     * If any child [RichSpan] has a heading style (other than [HeadingStyle.Normal]),
-     * this function returns that heading style, indicating that the entire paragraph is styled as a heading.
+     * Direct assignment to [headingStyle] is reserved for parsers that already applied the visual
+     * style via tag-style maps; user-facing mutations should go through this function.
      */
-    fun getHeadingStyle() : HeadingStyle {
+    fun applyHeadingStyle(newHeadingStyle: HeadingStyle) {
+        if (newHeadingStyle == headingStyle) return
+
+        // Strip the previously applied heading visuals (no-op if Normal).
+        if (headingStyle != HeadingStyle.Normal) {
+            removeHeadingVisuals(headingStyle.defaultSpanStyle, headingStyle.defaultParagraphStyle)
+        }
+
+        headingStyle = newHeadingStyle
+
+        // Apply the new heading visuals (no-op if Normal).
+        if (newHeadingStyle != HeadingStyle.Normal) {
+            addHeadingVisuals(newHeadingStyle.defaultSpanStyle, newHeadingStyle.defaultParagraphStyle)
+        }
+    }
+
+    private fun addHeadingVisuals(spanStyle: SpanStyle, paragraphStyle: ParagraphStyle) {
         children.fastForEach { richSpan ->
-            val childHeadingParagraphStyle = HeadingStyle.fromRichSpan(richSpan)
-            if (childHeadingParagraphStyle != HeadingStyle.Normal){
-                return childHeadingParagraphStyle
-            }
-        }
-        return HeadingStyle.Normal
-    }
-
-    /**
-     * Sets the heading style for this paragraph.
-     *
-     * This function applies the specified [headerParagraphStyle] to the entire paragraph.
-     *
-     * If the specified style is [HeadingStyle.Normal], any existing heading
-     * style (H1-H6) is removed from the paragraph. Otherwise, the specified
-     * heading style is applied, replacing any previous heading style on this paragraph.
-     *
-     * Heading styles are applied to the entire paragraph, consistent with common rich text editor
-    behavior.
-     */
-    fun setHeadingStyle(headerParagraphStyle: HeadingStyle) {
-        val spanStyle = headerParagraphStyle.getSpanStyle()
-        val paragraphStyle = headerParagraphStyle.getParagraphStyle()
-
-        // Remove any existing heading styles first
-        HeadingStyle.entries.forEach {
-            removeHeadingStyle(it.getSpanStyle(), it.getParagraphStyle())
-        }
-
-        // Apply the new heading style if it's not Normal
-        if (headerParagraphStyle != HeadingStyle.Normal) {
-            addHeadingStyle(spanStyle, paragraphStyle)
-        }
-    }
-
-    /**
-     * Internal helper function to apply a given header [SpanStyle] and [ParagraphStyle]
-     * to this paragraph.
-     *
-     * This function is used by [setHeadingStyle] after determining which
-     * style to set.
-     * Note: This function only adds the styles and does not handle removing existing
-     * heading styles from the paragraph.
-     */
-    private fun addHeadingStyle(spanStyle: SpanStyle, paragraphStyle: ParagraphStyle) {
-        children.forEach { richSpan ->
             richSpan.spanStyle = richSpan.spanStyle.customMerge(spanStyle)
         }
         this.paragraphStyle = this.paragraphStyle.merge(paragraphStyle)
     }
 
-    /**
-     * Internal helper function to remove a given header [SpanStyle] and [ParagraphStyle]
-     * from this paragraph.
-     *
-     * This function is used by [setHeadingStyle] to clear any existing heading
-     * styles before applying a new one, or to remove a specific heading style when
-     * setting the paragraph style back to [HeadingStyle.Normal].
-     */
-    private fun removeHeadingStyle(spanStyle: SpanStyle, paragraphStyle: ParagraphStyle) {
-        children.forEach { richSpan ->
-            richSpan.spanStyle = richSpan.spanStyle.unmerge(spanStyle) // Unmerge using toSpanStyle
+    private fun removeHeadingVisuals(spanStyle: SpanStyle, paragraphStyle: ParagraphStyle) {
+        children.fastForEach { richSpan ->
+            richSpan.spanStyle = richSpan.spanStyle.unmerge(spanStyle)
         }
-        this.paragraphStyle = this.paragraphStyle.unmerge(paragraphStyle) // Unmerge ParagraphStyle
+        this.paragraphStyle = this.paragraphStyle.unmerge(paragraphStyle)
     }
 
 
@@ -435,6 +410,7 @@ internal class RichParagraph(
         val newParagraph = RichParagraph(
             paragraphStyle = paragraphStyle.copy(),
             type = type.copy(),
+            headingStyle = headingStyle,
         )
         children.fastForEach { childRichSpan ->
             val newRichSpan = childRichSpan.copy(newParagraph)

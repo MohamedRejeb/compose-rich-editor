@@ -611,27 +611,27 @@ class RichTextStateMarkdownParserDecodeTest {
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 1", paragraph = it))
-                    it.setHeadingStyle(HeadingStyle.H1)
+                    it.applyHeadingStyle(HeadingStyle.H1)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 2", paragraph = it))
-                    it.setHeadingStyle(HeadingStyle.H2)
+                    it.applyHeadingStyle(HeadingStyle.H2)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 3", paragraph = it))
-                    it.setHeadingStyle(HeadingStyle.H3)
+                    it.applyHeadingStyle(HeadingStyle.H3)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 4", paragraph = it))
-                    it.setHeadingStyle(HeadingStyle.H4)
+                    it.applyHeadingStyle(HeadingStyle.H4)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 5", paragraph = it))
-                    it.setHeadingStyle(HeadingStyle.H5)
+                    it.applyHeadingStyle(HeadingStyle.H5)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Heading 6", paragraph = it))
-                    it.setHeadingStyle(HeadingStyle.H6)
+                    it.applyHeadingStyle(HeadingStyle.H6)
                 },
                 RichParagraph(type = DefaultParagraph()).also {
                     it.children.add(RichSpan(text = "Another Normal Paragraph", paragraph = it))

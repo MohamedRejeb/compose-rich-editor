@@ -25,6 +25,7 @@ import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.TextFields
+import androidx.compose.material.icons.outlined.Title
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -57,6 +58,7 @@ fun HomeScreen(
     navigateToLinks: () -> Unit,
     navigateToImages: () -> Unit,
     navigateToGithub: () -> Unit,
+    navigateToHeadings: () -> Unit,
 ) {
     SampleScaffold(
         title = "Compose Rich Editor",
@@ -92,6 +94,16 @@ fun HomeScreen(
                     icon = Icons.Outlined.TextFields,
                     accent = SampleAccents.Indigo,
                     onClick = navigateToRichEditor,
+                )
+            }
+
+            item {
+                FeatureCard(
+                    title = "Headings",
+                    description = "Promote any paragraph to H1-H6 with a first-class headingStyle field that round-trips through HTML and Markdown.",
+                    icon = Icons.Outlined.Title,
+                    accent = SampleAccents.Indigo,
+                    onClick = navigateToHeadings,
                 )
             }
 

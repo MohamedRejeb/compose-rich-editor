@@ -64,6 +64,8 @@ nav:
     - 'Ordered/Unordered lists': ordered_unordered_lists.md
     - 'Images': images.md
     - 'Mentions & Triggers': mentions_and_triggers.md
+  - 'Read-only views':
+    - 'Expandable text': expandable_text.md
   - 'Import / Export':
     - 'HTML import/export': html_import_export.md
     - 'Markdown import/export': markdown_import_export.md

@@ -26,6 +26,7 @@ import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.TextFields
 import androidx.compose.material.icons.outlined.Title
+import androidx.compose.material.icons.outlined.UnfoldMore
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -61,6 +62,7 @@ fun HomeScreen(
     navigateToNotion: () -> Unit,
     navigateToHeadings: () -> Unit,
     navigateToClaude: () -> Unit,
+    navigateToExpandable: () -> Unit,
 ) {
     SampleScaffold(
         title = "Compose Rich Editor",
@@ -209,6 +211,16 @@ fun HomeScreen(
                     icon = Icons.Outlined.History,
                     accent = SampleAccents.Teal,
                     onClick = navigateToUndoRedo,
+                )
+            }
+
+            item {
+                FeatureCard(
+                    title = "Expandable text",
+                    description = "Read-only rich text that collapses to a few lines with an inline “… See more / See less” toggle.",
+                    icon = Icons.Outlined.UnfoldMore,
+                    accent = SampleAccents.Teal,
+                    onClick = navigateToExpandable,
                 )
             }
 

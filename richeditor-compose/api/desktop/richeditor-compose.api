@@ -472,6 +472,10 @@ public final class com/mohamedrejeb/richeditor/ui/ComposableSingletons$BasicRich
 	public final fun getLambda$626927937$richeditor_compose ()Lkotlin/jvm/functions/Function3;
 }
 
+public final class com/mohamedrejeb/richeditor/ui/ExpandableBasicRichTextKt {
+	public static final fun ExpandableBasicRichText (Lcom/mohamedrejeb/richeditor/model/RichTextState;ZLkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Landroidx/compose/ui/text/TextStyle;ILjava/lang/String;Ljava/lang/String;Landroidx/compose/ui/text/SpanStyle;ZLjava/util/Map;Lcom/mohamedrejeb/richeditor/model/ImageLoader;Landroidx/compose/runtime/Composer;III)V
+}
+
 public final class com/mohamedrejeb/richeditor/ui/UndoBehavior : java/lang/Enum {
 	public static final field Disabled Lcom/mohamedrejeb/richeditor/ui/UndoBehavior;
 	public static final field Enabled Lcom/mohamedrejeb/richeditor/ui/UndoBehavior;
@@ -490,6 +494,10 @@ public final class com/mohamedrejeb/richeditor/ui/material/RichTextEditorKt {
 
 public final class com/mohamedrejeb/richeditor/ui/material/RichTextKt {
 	public static final fun RichText-mQfddtU (Lcom/mohamedrejeb/richeditor/model/RichTextState;Landroidx/compose/ui/Modifier;JJLandroidx/compose/ui/text/font/FontStyle;Landroidx/compose/ui/text/font/FontWeight;Landroidx/compose/ui/text/font/FontFamily;JLandroidx/compose/ui/text/style/TextDecoration;IJIZIILjava/util/Map;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/text/TextStyle;Lcom/mohamedrejeb/richeditor/model/ImageLoader;Lcom/mohamedrejeb/richeditor/model/TokenClickHandler;Lcom/mohamedrejeb/richeditor/model/TokenHoverHandler;Landroidx/compose/runtime/Composer;IIII)V
+}
+
+public final class com/mohamedrejeb/richeditor/ui/material3/ExpandableRichTextKt {
+	public static final fun ExpandableRichText-yr6d_t4 (Lcom/mohamedrejeb/richeditor/model/RichTextState;ZLkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Landroidx/compose/ui/text/TextStyle;JILjava/lang/String;Ljava/lang/String;JZLjava/util/Map;Lcom/mohamedrejeb/richeditor/model/ImageLoader;Landroidx/compose/runtime/Composer;III)V
 }
 
 public final class com/mohamedrejeb/richeditor/ui/material3/OutlinedRichTextEditorKt {

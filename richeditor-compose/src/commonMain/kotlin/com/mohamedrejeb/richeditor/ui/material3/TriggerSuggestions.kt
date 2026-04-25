@@ -6,8 +6,10 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -46,6 +48,7 @@ import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.trigger.Trigger
+import com.mohamedrejeb.richeditor.platform.currentPlatform
 
 /**
  * Material 3 suggestions popup that renders while a matching [Trigger] is active.
@@ -120,13 +123,54 @@ public fun <T> TriggerSuggestions(
     val density = LocalDensity.current
     val verticalOffsetPx = remember(verticalOffset, density) { with(density) { verticalOffset.roundToPx() } }
 
-    val positionProvider = remember(caretRect, state.textFieldWindowPosition, verticalOffsetPx) {
+    // iOS only: the soft keyboard is an overlay, so the scene's reported size
+    // does not shrink when the IME shows; we must subtract the IME bottom inset
+    // ourselves to keep the popup in the visible area. On Android the keyboard
+    // resizes the window (adjustResize), so the scene size already excludes the
+    // keyboard - subtracting again would double-count and push the popup
+    // incorrectly. Desktop / Web have no soft keyboard.
+    val imeBottomPx = if (currentPlatform.isIOS) {
+        WindowInsets.ime.getBottom(density)
+    } else {
+        0
+    }
+
+    // Resolve the caret line's true baseline and top from the layout. The cursor
+    // rect returned by getCursorRect spans the full LINE BOX (with line-leading
+    // padding above and below the visible glyphs) - using its bottom as the
+    // popup anchor produces a visible gap that grows with the editor's line
+    // height. The baseline is the typographic invariant: positioning a popup at
+    // baseline + verticalOffset puts it directly under where letters "sit",
+    // independent of font size, line leading, or platform line-height policy.
+    val layout = state.textLayoutResult
+    val (caretLineTopY, caretBaselineY) = remember(query.range, caretRect, layout) {
+        if (layout != null) {
+            val safeEnd = query.range.end.coerceIn(0, layout.layoutInput.text.text.length)
+            runCatching {
+                val line = layout.getLineForOffset(safeEnd)
+                layout.getLineTop(line) to layout.getLineBaseline(line)
+            }.getOrDefault(caretRect.top to caretRect.bottom)
+        } else {
+            caretRect.top to caretRect.bottom
+        }
+    }
+
+    val positionProvider = remember(
+        caretRect,
+        caretLineTopY,
+        caretBaselineY,
+        state.textFieldWindowPosition,
+        imeBottomPx,
+        verticalOffsetPx,
+    ) {
         CaretWindowPositionProvider(
             textFieldWindowX = state.textFieldWindowPosition.x.toInt(),
             textFieldWindowY = state.textFieldWindowPosition.y.toInt(),
             caretX = caretRect.left.toInt(),
-            caretBottom = caretRect.bottom.toInt(),
+            caretLineTop = caretLineTopY.toInt(),
+            caretBaseline = caretBaselineY.toInt(),
             verticalOffset = verticalOffsetPx,
+            imeBottom = imeBottomPx,
         )
     }
 
@@ -261,18 +305,27 @@ private fun <T> commitSelection(
 }
 
 /**
- * Anchors the popup at the caret in WINDOW coordinates (not relative to the
- * popup's own anchorBounds) by using the text field's captured window position
- * plus the caret's offset within the text layout. This avoids the
- * anchorBounds-vs-text-content mismatch that causes the popup to overlap the
- * query text when the editor has internal decoration padding (e.g. Outlined).
+ * Anchors the popup in WINDOW coordinates by using the text field's captured
+ * window position plus the caret's typographic anchors within the text layout:
+ *  - [caretBaseline] for below-placement (popup top sits at baseline + offset,
+ *    so it visually attaches to where letters "sit" without being pushed away
+ *    by line-box bottom leading).
+ *  - [caretLineTop] for above-placement (popup bottom sits at lineTop - offset,
+ *    safely clearing the ascent-most glyph and any top leading).
+ *
+ * Honors the IME bottom inset so the popup doesn't slide behind the soft
+ * keyboard, and flips above the caret when there's no room below (preferring
+ * above the popup's anchor bounds - the editor's outer rect - when that fits,
+ * otherwise above the caret line itself).
  */
 private class CaretWindowPositionProvider(
     private val textFieldWindowX: Int,
     private val textFieldWindowY: Int,
     private val caretX: Int,
-    private val caretBottom: Int,
+    private val caretLineTop: Int,
+    private val caretBaseline: Int,
     private val verticalOffset: Int,
+    private val imeBottom: Int,
 ) : PopupPositionProvider {
     override fun calculatePosition(
         anchorBounds: IntRect,
@@ -280,12 +333,38 @@ private class CaretWindowPositionProvider(
         layoutDirection: LayoutDirection,
         popupContentSize: IntSize,
     ): IntOffset {
-        val x = (textFieldWindowX + caretX)
+        val effectiveBottom = (windowSize.height - imeBottom).coerceAtLeast(0)
+
+        val baselineWindowY = textFieldWindowY + caretBaseline
+        val lineTopWindowY = textFieldWindowY + caretLineTop
+
+        val belowY = baselineWindowY + verticalOffset
+        val fitsBelow = belowY + popupContentSize.height <= effectiveBottom
+
+        // Two flip targets, in priority order:
+        //  1. Above the popup's anchor (editor outer bounds) - clears decoration padding.
+        //  2. Above the caret line top - falls back when the editor is too high
+        //     on screen for option 1 to fit (would push the popup off the top
+        //     of the window).
+        val flipAboveAnchorY = anchorBounds.top - verticalOffset - popupContentSize.height
+        val flipAboveCaretY = lineTopWindowY - verticalOffset - popupContentSize.height
+        val flipAboveAnchorFits =
+            anchorBounds.top in 1 until lineTopWindowY && flipAboveAnchorY >= 0
+
+        val rawY = when {
+            fitsBelow -> belowY
+            flipAboveAnchorFits -> flipAboveAnchorY
+            else -> flipAboveCaretY
+        }
+
+        val rawX = textFieldWindowX + caretX
+        val x = rawX
             .coerceAtMost(windowSize.width - popupContentSize.width)
             .coerceAtLeast(0)
-        val y = (textFieldWindowY + caretBottom + verticalOffset)
-            .coerceAtMost(windowSize.height - popupContentSize.height)
-            .coerceAtLeast(0)
+        // Clamp Y into [0, effectiveBottom - popupHeight] so even when flipping
+        // the popup never lands above the top of the screen or behind the IME.
+        val maxY = (effectiveBottom - popupContentSize.height).coerceAtLeast(0)
+        val y = rawY.coerceAtMost(maxY).coerceAtLeast(0)
         return IntOffset(x, y)
     }
 }

@@ -319,7 +319,14 @@ public fun BasicRichTextEditor(
             singleLine = singleLine,
             maxLines = maxLines,
             minLines = minLines,
-            visualTransformation = state.visualTransformation,
+            visualTransformation = if (enabled) {
+                state.visualTransformation
+            } else {
+                DisabledTextVisualTransformation(
+                    delegate = state.visualTransformation,
+                    disabledAlpha = DisabledStateAlpha,
+                )
+            },
             onTextLayout = {
                 state.onTextLayout(
                     textLayoutResult = it,

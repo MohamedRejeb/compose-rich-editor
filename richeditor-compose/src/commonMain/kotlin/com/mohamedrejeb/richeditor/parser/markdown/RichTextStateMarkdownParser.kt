@@ -230,7 +230,11 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
                 if (
                     node.type == GFMTokenTypes.GFM_AUTOLINK ||
-                    node.type == MarkdownTokenTypes.CODE_LINE
+                    node.type == MarkdownTokenTypes.CODE_LINE ||
+                    // Fenced code blocks (```...```) emit their body as
+                    // CODE_FENCE_CONTENT tokens. Without this branch the
+                    // content was dropped on decode (#253, #540).
+                    node.type == MarkdownTokenTypes.CODE_FENCE_CONTENT
                 ) {
                     onText(node.getTextInNode(correctedMarkdown).toString())
                 }

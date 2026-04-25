@@ -113,14 +113,14 @@ parsed on import depending on the Markdown dialect.
 Earlier revisions of the library modeled headings as a bundle of
 `SpanStyle`/`ParagraphStyle` (e.g. "this paragraph looks bold at 2em, so it
 must be an H1"). That approach breaks the moment a user applies partial
-formatting — italicizing one word in an H1 shouldn't demote it.
+formatting - italicizing one word in an H1 shouldn't demote it.
 
 Storing the level directly on `RichParagraph.headingStyle` means:
 
 - **Toolbar highlighting stays accurate** regardless of partial inline styling.
-- **Round-trips are lossless** — `setHtml → toHtml` and `setMarkdown →
+- **Round-trips are lossless** - `setHtml → toHtml` and `setMarkdown →
   toMarkdown` preserve the heading, even if the user tweaks font size mid-line.
-- **Theme changes update visuals without losing structure** — swap the app
+- **Theme changes update visuals without losing structure** - swap the app
   typography and every H2 re-renders at the new size without re-tagging.
 
 ## Related

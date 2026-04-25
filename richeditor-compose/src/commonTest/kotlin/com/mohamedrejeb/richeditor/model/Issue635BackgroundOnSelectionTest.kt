@@ -14,7 +14,7 @@ import kotlin.test.assertEquals
  *
  * By design, a span's background color is masked with [Color.Transparent] under
  * the live selection so the system selection highlight stays visible. Once the
- * selection clears the background must become visible again — including when
+ * selection clears the background must become visible again - including when
  * the user only clicks elsewhere to collapse the selection, without typing.
  *
  * Before the fix, [RichTextState.updateTextFieldValue] took a fast path on
@@ -55,7 +55,7 @@ class Issue635BackgroundOnSelectionTest {
         state.selection = TextRange(0, 5)
         state.addSpanStyle(SpanStyle(background = Color.Yellow))
 
-        // Selection still active over the painted range — mask should render
+        // Selection still active over the painted range - mask should render
         // the background as transparent so the selection highlight is visible.
         assertEquals(
             Color.Transparent,
@@ -95,7 +95,7 @@ class Issue635BackgroundOnSelectionTest {
         state.selection = TextRange(0, 5)
         state.addSpanStyle(SpanStyle(background = Color.Yellow))
 
-        // Move the selection entirely off the painted range — still non-collapsed
+        // Move the selection entirely off the painted range - still non-collapsed
         // but no longer intersecting "Hello", so the mask should no longer hide it.
         state.onTextFieldValueChange(
             TextFieldValue(

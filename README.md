@@ -244,7 +244,7 @@ Check out Compose Rich Editor's [full documentation](https://mohamedrejeb.github
 
 ## Mentions, Hashtags, Slash Commands (Triggers)
 
-> Experimental — gated by `@ExperimentalRichTextApi`.
+> Experimental - gated by `@ExperimentalRichTextApi`.
 
 A generic trigger system lets you add `@mentions`, `#hashtags`, `/commands` or any
 single-character trigger. A trigger activates a query mode; when the user selects a

@@ -281,7 +281,7 @@ public interface RichSpanStyle {
                     // instance (new id) retriggers the clamp. BasicText's
                     // inline-content subcomposition is sometimes reused across
                     // `setHtml(...)` calls even when the Image instance and
-                    // inlineContentMap key change — the remembered [data] and
+                    // inlineContentMap key change - the remembered [data] and
                     // the remembered `imageData` state in ImageLoaders that
                     // cache painters (e.g. Coil3) end up identical to the
                     // previous scope, so without a fresh key the effect would

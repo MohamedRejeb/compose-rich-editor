@@ -1,6 +1,12 @@
 package com.mohamedrejeb.richeditor.sample.common.navigation
 
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -41,10 +47,20 @@ private const val EXPANDABLE_ROUTE = "expandable"
 @Composable
 fun NavGraph() {
     val navController = rememberNavController()
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
 
     NavHost(
         navController = navController,
-        startDestination = HOME_ROUTE
+        startDestination = HOME_ROUTE,
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(keyboardController) {
+                detectTapGestures {
+                    keyboardController?.hide()
+                    focusManager.clearFocus()
+                }
+            }
     ) {
         composable(HOME_ROUTE) {
             HomeScreen(

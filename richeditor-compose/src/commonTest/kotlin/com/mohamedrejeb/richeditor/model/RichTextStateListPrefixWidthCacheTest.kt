@@ -37,7 +37,7 @@ class RichTextStateListPrefixWidthCacheTest {
         firstPara.startTextWidth = 12.sp
         state.startTextWidthCache[firstPara.startText] = 12.sp
 
-        // Streaming-style replacement — same prefix, more items.
+        // Streaming-style replacement - same prefix, more items.
         state.setMarkdown("- one\n- two\n- three")
 
         state.richParagraphList.forEachIndexed { index, paragraph ->
@@ -56,7 +56,7 @@ class RichTextStateListPrefixWidthCacheTest {
         val state = RichTextState()
         state.setText("first")
 
-        // First toggle — measure as if onTextLayout had run.
+        // First toggle - measure as if onTextLayout had run.
         state.toggleUnorderedList()
         val firstList = state.richParagraphList[0].type
         require(firstList is ConfigurableStartTextWidth)
@@ -87,7 +87,7 @@ class RichTextStateListPrefixWidthCacheTest {
         firstOl.startTextWidth = 14.sp
         state.startTextWidthCache[firstOl.startText] = 14.sp
 
-        // Switch to an unordered list — different prefix string, cache miss expected.
+        // Switch to an unordered list - different prefix string, cache miss expected.
         state.setMarkdown("- one")
         val unordered = state.richParagraphList[0].type
         require(unordered is UnorderedList)

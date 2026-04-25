@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.mohamedrejeb.richeditor.sample.common.claude.ClaudeDemoScreen
 import com.mohamedrejeb.richeditor.sample.common.examples.RealExamplesScreen
+import com.mohamedrejeb.richeditor.sample.common.expandable.ExpandableTextSampleScreen
 import com.mohamedrejeb.richeditor.sample.common.github.GitHubDemoScreen
 import com.mohamedrejeb.richeditor.sample.common.headings.HeadingsSampleScreen
 import com.mohamedrejeb.richeditor.sample.common.home.HomeScreen
@@ -35,6 +36,7 @@ private const val GITHUB_ROUTE = "github"
 private const val NOTION_ROUTE = "notion"
 private const val HEADINGS_ROUTE = "headings"
 private const val CLAUDE_ROUTE = "claude"
+private const val EXPANDABLE_ROUTE = "expandable"
 
 @Composable
 fun NavGraph() {
@@ -60,6 +62,7 @@ fun NavGraph() {
                 navigateToNotion = { navController.navigate(NOTION_ROUTE) },
                 navigateToHeadings = { navController.navigate(HEADINGS_ROUTE) },
                 navigateToClaude = { navController.navigate(CLAUDE_ROUTE) },
+                navigateToExpandable = { navController.navigate(EXPANDABLE_ROUTE) },
             )
         }
 
@@ -147,6 +150,12 @@ fun NavGraph() {
 
         composable(HEADINGS_ROUTE) {
             HeadingsSampleScreen(
+                navigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(EXPANDABLE_ROUTE) {
+            ExpandableTextSampleScreen(
                 navigateBack = { navController.popBackStack() }
             )
         }

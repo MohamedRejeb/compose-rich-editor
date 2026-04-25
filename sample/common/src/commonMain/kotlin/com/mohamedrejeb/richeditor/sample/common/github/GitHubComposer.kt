@@ -160,6 +160,11 @@ internal fun GitHubComposer(
                                 label = user.handle,
                             )
                         },
+                        // Lock the popup to the GitHub palette so it stays on-brand
+                        // when the host app toggles between light and dark themes.
+                        containerColor = GitHubColors.SurfaceHigh,
+                        contentColor = GitHubColors.Text,
+                        highlightColor = GitHubColors.ToolbarSelected,
                         item = { user -> SuggestionRow(user) },
                     )
 
@@ -180,6 +185,9 @@ internal fun GitHubComposer(
                                 label = "#${ref.number}",
                             )
                         },
+                        containerColor = GitHubColors.SurfaceHigh,
+                        contentColor = GitHubColors.Text,
+                        highlightColor = GitHubColors.ToolbarSelected,
                         item = { ref -> IssueRefRow(ref) },
                     )
                 }

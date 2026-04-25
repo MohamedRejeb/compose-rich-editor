@@ -31,7 +31,7 @@ import com.mohamedrejeb.richeditor.ui.material3.ExpandableRichText
 private val longPlainHtml = """
 <p>Composable functions are the building blocks of Jetpack Compose. They describe a piece of UI by
 emitting nodes into the layout tree, and they recompose whenever the state they read changes. Once
-you internalize that mental model, the rest of the framework — modifiers, slots, effects — falls
+you internalize that mental model, the rest of the framework - modifiers, slots, effects - falls
 into place. The trick is to keep your composables small, side-effect free, and oriented around
 state hoisting so the surrounding code can drive their behaviour.</p>
 """.trimIndent()
@@ -44,7 +44,7 @@ private val longRichHtml = """
 <p><b>Compose Rich Editor</b> ships <i>span-level styling</i>, hyperlinks like
 <a href="https://github.com/MohamedRejeb/compose-rich-editor">the project repo</a>, and inline
 content. The <b><i>ExpandableRichText</i></b> composable preserves all of those when truncating, but
-it does <i>not</i> render code-span pills, list bullets, or paragraph backgrounds in v1 — so save it
+it does <i>not</i> render code-span pills, list bullets, or paragraph backgrounds in v1 - so save it
 for posts, comments, and bios rather than full markdown viewers.</p>
 """.trimIndent()
 

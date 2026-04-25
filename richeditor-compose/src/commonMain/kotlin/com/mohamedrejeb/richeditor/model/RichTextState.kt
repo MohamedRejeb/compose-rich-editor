@@ -2097,10 +2097,10 @@ public class RichTextState internal constructor(
             // Pure selection change: normally we only reassign textFieldValue and skip
             // rebuilding annotatedString. But the annotatedString carries a
             // selection-dependent mask that drops background colors underneath the live
-            // selection (see AnnotatedStringExt.append — prevents an opaque span
+            // selection (see AnnotatedStringExt.append - prevents an opaque span
             // background from hiding the system selection highlight). If either the
             // previous or the new selection is non-collapsed, the mask set differs and
-            // the cached annotatedString is stale — so force a rebuild. See #635.
+            // the cached annotatedString is stale - so force a rebuild. See #635.
             val maskAffected =
                 !textFieldValue.selection.collapsed || !tempTextFieldValue.selection.collapsed
             if (maskAffected) {
@@ -4803,7 +4803,7 @@ public class RichTextState internal constructor(
 
         usedInlineContentMapKeys.clear()
 
-        // See [updateAnnotatedString] for why this runs before the rebuild — same
+        // See [updateAnnotatedString] for why this runs before the rebuild - same
         // reason: ensures freshly-parsed list paragraphs from setMarkdown / setHtml
         // get the cached prefix width before their first frame.
         applyCachedStartTextWidths()

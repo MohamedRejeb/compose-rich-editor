@@ -692,7 +692,7 @@ class RichTextStateHtmlParserDecodeTest {
                     it.children.add(span)
                     it.applyHeadingStyle(HeadingStyle.H3)
                 },
-                // Bold IS part of every heading's default — re-applying it on top should NOT
+                // Bold IS part of every heading's default - re-applying it on top should NOT
                 // produce a redundant <b> wrapper, because the heading tag already implies bold.
                 RichParagraph(type = DefaultParagraph()).also {
                     val span = RichSpan(text = "Bold on H1 is redundant", paragraph = it)

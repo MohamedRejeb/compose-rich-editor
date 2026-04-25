@@ -102,7 +102,7 @@ state.registerTrigger(
 | `style` | `{ SpanStyle(color = it.linkColor) }` | Visual style applied to committed tokens. Receives the live `RichTextConfig`. |
 | `drawStyle` | `null` | Optional custom draw pass beneath the token (e.g. to draw a pill background). |
 | `stopChars` | `{' ', '\n', '\t'}` | Characters that cancel an in-progress query. |
-| `requireWordBoundary` | `true` | When true, `foo@bar` does not activate — the char before `@` must be whitespace, a paragraph boundary, or nothing. |
+| `requireWordBoundary` | `true` | When true, `foo@bar` does not activate - the char before `@` must be whitespace, a paragraph boundary, or nothing. |
 | `maxQueryLength` | `50` | Cap on query characters after the trigger char before detection gives up. |
 
 ### Unregistering
@@ -127,7 +127,7 @@ data class TriggerQuery(
 )
 ```
 
-Most apps do not read this directly — [`TriggerSuggestions`](#trigger-suggestions-material-3)
+Most apps do not read this directly - [`TriggerSuggestions`](#trigger-suggestions-material-3)
 wires it up for you. You can also build a fully custom popup against it.
 
 ## Trigger Suggestions (Material 3)
@@ -165,7 +165,7 @@ fun <T> TriggerSuggestions(
 
 Place `TriggerSuggestions` inside a `Box` alongside the editor so its popup is
 parented to the same layout. Render one `TriggerSuggestions` per registered
-trigger — each one checks `activeTriggerQuery.triggerId` and shows nothing when
+trigger - each one checks `activeTriggerQuery.triggerId` and shows nothing when
 its trigger is not active.
 
 ```kotlin
@@ -245,7 +245,7 @@ RichText(
 )
 ```
 
-`tapOffset` is in the rich-text composable's local coordinates — useful for
+`tapOffset` is in the rich-text composable's local coordinates - useful for
 anchoring a popover at the tap point.
 
 ### onTokenHover
@@ -294,7 +294,7 @@ so server-side rendering stays consistent.
 
 Committed tokens are serialized as `<span>` elements carrying `data-trigger-id`
 and `data-token-id` attributes. On `setHtml`, unknown trigger ids render as
-plain text — so make sure to `registerTrigger(...)` **before** loading content
+plain text - so make sure to `registerTrigger(...)` **before** loading content
 that contains tokens.
 
 ### Markdown

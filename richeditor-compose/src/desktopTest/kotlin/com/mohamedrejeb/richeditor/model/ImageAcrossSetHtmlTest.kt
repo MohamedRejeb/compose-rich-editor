@@ -95,7 +95,7 @@ class ImageAcrossSetHtmlTest {
     }
 
     /**
-     * Configurable intrinsic-size version of [FakeAsyncPainter] — so we can
+     * Configurable intrinsic-size version of [FakeAsyncPainter] - so we can
      * simulate a large (600x400) image rather than the default 200x100.
      */
     private class FakeAsyncPainterSized(
@@ -371,7 +371,7 @@ class ImageAcrossSetHtmlTest {
         setContent {
             state = remember { RichTextState() }
             CompositionLocalProvider(
-                // Intrinsic 600x400 — matches the HTML-attr width the sample
+                // Intrinsic 600x400 - matches the HTML-attr width the sample
                 // uses for the Landscape preset. The container is 400sp wide
                 // so a correctly-clamped Image.width must end up <= 400.
                 LocalImageLoader provides SizedFreshLoader(w = 600f, h = 400f),

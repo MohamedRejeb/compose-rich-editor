@@ -39,14 +39,14 @@ import com.mohamedrejeb.richeditor.model.RichTextState
  * so taps fire [onExpandedChange] without any extra pointer-input plumbing.
  *
  * v1 limitations: this composable renders through [BasicText] (not [BasicRichText]), so it
- * preserves span-level styling — bold, italic, color, underline, font size, hyperlinks, inline
- * content — but does not render code-span pill backgrounds, list-bullet glyphs, paragraph
+ * preserves span-level styling - bold, italic, color, underline, font size, hyperlinks, inline
+ * content - but does not render code-span pill backgrounds, list-bullet glyphs, paragraph
  * backgrounds, mention/token pointer interactions, or other paragraph-level decoration that the
  * rich state draws via its own modifier overlays. If your content needs those, prefer
  * [BasicRichText] with manual maxLines until v2 of this composable.
  *
  * @param state The [RichTextState] to render.
- * @param expanded Whether the content is fully shown. Required hoisted state — the caller owns the
+ * @param expanded Whether the content is fully shown. Required hoisted state - the caller owns the
  * boolean and must update it from [onExpandedChange].
  * @param onExpandedChange Invoked when the user taps `See more` (with `true`) or `See less` (with
  * `false`).
@@ -136,7 +136,7 @@ public fun ExpandableBasicRichText(
             style = style,
             onTextLayout = { result ->
                 if (expanded) {
-                    // Don't track truncation while expanded — the next collapse will re-measure.
+                    // Don't track truncation while expanded - the next collapse will re-measure.
                     return@BasicText
                 }
                 val width = result.size.width
@@ -257,7 +257,7 @@ private fun computeCollapsedText(
     }
 
     // Pathological: the affordance alone overflows. Rendering only the suffix is at least
-    // recoverable — the user can still tap to expand.
+    // recoverable - the user can still tap to expand.
     return suffix
 }
 
@@ -277,7 +277,7 @@ private fun AnnotatedString.trimEndAnnotated(): AnnotatedString {
  * styles and link annotations. Without this, concatenating an inline suffix to a [RichTextState]'s
  * annotated string would push the suffix into a fresh default-styled paragraph (rendered on a new
  * line), because each [com.mohamedrejeb.richeditor.paragraph.RichParagraph] contributes its own
- * [androidx.compose.ui.text.ParagraphStyle] range — leaving the suffix range with no overlapping
+ * [androidx.compose.ui.text.ParagraphStyle] range - leaving the suffix range with no overlapping
  * paragraph style and therefore a paragraph boundary at the seam.
  *
  * Paragraph-level visual settings (lineHeight, textAlign, textIndent, etc.) on the original state

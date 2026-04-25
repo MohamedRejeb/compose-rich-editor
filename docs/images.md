@@ -12,13 +12,13 @@ oversized sources don't overflow the layout.
 
 ## Loading Images
 
-`RichSpanStyle.Image.model` is an opaque `Any` — a URL, a `Painter`, a resource
+`RichSpanStyle.Image.model` is an opaque `Any` - a URL, a `Painter`, a resource
 id, or any type your [`ImageLoader`](#image-loaders) understands. The library
 resolves it through the `ImageLoader` supplied via `LocalImageLoader`.
 
 ### Default loader
 
-Out of the box, `DefaultImageLoader` returns `null` for every model — it has no
+Out of the box, `DefaultImageLoader` returns `null` for every model - it has no
 knowledge of networking or asset pipelines. You **must** provide an
 `ImageLoader` to see images rendered, even for local resources.
 
@@ -90,7 +90,7 @@ When an image's intrinsic width exceeds the `RichText` container width, it is
 layout width via `Modifier.onSizeChanged` and clamps images on the next frame.
 
 This means you can safely load wide source images (e.g. a `1600×900` hero)
-inside a narrow column — they'll render at the column's width with correct
+inside a narrow column - they'll render at the column's width with correct
 aspect ratio.
 
 If the clamp finishes before the painter reports its intrinsic size, the
@@ -117,7 +117,7 @@ class ImageData(
 )
 ```
 
-Return `null` while the image is still loading or failed — the Placeholder stays
+Return `null` while the image is still loading or failed - the Placeholder stays
 at its reserved size and the layout doesn't jump when your loader later returns
 a painter.
 
@@ -191,7 +191,7 @@ Markdown round-trip. Prefer HTML if you need to preserve explicit dimensions.
 - Images are **atomic**: backspace deletes the whole image span, typing adjacent
   to an image creates a sibling text span instead of merging.
 - Images render in `RichText` / `BasicRichText` (the read-only surfaces).
-  Editor-surface rendering is a work in progress — expect images to appear as
+  Editor-surface rendering is a work in progress - expect images to appear as
   placeholders inside `RichTextEditor` until that lands.
 - `DefaultImageLoader` returns `null` for every model, so configure
   `LocalImageLoader` (typically with `Coil3ImageLoader`) before expecting

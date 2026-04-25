@@ -74,7 +74,7 @@ internal enum class NotionBlockCommand(
         label = "Divider",
         description = "Visually divide blocks.",
         keywords = listOf("divider", "hr", "line", "rule"),
-        iconLabel = "—",
+        iconLabel = "-",
     ),
     Code(
         id = "code",

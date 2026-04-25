@@ -106,12 +106,14 @@ fun MentionsSampleScreen(
         title = "Mentions & triggers",
         navigateBack = navigateBack,
     ) { paddingValues ->
+        val pageScroll = rememberScrollState()
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .windowInsetsPadding(WindowInsets.ime)
+                .verticalScroll(pageScroll)
                 .padding(horizontal = 20.dp),
         ) {
             Spacer(Modifier.height(4.dp))

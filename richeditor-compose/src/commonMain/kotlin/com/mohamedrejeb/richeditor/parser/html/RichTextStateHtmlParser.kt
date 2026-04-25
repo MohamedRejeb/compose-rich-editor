@@ -53,7 +53,11 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 val addedText = KsoupEntities.decodeHtml(
                     removeHtmlTextExtraSpaces(
                         input = it,
-                        trimStart = stringBuilder.lastOrNull() == null || stringBuilder.lastOrNull()?.isWhitespace() == true || stringBuilder.lastOrNull() == '\n',
+                        // Only trim leading ASCII whitespace if the buffer already ends in a
+                        // collapsible whitespace run. Non-breaking spaces (U+00A0) are preserved
+                        // and must not trigger a trim, otherwise an `&nbsp;` followed by a real
+                        // space would lose the space (issue #388).
+                        trimStart = stringBuilder.lastOrNull()?.let(::isCollapsibleHtmlWhitespace) ?: true,
                     )
                 )
 

@@ -1,22 +1,45 @@
 package com.mohamedrejeb.richeditor.parser.html
 
 /**
- * Removes extra spaces from the given input. Because in HTML, extra spaces are ignored as well as new lines.
+ * Collapses runs of ASCII whitespace from HTML text content, matching the
+ * "white-space: normal" rule that browsers apply by default.
+ *
+ * The non-breaking space (U+00A0, `&nbsp;`) is intentionally not collapsed
+ * or trimmed: per the HTML spec it is not part of the collapsible whitespace
+ * set, and authors use it to preserve visual leading or repeated whitespace
+ * (e.g. indentation, see issue #388). The collapsing regex is therefore
+ * restricted to ASCII whitespace, and `trimStart` relies on Kotlin's
+ * `Char.isWhitespace`, which also returns false for U+00A0.
  *
  * @param input the input to remove extra spaces from.
  * @return the input without extra spaces.
  */
 internal fun removeHtmlTextExtraSpaces(input: String, trimStart: Boolean = false): String {
     return input
-        .replace(' ', ' ')
         .replace('\n', ' ')
-        .replace("\\s+".toRegex(), " ")
+        .replace("[ \\t\\r\\u000C]+".toRegex(), " ")
         .let {
             if (trimStart)
-                it.trimStart()
+                it.trimStart(::isCollapsibleHtmlWhitespace)
             else
                 it
         }
+}
+
+/**
+ * Whether [c] is the kind of whitespace that browsers collapse in HTML text
+ * content (`white-space: normal`). This matches ASCII whitespace only;
+ * non-breaking spaces (U+00A0) and other Unicode space characters are
+ * preserved so leading or repeated visual whitespace authored with `&nbsp;`
+ * survives encode/decode (see issue #388).
+ *
+ * `Char.isWhitespace()` cannot be used directly because Kotlin treats
+ * U+00A0 as whitespace via `Character.isSpaceChar` on JVM, which would
+ * trim out the very characters this function is meant to preserve.
+ */
+internal fun isCollapsibleHtmlWhitespace(c: Char): Boolean = when (c) {
+    ' ', '\t', '\n', '\r', '\u000C' -> true
+    else -> false
 }
 
 /**

@@ -22,6 +22,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
 import com.mohamedrejeb.richeditor.ui.RichTextChangedListener
+import com.mohamedrejeb.richeditor.ui.UndoBehavior
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 
 /**
@@ -104,7 +105,8 @@ public fun RichTextEditor(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     shape: Shape =
         MaterialTheme.shapes.small.copy(bottomEnd = ZeroCornerSize, bottomStart = ZeroCornerSize),
-    colors: TextFieldColors = TextFieldDefaults.textFieldColors()
+    colors: TextFieldColors = TextFieldDefaults.textFieldColors(),
+    undoBehavior: UndoBehavior = UndoBehavior.Enabled,
 ) {
     // If color is not provided via the text style, use content color as a default
     val textColor = textStyle.color.takeOrElse {
@@ -134,6 +136,7 @@ public fun RichTextEditor(
         maxLines = maxLines,
         minLines = minLines,
         maxLength = maxLength,
+        undoBehavior = undoBehavior,
         decorationBox = @Composable { innerTextField ->
             // places leading icon, text field with label and placeholder, trailing icon
             TextFieldDefaults.TextFieldDecorationBox(

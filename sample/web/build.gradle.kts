@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalWasmDsl::class)
+
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 
 plugins {
@@ -12,9 +14,13 @@ kotlin {
         binaries.executable()
     }
 
-    @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
-        browser()
+        outputModuleName = "web"
+        browser {
+            commonWebpackConfig {
+                outputFileName = "web.js"
+            }
+        }
         binaries.executable()
     }
 

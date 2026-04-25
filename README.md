@@ -15,6 +15,11 @@ A rich text editor library for both Jetpack Compose and Compose Multiplatform, f
 - **Multiplatform**: Compose Rich Editor supports Compose Multiplatform (Android, iOS, Desktop, Web).
 - **Easy to use**: Compose Rich Editor's API leverages Kotlin's language features for simplicity and minimal boilerplate.
 - **WYSIWYG**: Compose Rich Editor is a WYSIWYG editor that supports the most common text styling features.
+- **Undo / Redo**: Built-in rich-text-aware undo/redo (`state.history`) that respects formatting, overriding `BasicTextField`'s default.
+
+---
+
+<div align="center"><a href="https://github.com/Safouene1/support-palestine-banner/blob/master/Markdown-pages/Support.md"><img src="https://raw.githubusercontent.com/Safouene1/support-palestine-banner/master/banner-project.svg" alt="Support Palestine" style="width: 100%;"></a></div>
 
 ## Screenshots
 
@@ -237,6 +242,52 @@ val markdown = richTextState.toMarkdown()
 
 Check out Compose Rich Editor's [full documentation](https://mohamedrejeb.github.io/compose-rich-editor/) for more details.
 
+## Mentions, Hashtags, Slash Commands (Triggers)
+
+> Experimental — gated by `@ExperimentalRichTextApi`.
+
+A generic trigger system lets you add `@mentions`, `#hashtags`, `/commands` or any
+single-character trigger. A trigger activates a query mode; when the user selects a
+suggestion, an atomic `Token` span is inserted. Tokens are deleted, selected, and
+skipped as a single unit, and they round-trip through both HTML and Markdown.
+
+Register triggers on the state and observe `activeTriggerQuery`:
+
+```kotlin
+import com.mohamedrejeb.richeditor.model.trigger.Trigger
+import com.mohamedrejeb.richeditor.ui.material3.TriggerSuggestions
+
+val state = rememberRichTextState()
+
+LaunchedEffect(Unit) {
+    state.registerTrigger(Trigger(id = "mention", char = '@'))
+    state.registerTrigger(Trigger(id = "hashtag", char = '#'))
+}
+
+Box {
+    RichTextEditor(state = state)
+
+    // Drop in the built-in popup, or roll your own using state.activeTriggerQuery.
+    TriggerSuggestions(
+        state = state,
+        triggerId = "mention",
+        suggestions = { query -> users.filter { it.handle.contains(query) } },
+        onSelect = { user ->
+            RichSpanStyle.Token(
+                triggerId = "mention",
+                id = user.id,
+                label = "@${user.handle}",
+            )
+        },
+        item = { user -> Text(user.handle) },
+    )
+}
+```
+
+Tokens serialize as `<span data-trigger="mention" data-id="u123">@mohamed</span>` in HTML
+and `[@mohamed](trigger:mention:u123)` in Markdown, so content round-trips even in viewers
+that don't know about triggers.
+
 ## Web live demo
 You can try out the web demo [here](https://compose-richeditor.netlify.app/).
 
@@ -250,8 +301,7 @@ Feel free to help out by sending a pull request :heart:.
 Support it by joining __[stargazers](https://github.com/MohamedRejeb/Compose-Rich-Editor/stargazers)__ for this repository. :star: <br>
 Also, __[follow me](https://github.com/MohamedRejeb)__ on GitHub for more libraries! 🤩
 
-You can always <a href="https://www.buymeacoffee.com/MohamedRejeb" target="_blank"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=MohamedRejeb&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff"></a>
-
+You can always <a href="https://www.buymeacoffee.com/MohamedRejeb" target="_blank"><img style="display: block; height: 60px;" src="docs/images/bmc-yellow-button.png"></a>
 # License
 ```markdown
 Copyright 2023 Mohamed Rejeb

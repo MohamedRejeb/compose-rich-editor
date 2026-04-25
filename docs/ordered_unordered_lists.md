@@ -7,6 +7,8 @@
   - [Ordered Lists](#ordered-lists)
   - [Unordered Lists](#unordered-lists)
 - [List Indentation](#list-indentation)
+- [List Prefix Alignment](#list-prefix-alignment)
+- [List Marker Style](#list-marker-style)
 - [Common Operations](#common-operations)
   - [Default Values](#default-values)
   - [Keyboard Shortcuts](#keyboard-shortcuts)
@@ -106,6 +108,66 @@ richTextState.config.orderedListIndent = 20
 richTextState.config.unorderedListIndent = 20
 ```
 
+## List Prefix Alignment
+
+> **Note:** This API is marked `@ExperimentalRichTextApi` and may change in a future release.
+
+You can control where the list marker (`1.`, `10.`, `•`, ...) sits relative to the
+indent "gutter" using `ListPrefixAlignment`:
+
+```kotlin
+// Default: HTML-style - the marker sits inside the gutter and ends at the content
+// start, so "1." and "10." have their dots aligned vertically.
+richTextState.config.listPrefixAlignment = ListPrefixAlignment.End
+
+// Alternative: every item's marker starts at the same left edge, giving a uniform
+// left edge even when item widths differ (e.g. "1." vs "10.").
+richTextState.config.listPrefixAlignment = ListPrefixAlignment.Start
+```
+
+| Alignment | Layout | Example |
+|---|---|---|
+| `End` (default) | marker right-aligned to content start, dots align vertically | `` 1.`` / ``10.`` / ``11.`` - dots stacked |
+| `Start` | marker left-aligned to the indent origin, marker left edges stack | ``1.`` / ``10. `` / ``11. `` - numbers stacked |
+
+If the configured indent is smaller than the marker width (for example
+`orderedListIndent = 0`), `End` clamps the first-line indent at `0` so the
+marker stays visible. Clamping (rather than switching formulas per item) keeps
+the whole list on a single layout so paragraphs with different marker widths
+stay visually consistent.
+
+## List Marker Style
+
+> **Note:** This API is marked `@ExperimentalRichTextApi` and may change in a future release.
+
+You can control how list markers (`•`, `1.`, etc.) inherit styles from the list item's text using `ListMarkerStyleBehavior`:
+
+```kotlin
+// Default: marker inherits typography from the item's text but drops decorations.
+richTextState.config.listMarkerStyleBehavior = ListMarkerStyleBehavior.InheritFromText
+
+// Alternative: every marker renders with the default span style regardless of content.
+richTextState.config.listMarkerStyleBehavior = ListMarkerStyleBehavior.AlwaysDefault
+```
+
+With `InheritFromText` (the default), markers match the paragraph's typography so they stay visually aligned with the text. This matches Google Docs behavior:
+
+| Attribute | Applied to marker |
+|---|---|
+| `color` | yes |
+| `fontSize` | yes |
+| `fontWeight` (bold) | yes |
+| `fontStyle` (italic) | yes |
+| `fontFamily` | yes |
+| `letterSpacing` | yes |
+| `textDecoration` (underline, strikethrough) | no |
+| `background` (highlight) | no |
+| `baselineShift` (super/subscript) | no |
+| `shadow` | no |
+| `textGeometricTransform` | no |
+
+Use `AlwaysDefault` when you want bullets that look identical no matter how the line is formatted (for example, editors that style markers entirely through a separate theme).
+
 ## Common Operations
 
 ### Default Values
@@ -119,6 +181,8 @@ By default, the Rich Text Editor uses these configurations:
   - Second level: `◦` (circle)
   - Third level: `▪` (square)
 - List Indentation: 38
+- List Prefix Alignment: `ListPrefixAlignment.End` (HTML-style, dots aligned)
+- List Marker Style: `ListMarkerStyleBehavior.InheritFromText`
 - Exit List on Empty Item: `true` (configurable via `richTextState.config.exitListOnEmptyItem`)
 
 ### Keyboard Shortcuts

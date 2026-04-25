@@ -7,10 +7,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.model.HeadingStyle
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
+import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
+import com.mohamedrejeb.richeditor.parser.html.RichTextStateHtmlParser
 import com.mohamedrejeb.richeditor.parser.utils.H1SpanStyle
 import com.mohamedrejeb.richeditor.parser.utils.H2SpanStyle
 import kotlin.test.Test
@@ -102,6 +105,26 @@ class RichTextStateMarkdownParserEncodeTest {
         assertEquals(
             expected = SpanStyle(textDecoration = TextDecoration.Underline),
             actual = state.richParagraphList.first().children.first().spanStyle
+        )
+    }
+
+    /**
+     * Regression for #593: markdown round-trip should preserve underline
+     * (markdown has no standard underline syntax, so we emit `<u>...</u>`).
+     */
+    @Test
+    fun testUnderlineRoundTrip() {
+        val markdown = "<u>Hello World!</u>"
+        val state = RichTextStateMarkdownParser.encode(markdown)
+
+        assertEquals(
+            expected = SpanStyle(textDecoration = TextDecoration.Underline),
+            actual = state.richParagraphList.first().children.first().spanStyle
+        )
+
+        assertEquals(
+            expected = markdown,
+            actual = RichTextStateMarkdownParser.decode(state),
         )
     }
 
@@ -421,10 +444,16 @@ class RichTextStateMarkdownParserEncodeTest {
 
         val firstParagraph = state.richParagraphList[0]
 
-        assertEquals(H1SpanStyle, firstParagraph.getFirstNonEmptyChild()!!.spanStyle)
+        // Check paragraph type and heading style
+        assertEquals(HeadingStyle.H1, firstParagraph.headingStyle)
+        // Check span style applied by the parser
+        assertEquals(HeadingStyle.H1.getSpanStyle(), firstParagraph.getFirstNonEmptyChild()!!.spanStyle)
+
 
         val secondParagraph = state.richParagraphList[1]
-        assertEquals(H2SpanStyle, secondParagraph.getFirstNonEmptyChild()!!.spanStyle)
+        assertEquals(HeadingStyle.H2, secondParagraph.headingStyle)
+        assertEquals(HeadingStyle.H2.getSpanStyle(), secondParagraph.getFirstNonEmptyChild()!!.spanStyle)
+
 
         assertEquals("Prompt\nEmphasis", state.toText())
     }
@@ -541,6 +570,147 @@ class RichTextStateMarkdownParserEncodeTest {
         assertEquals("Item2.2", fourthItem.text)
         assertEquals("Item3", fifthItem .text)
         assertEquals("Item4", sixthItem .text)
+    }
+
+    @Test
+    fun testEncodeHeadingParagraphStyles() {
+        val markdown = """
+            # Heading 1
+            Some text
+            ## Heading 2
+            More text
+        """.trimIndent()
+
+        val state = RichTextStateMarkdownParser.encode(markdown)
+
+        assertEquals(4, state.richParagraphList.size)
+
+        // Paragraph 0: H1
+        val p0 = state.richParagraphList[0]
+        assertEquals(HeadingStyle.H1, p0.headingStyle)
+        assertEquals("Heading 1", p0.getFirstNonEmptyChild()?.text)
+        assertEquals(HeadingStyle.H1.getSpanStyle(), p0.getFirstNonEmptyChild()?.spanStyle)
+
+        // Paragraph 1: Normal
+        val p1 = state.richParagraphList[1]
+        assertEquals(HeadingStyle.Normal, p1.headingStyle)
+        assertEquals("Some text", p1.getFirstNonEmptyChild()?.text)
+        assertEquals(SpanStyle(), p1.getFirstNonEmptyChild()?.spanStyle) // Default SpanStyle
+
+        // Paragraph 2: H2
+        val p2 = state.richParagraphList[2]
+        assertEquals(HeadingStyle.H2, p2.headingStyle)
+        assertEquals("Heading 2", p2.getFirstNonEmptyChild()?.text)
+        assertEquals(HeadingStyle.H2.getSpanStyle(), p2.getFirstNonEmptyChild()?.spanStyle)
+
+        // Paragraph 3: Normal
+        val p3 = state.richParagraphList[3]
+        assertEquals(HeadingStyle.Normal, p3.headingStyle)
+        assertEquals("More text", p3.getFirstNonEmptyChild()?.text)
+        assertEquals(SpanStyle(), p3.getFirstNonEmptyChild()?.spanStyle) // Default SpanStyle
+    }
+
+    @Test
+    fun testEncodeOrderedListWithNestedUList() {
+        val markdown = """
+            1. Item1
+            2. Item2
+              - Item2.1
+              - Item2.2
+            3. Item3
+            Item4
+        """.trimIndent()
+
+        val richTextState = RichTextStateMarkdownParser.encode(markdown)
+
+        richTextState.printParagraphs()
+
+        assertEquals(6, richTextState.richParagraphList.size)
+
+        val firstItem = richTextState.richParagraphList[0].children[0]
+        val secondItem = richTextState.richParagraphList[1].children[0]
+        val thirdItem = richTextState.richParagraphList[2].children[0]
+        val fourthItem = richTextState.richParagraphList[3].children[0]
+        val fifthItem = richTextState.richParagraphList[4].children[0]
+        val sixthItem = richTextState.richParagraphList[5].children[0]
+
+        richTextState.richParagraphList.forEachIndexed { i, p ->
+            val type = p.type
+
+            if (i == 5) {
+                assertIs<DefaultParagraph>(type)
+                return@forEachIndexed
+            }
+
+            if (i == 2 || i == 3)
+                assertIs<UnorderedList>(type)
+            else
+                assertIs<OrderedList>(type)
+
+            if (
+                i == 0 ||
+                i == 1 ||
+                i == 4
+            )
+                assertEquals(1, type.level)
+            else
+                assertEquals(2, type.level)
+        }
+
+        assertEquals("Item1", firstItem.text)
+        assertEquals("Item2", secondItem.text)
+        assertEquals("Item2.1", thirdItem.text)
+        assertEquals("Item2.2", fourthItem.text)
+        assertEquals("Item3", fifthItem .text)
+        assertEquals("Item4", sixthItem .text)
+    }
+
+    @Test
+    fun testHtmlEncodeSetRichSpanParentCorrectly() {
+        val html = "<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\"></head><body><div style=\"background-color:#1e1f22;color:#bcbec4\"><pre style=\"font-family:'JetBrains Mono',monospace;font-size:9.8pt;\"><span style=\"font-style:italic;\">println</span>(<span style=\"color:#6aab73;\">\"insertHtml:&#32;</span><span style=\"color:#cf8e6d;\">\$</span>position<span style=\"color:#6aab73;\">\"</span>)</pre></div></body></html>"
+        val richTextState = RichTextStateHtmlParser.encode(html)
+
+        richTextState.selection = TextRange(0)
+
+        assertEquals(1, richTextState.richParagraphList[0].children.size)
+        assertEquals(13, richTextState.richParagraphList[0].children[0].spanStyle.fontSize.value.toInt())
+        assertEquals(7, richTextState.richParagraphList[0].children[0].children.size)
+        richTextState.richParagraphList[0].children[0].children.forEach {
+            assertEquals(richTextState.richParagraphList[0].children[0], it.parent)
+        }
+
+        richTextState.onTextFieldValueChange(
+            newTextFieldValue = TextFieldValue(
+                text = "\n${richTextState.textFieldValue.text}",
+                selection = TextRange(1)
+            )
+        )
+    }
+
+    @Test
+    fun testHtmlEncodeInheritSpanStyleCorrectly() {
+        val html = "<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\"></head><body><div style=\"background-color:#1e1f22;color:#bcbec4\"><pre style=\"font-family:'JetBrains Mono',monospace;font-size:9.8pt;\"><span style=\"font-style:italic;\">println</span>(<span style=\"color:#6aab73;\">\"selection&#32;html:&#32;</span><span style=\"color:#cf8e6d;\">\$</span>html<span style=\"color:#6aab73;\">\"</span>)<br><span style=\"font-style:italic;\">println</span>(<span style=\"color:#6aab73;\">\"selection&#32;text:&#32;</span><span style=\"color:#cf8e6d;\">\$</span>text<span style=\"color:#6aab73;\">\"</span>)<br><br><span style=\"color:#cf8e6d;\">val&#32;</span>htmlSelection&#32;=&#32;<span style=\"color:#cf8e6d;\">object&#32;</span>:&#32;StringSelection(html),&#32;Transferable&#32;{</pre></div></body></html>"
+        val richTextState = RichTextStateHtmlParser.encode(html)
+
+        val fontSize = richTextState.richParagraphList[0].getFirstNonEmptyChild()!!.fullSpanStyle.fontSize
+
+        richTextState.richParagraphList.forEachIndexed { index, paragraph ->
+            val paragraphFontSize = paragraph.getFirstNonEmptyChild()!!.fullSpanStyle.fontSize
+            assertEquals(fontSize, paragraphFontSize)
+        }
+    }
+
+    @Test
+    fun testHtmlEncodeInheritSpanStyleCorrectly2() {
+        val html = "<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\"></head><body><div style=\"background-color:#1e1f22;color:#bcbec4\"><pre style=\"font-family:'JetBrains Mono',monospace;font-size:9.8pt;\"><span style=\"color:#cf8e6d;\">val&#32;</span>html&#32;=&#32;<span style=\"color:#6aab73;\">\"hello\"<br></span><span style=\"color:#cf8e6d;\">val&#32;</span>richTextState&#32;=&#32;RichTextStateHtmlParser.encode(html)</pre></div></body></html>"
+        val richTextState = RichTextStateHtmlParser.encode(html)
+
+        val fontSize = richTextState.richParagraphList[0].getFirstNonEmptyChild()!!.fullSpanStyle.fontSize
+
+        richTextState.richParagraphList.forEachIndexed { index, paragraph ->
+            val paragraphFontSize = paragraph.getFirstNonEmptyChild()!!.fullSpanStyle.fontSize
+            assertEquals(fontSize, paragraphFontSize)
+        }
     }
 
 }

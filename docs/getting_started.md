@@ -81,19 +81,24 @@ The styling formats supported by Compose Rich Editor:
 
 ### Paragraph Formatting
 * Text Align
+* Headings (H1..H6) - see [Headings](headings.md)
 * Any custom style using `ParagraphStyle`
 
 ### Lists and Blocks
 * Ordered List
 * Unordered List
-* Code Blocks
+* Code Spans
 
 ### Links
-* Hyperlinks
+* Hyperlinks - see [Links](links.md)
 
-There are some styling formats that are not supported yet, but I'm planning to add them in the future:
+### Rich Content
+* Images (with pluggable `ImageLoader`, Coil3 integration) - see [Images](images.md)
+* Mentions, hashtags, slash commands via triggers - see [Mentions & Triggers](mentions_and_triggers.md)
 
-* Images
+There are some formats that are not supported yet, but are planned for future releases:
+
 * Blockquotes
-* Multiline Code Blocks
-* Checkbox
+* Multiline Code Blocks (with syntax highlighting)
+* Checkboxes / task lists
+* Tables

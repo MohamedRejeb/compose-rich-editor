@@ -1,6 +1,11 @@
 package com.mohamedrejeb.richeditor.parser.html
 
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.model.HeadingStyle
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
@@ -486,15 +491,255 @@ class RichTextStateHtmlParserDecodeTest {
         assertEquals(expectedHtml, richTextState.toHtml())
     }
 
-    @Test
-    fun testDecodeSpanWithOnlySpace() {
-        val html = "<meta charset='utf-8'><span style=\"box-sizing: border-box; color: rgb(240, 246, 252); font-family: -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, &quot;Noto Sans&quot;, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(1, 4, 9); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;\">results in the</span><span style=\"color: rgb(240, 246, 252); font-family: -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, &quot;Noto Sans&quot;, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(1, 4, 9); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;\"><span> </span></span><b style=\"box-sizing: border-box; font-weight: var(--base-text-weight-semibold, 600); color: rgb(240, 246, 252); font-family: -apple-system, &quot;system-ui&quot;, &quot;Segoe UI&quot;, &quot;Noto Sans&quot;, Helvetica, Arial, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(1, 4, 9); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;\">Horizon-School</b>"
-        val richTextState = RichTextStateHtmlParser.encode(html)
 
+
+    @OptIn(ExperimentalRichTextApi::class)
+    @Test
+    fun testToHtmlWithRange() {
+        // Test basic text conversion with range
+        val richTextState = RichTextStateHtmlParser.encode("<p>Hello World!</p>")
+
+        // Test middle range
         assertEquals(
-            "results in the Horizon-School",
-            richTextState.annotatedString.text
+            "<p>World</p>",
+            richTextState.toHtml(TextRange(6, 11))
+        )
+
+        // Test start range
+        assertEquals(
+            "<p>Hello</p>",
+            richTextState.toHtml(TextRange(0, 5))
+        )
+
+        // Test end range
+        assertEquals(
+            "<p>World&excl;</p>",
+            richTextState.toHtml(TextRange(6, 12))
+        )
+
+        // Test full range
+        assertEquals(
+            "<p>Hello World&excl;</p>",
+            richTextState.toHtml(TextRange(0, 12))
+        )
+
+        // Test empty range
+        assertEquals(
+            "<p></p>",
+            richTextState.toHtml(TextRange(0, 0))
         )
     }
 
+    @OptIn(ExperimentalRichTextApi::class)
+    @Test
+    fun testToHtmlWithInvalidRange() {
+        val richTextState = RichTextStateHtmlParser.encode("<p>Hello World</p>")
+
+        // Test range with start > end
+        assertEquals(
+            "<p>llo</p>",
+            richTextState.toHtml(TextRange(5, 2))
+        )
+
+        // Test range beyond text length
+        assertEquals(
+            "<p>World</p>",
+            richTextState.toHtml(TextRange(6, 19))
+        )
+    }
+
+    @OptIn(ExperimentalRichTextApi::class)
+    @Test
+    fun testToHtmlWithNestedStyles() {
+        val richTextState = RichTextStateHtmlParser.encode(
+            "<p>Start <i>italic with <b>bold</b> text</i> end</p>"
+        )
+
+        // Test selecting only nested bold text
+        assertEquals(
+            "<p><b><i>bold</i></b></p>", // order of tags may change here because of optimizations
+            richTextState.toHtml(TextRange(18, 22))
+        )
+
+        // Test selecting partial nested text
+        assertEquals(
+            "<p><i>with <b>bold</b></i></p>",
+            richTextState.toHtml(TextRange(13, 22))
+        )
+
+        // Test selecting entire styled section
+        assertEquals(
+            "<p><i>italic with <b>bold</b> text</i></p>",
+            richTextState.toHtml(TextRange(6, 27))
+        )
+    }
+
+    @OptIn(ExperimentalRichTextApi::class)
+    @Test
+    fun testToHtmlWithRangeAndStyles() {
+        // Test text with mixed styles
+        val richTextState = RichTextStateHtmlParser.encode(
+            "<p>Hello <b>Bold</b> and <i>Italic</i> text!</p>"
+        )
+
+        // Test selecting only bold text
+        assertEquals(
+            "<p><b>Bold</b></p>",
+            richTextState.toHtml(TextRange(6, 10))
+        )
+
+        // Test selecting only italic text
+        assertEquals(
+            "<p><i>Italic</i></p>",
+            richTextState.toHtml(TextRange(15, 21))
+        )
+
+        // Test selecting text with multiple styles
+        assertEquals(
+            "<p><b>Bold</b> and <i>Italic</i></p>",
+            richTextState.toHtml(TextRange(6, 21))
+        )
+
+        // Test selecting partial styled text
+        assertEquals(
+            "<p>o <b>Bold</b> and <i>Ital</i></p>",
+            richTextState.toHtml(TextRange(4, 19))
+        )
+    }
+
+    @Test
+    fun testToHtmlWithRangeReversed() {
+        val richTextState = RichTextStateHtmlParser.encode(
+            "<p>Hey all <b>bruh </b><i>emnn <u>fdf fdf</u> fdf</i></p><p><i>so yes </i></p>"
+        )
+
+        assertEquals(
+            richTextState.toHtml(TextRange(16, 28)),
+            richTextState.toHtml(TextRange(28, 16))
+        )
+    }
+
+    @Test
+    fun testDecodeHeadingParagraphStyles() {
+        val state = RichTextState(
+            initialRichParagraphList = listOf(
+                RichParagraph(type = DefaultParagraph()).also {
+                    it.children.add(RichSpan(text = "Normal Paragraph", paragraph = it))
+                },
+                RichParagraph(type = DefaultParagraph()).also {
+                    it.children.add(RichSpan(text = "Heading 1", paragraph = it))
+                    it.applyHeadingStyle(HeadingStyle.H1)
+                },
+                RichParagraph(type = DefaultParagraph()).also {
+                    it.children.add(RichSpan(text = "Heading 2", paragraph = it))
+                    it.applyHeadingStyle(HeadingStyle.H2)
+                },
+                RichParagraph(type = DefaultParagraph()).also {
+                    it.children.add(RichSpan(text = "Heading 3", paragraph = it))
+                    it.applyHeadingStyle(HeadingStyle.H3)
+                },
+                RichParagraph(type = DefaultParagraph()).also {
+                    it.children.add(RichSpan(text = "Heading 4", paragraph = it))
+                    it.applyHeadingStyle(HeadingStyle.H4)
+                },
+                RichParagraph(type = DefaultParagraph()).also {
+                    it.children.add(RichSpan(text = "Heading 5", paragraph = it))
+                    it.applyHeadingStyle(HeadingStyle.H5)
+                },
+                RichParagraph(type = DefaultParagraph()).also {
+                    it.children.add(RichSpan(text = "Heading 6", paragraph = it))
+                    it.applyHeadingStyle(HeadingStyle.H6)
+                },
+                RichParagraph(type = DefaultParagraph()).also {
+                    it.children.add(RichSpan(text = "Another Normal Paragraph", paragraph = it))
+                }
+            )
+        )
+
+        val html = RichTextStateHtmlParser.decode(state)
+
+        val expectedHtml = """
+            <p>Normal Paragraph</p>
+            <h1>Heading 1</h1>
+            <h2>Heading 2</h2>
+            <h3>Heading 3</h3>
+            <h4>Heading 4</h4>
+            <h5>Heading 5</h5>
+            <h6>Heading 6</h6>
+            <p>Another Normal Paragraph</p>
+        """.trimIndent().replace("\n", "") // Remove newlines for comparison
+
+        assertEquals(expectedHtml, html.replace("\n", ""))
+    }
+
+    @Test
+    fun testDecodeHeadingParagraphStylesWithAdditionalSpanStyle() {
+        val state = RichTextState(
+            initialRichParagraphList = listOf(
+                // Italic is NOT part of any heading's default style, so it must survive as <i>.
+                RichParagraph(type = DefaultParagraph()).also {
+                    val span = RichSpan(text = "Italic Heading 2", paragraph = it)
+                    span.spanStyle = span.spanStyle.merge(SpanStyle(fontStyle = FontStyle.Italic))
+                    it.children.add(span)
+                    it.applyHeadingStyle(HeadingStyle.H2)
+                },
+                // Underline is also NOT part of any heading's default style.
+                RichParagraph(type = DefaultParagraph()).also {
+                    val span = RichSpan(text = "Underlined Heading 3", paragraph = it)
+                    span.spanStyle = span.spanStyle.merge(
+                        SpanStyle(textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline)
+                    )
+                    it.children.add(span)
+                    it.applyHeadingStyle(HeadingStyle.H3)
+                },
+                // Bold IS part of every heading's default — re-applying it on top should NOT
+                // produce a redundant <b> wrapper, because the heading tag already implies bold.
+                RichParagraph(type = DefaultParagraph()).also {
+                    val span = RichSpan(text = "Bold on H1 is redundant", paragraph = it)
+                    span.spanStyle = span.spanStyle.merge(SpanStyle(fontWeight = FontWeight.Bold))
+                    it.children.add(span)
+                    it.applyHeadingStyle(HeadingStyle.H1)
+                }
+            )
+        )
+
+        val html = RichTextStateHtmlParser.decode(state)
+
+        val expectedHtml = """
+            <h2><i>Italic Heading 2</i></h2>
+            <h3><u>Underlined Heading 3</u></h3>
+            <h1>Bold on H1 is redundant</h1>
+        """.trimIndent().replace("\n", "")
+
+        assertEquals(expectedHtml, html.replace("\n", ""))
+    }
+
+    @Test
+    fun testSetHeadingParagraphStyleWithSelection() {
+        val state = RichTextState()
+        val initialText = "Paragraph 1\nParagraph 2\nParagraph 3"
+        state.setText(initialText)
+
+        // Select "Paragraph 2"
+        val paragraph2StartIndex = initialText.indexOf("Paragraph 2")
+        val paragraph2EndIndex = paragraph2StartIndex + "Paragraph 2".length
+        state.selection = TextRange(paragraph2StartIndex, paragraph2EndIndex)
+
+        // Apply H2 heading style
+        state.setHeadingStyle(HeadingStyle.H2)
+
+        // Verify the second paragraph is now H2
+        assertEquals(3, state.richParagraphList.size)
+        assertEquals(HeadingStyle.Normal, state.richParagraphList[0].headingStyle)
+        assertEquals(HeadingStyle.H2, state.richParagraphList[1].headingStyle)
+        assertEquals(HeadingStyle.Normal, state.richParagraphList[2].headingStyle)
+
+        // Verify the text content is unchanged
+        assertEquals(initialText.replace("\n", " "), state.annotatedString.text)
+
+        // Decode to HTML and verify the tag
+        val html = state.toHtml()
+        val expectedHtmlPart = "<h2>Paragraph 2</h2>"
+        assertTrue(html.contains(expectedHtmlPart), "Generated HTML should contain $expectedHtmlPart")
+    }
 }

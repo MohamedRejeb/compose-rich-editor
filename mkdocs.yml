@@ -52,20 +52,25 @@ extra:
 nav:
   - 'Overview': index.md
   - 'Getting Started': getting_started.md
-  - 'RichTextState': rich_text_state.md
-  - 'Span Style': span_style.md
-  - 'Paragraph Style': paragraph_style.md
-  - 'Links': links.md
-  - 'Code Blocks': code_blocks.md
-  - 'Ordered/Unordered lists': ordered_unordered_lists.md
-  - 'HTML import/export': html_import_export.md
-  - 'Markdown import/export': markdown_import_export.md
-  - 'FAQ': faq.md
-  #- 'Compose Components': compose.md
-  - 'Upgrading from 0.x to 1.x': upgrading.md
-  #- 'Change Log': changelog.md
-  #- 'Contributing': contributing.md
-  - 'Code of Conduct': code_of_conduct.md
+  - 'Core':
+    - 'RichTextState': rich_text_state.md
+  - 'Styling':
+    - 'Span Style': span_style.md
+    - 'Paragraph Style': paragraph_style.md
+    - 'Headings': headings.md
+  - 'Rich Content':
+    - 'Links': links.md
+    - 'Code Blocks': code_blocks.md
+    - 'Ordered/Unordered lists': ordered_unordered_lists.md
+    - 'Images': images.md
+    - 'Mentions & Triggers': mentions_and_triggers.md
+  - 'Import / Export':
+    - 'HTML import/export': html_import_export.md
+    - 'Markdown import/export': markdown_import_export.md
+  - 'Reference':
+    - 'FAQ': faq.md
+    - 'Upgrading from 0.x to 1.x': upgrading.md
+    - 'Code of Conduct': code_of_conduct.md
   - 'Sample code': https://github.com/MohamedRejeb/Compose-Rich-Editor/blob/main/sample/common/src/commonMain/kotlin/com/mohamedrejeb/richeditor/sample/common
   - '🕸️ Sample WASM app': https://compose-richeditor.netlify.app/
 

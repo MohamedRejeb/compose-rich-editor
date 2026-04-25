@@ -60,6 +60,7 @@ The following HTML tags are supported:
 - `<p>` - Paragraphs
 - `<div>` - Divisions
 - `<br>` - Line breaks
+- `<h1>`..`<h6>` - Headings (see [Headings](headings.md))
 - `<ul>` - Unordered lists
 - `<ol>` - Ordered lists
 - `<li>` - List items
@@ -67,9 +68,14 @@ The following HTML tags are supported:
 ### Links
 - `<a href="...">` - Hyperlinks
 
+### Rich Content
+- `<img src="..." width="..." height="..." alt="...">` - Inline images (see [Images](images.md))
+- `<span data-trigger-id="..." data-token-id="...">` - Mention/hashtag/command tokens (see [Mentions & Triggers](mentions_and_triggers.md))
+
 ## Notes
 
 - Unsupported HTML tags will be ignored during import
 - Nested lists are supported
 - Custom styles (using style attribute) are not currently supported
 - The HTML output is clean and properly formatted
+- Register triggers **before** calling `setHtml` with content that contains tokens, otherwise tokens fall back to plain text

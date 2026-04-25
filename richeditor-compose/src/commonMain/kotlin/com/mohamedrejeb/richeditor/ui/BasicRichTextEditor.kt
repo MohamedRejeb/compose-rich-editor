@@ -11,12 +11,16 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.onPreviewKeyEvent
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextLayoutResult
@@ -25,6 +29,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
+import com.mohamedrejeb.richeditor.clipboard.ClipboardEventEffect
+import com.mohamedrejeb.richeditor.clipboard.createRichTextClipboardManager
 import com.mohamedrejeb.richeditor.model.RichTextState
 import kotlinx.coroutines.CoroutineScope
 
@@ -97,6 +103,7 @@ public fun BasicRichTextEditor(
     onTextLayout: (TextLayoutResult) -> Unit = {},
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     cursorBrush: Brush = SolidColor(Color.Black),
+    undoBehavior: UndoBehavior = UndoBehavior.Enabled,
     decorationBox: @Composable (innerTextField: @Composable () -> Unit) -> Unit =
         @Composable { innerTextField -> innerTextField() }
 ) {
@@ -115,6 +122,7 @@ public fun BasicRichTextEditor(
         onTextLayout = onTextLayout,
         interactionSource = interactionSource,
         cursorBrush = cursorBrush,
+        undoBehavior = undoBehavior,
         decorationBox = decorationBox,
         contentPadding = PaddingValues()
     )
@@ -190,22 +198,30 @@ public fun BasicRichTextEditor(
     onTextLayout: (TextLayoutResult) -> Unit = {},
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     cursorBrush: Brush = SolidColor(Color.Black),
+    undoBehavior: UndoBehavior = UndoBehavior.Enabled,
     decorationBox: @Composable (innerTextField: @Composable () -> Unit) -> Unit =
         @Composable { innerTextField -> innerTextField() },
     contentPadding: PaddingValues
 ) {
     val density = LocalDensity.current
     val layoutDirection = LocalLayoutDirection.current
-    val clipboardManager = LocalClipboardManager.current
-    val richClipboardManager = remember(state) {
-        RichTextClipboardManager(
+    val clipboard = LocalClipboard.current
+    val richClipboardManager = remember(state, clipboard) {
+        createRichTextClipboardManager(
             richTextState = state,
-            clipboardManager = clipboardManager
+            clipboard = clipboard
         )
     }
 
+    ClipboardEventEffect(richTextState = state)
+
     LaunchedEffect(singleParagraph) {
         state.singleParagraphMode = singleParagraph
+    }
+
+    DisposableEffect(state, undoBehavior) {
+        state.suppressUndoShortcuts = (undoBehavior == UndoBehavior.Disabled)
+        onDispose { state.suppressUndoShortcuts = false }
     }
 
     if (!singleParagraph) {
@@ -229,7 +245,28 @@ public fun BasicRichTextEditor(
         }
     }
 
-    CompositionLocalProvider(LocalClipboardManager provides richClipboardManager) {
+    CompositionLocalProvider(LocalClipboard provides richClipboardManager) {
+        // Capture position on the innerTextField (the actual text content composable),
+        // not on the outer BasicTextField, so trigger-suggestion popups can anchor
+        // precisely at the text content's origin - not at the top of the decorated
+        // container (which for OutlinedRichTextEditor is ~16dp higher).
+        val positionCapturingDecorationBox: @Composable (innerTextField: @Composable () -> Unit) -> Unit =
+            { innerTextField ->
+                decorationBox {
+                    Layout(
+                        content = { innerTextField() },
+                        modifier = Modifier.onPlaced { coords ->
+                            state.textFieldWindowPosition = coords.positionInWindow()
+                        }
+                    ) { measurables, constraints ->
+                        val placeable = measurables.first().measure(constraints)
+                        layout(placeable.width, placeable.height) {
+                            placeable.place(0, 0)
+                        }
+                    }
+                }
+            }
+
         BasicTextField(
             value = state.textFieldValue,
             onValueChange = {
@@ -239,6 +276,9 @@ public fun BasicRichTextEditor(
                 state.onTextFieldValueChange(it)
             },
             modifier = modifier
+                .onFocusChanged { focusState ->
+                    state.isFocused = focusState.isFocused
+                }
                 .onPreviewKeyEvent { event ->
                     if (readOnly)
                         return@onPreviewKeyEvent false
@@ -289,7 +329,7 @@ public fun BasicRichTextEditor(
             },
             interactionSource = interactionSource,
             cursorBrush = cursorBrush,
-            decorationBox = decorationBox,
+            decorationBox = positionCapturingDecorationBox,
         )
     }
 }

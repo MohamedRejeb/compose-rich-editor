@@ -10,9 +10,7 @@ import androidx.compose.ui.util.fastForEachIndexed
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
-import com.mohamedrejeb.richeditor.model.RichTextConfig
 import com.mohamedrejeb.richeditor.model.RichTextState
-import com.mohamedrejeb.richeditor.ui.RichTextClipboardManager
 import kotlin.math.max
 import kotlin.math.min
 
@@ -123,7 +121,24 @@ internal fun AnnotatedString.Builder.append(
 ): Int {
     var index = startIndex
 
-    withStyle(richSpan.spanStyle.merge(richSpan.richSpanStyle.spanStyle(state.config))) {
+    withStyle(richSpan.spanStyle.merge(resolveRichSpanStyleStyle(state, richSpan.richSpanStyle))) {
+        if (richSpan.richSpanStyle is RichSpanStyle.Image) {
+            // Image owns a single placeholder char in the raw text;
+            // appendCustomContent (via appendInlineContent) emits that
+            // char plus the inline-content annotation. Skip the normal
+            // append path so the placeholder isn't duplicated. See #466.
+            richSpan.textRange = TextRange(index, index + richSpan.text.length)
+
+            with(richSpan.richSpanStyle) {
+                appendCustomContent(richTextState = state)
+            }
+
+            onStyledRichSpan(richSpan)
+
+            index += richSpan.text.length
+            return@withStyle
+        }
+
         val newText = text.substring(index, index + richSpan.text.length)
 
         richSpan.text = newText
@@ -188,65 +203,6 @@ internal fun AnnotatedString.Builder.append(
 }
 
 /**
- * Used in [RichTextClipboardManager]
- */
-internal fun AnnotatedString.Builder.append(
-    richSpanList: List<RichSpan>,
-    startIndex: Int,
-    selection: TextRange,
-    richTextConfig: RichTextConfig,
-): Int {
-    var index = startIndex
-    richSpanList.fastForEach { richSpan ->
-        index = append(
-            richSpan = richSpan,
-            startIndex = index,
-            selection = selection,
-            richTextConfig = richTextConfig,
-        )
-    }
-    return index
-}
-
-/**
- * Used in [RichTextClipboardManager]
- */
-@OptIn(ExperimentalRichTextApi::class)
-internal fun AnnotatedString.Builder.append(
-    richSpan: RichSpan,
-    startIndex: Int,
-    selection: TextRange,
-    richTextConfig: RichTextConfig,
-): Int {
-    var index = startIndex
-
-    withStyle(richSpan.spanStyle.merge(richSpan.richSpanStyle.spanStyle(richTextConfig))) {
-        richSpan.textRange = TextRange(index, index + richSpan.text.length)
-        if (
-            !selection.collapsed &&
-            selection.min < index + richSpan.text.length &&
-            selection.max > index
-        ) {
-            val selectedText = richSpan.text.substring(
-                max(0, selection.min - index),
-                min(selection.max - index, richSpan.text.length)
-            )
-            append(selectedText)
-        }
-        index += richSpan.text.length
-        richSpan.children.fastForEach { richSpan ->
-            index = append(
-                richSpan = richSpan,
-                startIndex = index,
-                selection = selection,
-                richTextConfig = richTextConfig,
-            )
-        }
-    }
-    return index
-}
-
-/**
  * Used in [RichTextState.updateRichParagraphList]
  */
 internal fun AnnotatedString.Builder.append(
@@ -279,9 +235,17 @@ internal fun AnnotatedString.Builder.append(
 ): Int {
     var index = startIndex
 
-    withStyle(richSpan.spanStyle.merge(richSpan.richSpanStyle.spanStyle(state.config))) {
+    withStyle(richSpan.spanStyle.merge(resolveRichSpanStyleStyle(state, richSpan.richSpanStyle))) {
         richSpan.textRange = TextRange(index, index + richSpan.text.length)
-        append(richSpan.text)
+
+        // Image owns a single placeholder char in the raw text;
+        // appendCustomContent (via appendInlineContent) emits that
+        // char plus the inline-content annotation. Skip append(text)
+        // for images so the placeholder isn't duplicated. See #466.
+        if (richSpan.richSpanStyle !is RichSpanStyle.Image) {
+            append(richSpan.text)
+        }
+
         with(richSpan.richSpanStyle) {
             appendCustomContent(
                 richTextState = state,
@@ -303,4 +267,21 @@ internal fun AnnotatedString.Builder.append(
         }
     }
     return index
+}
+
+/**
+ * Resolve a span's render-time [SpanStyle], preferring the registered [Trigger]'s style
+ * for [RichSpanStyle.Token] spans when the trigger is known. Falls back to the style
+ * encoded on the [RichSpanStyle] itself (which, for Token, is a neutral default).
+ */
+@OptIn(ExperimentalRichTextApi::class)
+private fun resolveRichSpanStyleStyle(
+    state: RichTextState,
+    richSpanStyle: RichSpanStyle,
+): SpanStyle {
+    if (richSpanStyle is RichSpanStyle.Token) {
+        val trigger = state.findTrigger(richSpanStyle.triggerId)
+        if (trigger != null) return trigger.style(state.config)
+    }
+    return richSpanStyle.spanStyle(state.config)
 }

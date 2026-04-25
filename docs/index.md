@@ -177,6 +177,67 @@ val isOrderedList = richTextState.isOrderedList
 val isUnorderedList = richTextState.isUnorderedList
 ```
 
+#### Headings
+
+To set the heading level for the current paragraph(s), use `RichTextState.setHeadingStyle`:
+
+```kotlin
+richTextState.setHeadingStyle(HeadingStyle.H2)
+
+// Back to a plain paragraph
+richTextState.setHeadingStyle(HeadingStyle.Normal)
+```
+
+To read the heading level of the paragraph at the caret, use `currentHeadingStyle`:
+
+```kotlin
+val isH1 = richTextState.currentHeadingStyle == HeadingStyle.H1
+```
+
+See [Headings](headings.md) for details.
+
+#### Images
+
+Inline images render through a pluggable `ImageLoader`. For network images, drop in the Coil3 integration:
+
+```kotlin
+implementation("com.mohamedrejeb.richeditor:richeditor-compose-coil3:1.0.0-rc13")
+```
+
+```kotlin
+CompositionLocalProvider(LocalImageLoader provides Coil3ImageLoader) {
+    RichText(state = richTextState)
+}
+```
+
+Images are inserted via `setHtml` (or `setMarkdown`) and round-trip through `<img>` tags. See [Images](images.md) for details, including custom loaders and container-width clamping.
+
+#### Mentions, Hashtags, and Slash Commands
+
+Register triggers on the state and drop in a `TriggerSuggestions` popup:
+
+```kotlin
+state.registerTrigger(
+    Trigger(id = "mention", char = '@')
+)
+
+Box {
+    OutlinedRichTextEditor(state = state)
+
+    TriggerSuggestions(
+        state = state,
+        triggerId = "mention",
+        suggestions = { query -> users.filter { it.handle.contains(query, ignoreCase = true) } },
+        onSelect = { user ->
+            RichSpanStyle.Token(triggerId = "mention", id = user.id, label = user.handle)
+        },
+        item = { user -> Text(user.handle) },
+    )
+}
+```
+
+See [Mentions & Triggers](mentions_and_triggers.md) for the full API, including `/commands`, `#hashtags`, token click/hover handlers, and HTML/Markdown round-trip.
+
 #### Customizing the rich text configuration
 
 Some of the rich text editor's features can be customized, such as the color of the links and the code blocks.

@@ -28,7 +28,7 @@ The `richeditor-compose-coil3` artifact ships a drop-in `Coil3ImageLoader` that
 uses Coil's `rememberAsyncImagePainter`:
 
 ```kotlin
-implementation("com.mohamedrejeb.richeditor:richeditor-compose-coil3:1.0.0-rc13")
+implementation("com.mohamedrejeb.richeditor:richeditor-compose-coil3:1.0.0-rc14")
 ```
 
 Provide it via `CompositionLocalProvider`, usually at the root of your editor

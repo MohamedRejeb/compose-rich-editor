@@ -1935,6 +1935,23 @@ public class RichTextState internal constructor(
     private var forceCheckAllNewlines = false
 
     /**
+     * Set to true right after [checkForParagraphs] creates a new list paragraph and
+     * inserts its startText (e.g. "• " or "1. ") into [tempTextFieldValue].
+     *
+     * Some IMEs (Samsung and others) respond to that programmatic text insertion with
+     * one or more removal callbacks that remove exactly the startText characters from
+     * the newly-created, still-empty paragraph. These are NOT user-initiated deletions —
+     * they are the IME reconciling its internal buffer with the text we inserted.
+     *
+     * [handleRemovingCharacters] uses this flag (together with a positional check) to
+     * distinguish an IME resync from a real Backspace, and restores the startText
+     * instead of demoting the paragraph type. The flag is intentionally NOT cleared on
+     * each resync so that repeated resyncs from persistent IMEs are all handled the
+     * same way; it is cleared once the user actually types into the new bullet item.
+     */
+    private var justInsertedListParagraph = false
+
+    /**
      * Handles the new text field value.
      *
      * @param newTextFieldValue the new text field value.
@@ -2001,8 +2018,12 @@ public class RichTextState internal constructor(
 
         tempTextFieldValue = newTextFieldValue
 
-        if (tempTextFieldValue.text.length > textFieldValue.text.length)
+        if (tempTextFieldValue.text.length > textFieldValue.text.length) {
+            // Disarm before the add path; checkForParagraphs will re-arm if it
+            // inserts a new list paragraph with startText.
+            justInsertedListParagraph = false
             handleAddingCharacters()
+        }
         else if (tempTextFieldValue.text.length < textFieldValue.text.length) {
             val newNewlineCount = tempTextFieldValue.text.count { it == '\n' }
             val oldNewlineCount = textFieldValue.text.count { it == '\n' }
@@ -2588,31 +2609,73 @@ public class RichTextState internal constructor(
                 minRichSpan.paragraph.children.clear()
                 richParagraphList.remove(minRichSpan.paragraph)
             } else {
-                handleRemoveMinParagraphStartText(
-                    removeIndex = minRemoveIndex,
-                    paragraphStartTextLength = minParagraphStartTextLength,
-                    paragraphFirstChildMinIndex = minParagraphFirstChildMinIndex,
-                )
-
-                // Save the old paragraph type
                 val minParagraphOldType = minRichSpan.paragraph.type
 
-                // Set the paragraph type to DefaultParagraph
-                minRichSpan.paragraph.type = DefaultParagraph()
-
-                // Check if it's a list and handle level appropriately
-                if (
-                    maxRemoveIndex - minRemoveIndex == 1 &&
+                // Detect an IME resync: after checkForParagraphs inserts a list startText
+                // (e.g. "• " or "1. ") into tempTextFieldValue, some IMEs (Samsung and
+                // others) send one or more removal callbacks that strip exactly those
+                // characters from the still-empty new paragraph. These are NOT user
+                // Backspaces — they are the IME reconciling its internal buffer with the
+                // text we inserted programmatically.
+                //
+                // Detection criteria (all must be true):
+                //   • justInsertedListParagraph is set (checkForParagraphs just fired)
+                //   • the paragraph is a list type (has a startText prefix)
+                //   • the paragraph body is empty (only startText exists, nothing typed yet)
+                //   • the removal count equals exactly the startText length
+                //   • the removal starts exactly where the startText begins
+                //
+                // On detection: restore the startText into tempTextFieldValue so that
+                // updateAnnotatedString sees no net change and the IME converges.
+                // We do NOT clear justInsertedListParagraph — repeated resyncs from
+                // persistent IMEs are all handled the same way. The flag is cleared once
+                // the user types an actual character into the new bullet item.
+                val isComposeResync =
+                    justInsertedListParagraph &&
                     minParagraphOldType is ConfigurableListLevel &&
-                    minParagraphOldType.level > 1
-                ) {
-                    // Decrease level instead of exiting list
-                    minParagraphOldType.level -= 1
-                    tempTextFieldValue = updateParagraphType(
-                        paragraph = minRichSpan.paragraph,
-                        newType = minParagraphOldType,
-                        textFieldValue = tempTextFieldValue,
+                    minRichSpan.paragraph.isEmpty() &&
+                    removedCharsCount == minParagraphStartTextLength &&
+                    minRemoveIndex == minParagraphFirstChildMinIndex - minParagraphStartTextLength
+
+                if (isComposeResync) {
+                    val startText = minParagraphOldType.startText
+                    if (startText.isNotEmpty()) {
+                        val insertAt = minRemoveIndex.coerceIn(0, tempTextFieldValue.text.length)
+                        tempTextFieldValue = tempTextFieldValue.copy(
+                            text = tempTextFieldValue.text.substring(0, insertAt) +
+                                startText +
+                                tempTextFieldValue.text.substring(insertAt),
+                            selection = TextRange(
+                                (tempTextFieldValue.selection.start + startText.length)
+                                    .coerceAtLeast(0),
+                            ),
+                        )
+                    }
+                } else {
+                    justInsertedListParagraph = false
+                    handleRemoveMinParagraphStartText(
+                        removeIndex = minRemoveIndex,
+                        paragraphStartTextLength = minParagraphStartTextLength,
+                        paragraphFirstChildMinIndex = minParagraphFirstChildMinIndex,
                     )
+
+                    // Set the paragraph type to DefaultParagraph
+                    minRichSpan.paragraph.type = DefaultParagraph()
+
+                    // Check if it's a list and handle level appropriately
+                    if (
+                        maxRemoveIndex - minRemoveIndex == 1 &&
+                        minParagraphOldType is ConfigurableListLevel &&
+                        minParagraphOldType.level > 1
+                    ) {
+                        // Decrease level instead of exiting list
+                        minParagraphOldType.level -= 1
+                        tempTextFieldValue = updateParagraphType(
+                            paragraph = minRichSpan.paragraph,
+                            newType = minParagraphOldType,
+                            textFieldValue = tempTextFieldValue,
+                        )
+                    }
                 }
             }
         }
@@ -3115,6 +3178,14 @@ public class RichTextState internal constructor(
                     end = tempTextFieldValue.selection.end + newParagraph.type.startText.length,
                 ),
             )
+
+            // Arm the IME-resync guard: some IMEs respond to the programmatic startText
+            // insertion above by sending a removal callback that removes exactly those
+            // characters. handleRemovingCharacters uses this flag to detect and absorb
+            // such resyncs instead of treating them as user Backspaces.
+            if (newParagraph.type.startText.isNotEmpty()) {
+                justInsertedListParagraph = true
+            }
 
             // Add the new paragraph
             richParagraphList.add(paragraphIndex + 1, newParagraph)

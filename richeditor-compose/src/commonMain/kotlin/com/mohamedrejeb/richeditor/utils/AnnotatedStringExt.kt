@@ -139,7 +139,15 @@ internal fun AnnotatedString.Builder.append(
             return@withStyle
         }
 
-        val newText = text.substring(index, index + richSpan.text.length)
+        // Guard against stale span lengths that exceed the new text. Samsung soft keyboards
+        // on budget devices (e.g. A04, A57) route some input through TextFieldKeyInput
+        // (dispatchKeyEvent) rather than the IME protocol, delivering a new TextFieldValue
+        // atomically before span reconciliation runs. Without this clamp the substring
+        // throws StringIndexOutOfBoundsException when a span's stored length overshoots
+        // the incoming text. Physical keyboards trigger the same code path.
+        val safeStart = index.coerceAtMost(text.length)
+        val safeEnd = (index + richSpan.text.length).coerceAtMost(text.length)
+        val newText = text.substring(safeStart, safeEnd)
 
         richSpan.text = newText
         richSpan.textRange = TextRange(index, index + richSpan.text.length)

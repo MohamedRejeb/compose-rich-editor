@@ -2304,11 +2304,15 @@ public class RichTextState internal constructor(
         // measures the prefix and corrects it.
         applyCachedStartTextWidths()
 
+        // Collect paragraph indices to remove after iteration — calling removeAt(i) inside
+        // fastForEachIndexed throws IndexOutOfBoundsException because the loop captures the
+        // list size once and the removal shifts subsequent indices.
+        val paragraphIndicesToRemove = mutableListOf<Int>()
         annotatedString = buildAnnotatedString {
             var index = 0
             richParagraphList.fastForEachIndexed { i, richParagraph ->
                 if (index > newText.length) {
-                    richParagraphList.removeAt(i)
+                    paragraphIndicesToRemove.add(i)
                     return@fastForEachIndexed
                 }
 
@@ -2341,6 +2345,15 @@ public class RichTextState internal constructor(
                             }
                         }
                     }
+                }
+            }
+        }
+
+        // Remove stale paragraphs in reverse order so earlier indices stay valid.
+        if (paragraphIndicesToRemove.isNotEmpty()) {
+            for (idx in paragraphIndicesToRemove.sortedDescending()) {
+                if (idx in richParagraphList.indices) {
+                    richParagraphList.removeAt(idx)
                 }
             }
         }

@@ -3055,6 +3055,14 @@ public class RichTextState internal constructor(
             // This is to make sure that the index is not in paragraph custom start text
             val sliceIndex = max(index, richSpan.textRange.min)
 
+            // Guard: a prior loop iteration may have inserted startText into tempTextFieldValue,
+            // leaving span textRanges stale (they will be reconciled by updateAnnotatedString).
+            // If sliceIndex points past the current text end, skip rather than crash on substring.
+            if (sliceIndex >= tempTextFieldValue.text.length) {
+                index--
+                continue
+            }
+
             // Create a new paragraph style
             val newParagraph = richSpan.paragraph.slice(
                 startIndex = sliceIndex,

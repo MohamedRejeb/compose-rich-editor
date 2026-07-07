@@ -10,18 +10,19 @@ import kotlin.test.Test
 import kotlin.test.fail
 
 /**
- * Fuzz round 2, with stronger oracles than round 1 (Issue716StringIndexFuzzTest):
- * every edit checks annotatedString/textFieldValue consistency and selection bounds,
- * plain-document scenarios require the text to exactly equal the committed text,
+ * Edit-pipeline fuzz harness with corruption oracles, stronger than
+ * [Issue716StringIndexFuzzTest]'s crash-only net: every edit checks
+ * annotatedString/textFieldValue consistency and selection bounds, plain-document
+ * scenarios require the text to exactly equal the committed text,
  * toHtml()/toMarkdown() run periodically, and undo/redo and emoji surrogate pairs are
  * part of the op mix. All known-bug masks except the separator-overwrite one (see
  * `knownSeparatorOverwrite` below) were removed after the fixes landed.
  */
 @OptIn(ExperimentalRichTextApi::class)
-class RichTextEditFuzzRound2Test {
+class RichTextEditCorruptionFuzzTest {
 
     @Test
-    fun `fuzz round 2 with corruption oracles must find no new issues`() {
+    fun `fuzz with corruption oracles must find no new issues`() {
         val scenarios = 600
         val stepsPerScenario = 40
 
@@ -38,7 +39,7 @@ class RichTextEditFuzzRound2Test {
             fun finding(message: String): Nothing =
                 fail(
                     buildString {
-                        appendLine("Fuzz round 2 finding, seed=$seed plainMode=$plainMode")
+                        appendLine("Corruption fuzz finding, seed=$seed plainMode=$plainMode")
                         appendLine(message)
                         appendLine("Op log (${opLog.size} ops):")
                         opLog.forEach { appendLine("  $it") }

@@ -186,8 +186,9 @@ class RichTextHtmlRoundTripFuzzTest {
             } catch (t: Throwable) {
                 if (t is AssertionError) throw t
                 // Edit-pipeline crashes (tree/text desync families) are already pinned
-                // by rounds 1 and 2; this round hunts the export surface, so skip the
-                // scenario when the crash came from onTextFieldValueChange.
+                // by Issue716StringIndexFuzzTest and RichTextEditCorruptionFuzzTest;
+                // this harness hunts the export surface, so skip the scenario when the
+                // crash came from onTextFieldValueChange.
                 val isKnownEditPipelineCrash = t is IndexOutOfBoundsException &&
                     t.stackTraceToString().contains("onTextFieldValueChange")
                 if (!isKnownEditPipelineCrash) {

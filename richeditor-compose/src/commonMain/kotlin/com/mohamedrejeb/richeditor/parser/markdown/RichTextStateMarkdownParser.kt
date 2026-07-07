@@ -153,6 +153,23 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                             (currentRichParagraphType as ConfigurableListLevel).level = currentListLevel
                         }
 
+                        // Interrupted lists parse as separate list nodes; seed the item
+                        // with the literal source number so the author's numbering
+                        // survives renumbering (#734).
+                        val literalNumber = node.children
+                            .firstOrNull { it.type == MarkdownTokenTypes.LIST_NUMBER }
+                            ?.getTextInNode(correctedMarkdown)
+                            ?.toString()
+                            ?.takeWhile { char -> char.isDigit() }
+                            ?.toIntOrNull()
+                        if (literalNumber != null) {
+                            currentRichParagraphType = OrderedList(
+                                number = literalNumber,
+                                initialLevel = currentListLevel,
+                                startFrom = literalNumber,
+                            )
+                        }
+
                         currentRichParagraph.type = currentRichParagraphType
                     }
 

@@ -290,7 +290,7 @@ class RichTextStateVisualTransformationRaceTest {
         val state = RichTextState()
         state.setHtml(
             "<p>" +
-                ("This is a long paragraph that wraps and wraps. ".repeat(40)) +
+                "This is a long paragraph that wraps and wraps. ".repeat(40) +
                 "</p>"
         )
         state.assertVtInvariant("long flowing paragraph")

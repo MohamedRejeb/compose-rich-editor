@@ -25,6 +25,7 @@ internal actual fun Modifier.adjustTextIndicatorOffset(
         val topPadding = with(density) { contentPadding.calculateTopPadding().toPx() }
         val startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() }
 
+        state.onSelectionGestureStart()
         scope.launch {
             adjustTextIndicatorOffset(
                 pressPosition = pressPosition,
@@ -33,4 +34,7 @@ internal actual fun Modifier.adjustTextIndicatorOffset(
                 startPadding = startPadding,
             )
         }
+    }
+    .onPointerEvent(PointerEventType.Release) {
+        state.onSelectionGestureEnd()
     }

@@ -43,6 +43,7 @@ import com.mohamedrejeb.richeditor.model.trigger.TriggerQuery
 import com.mohamedrejeb.richeditor.model.trigger.detectActiveTrigger
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.*
+import com.mohamedrejeb.richeditor.platform.currentPlatform
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startText
 import com.mohamedrejeb.richeditor.parser.html.RichTextStateHtmlParser
 import com.mohamedrejeb.richeditor.parser.markdown.RichTextStateMarkdownParser
@@ -54,8 +55,22 @@ import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import kotlin.math.max
 import kotlin.reflect.KClass
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 private val RichTextStateHistoryClockStart = kotlin.time.TimeSource.Monotonic.markNow()
+
+/**
+ * Keeps a selection gesture live across Android's press Cancel at long-press start
+ * and short mid-drag pauses.
+ */
+private val SelectionGestureGrace = 1.seconds
+
+/**
+ * A pointer position older than this must not clamp: handle drags never cross the
+ * editor node and leave the observed position stale.
+ */
+private val SelectionGesturePointerFreshness = 500.milliseconds
 
 @Composable
 public fun rememberRichTextState(
@@ -382,6 +397,38 @@ public class RichTextState internal constructor(
         private set
 
     private var lastPressPosition: Offset? by mutableStateOf(null)
+
+    // lastActivity keeps the gesture alive through Android's press Cancel at
+    // long-press start; each routed non-collapsed selection change refreshes it.
+    private var selectionGesturePressed = false
+    private var selectionGestureLastActivity: kotlin.time.TimeMark? = null
+
+    // On touch platforms no press signal is reliable (the selection handles are
+    // separate popups, and the press interaction is cancelled at long-press start),
+    // so every platform selection change counts as gesture-driven.
+    internal var treatSelectionChangesAsGesture: Boolean =
+        currentPlatform.isAndroid || currentPlatform.isIOS
+
+    internal fun onSelectionGestureStart() {
+        selectionGesturePressed = true
+        selectionGestureLastActivity = kotlin.time.TimeSource.Monotonic.markNow()
+    }
+
+    internal fun onSelectionGestureEnd() {
+        selectionGesturePressed = false
+        selectionGestureLastActivity = kotlin.time.TimeSource.Monotonic.markNow()
+    }
+
+    // Latest pressed pointer position over the editor, feeding the geometric clamp
+    // in [adjustGestureSelection].
+    internal var selectionGesturePointer: Offset? = null
+        private set
+    private var selectionGesturePointerMark: kotlin.time.TimeMark? = null
+
+    internal fun onSelectionGesturePointerMove(position: Offset) {
+        selectionGesturePointer = position
+        selectionGesturePointerMark = kotlin.time.TimeSource.Monotonic.markNow()
+    }
 
     private var currentAppliedSpanStyle: SpanStyle by mutableStateOf(
         getRichSpanByTextIndex(textIndex = selection.min - 1)?.fullSpanStyle
@@ -2121,9 +2168,13 @@ public class RichTextState internal constructor(
                 }
             }
         } else if (tempTextFieldValue.selection != textFieldValue.selection) {
+            val gestureAdjusted = adjustGestureSelection(tempTextFieldValue.selection)
+            if (gestureAdjusted != tempTextFieldValue.selection)
+                tempTextFieldValue = tempTextFieldValue.copy(selection = gestureAdjusted)
+
             val lastPressPosition = this.lastPressPosition
             if (lastPressPosition != null) {
-                adjustSelection(lastPressPosition, newTextFieldValue.selection)
+                adjustSelection(lastPressPosition, tempTextFieldValue.selection)
                 return
             }
         }
@@ -4531,6 +4582,89 @@ public class RichTextState internal constructor(
         } else if (newSelection != null) {
             applyAdjustedSelection(newSelection)
         }
+    }
+
+    private fun isSelectionGestureLive(): Boolean =
+        treatSelectionChangesAsGesture ||
+            selectionGesturePressed ||
+            selectionGestureLastActivity?.let { it.elapsedNow() < SelectionGestureGrace } == true
+
+    /**
+     * Corrects the moving edge of a drag selection: it may not extend below the
+     * pointer's line, and may not land exactly on a paragraph's start offset (which
+     * would select the virtual separator and highlight the next line). Select-all,
+     * collapsed carets, and selections without a live gesture pass through untouched.
+     */
+    private fun adjustGestureSelection(selection: TextRange): TextRange {
+        if (selection.collapsed || !isSelectionGestureLive())
+            return selection
+
+        selectionGestureLastActivity = kotlin.time.TimeSource.Monotonic.markNow()
+
+        // Only the moving edge may be corrected: the other edge is the anchor, and on
+        // a backward drag the anchor is the max, legitimately below the pointer's
+        // line. When both edges changed (first event of a gesture) the moving edge is
+        // unknown and nothing is corrected.
+        val oldSelection = textFieldValue.selection
+        val movingEdgeIsMax = when {
+            selection.start == oldSelection.start && selection.end != oldSelection.end ->
+                selection.end > selection.start
+
+            selection.end == oldSelection.end && selection.start != oldSelection.start ->
+                selection.start > selection.end
+
+            else -> false
+        }
+        if (!movingEdgeIsMax)
+            return selection
+
+        val max = selection.max
+        if (max <= 0 || max >= textFieldValue.text.length)
+            return selection
+
+        // Dragging into the empty area after a short line maps to the next
+        // paragraph's start, and the platform's word acceleration then swallows the
+        // next line's first word; the pointer's line is the user's intent.
+        val pointer = selectionGesturePointer
+        val pointerFresh =
+            selectionGesturePointerMark?.let { it.elapsedNow() < SelectionGesturePointerFreshness } == true
+        val layout = textLayoutResult
+        if (
+            pointer != null &&
+            pointerFresh &&
+            layout != null &&
+            layout.layoutInput.text.length == textFieldValue.text.length
+        ) {
+            val pointerLine = layout.getLineForVerticalPosition(
+                pointer.y.coerceIn(0f, layout.size.height.toFloat())
+            )
+            val maxLine = layout.getLineForOffset(max)
+            if (maxLine > pointerLine) {
+                val clampedMax = layout.getLineEnd(pointerLine, visibleEnd = true)
+                if (clampedMax > selection.min && clampedMax < max) {
+                    return if (selection.start > selection.end)
+                        TextRange(clampedMax, selection.end)
+                    else
+                        TextRange(selection.start, clampedMax)
+                }
+            }
+        }
+
+        val isParagraphStart = richParagraphList
+            .asSequence()
+            .drop(1)
+            .any { paragraph ->
+                val firstChild = paragraph.getFirstNonEmptyChild() ?: paragraph.type.startRichSpan
+                firstChild.textRange.min - paragraph.type.startText.length == max
+            }
+        if (!isParagraphStart)
+            return selection
+
+        val newMax = max - 1
+        return if (selection.start > selection.end)
+            TextRange(newMax, selection.end)
+        else
+            TextRange(selection.start, newMax)
     }
 
     /**

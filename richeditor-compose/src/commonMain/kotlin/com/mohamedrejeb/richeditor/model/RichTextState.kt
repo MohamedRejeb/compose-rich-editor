@@ -2671,7 +2671,9 @@ public class RichTextState internal constructor(
 
             val imageSibling =
                 candidateRichSpan?.takeIf { it.richSpanStyle.isAtomic }
-            val paragraph = imageSibling?.paragraph ?: richParagraphList.last()
+            val paragraph = imageSibling?.paragraph
+                ?: getRichParagraphListByTextRange(TextRange(previousIndex)).firstOrNull()
+                ?: richParagraphList.last()
             val newRichSpan = RichSpan(
                 paragraph = paragraph,
                 text = typedText,

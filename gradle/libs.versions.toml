@@ -8,7 +8,7 @@ dokka = "2.2.0"
 
 ksoup = "0.6.0"
 jetbrainsMarkdown = "0.7.7"
-coil = "3.4.0"
+coil = "3.5.0"
 
 vanniktech-maven-publish = "0.36.0"
 

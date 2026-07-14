@@ -1751,10 +1751,14 @@ class RichTextStateTest {
             )
         )
 
+        // Type "World" into the second item, deriving the value from the live state
+        // text the way a real text field reports it.
+        val textAfterEnter = state.textFieldValue.text
+        assertEquals("1. Hello  2. ", textAfterEnter)
         state.onTextFieldValueChange(
             TextFieldValue(
-                text = "1. Hello 2. World",
-                selection = TextRange(17),
+                text = textAfterEnter + "World",
+                selection = TextRange(textAfterEnter.length + 5),
             )
         )
 

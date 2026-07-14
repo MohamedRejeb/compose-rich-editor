@@ -1929,12 +1929,6 @@ public class RichTextState internal constructor(
     private var tempTextFieldValue = textFieldValue
 
     /**
-     * Set to true when the IME revert is detected (#640), so [checkForParagraphs]
-     * uses a threshold of 0 to scan all newlines.
-     */
-    private var forceCheckAllNewlines = false
-
-    /**
      * Handles the new text field value.
      *
      * @param newTextFieldValue the new text field value.
@@ -1953,7 +1947,10 @@ public class RichTextState internal constructor(
             }
             newText.length < oldText.length ->
                 CommitTrigger.Delete(caret = newTextFieldValue.selection.min)
-            newText == oldText && newTextFieldValue.selection != textFieldValue.selection ->
+            // Same-length replacement (autocorrect rewrite): its own undo group.
+            newText != oldText ->
+                CommitTrigger.Structural
+            newTextFieldValue.selection != textFieldValue.selection ->
                 CommitTrigger.SelectionJump
             else -> null
         }
@@ -2001,66 +1998,129 @@ public class RichTextState internal constructor(
 
         tempTextFieldValue = newTextFieldValue
 
-        if (tempTextFieldValue.text.length > textFieldValue.text.length)
-            handleAddingCharacters()
-        else if (tempTextFieldValue.text.length < textFieldValue.text.length) {
-            val newNewlineCount = tempTextFieldValue.text.count { it == '\n' }
-            val oldNewlineCount = textFieldValue.text.count { it == '\n' }
-            val isImeRevert = newNewlineCount > oldNewlineCount
-                && !singleParagraphMode
-                && richParagraphList.size > 1
-                && textFieldValue.selection.collapsed
+        val oldTextFieldValue = textFieldValue
+        val oldText = oldTextFieldValue.text
+        val newText = tempTextFieldValue.text
 
-            // Selection replacement: old selection was a range and the new text fits the
-            // pattern of "selection removed + optional replacement chars at selection start".
-            // Split into two steps: remove the old selection, then add any replacement chars.
-            val selMin = textFieldValue.selection.min
-            val selMax = textFieldValue.selection.max
-            val pureRemovalText = textFieldValue.text.substring(0, selMin) +
-                textFieldValue.text.substring(selMax)
-            val newTextStartsWithPrefix = tempTextFieldValue.text.length >= selMin &&
-                tempTextFieldValue.text.substring(0, selMin) == textFieldValue.text.substring(0, selMin)
-            val replacementCount = tempTextFieldValue.text.length - pureRemovalText.length
-            val isSelectionReplacement = !textFieldValue.selection.collapsed &&
-                !isImeRevert &&
-                newTextStartsWithPrefix &&
-                replacementCount >= 0 &&
-                tempTextFieldValue.text.length >= selMin + replacementCount &&
-                tempTextFieldValue.text.substring(selMin + replacementCount) ==
-                    textFieldValue.text.substring(selMax)
+        if (newText != oldText) {
+            // Diff the real changed region (longest common prefix/suffix): IME batch
+            // edits can change text away from the selection, so the selection alone
+            // cannot be trusted (#716).
+            var commonPrefix = 0
+            val maxCommon = minOf(oldText.length, newText.length)
+            while (
+                commonPrefix < maxCommon &&
+                oldText[commonPrefix] == newText[commonPrefix]
+            ) commonPrefix++
+            var commonSuffix = 0
+            val maxSuffix = maxCommon - commonPrefix
+            while (
+                commonSuffix < maxSuffix &&
+                oldText[oldText.lastIndex - commonSuffix] == newText[newText.lastIndex - commonSuffix]
+            ) commonSuffix++
 
-            if (isImeRevert) {
-                // IME revert: merge last paragraph back, let checkForParagraphs rebuild. See #640.
-                val lastParagraph = richParagraphList.removeAt(richParagraphList.lastIndex)
-                val precedingParagraph = richParagraphList.last()
-                lastParagraph.updateChildrenParagraph(precedingParagraph)
-                precedingParagraph.children.addAll(lastParagraph.children)
-                forceCheckAllNewlines = true
-            } else if (isSelectionReplacement) {
-                // Step 1: remove the old selection as a pure deletion
-                val actualNewTextFieldValue = tempTextFieldValue
-                tempTextFieldValue = textFieldValue.copy(
-                    text = pureRemovalText,
-                    selection = TextRange(selMin),
-                )
-                handleRemovingCharacters()
+            val removedLength = oldText.length - commonPrefix - commonSuffix
+            val insertedLength = newText.length - commonPrefix - commonSuffix
 
-                // Step 2: if there are replacement chars, add them
-                if (replacementCount > 0) {
-                    updateTextFieldValue()
-                    tempTextFieldValue = actualNewTextFieldValue
-                    if (actualNewTextFieldValue.text.length > textFieldValue.text.length) {
-                        handleAddingCharacters()
+            when {
+                removedLength == 0 && insertedLength > 0 -> {
+                    // Pure insertion. The diff position is ambiguous inside runs of
+                    // repeated characters; prefer the selection-derived position when
+                    // it describes the same change.
+                    val legacyStart = oldTextFieldValue.selection.min
+                    val legacyDescribesChange =
+                        legacyStart in 0..oldText.length &&
+                            newText.substring(0, legacyStart) == oldText.substring(0, legacyStart) &&
+                            newText.substring(legacyStart + insertedLength) == oldText.substring(legacyStart)
+                    handleAddingCharacters(
+                        startTypeIndex = if (legacyDescribesChange) legacyStart else commonPrefix,
+                        typedCharsCount = insertedLength,
+                        positionFromSelection = legacyDescribesChange,
+                    )
+                }
+
+                insertedLength == 0 && removedLength > 0 -> {
+                    // Pure removal, same ambiguity rule using the new selection.
+                    val legacyMin = tempTextFieldValue.selection.min
+                    val legacyDescribesChange =
+                        legacyMin in 0..newText.length &&
+                            legacyMin + removedLength <= oldText.length &&
+                            oldText.substring(0, legacyMin) == newText.substring(0, legacyMin) &&
+                            oldText.substring(legacyMin + removedLength) == newText.substring(legacyMin)
+                    handleRemovingCharacters(
+                        minRemoveIndex = if (legacyDescribesChange) legacyMin else commonPrefix,
+                        removedCharsCount = removedLength,
+                    )
+                }
+
+                removedLength > 0 && insertedLength > 0 -> {
+                    // Replacement: removal followed by insertion. Prefer the old
+                    // selection bounds when they describe the change, else the diff bounds.
+                    val selMin = oldTextFieldValue.selection.min
+                    val selMax = oldTextFieldValue.selection.max
+                    val selReplacementLength = newText.length - selMin - (oldText.length - selMax)
+                    val selectionDescribesChange = !oldTextFieldValue.selection.collapsed &&
+                        selReplacementLength >= 0 &&
+                        selMin + selReplacementLength <= newText.length &&
+                        newText.substring(0, selMin) == oldText.substring(0, selMin) &&
+                        newText.substring(selMin + selReplacementLength) == oldText.substring(selMax)
+
+                    val removeStart: Int
+                    val removeEnd: Int
+                    if (selectionDescribesChange) {
+                        removeStart = selMin
+                        removeEnd = selMax
+                    } else {
+                        removeStart = commonPrefix
+                        removeEnd = oldText.length - commonSuffix
+                    }
+                    val replacement = newText.substring(
+                        removeStart,
+                        newText.length - (oldText.length - removeEnd),
+                    )
+
+                    // Step 1: apply the removal as a pure deletion
+                    val actualNewTextFieldValue = tempTextFieldValue
+                    tempTextFieldValue = oldTextFieldValue.copy(
+                        text = oldText.substring(0, removeStart) + oldText.substring(removeEnd),
+                        selection = TextRange(removeStart),
+                    )
+                    handleRemovingCharacters(
+                        minRemoveIndex = removeStart,
+                        removedCharsCount = removeEnd - removeStart,
+                    )
+
+                    // Step 2: insert the replacement on top of the CURRENT text; the
+                    // removal may have rewritten it (prefix removal, renumbering), so
+                    // the IME's view is stale.
+                    if (replacement.isNotEmpty()) {
+                        updateTextFieldValue()
+                        val insertPosition = textFieldValue.selection.min
+                            .coerceIn(0, textFieldValue.text.length)
+                        val stepTwoText = textFieldValue.text.substring(0, insertPosition) +
+                            replacement +
+                            textFieldValue.text.substring(insertPosition)
+                        // If the removal didn't rewrite surrounding text, the IME's
+                        // reported caret is still valid; keep it.
+                        tempTextFieldValue = actualNewTextFieldValue.copy(
+                            text = stepTwoText,
+                            selection = if (stepTwoText == actualNewTextFieldValue.text)
+                                actualNewTextFieldValue.selection
+                            else
+                                TextRange(insertPosition + replacement.length),
+                        )
+                        // positionFromSelection = false: the insert position is
+                        // reconstructed, so the Android-suggestion heuristic could
+                        // misread the preserved IME caret and inject a phantom space.
+                        handleAddingCharacters(
+                            startTypeIndex = insertPosition,
+                            typedCharsCount = replacement.length,
+                            positionFromSelection = false,
+                        )
                     }
                 }
-            } else {
-                handleRemovingCharacters()
             }
-        }
-        else if (
-            tempTextFieldValue.text == textFieldValue.text &&
-            tempTextFieldValue.selection != textFieldValue.selection
-        ) {
+        } else if (tempTextFieldValue.selection != textFieldValue.selection) {
             val lastPressPosition = this.lastPressPosition
             if (lastPressPosition != null) {
                 adjustSelection(lastPressPosition, newTextFieldValue.selection)
@@ -2085,6 +2145,22 @@ public class RichTextState internal constructor(
             checkForParagraphs()
         }
 
+        // The span tree is the source of truth for the text: re-derive it before the
+        // rebuild so the two can never desync (#716 crash family). Skipped on pure
+        // selection changes, the drag-selection hot path (#730).
+        if (tempTextFieldValue.text != textFieldValue.text) {
+            val treeText = computeTextFromTree()
+            if (treeText != tempTextFieldValue.text) {
+                tempTextFieldValue = tempTextFieldValue.copy(
+                    text = treeText,
+                    selection = TextRange(
+                        tempTextFieldValue.selection.start.coerceIn(0, treeText.length),
+                        tempTextFieldValue.selection.end.coerceIn(0, treeText.length),
+                    ),
+                )
+            }
+        }
+
         // Track the last non-collapsed selection for clipboard operations
         if (!textFieldValue.selection.collapsed) {
             lastNonCollapsedSelection = textFieldValue.selection
@@ -2101,8 +2177,12 @@ public class RichTextState internal constructor(
             // background from hiding the system selection highlight). If either the
             // previous or the new selection is non-collapsed, the mask set differs and
             // the cached annotatedString is stale - so force a rebuild. See #635.
+            // The mask only changes the output when a span has a background color;
+            // rebuilding otherwise recreates the visualTransformation mid-gesture and
+            // breaks selection on Android (#730, #731).
             val maskAffected =
-                !textFieldValue.selection.collapsed || !tempTextFieldValue.selection.collapsed
+                (!textFieldValue.selection.collapsed || !tempTextFieldValue.selection.collapsed) &&
+                    treeHasBackgroundSpans()
             if (maskAffected) {
                 updateAnnotatedString(tempTextFieldValue)
             } else {
@@ -2130,6 +2210,31 @@ public class RichTextState internal constructor(
 
         // Clear [tempTextFieldValue]
         tempTextFieldValue = TextFieldValue()
+    }
+
+    /**
+     * True when any span resolves to a [SpanStyle] with a specified background color,
+     * the only case the #635 selection mask changes the rendered output.
+     */
+    private fun treeHasBackgroundSpans(): Boolean {
+        fun spanHasBackground(richSpan: RichSpan): Boolean {
+            if (richSpan.spanStyle.background.isSpecified) return true
+
+            val richSpanStyle = richSpan.richSpanStyle
+            val resolvedStyle =
+                if (richSpanStyle is RichSpanStyle.Token)
+                    findTrigger(richSpanStyle.triggerId)?.style(config)
+                        ?: richSpanStyle.spanStyle(config)
+                else
+                    richSpanStyle.spanStyle(config)
+            if (resolvedStyle.background.isSpecified) return true
+
+            return richSpan.children.any { spanHasBackground(it) }
+        }
+
+        return richParagraphList.any { paragraph ->
+            paragraph.children.any { spanHasBackground(it) }
+        }
     }
 
     private inner class HistoryHostImpl : RichTextHistoryHost {
@@ -2360,9 +2465,12 @@ public class RichTextState internal constructor(
                 newTextFieldValue.selection.end.coerceIn(0, newTextLength),
             ),
         )
+        // Snapshot by value: the lambda runs during measure, where a live
+        // `annotatedString` read would race the textFieldValue captured at composition.
+        val transformed = annotatedString
         visualTransformation = VisualTransformation { _ ->
             TransformedText(
-                text = annotatedString,
+                text = transformed,
                 offsetMapping = OffsetMapping.Identity
             )
         }
@@ -2373,10 +2481,20 @@ public class RichTextState internal constructor(
      * Handles adding characters to the text field.
      * This method will update the [richParagraphList] to reflect the new changes.
      * This method will use the [tempTextFieldValue] to get the new characters.
+     *
+     * @param startTypeIndex the index in [tempTextFieldValue]'s text where the insertion begins.
+     * @param typedCharsCount the number of inserted characters.
+     * @param positionFromSelection true when [startTypeIndex] came from the selection;
+     * the Android-suggestion heuristic assumes a caret-derived position and must not
+     * fire for diff-derived positions.
      */
-    private fun handleAddingCharacters() {
-        val typedCharsCount = tempTextFieldValue.text.length - textFieldValue.text.length
-        var startTypeIndex = textFieldValue.selection.min
+    private fun handleAddingCharacters(
+        startTypeIndex: Int,
+        typedCharsCount: Int,
+        positionFromSelection: Boolean,
+    ) {
+        @Suppress("NAME_SHADOWING")
+        var startTypeIndex = startTypeIndex
         val typedText = tempTextFieldValue.text.substring(
             startIndex = startTypeIndex,
             endIndex = startTypeIndex + typedCharsCount,
@@ -2395,7 +2513,8 @@ public class RichTextState internal constructor(
 
         if (activeRichSpan != null) {
             val isAndroidSuggestion =
-                activeRichSpan.isLastInParagraph &&
+                positionFromSelection &&
+                        activeRichSpan.isLastInParagraph &&
                         activeRichSpan.textRange.max == startTypeIndex &&
                         tempTextFieldValue.selection.max == startTypeIndex + typedCharsCount + 1
 
@@ -2531,13 +2650,16 @@ public class RichTextState internal constructor(
      * Handles removing characters from the text field value.
      * This method will update the [richParagraphList] to reflect the new changes.
      * This method will use the [tempTextFieldValue] to get the removed characters.
+     *
+     * @param minRemoveIndex the index in the old text where the removed range begins.
+     * @param removedCharsCount the number of removed characters.
      */
-    private fun handleRemovingCharacters() {
-        val removedCharsCount = textFieldValue.text.length - tempTextFieldValue.text.length
-
-        val minRemoveIndex =
-            tempTextFieldValue.selection.min
-                .coerceAtLeast(0)
+    private fun handleRemovingCharacters(
+        minRemoveIndex: Int,
+        removedCharsCount: Int,
+    ) {
+        @Suppress("NAME_SHADOWING")
+        val minRemoveIndex = minRemoveIndex.coerceAtLeast(0)
 
         val maxRemoveIndex =
             (minRemoveIndex + removedCharsCount)
@@ -2617,10 +2739,18 @@ public class RichTextState internal constructor(
             }
         }
 
+        // Prefix handling must only run when the removal actually cuts into the max
+        // paragraph's prefix; a range ending at its start leaves it untouched.
+        val maxPrefixStart = maxParagraphFirstChildMinIndex - maxParagraphStartTextLength
+        val removalCutsMaxPrefix =
+            maxParagraphStartTextLength > 0 &&
+                maxRemoveIndex > maxPrefixStart &&
+                maxRemoveIndex < maxParagraphFirstChildMinIndex
+
         // Handle Remove the max paragraph custom text
         if (
             (minParagraphIndex == maxParagraphIndex || minRemoveIndex >= minParagraphFirstChildMinIndex) &&
-            maxRemoveIndex < maxParagraphFirstChildMinIndex
+            removalCutsMaxPrefix
         ) {
             handleRemoveMaxParagraphStartText(
                 minRemoveIndex = minRemoveIndex,
@@ -2637,8 +2767,7 @@ public class RichTextState internal constructor(
         } else if (
             minParagraphIndex != maxParagraphIndex &&
             minRemoveIndex < minParagraphFirstChildMinIndex &&
-            maxRemoveIndex < maxParagraphFirstChildMinIndex &&
-            maxParagraphStartTextLength > 0
+            removalCutsMaxPrefix
         ) {
             // Cross-paragraph removal: both min and max paragraph prefixes are partially cut.
             // Leftover max prefix chars remain in tempTextFieldValue.text; preserve them by
@@ -2678,12 +2807,20 @@ public class RichTextState internal constructor(
                         minParagraphFirstChildMinIndex
                     ) == null
 
-                if (isMaxParagraphEmpty) {
+                if (isMinParagraphEmpty && isMaxParagraphEmpty) {
+                    // Both paragraphs are empty: as many lines disappear as paragraph
+                    // separators the removal consumed, so the min paragraph survives
+                    // unless the separator before it is inside the range.
+                    val minParagraphPrefixStart =
+                        minParagraphFirstChildMinIndex - minParagraphStartTextLength
+                    richParagraphList.remove(maxRichSpan.paragraph)
+                    if (minRemoveIndex < minParagraphPrefixStart) {
+                        richParagraphList.remove(minRichSpan.paragraph)
+                    }
+                } else if (isMaxParagraphEmpty) {
                     // Remove the max paragraph if it's empty
                     richParagraphList.remove(maxRichSpan.paragraph)
-                }
-
-                if (isMinParagraphEmpty) {
+                } else if (isMinParagraphEmpty) {
                     // Set the min paragraph type to the max paragraph type
                     // Since the max paragraph is going to take the min paragraph's place
 //                    maxRichSpan.paragraph.type = minRichSpan.paragraph.type
@@ -2759,6 +2896,26 @@ public class RichTextState internal constructor(
             startParagraphIndex = minParagraphIndex - 1,
             endParagraphIndex = minParagraphIndex + 1,
         )
+    }
+
+    /**
+     * Serializes the current [richParagraphList] to the plain text exactly as
+     * [updateAnnotatedString] will emit it: each paragraph's list prefix followed by
+     * its span tree's text, with a single space separating paragraphs.
+     */
+    private fun computeTextFromTree(): String = buildString {
+        fun appendSpanText(richSpan: RichSpan) {
+            append(richSpan.text)
+            richSpan.children.fastForEach { appendSpanText(it) }
+        }
+
+        richParagraphList.fastForEachIndexed { index, paragraph ->
+            append(paragraph.type.startRichSpan.text)
+            paragraph.children.fastForEach { appendSpanText(it) }
+            if (!singleParagraphMode && index != richParagraphList.lastIndex) {
+                append(' ')
+            }
+        }
     }
 
     private fun handleRemoveMinParagraphStartText(
@@ -2941,30 +3098,48 @@ public class RichTextState internal constructor(
         startParagraphIndex: Int,
         endParagraphIndex: Int,
     ) {
-        // The map to store the list number of each list level, level -> number
+        // List number per level. Seed it by walking back through the list run so a
+        // window starting at a deep level still knows the shallower levels' numbers.
         val levelNumberMap = mutableMapOf<Int, Int>()
-        val startParagraph = richParagraphList.getOrNull(startParagraphIndex)
-        val startParagraphType = startParagraph?.type
-        if (startParagraphType is OrderedList)
-            levelNumberMap[startParagraphType.level] = startParagraphType.number
+        run {
+            val blockedLevels = mutableSetOf<Int>()
+            // Levels deeper than the shallowest item seen are completed runs; don't seed them.
+            var maxSeedableLevel = Int.MAX_VALUE
+            var seedIndex = startParagraphIndex
+            while (seedIndex >= 0) {
+                val seedType = richParagraphList.getOrNull(seedIndex)?.type ?: break
+                if (seedType !is ConfigurableListLevel) break
+                if (seedType.level <= maxSeedableLevel) {
+                    if (
+                        seedType is OrderedList &&
+                        seedType.level !in levelNumberMap &&
+                        seedType.level !in blockedLevels
+                    ) {
+                        levelNumberMap[seedType.level] = seedType.number
+                    }
+                    if (seedType is UnorderedList && seedType.level !in levelNumberMap) {
+                        blockedLevels.add(seedType.level)
+                    }
+                    maxSeedableLevel = seedType.level
+                }
+                seedIndex--
+            }
+        }
 
-        if (startParagraphIndex == -1)
-            levelNumberMap[1] = 0
-
-        // Update the paragraph type of the paragraphs after the new paragraph
-        for (i in (startParagraphIndex + 1)..richParagraphList.lastIndex) {
+        // Update the paragraph type of the paragraphs after the new paragraph;
+        // a negative start means "renumber from the beginning".
+        for (i in (startParagraphIndex + 1).coerceAtLeast(0)..richParagraphList.lastIndex) {
             val currentParagraph = richParagraphList[i]
             val currentParagraphType = currentParagraph.type
 
             if (currentParagraphType is ConfigurableListLevel) {
-                // Clear the completed list levels
-                levelNumberMap.filterKeys { level ->
+                // Clear the completed list levels: a shallower item ends all deeper runs.
+                levelNumberMap.keys.retainAll { level ->
                     level <= currentParagraphType.level
                 }
             } else {
                 // Clear the map if the current paragraph is not a list
                 levelNumberMap.clear()
-                levelNumberMap[1] = 0
             }
 
             // Remove current list level from map if the current paragraph is an unordered list
@@ -2972,10 +3147,12 @@ public class RichTextState internal constructor(
                 levelNumberMap.remove(currentParagraphType.level)
 
             if (currentParagraphType is OrderedList) {
+                // The first item of a run starts at its startFrom; following items count up.
+                val isFirstOfRun = currentParagraphType.level !in levelNumberMap
                 val number =
                     levelNumberMap[currentParagraphType.level]
                         ?.plus(1)
-                        ?: currentParagraphType.number
+                        ?: currentParagraphType.startFrom
 
                 levelNumberMap[currentParagraphType.level] = number
 
@@ -2985,7 +3162,8 @@ public class RichTextState internal constructor(
                         number = number,
                         config = config,
                         startTextWidth = currentParagraphType.startTextWidth,
-                        initialLevel = currentParagraphType.level
+                        initialLevel = currentParagraphType.level,
+                        startFrom = if (isFirstOfRun) currentParagraphType.startFrom else 1,
                     ),
                     textFieldValue = tempTextFieldValue,
                 )
@@ -3010,16 +3188,14 @@ public class RichTextState internal constructor(
         // paragraph prefix (e.g. "2. ") but keeps the newline, the newline
         // position ends up before the old selection, so the normal threshold
         // would skip it. See #640.
-        // Lower the threshold to scan all newlines when:
-        // - forceCheckAllNewlines: set by IME revert detection in onTextFieldValueChange
-        // - There's a single paragraph but the text has newlines: autocorrect shortened
-        //   text + added newline in one onValueChange call (the newline is before the
-        //   old cursor, so the normal threshold would skip it). See #640.
+        // Lower the threshold to scan all newlines when there's a single paragraph but
+        // the text has newlines: autocorrect shortened text + added newline in one
+        // onValueChange call (the newline is before the old cursor, so the normal
+        // threshold would skip it). See #640.
         val actualNewlines = tempTextFieldValue.text.count { it == '\n' }
         val breakThreshold =
-            if (forceCheckAllNewlines || (actualNewlines > 0 && richParagraphList.size == 1)) 0
+            if (actualNewlines > 0 && richParagraphList.size == 1) 0
             else textFieldValue.selection.min
-        forceCheckAllNewlines = false
 
         while (true) {
             // Search for the next paragraph
@@ -3775,6 +3951,7 @@ public class RichTextState internal constructor(
             richSpan.children.removeAt(i)
             childRichSpan.parent = newRichSpan
             childRichSpan.paragraph = newRichParagraph
+            childRichSpan.updateChildrenParagraph(newRichParagraph)
             newRichSpan.children.add(childRichSpan)
         }
 
@@ -3789,6 +3966,7 @@ public class RichTextState internal constructor(
                     childRichSpan.spanStyle = childRichSpan.fullSpanStyle
                     childRichSpan.parent = null
                     childRichSpan.paragraph = newRichParagraph
+                    childRichSpan.updateChildrenParagraph(newRichParagraph)
                     newRichParagraph.children.add(childRichSpan)
                 }
                 currentRichSpan.children.removeRange(index + 1, currentRichSpan.children.size)
@@ -3802,6 +3980,7 @@ public class RichTextState internal constructor(
                 childRichSpan.spanStyle = childRichSpan.fullSpanStyle
                 childRichSpan.parent = null
                 childRichSpan.paragraph = newRichParagraph
+                childRichSpan.updateChildrenParagraph(newRichParagraph)
                 newRichParagraph.children.add(childRichSpan)
             }
             richSpan.paragraph.children.removeRange(index + 1, richSpan.paragraph.children.size)
@@ -4242,7 +4421,14 @@ public class RichTextState internal constructor(
         val selection = newSelection ?: this.selection
         var pressX = pressPosition.x
         var pressY = pressPosition.y
-        val textLayoutResult = this.textLayoutResult ?: return
+        val textLayoutResult = this.textLayoutResult ?: run {
+            // No layout yet: the caret workaround can't run, but the platform's
+            // selection must still be applied (#730).
+            if (newSelection != null) {
+                applyAdjustedSelection(newSelection)
+            }
+            return
+        }
         var index = 0
         var lastIndex = 0
 
@@ -4301,7 +4487,12 @@ public class RichTextState internal constructor(
         if (index > richParagraphList.lastIndex)
             index = richParagraphList.lastIndex
 
-        val selectedParagraph = richParagraphList.getOrNull(index) ?: return
+        val selectedParagraph = richParagraphList.getOrNull(index) ?: run {
+            if (newSelection != null) {
+                applyAdjustedSelection(newSelection)
+            }
+            return
+        }
         val nextParagraph = richParagraphList.getOrNull(index + 1)
         val nextParagraphStart =
             if (nextParagraph == null)
@@ -4338,17 +4529,23 @@ public class RichTextState internal constructor(
                 )
             )
         } else if (newSelection != null) {
-            // Ensure newSelection is within valid bounds
-            val adjustedSelection = TextRange(
-                newSelection.start.coerceIn(0, textLength),
-                newSelection.end.coerceIn(0, textLength)
-            )
-            updateTextFieldValue(
-                textFieldValue.copy(
-                    selection = adjustedSelection
+            applyAdjustedSelection(newSelection)
+        }
+    }
+
+    /**
+     * Applies a platform selection clamped to the current text bounds.
+     */
+    private fun applyAdjustedSelection(newSelection: TextRange) {
+        val textLength = textFieldValue.text.length
+        updateTextFieldValue(
+            textFieldValue.copy(
+                selection = TextRange(
+                    newSelection.start.coerceIn(0, textLength),
+                    newSelection.end.coerceIn(0, textLength),
                 )
             )
-        }
+        )
     }
 
     private var registerLastPressPositionJob: Job? = null
@@ -4547,21 +4744,34 @@ public class RichTextState internal constructor(
     /**
      * Updates the [RichTextState] with the given [text].
      *
+     * Like [setHtml] and [setMarkdown], this is a programmatic replace: it clears the
+     * undo/redo history.
+     *
      * @param text The text to update the [RichTextState] with.
      */
     public fun setText(
         text: String,
         selection: TextRange = TextRange(text.length),
     ): RichTextState {
+        // A programmatic load is not a typing event: clear history (like setHtml /
+        // setMarkdown) and suppress recording for the load itself.
+        history.onProgrammaticReplace()
+
         val textFieldValue =
             TextFieldValue(
                 text = text,
                 selection = selection,
             )
 
-        onTextFieldValueChange(
-            newTextFieldValue = textFieldValue
-        )
+        val wasSuppressed = suppressHistoryRecording
+        suppressHistoryRecording = true
+        try {
+            onTextFieldValueChange(
+                newTextFieldValue = textFieldValue
+            )
+        } finally {
+            suppressHistoryRecording = wasSuppressed
+        }
         return this
     }
 
@@ -4858,9 +5068,11 @@ public class RichTextState internal constructor(
             text = annotatedString.text,
             selection = TextRange(selectionIndex),
         )
+        // Snapshot by value: see the matching note in `updateAnnotatedString`.
+        val transformed = annotatedString
         visualTransformation = VisualTransformation { _ ->
             TransformedText(
-                text = annotatedString,
+                text = transformed,
                 offsetMapping = OffsetMapping.Identity
             )
         }

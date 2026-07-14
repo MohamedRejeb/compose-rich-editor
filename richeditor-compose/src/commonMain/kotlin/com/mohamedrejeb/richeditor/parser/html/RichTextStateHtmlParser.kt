@@ -32,6 +32,9 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         val richParagraphList = mutableListOf(RichParagraph())
         val lineBreakParagraphIndexSet = mutableSetOf<Int>()
         val toKeepEmptyParagraphIndexSet = mutableSetOf<Int>()
+        // Blank-looking paragraphs that are real content (empty <li>, entity-encoded
+        // whitespace) and must survive recycling and the blank-paragraph cleanup.
+        val preservedBlankParagraphs = mutableSetOf<RichParagraph>()
         var currentRichSpan: RichSpan? = null
         var currentListLevel = 0
         // Tracks the next item number per list nesting level for ordered lists.
@@ -81,6 +84,12 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     currentRichSpan = safeCurrentRichSpan
                     currentRichParagraph.children.add(safeCurrentRichSpan)
                 }
+
+                // Entity-encoded whitespace is real content even when the paragraph
+                // looks blank ("<p>&#32;</p>", "<p>&#x20;</p>").
+                if (SpaceEntityRegex.containsMatchIn(it)) {
+                    preservedBlankParagraphs.add(currentRichParagraph)
+                }
             }
             .onOpenTag { name, attributes, _ ->
                 val lastOpenedTag = openedTags.lastOrNull()?.first
@@ -92,6 +101,14 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 }
 
                 if (name == "ul" || name == "ol") {
+                    // An empty <li> hosting a nested list is visible content; don't let
+                    // the first nested item recycle it.
+                    richParagraphList.lastOrNull()?.let { paragraph ->
+                        if (paragraph.isBlank() && paragraph.type is ConfigurableListLevel) {
+                            preservedBlankParagraphs.add(paragraph)
+                        }
+                    }
+
                     currentListLevel += 1
                     if (name == "ol") {
                         val startAttr = attributes["start"]?.toIntOrNull() ?: 1
@@ -116,7 +133,8 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 val tagParagraphStyle = htmlElementsParagraphStyleEncodeMap[name]
 
                 val currentRichParagraph = richParagraphList.lastOrNull()
-                val isCurrentRichParagraphBlank = currentRichParagraph?.isBlank() == true
+                val isCurrentRichParagraphBlank = currentRichParagraph?.isBlank() == true &&
+                    currentRichParagraph !in preservedBlankParagraphs
                 val isCurrentTagBlockElement = name in htmlBlockElements
                 val isLastOpenedTagBlockElement = lastOpenedTag in htmlBlockElements
 
@@ -276,7 +294,19 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
             .onCloseTag { name, _ ->
                 openedTags.removeLastOrNull()
 
-                val isCurrentRichParagraphBlank = richParagraphList.lastOrNull()?.isBlank() == true
+                val lastRichParagraph = richParagraphList.lastOrNull()
+                val isCurrentRichParagraphBlank = lastRichParagraph?.isBlank() == true &&
+                    lastRichParagraph !in preservedBlankParagraphs
+
+                // An empty <li> is visible content (its marker renders); preserve it.
+                if (name == "li" && isCurrentRichParagraphBlank) {
+                    richParagraphList.lastOrNull()?.let { paragraph ->
+                        if (paragraph.type !is DefaultParagraph) {
+                            preservedBlankParagraphs.add(paragraph)
+                        }
+                    }
+                }
+
                 val isCurrentTagBlockElement = name in htmlBlockElements && name != "li"
 
                 if (isCurrentTagBlockElement && !isCurrentRichParagraphBlank) {
@@ -346,8 +376,13 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         parser.end()
 
         for (i in richParagraphList.lastIndex downTo 0) {
-            // Keep empty paragraphs if they are line breaks <br> or by block html elements
-            if (i in lineBreakParagraphIndexSet || (i != richParagraphList.lastIndex && i in toKeepEmptyParagraphIndexSet))
+            // Keep empty paragraphs if they are line breaks <br>, kept block elements,
+            // or empty list items (whose marker is visible content)
+            if (
+                i in lineBreakParagraphIndexSet ||
+                (i != richParagraphList.lastIndex && i in toKeepEmptyParagraphIndexSet) ||
+                richParagraphList[i] in preservedBlankParagraphs
+            )
                 continue
 
             // Remove empty paragraphs
@@ -377,17 +412,37 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
         val builder = StringBuilder()
 
-        val openedListTagNames = mutableListOf<String>()
-        var lastParagraphGroupTagName: String? = null
-        var lastParagraphGroupLevel = 0
+        // Open list elements, outermost first. `hasHostItem` records that the list was
+        // opened inside a withheld parent <li>, so closing it also closes that item (#736).
+        class OpenList(val tag: String, val hasHostItem: Boolean)
+
+        val openLists = mutableListOf<OpenList>()
+
+        // Item/paragraph tag left open because the next paragraph is a <br> continuation.
+        var openItemTag: String? = null
+
+        // Level of the list item whose </li> is withheld so the next, deeper list can
+        // nest inside it. 0 when no item is withheld.
+        var hostItemLevel = 0
+
         var isLastParagraphEmpty = false
 
-        var currentListLevel = 0
+        val paragraphs = richTextState.richParagraphList
 
-        richTextState.richParagraphList.fastForEachIndexed { index, richParagraph ->
+        fun closeListsDownTo(level: Int) {
+            while (openLists.size > level) {
+                val closed = openLists.removeAt(openLists.lastIndex)
+                builder.append("</${closed.tag}>")
+                if (closed.hasHostItem)
+                    builder.append("</li>")
+            }
+        }
+
+        paragraphs.fastForEachIndexed { index, richParagraph ->
             val richParagraphType = richParagraph.type
             val isParagraphEmpty = richParagraph.isEmpty()
             val paragraphGroupTagName = decodeHtmlElementFromRichParagraph(richParagraph)
+            val isParagraphList = paragraphGroupTagName == "ol" || paragraphGroupTagName == "ul"
 
             val paragraphLevel =
                 if (richParagraphType is ConfigurableListLevel)
@@ -395,182 +450,180 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 else
                     0
 
-            val isParagraphList = paragraphGroupTagName in listOf("ol", "ul")
-            val isLastParagraphList = lastParagraphGroupTagName in listOf("ol", "ul")
+            // If this paragraph carries a heading, the <hN> tag is meant to imply the
+            // heading's typography. Strip the heading defaults from the paragraph CSS and the
+            // child span CSS via diff so user-added styles ride on top, but the heading
+            // visuals stay implied by the tag alone.
+            val headingStyle = richParagraph.headingStyle
 
-            fun isCloseParagraphGroup(): Boolean {
-                if (!isLastParagraphList)
-                    return false
+            val nextParagraph = paragraphs.getOrNull(index + 1)
+            val nextIsLineBreakContinuation = nextParagraph != null &&
+                nextParagraph.isFromLineBreak &&
+                !nextParagraph.isEmpty()
 
-                if (paragraphLevel > lastParagraphGroupLevel)
-                    return false
-
-                if (
-                    lastParagraphGroupTagName == paragraphGroupTagName &&
-                    paragraphLevel == lastParagraphGroupLevel
-                )
-                    return false
-
-                return true
-            }
-
-            fun isCloseAllOpenedTags(): Boolean {
-                if (isParagraphList)
-                    return false
-
-                if (!isLastParagraphList)
-                    return false
-
-                return true
-            }
-
-            fun isOpenParagraphGroup(): Boolean {
-                if (!isParagraphList)
-                    return false
-
-                if (
-                    isLastParagraphList &&
-                    paragraphGroupTagName == openedListTagNames.lastOrNull() &&
-                    paragraphLevel < lastParagraphGroupLevel
-                )
-                    return false
-
-                if (
-                    isLastParagraphList &&
-                    paragraphLevel == lastParagraphGroupLevel &&
-                    paragraphGroupTagName == lastParagraphGroupTagName
-                )
-                    return false
-
-                return true
-            }
-
-            if (isCloseAllOpenedTags()) {
-                openedListTagNames.fastForEachReversed {
-                    builder.append("</$it>")
+            // A <br> continuation rides inside the still-open owning tag and must
+            // bypass the list bookkeeping, or it would close the list mid-item.
+            if (richParagraph.isFromLineBreak && openItemTag != null) {
+                builder.append("<$BrElement>")
+                val textContext = HtmlTextEmitContext(afterCollapsibleSpace = true)
+                richParagraph.children.fastForEach { richSpan ->
+                    builder.append(
+                        decodeRichSpanToHtml(
+                            richSpan = richSpan,
+                            headingStyle = headingStyle,
+                            textContext = textContext,
+                        )
+                    )
                 }
-                openedListTagNames.clear()
-            } else if (isCloseParagraphGroup()) {
-                // Close last paragraph group tag
-                builder.append("</$lastParagraphGroupTagName>")
-                openedListTagNames.removeLastOrNull()
-
-                // We can move from nested level: 3 to nested level: 1,
-                // for this case we need to close more than one tag
-                if (
-                    isLastParagraphList &&
-                    paragraphLevel < lastParagraphGroupLevel
-                ) {
-                    repeat(lastParagraphGroupLevel - paragraphLevel) {
-                        openedListTagNames.removeLastOrNull()?.let {
-                            builder.append("</$it>")
-                        }
+                if (!nextIsLineBreakContinuation) {
+                    // A following deeper list nests inside this item: withhold </li>
+                    // like the main path instead of closing it (#736).
+                    val nextTag = nextParagraph?.let { decodeHtmlElementFromRichParagraph(it) }
+                    val nextLevel = (nextParagraph?.type as? ConfigurableListLevel)?.level ?: 0
+                    val nextNestsInThisItem = openItemTag == "li" &&
+                        (nextTag == "ol" || nextTag == "ul") &&
+                        nextLevel > openLists.size
+                    if (nextNestsInThisItem) {
+                        hostItemLevel = openLists.size
+                    } else {
+                        builder.append("</$openItemTag>")
                     }
+                    openItemTag = null
                 }
+                isLastParagraphEmpty = isParagraphEmpty
+                return@fastForEachIndexed
             }
 
-            if (isOpenParagraphGroup()) {
-                if (paragraphGroupTagName == "ol" && richParagraphType is OrderedList && richParagraphType.startFrom > 1) {
-                    builder.append("<ol start=\"${richParagraphType.startFrom}\">")
-                } else {
-                    builder.append("<$paragraphGroupTagName>")
+            if (isParagraphList) {
+                // Close deeper lists (and the withheld host items that contained them)
+                closeListsDownTo(paragraphLevel)
+
+                // Same-level list type switch (ol <-> ul): the replacement list lives in
+                // the same host item, so the host (if any) is inherited, not closed.
+                var inheritedHost: Boolean? = null
+                if (
+                    openLists.size == paragraphLevel &&
+                    openLists.isNotEmpty() &&
+                    openLists.last().tag != paragraphGroupTagName
+                ) {
+                    val closed = openLists.removeAt(openLists.lastIndex)
+                    builder.append("</${closed.tag}>")
+                    inheritedHost = closed.hasHostItem
                 }
-                openedListTagNames.add(paragraphGroupTagName)
+
+                // Open missing levels. Only the list immediately inside a withheld item
+                // has a host; other missing levels nest bare (orphan deep items). Bare
+                // nesting is invalid HTML but round-trips: the importer preserves an
+                // empty <li> that hosts a nested list as real content, so a synthetic
+                // host item would reimport as a ghost list item.
+                while (openLists.size < paragraphLevel) {
+                    val hasHost = inheritedHost
+                        ?: (hostItemLevel > 0 && openLists.size == hostItemLevel)
+                    inheritedHost = null
+                    val openingLevel = openLists.size + 1
+                    if (
+                        paragraphGroupTagName == "ol" &&
+                        richParagraphType is OrderedList &&
+                        richParagraphType.startFrom > 1 &&
+                        openingLevel == paragraphLevel
+                    ) {
+                        builder.append("<ol start=\"${richParagraphType.startFrom}\">")
+                    } else {
+                        builder.append("<$paragraphGroupTagName>")
+                    }
+                    openLists.add(OpenList(paragraphGroupTagName, hasHost))
+                }
+                hostItemLevel = 0
+            } else {
+                closeListsDownTo(0)
+                hostItemLevel = 0
             }
 
-            currentListLevel = paragraphLevel
-
-            fun isLineBreak(): Boolean {
-                if (!isParagraphEmpty)
-                    return false
-
-                if (isParagraphList && lastParagraphGroupTagName != paragraphGroupTagName)
-                    return false
-
-                return true
-            }
-
-            // Add line break if the paragraph is empty
-            if (isLineBreak()) {
+            // An empty non-list paragraph is a line break; an empty list paragraph is a
+            // real item and is emitted as <li></li>.
+            if (isParagraphEmpty && !isParagraphList) {
                 val skipAddingBr =
-                    isLastParagraphEmpty && richParagraph.isEmpty() && index == richTextState.richParagraphList.lastIndex
+                    isLastParagraphEmpty && index == paragraphs.lastIndex
 
                 if (!skipAddingBr)
                     builder.append("<$BrElement>")
             } else {
                 // Create paragraph tag name
                 val paragraphTagName =
-                    if (paragraphGroupTagName == "ol" || paragraphGroupTagName == "ul") "li"
+                    if (isParagraphList) "li"
                     else paragraphGroupTagName
 
-                // If this paragraph carries a heading, the <hN> tag is meant to imply the
-                // heading's typography. Strip the heading defaults from the paragraph CSS and the
-                // child span CSS via diff so user-added styles ride on top, but the heading
-                // visuals stay implied by the tag alone.
-                val headingStyle = richParagraph.headingStyle
+                // Create paragraph css. If the paragraph is a heading, strip the heading's
+                // base ParagraphStyle so the tag carries the visual weight on its own.
+                val effectiveParagraphStyle =
+                    if (headingStyle == HeadingStyle.Normal)
+                        richParagraph.paragraphStyle
+                    else
+                        richParagraph.paragraphStyle.diff(headingStyle.defaultParagraphStyle)
 
-                // If this paragraph came from a <br>, emit <br> + content inline
-                // without opening a new <p> tag (the previous <p> is still open)
-                if (richParagraph.isFromLineBreak && index > 0) {
-                    builder.append("<$BrElement>")
-                    richParagraph.children.fastForEach { richSpan ->
-                        builder.append(decodeRichSpanToHtml(richSpan, headingStyle = headingStyle))
-                    }
-                } else {
-                    // Create paragraph css. If the paragraph is a heading, strip the heading's
-                    // base ParagraphStyle so the tag carries the visual weight on its own.
-                    val effectiveParagraphStyle =
-                        if (headingStyle == HeadingStyle.Normal)
-                            richParagraph.paragraphStyle
-                        else
-                            richParagraph.paragraphStyle.diff(headingStyle.defaultParagraphStyle)
+                val paragraphCssMap = CssDecoder.decodeParagraphStyleToCssStyleMap(effectiveParagraphStyle)
+                val paragraphCss = CssDecoder.decodeCssStyleMap(paragraphCssMap)
 
-                    val paragraphCssMap = CssDecoder.decodeParagraphStyleToCssStyleMap(effectiveParagraphStyle)
-                    val paragraphCss = CssDecoder.decodeCssStyleMap(paragraphCssMap)
+                // Append paragraph opening tag
+                builder.append("<$paragraphTagName")
+                if (paragraphCss.isNotBlank()) builder.append(" style=\"$paragraphCss\"")
+                builder.append(">")
 
-                    // Append paragraph opening tag
-                    builder.append("<$paragraphTagName")
-                    if (paragraphCss.isNotBlank()) builder.append(" style=\"$paragraphCss\"")
-                    builder.append(">")
-
-                    // Append paragraph children
-                    richParagraph.children.fastForEach { richSpan ->
-                        builder.append(decodeRichSpanToHtml(richSpan, headingStyle = headingStyle))
-                    }
+                // Append paragraph children
+                val textContext = HtmlTextEmitContext(afterCollapsibleSpace = true)
+                richParagraph.children.fastForEach { richSpan ->
+                    builder.append(
+                        decodeRichSpanToHtml(
+                            richSpan = richSpan,
+                            headingStyle = headingStyle,
+                            textContext = textContext,
+                        )
+                    )
                 }
 
-                // Check if the next paragraph is also a <br> continuation - if so, don't close yet
-                val nextParagraph = richTextState.richParagraphList.getOrNull(index + 1)
-                val nextIsLineBreakContinuation = nextParagraph != null &&
-                    nextParagraph.isFromLineBreak &&
-                    !nextParagraph.isEmpty()
+                val nextParagraphTag = nextParagraph?.let { decodeHtmlElementFromRichParagraph(it) }
+                val nextLevel = (nextParagraph?.type as? ConfigurableListLevel)?.level ?: 0
+                val nextIsDeeperListItem = isParagraphList &&
+                    (nextParagraphTag == "ol" || nextParagraphTag == "ul") &&
+                    nextLevel > paragraphLevel
 
-                if (!nextIsLineBreakContinuation) {
-                    builder.append("</$paragraphTagName>")
+                when {
+                    // The next paragraph continues this one after a <br>
+                    nextIsLineBreakContinuation ->
+                        openItemTag = paragraphTagName
+
+                    // The next paragraph is a deeper list item: withhold </li> so the
+                    // nested list becomes a child of this item
+                    nextIsDeeperListItem ->
+                        hostItemLevel = paragraphLevel
+
+                    else ->
+                        builder.append("</$paragraphTagName>")
                 }
             }
-
-            // Save last paragraph group tag name
-            lastParagraphGroupTagName = paragraphGroupTagName
-            lastParagraphGroupLevel = paragraphLevel
 
             isLastParagraphEmpty = isParagraphEmpty
         }
 
-        // Close the remaining list tags
-        openedListTagNames.fastForEachReversed {
-            builder.append("</$it>")
-        }
-        openedListTagNames.clear()
+        // Close the remaining list tags (and any withheld host items)
+        closeListsDownTo(0)
 
         return builder.toString()
     }
+
+    /**
+     * Whitespace context threaded through span emission: true when the last emitted
+     * character is a collapsible space, so the next leading space must be
+     * entity-encoded to survive reimport (#726). Starts true at a paragraph boundary.
+     */
+    private class HtmlTextEmitContext(var afterCollapsibleSpace: Boolean)
 
     @OptIn(ExperimentalRichTextApi::class)
     private fun decodeRichSpanToHtml(
         richSpan: RichSpan,
         parentFormattingTags: List<String> = emptyList(),
         headingStyle: HeadingStyle = HeadingStyle.Normal,
+        textContext: HtmlTextEmitContext = HtmlTextEmitContext(afterCollapsibleSpace = false),
     ): String {
         val stringBuilder = StringBuilder()
 
@@ -623,17 +676,28 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
             stringBuilder.append("<$it>")
         }
 
-        // Append text
-        stringBuilder.append(KsoupEntities.encodeHtml(richSpan.text))
+        // Append text, entity-encoding a leading space that follows a collapsible one.
+        val rawText = richSpan.text
+        val encodedText = encodeHtmlText(rawText).let {
+            if (textContext.afterCollapsibleSpace && it.startsWith(' '))
+                "&#32;" + it.substring(1)
+            else
+                it
+        }
+        if (rawText.isNotEmpty()) {
+            textContext.afterCollapsibleSpace = rawText.endsWith(' ')
+        }
+        stringBuilder.append(encodedText)
 
-        // Append children, threading the heading style down so nested spans also strip their
-        // base heading visuals from inline CSS.
+        // Append children, threading the heading style down so nested spans also strip
+        // their base heading visuals from inline CSS, and the whitespace context.
         richSpan.children.fastForEach { child ->
             stringBuilder.append(
                 decodeRichSpanToHtml(
                     richSpan = child,
                     parentFormattingTags = parentFormattingTags + htmlTags,
                     headingStyle = headingStyle,
+                    textContext = textContext,
                 )
             )
         }
@@ -768,6 +832,26 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
             else -> richParagraph.headingStyle.htmlTag ?: "p"
         }
     }
+
+    /**
+     * Encode a text node for HTML output: escape only `&`, `<`, `>` (the full
+     * named-entities table turned "fj" into "&fjlig;", #735) and encode the second and
+     * later spaces of a run as "&#32;" so space runs survive collapsing (#726).
+     */
+    private fun encodeHtmlText(text: String): String {
+        val escaped = text
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+        return escaped.replace(SpaceRunRegex) { match ->
+            " " + "&#32;".repeat(match.value.length - 1)
+        }
+    }
+
+    private val SpaceRunRegex = Regex(" {2,}")
+
+    /** Numeric character references for a space: decimal, hex, and zero-padded forms. */
+    private val SpaceEntityRegex = Regex("&#0*32;|&#[xX]0*20;")
 
     /**
      * Escape a value for inclusion inside a double-quoted HTML attribute.

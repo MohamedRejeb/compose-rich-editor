@@ -76,7 +76,10 @@ internal class RichParagraph(
 
         // Check if the textIndex is in the startRichSpan current paragraph
         if (index > textIndex)
-            return index to getFirstNonEmptyChild(offset = index)
+            return if (textIndex >= offset)
+                index to getFirstNonEmptyChild(offset = index)
+            else
+                index to null
 
         children.fastForEach { richSpan ->
             val result = richSpan.getRichSpanByTextIndex(

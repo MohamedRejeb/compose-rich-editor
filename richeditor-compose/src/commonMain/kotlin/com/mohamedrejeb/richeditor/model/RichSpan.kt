@@ -387,7 +387,9 @@ internal class RichSpan(
 
         // Check if the text index is in the start text range
         if (
-            (textIndex in textRange || (isFirstInParagraph && textIndex + 1 == textRange.min))
+            textIndex in textRange ||
+            (isFirstInParagraph && textIndex + 1 == textRange.min) ||
+            (text.isNotEmpty() && textIndex + 1 == textRange.min)
         ) {
             return if (text.isEmpty()) {
                 index to paragraph.getFirstNonEmptyChild(index)

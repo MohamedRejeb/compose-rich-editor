@@ -7,7 +7,7 @@ material-icons-extended = "1.7.3"
 dokka = "2.2.0"
 
 ksoup = "0.6.0"
-jetbrainsMarkdown = "0.7.3"
+jetbrainsMarkdown = "0.7.7"
 coil = "3.4.0"
 
 vanniktech-maven-publish = "0.36.0"

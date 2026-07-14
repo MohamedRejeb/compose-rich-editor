@@ -468,8 +468,8 @@ public final class com/mohamedrejeb/richeditor/ui/BasicRichTextKt {
 public final class com/mohamedrejeb/richeditor/ui/ComposableSingletons$BasicRichTextEditorKt {
 	public static final field INSTANCE Lcom/mohamedrejeb/richeditor/ui/ComposableSingletons$BasicRichTextEditorKt;
 	public fun <init> ()V
-	public final fun getLambda$58895838$richeditor_compose_release ()Lkotlin/jvm/functions/Function3;
-	public final fun getLambda$626927937$richeditor_compose_release ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$58895838$com_mohamedrejeb_richeditor_richeditor_compose_release ()Lkotlin/jvm/functions/Function3;
+	public final fun getLambda$626927937$com_mohamedrejeb_richeditor_richeditor_compose_release ()Lkotlin/jvm/functions/Function3;
 }
 
 public final class com/mohamedrejeb/richeditor/ui/ExpandableBasicRichTextKt {

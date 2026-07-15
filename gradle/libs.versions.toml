@@ -10,7 +10,7 @@ ksoup = "0.6.0"
 jetbrainsMarkdown = "0.7.7"
 coil = "3.5.0"
 
-vanniktech-maven-publish = "0.36.0"
+vanniktech-maven-publish = "0.37.0"
 
 java = "17"
 

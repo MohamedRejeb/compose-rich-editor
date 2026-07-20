@@ -21,7 +21,7 @@ jobs:
       matrix:
         include:
           - target: publish
-            os: macos-14
+            os: macos-15
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7

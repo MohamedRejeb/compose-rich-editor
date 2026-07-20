@@ -7,7 +7,12 @@
 
 name: Deploy to central
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (e.g. 1.0.0)"
+        required: true
 
 permissions:
   contents: read
@@ -41,6 +46,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
       - name: Deploy to Maven Central
         env:
+          VERSION: ${{ inputs.version }}
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.OSSRH_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.OSSRH_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.OSSRH_GPG_SECRET_KEY_ID }}

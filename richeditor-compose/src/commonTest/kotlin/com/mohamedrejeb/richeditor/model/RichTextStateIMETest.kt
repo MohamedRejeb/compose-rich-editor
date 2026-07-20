@@ -3,6 +3,7 @@ package com.mohamedrejeb.richeditor.model
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startText
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
@@ -922,5 +923,155 @@ class RichTextStateIMETest {
         )
         state.assertInvariants("after same-length replacement")
         assertTrue(state.annotatedString.text.contains("World"))
+    }
+
+    // -------------------------------------------------------------------------
+    // IME startText echo tests
+    //
+    // Some IMEs (Samsung and others) respond to a programmatic startText insertion
+    // (the bullet/number prefix added after Enter) by echoing it back as a removal
+    // of exactly those characters, possibly more than once. The echo used to be
+    // treated as a user Backspace and demoted the new item to DefaultParagraph,
+    // stripping the bullet. It is absorbed only while the selection is collapsed:
+    // a real user deletion of the prefix arrives after a range selection and must
+    // still demote the item (see the last test).
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun testSingleStartTextEchoAfterEnter_unorderedList() {
+        val state = RichTextState()
+        state.setHtml("<ul><li>item1</li><li>item2</li></ul>")
+        val textBeforeEnter = state.annotatedString.text
+        state.selection = TextRange(textBeforeEnter.length)
+
+        // Simulate Enter
+        state.onTextFieldValueChange(
+            TextFieldValue(
+                text = textBeforeEnter + "\n",
+                selection = TextRange(textBeforeEnter.length + 1),
+            )
+        )
+        assertEquals(3, state.richParagraphList.size, "Enter should create third bullet")
+        assertIs<UnorderedList>(state.richParagraphList[2].type)
+
+        // IME echo: removes exactly the startText of the new empty paragraph
+        val textAfterEnter = state.annotatedString.text
+        val startTextLen = state.richParagraphList[2].type.startText.length
+        val afterEcho = textAfterEnter.dropLast(startTextLen)
+        state.onTextFieldValueChange(
+            TextFieldValue(text = afterEcho, selection = TextRange(afterEcho.length))
+        )
+        state.assertInvariants("after single echo")
+        assertEquals(3, state.richParagraphList.size, "Echo must not delete the bullet paragraph")
+        assertIs<UnorderedList>(state.richParagraphList[2].type, "Echo must not demote paragraph type")
+    }
+
+    @Test
+    fun testDoubleStartTextEchoAfterEnter_unorderedList() {
+        val state = RichTextState()
+        state.setHtml("<ul><li>item1</li><li>item2</li></ul>")
+        val textBeforeEnter = state.annotatedString.text
+        state.selection = TextRange(textBeforeEnter.length)
+
+        state.onTextFieldValueChange(
+            TextFieldValue(
+                text = textBeforeEnter + "\n",
+                selection = TextRange(textBeforeEnter.length + 1),
+            )
+        )
+        assertEquals(3, state.richParagraphList.size)
+        assertIs<UnorderedList>(state.richParagraphList[2].type)
+
+        val textAfterEnter = state.annotatedString.text
+        val startTextLen = state.richParagraphList[2].type.startText.length
+        val afterEcho = textAfterEnter.dropLast(startTextLen)
+
+        // First echo
+        state.onTextFieldValueChange(
+            TextFieldValue(text = afterEcho, selection = TextRange(afterEcho.length))
+        )
+        state.assertInvariants("after first echo")
+        assertEquals(3, state.richParagraphList.size, "First echo must not delete bullet")
+        assertIs<UnorderedList>(state.richParagraphList[2].type, "First echo must not demote type")
+
+        // Second echo (Samsung-style persistent re-send)
+        state.onTextFieldValueChange(
+            TextFieldValue(text = afterEcho, selection = TextRange(afterEcho.length))
+        )
+        state.assertInvariants("after second echo")
+        assertEquals(3, state.richParagraphList.size, "Second echo must not delete bullet")
+        assertIs<UnorderedList>(state.richParagraphList[2].type, "Second echo must not demote type")
+    }
+
+    @Test
+    fun testDoubleStartTextEchoAfterEnter_orderedList() {
+        val state = RichTextState()
+        state.setHtml("<ol><li>item1</li><li>item2</li></ol>")
+        val textBeforeEnter = state.annotatedString.text
+        state.selection = TextRange(textBeforeEnter.length)
+
+        state.onTextFieldValueChange(
+            TextFieldValue(
+                text = textBeforeEnter + "\n",
+                selection = TextRange(textBeforeEnter.length + 1),
+            )
+        )
+        assertEquals(3, state.richParagraphList.size)
+        assertIs<OrderedList>(state.richParagraphList[2].type)
+
+        val textAfterEnter = state.annotatedString.text
+        val startTextLen = state.richParagraphList[2].type.startText.length
+        val afterEcho = textAfterEnter.dropLast(startTextLen)
+
+        // First echo
+        state.onTextFieldValueChange(
+            TextFieldValue(text = afterEcho, selection = TextRange(afterEcho.length))
+        )
+        state.assertInvariants("after first echo")
+        assertEquals(3, state.richParagraphList.size, "First echo must not delete bullet")
+        assertIs<OrderedList>(state.richParagraphList[2].type, "First echo must not demote type")
+
+        // Second echo
+        state.onTextFieldValueChange(
+            TextFieldValue(text = afterEcho, selection = TextRange(afterEcho.length))
+        )
+        state.assertInvariants("after second echo")
+        assertEquals(3, state.richParagraphList.size, "Second echo must not delete bullet")
+        assertIs<OrderedList>(state.richParagraphList[2].type, "Second echo must not demote type")
+    }
+
+    @Test
+    fun testUserDeletingSelectedPrefixAfterEnter_exitsList() {
+        // The user counterpart of the echo: press Enter, select the fresh "\u2022 "
+        // prefix, delete it. Same removal shape as the echo but with a range
+        // selection; it must demote the item, not be silently restored.
+        val state = RichTextState()
+        state.setHtml("<ul><li>item1</li><li>item2</li></ul>")
+        val textBeforeEnter = state.annotatedString.text
+        state.selection = TextRange(textBeforeEnter.length)
+
+        state.onTextFieldValueChange(
+            TextFieldValue(
+                text = textBeforeEnter + "\n",
+                selection = TextRange(textBeforeEnter.length + 1),
+            )
+        )
+        assertEquals(3, state.richParagraphList.size)
+        assertIs<UnorderedList>(state.richParagraphList[2].type)
+
+        val textAfterEnter = state.annotatedString.text
+        val startTextLen = state.richParagraphList[2].type.startText.length
+
+        // Select the freshly inserted prefix, then delete it
+        state.selection = TextRange(textAfterEnter.length - startTextLen, textAfterEnter.length)
+        val afterDelete = textAfterEnter.dropLast(startTextLen)
+        state.onTextFieldValueChange(
+            TextFieldValue(text = afterDelete, selection = TextRange(afterDelete.length))
+        )
+        state.assertInvariants("after user deletes selected prefix")
+        assertIs<DefaultParagraph>(
+            state.richParagraphList[2].type,
+            "Deleting the selected prefix must exit the list, not be absorbed as an echo",
+        )
     }
 }

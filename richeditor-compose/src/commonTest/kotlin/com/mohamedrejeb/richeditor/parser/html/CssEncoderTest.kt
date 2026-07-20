@@ -369,12 +369,14 @@ class CssEncoderTest {
             null,
             CssEncoder.parseCssTextIndent(textIndent1),
         )
+        // Relative units resolve to Sp against the 16px default font size;
+        // Em TextIndent crashes Compose layout ("Only Sp can convert to Px", #724).
         assertEquals(
-            TextIndent(1.5.em, 1.5.em),
+            TextIndent(24.sp, 24.sp),
             CssEncoder.parseCssTextIndent(textIndent2),
         )
         assertEquals(
-            TextIndent(3.em, 3.em),
+            TextIndent(48.sp, 48.sp),
             CssEncoder.parseCssTextIndent(textIndent3),
         )
         assertEquals(

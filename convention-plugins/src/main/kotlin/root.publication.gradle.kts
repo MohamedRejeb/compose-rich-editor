@@ -1,4 +1,4 @@
 allprojects {
     group = "com.mohamedrejeb.richeditor"
-    version = System.getenv("VERSION") ?: "1.0.0-rc14"
+    version = System.getenv("VERSION") ?: "1.0.0"
 }

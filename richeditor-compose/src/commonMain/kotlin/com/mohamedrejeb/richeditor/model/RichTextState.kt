@@ -1976,6 +1976,15 @@ public class RichTextState internal constructor(
     private var tempTextFieldValue = textFieldValue
 
     /**
+     * Armed when [checkForParagraphs] inserts a new list paragraph's startText.
+     * Some IMEs (Samsung) echo that programmatic insertion back as a removal of
+     * exactly those characters; [handleRemovingCharacters] absorbs the echo instead
+     * of demoting the paragraph. Not cleared per echo (persistent IMEs re-send it);
+     * cleared once the user actually types. Credit: tfkci, PR #722.
+     */
+    private var justInsertedListParagraph = false
+
+    /**
      * Handles the new text field value.
      *
      * @param newTextFieldValue the new text field value.
@@ -2071,6 +2080,7 @@ public class RichTextState internal constructor(
 
             when {
                 removedLength == 0 && insertedLength > 0 -> {
+                    justInsertedListParagraph = false
                     // Pure insertion. The diff position is ambiguous inside runs of
                     // repeated characters; prefer the selection-derived position when
                     // it describes the same change.
@@ -2101,6 +2111,7 @@ public class RichTextState internal constructor(
                 }
 
                 removedLength > 0 && insertedLength > 0 -> {
+                    justInsertedListParagraph = false
                     // Replacement: removal followed by insertion. Prefer the old
                     // selection bounds when they describe the change, else the diff bounds.
                     val selMin = oldTextFieldValue.selection.min
@@ -2763,31 +2774,58 @@ public class RichTextState internal constructor(
                 minRichSpan.paragraph.children.clear()
                 richParagraphList.remove(minRichSpan.paragraph)
             } else {
-                handleRemoveMinParagraphStartText(
-                    removeIndex = minRemoveIndex,
-                    paragraphStartTextLength = minParagraphStartTextLength,
-                    paragraphFirstChildMinIndex = minParagraphFirstChildMinIndex,
-                )
-
-                // Save the old paragraph type
                 val minParagraphOldType = minRichSpan.paragraph.type
 
-                // Set the paragraph type to DefaultParagraph
-                minRichSpan.paragraph.type = DefaultParagraph()
-
-                // Check if it's a list and handle level appropriately
-                if (
-                    maxRemoveIndex - minRemoveIndex == 1 &&
+                // IME startText echo (Samsung and others): right after
+                // checkForParagraphs inserted this paragraph's prefix, the IME
+                // reports a removal of exactly those characters from the still-empty
+                // item with a collapsed selection. A real user deletion of the prefix
+                // arrives after a range selection, so absorb only the collapsed echo
+                // and restore the prefix instead of demoting. See PR #722.
+                val isImeStartTextEcho =
+                    justInsertedListParagraph &&
+                    textFieldValue.selection.collapsed &&
                     minParagraphOldType is ConfigurableListLevel &&
-                    minParagraphOldType.level > 1
-                ) {
-                    // Decrease level instead of exiting list
-                    minParagraphOldType.level -= 1
-                    tempTextFieldValue = updateParagraphType(
-                        paragraph = minRichSpan.paragraph,
-                        newType = minParagraphOldType,
-                        textFieldValue = tempTextFieldValue,
+                    minRichSpan.paragraph.isEmpty() &&
+                    removedCharsCount == minParagraphStartTextLength &&
+                    minRemoveIndex == minParagraphFirstChildMinIndex - minParagraphStartTextLength
+
+                if (isImeStartTextEcho) {
+                    val startText = minRichSpan.paragraph.type.startText
+                    val insertAt = minRemoveIndex.coerceIn(0, tempTextFieldValue.text.length)
+                    tempTextFieldValue = tempTextFieldValue.copy(
+                        text = tempTextFieldValue.text.substring(0, insertAt) +
+                            startText +
+                            tempTextFieldValue.text.substring(insertAt),
+                        selection = TextRange(
+                            (tempTextFieldValue.selection.start + startText.length)
+                                .coerceAtLeast(0),
+                        ),
                     )
+                } else {
+                    handleRemoveMinParagraphStartText(
+                        removeIndex = minRemoveIndex,
+                        paragraphStartTextLength = minParagraphStartTextLength,
+                        paragraphFirstChildMinIndex = minParagraphFirstChildMinIndex,
+                    )
+
+                    // Set the paragraph type to DefaultParagraph
+                    minRichSpan.paragraph.type = DefaultParagraph()
+
+                    // Check if it's a list and handle level appropriately
+                    if (
+                        maxRemoveIndex - minRemoveIndex == 1 &&
+                        minParagraphOldType is ConfigurableListLevel &&
+                        minParagraphOldType.level > 1
+                    ) {
+                        // Decrease level instead of exiting list
+                        minParagraphOldType.level -= 1
+                        tempTextFieldValue = updateParagraphType(
+                            paragraph = minRichSpan.paragraph,
+                            newType = minParagraphOldType,
+                            textFieldValue = tempTextFieldValue,
+                        )
+                    }
                 }
             }
         }
@@ -3346,6 +3384,10 @@ public class RichTextState internal constructor(
             )
 
             // Add the new paragraph
+            if (newParagraph.type.startText.isNotEmpty()) {
+                justInsertedListParagraph = true
+            }
+
             richParagraphList.add(paragraphIndex + 1, newParagraph)
 
             // Update the paragraph type of the paragraphs after the new paragraph

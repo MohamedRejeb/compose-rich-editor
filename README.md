@@ -1,10 +1,10 @@
 <h1 align="center">Compose Rich Editor</h1><br>
 
-[![Kotlin](https://img.shields.io/badge/kotlin-2.3.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
-[![Compose](https://img.shields.io/badge/compose-1.10.3-blue.svg?logo=jetpackcompose)](https://www.jetbrains.com/lp/compose-multiplatform)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.4.0-blue.svg?logo=kotlin)](http://kotlinlang.org)
+[![Compose](https://img.shields.io/badge/compose-1.11.1-blue.svg?logo=jetpackcompose)](https://www.jetbrains.com/lp/compose-multiplatform)
 [![MohamedRejeb](https://raw.githubusercontent.com/MohamedRejeb/MohamedRejeb/main/badges/mohamedrejeb.svg)](https://github.com/MohamedRejeb)
 [![Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
-[![API](https://img.shields.io/badge/API-21%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=21)
+[![API](https://img.shields.io/badge/API-23%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=23)
 [![Maven Central](https://img.shields.io/maven-central/v/com.mohamedrejeb.richeditor/richeditor-compose/1.0.0-rc14)](https://search.maven.org/search?q=g:%22com.mohamedrejeb.richeditor%22%20AND%20a:%22richeditor-compose%22)
 
 ![Compose Rich Editor](docs/images/logo-large-light.svg#gh-light-mode-only)
@@ -39,7 +39,7 @@ A rich text editor library for both Jetpack Compose and Compose Multiplatform, f
 Compose Rich Editor is available on `mavenCentral()`.
 
 ```kotlin
-implementation("com.mohamedrejeb.richeditor:richeditor-compose:1.0.0-rc14")
+implementation("com.mohamedrejeb.richeditor:richeditor-compose:1.0.0")
 ```
 
 ## Compatibility
@@ -48,6 +48,7 @@ implementation("com.mohamedrejeb.richeditor:richeditor-compose:1.0.0-rc14")
 
 | Kotlin version | Compose version | Compose Rich Editor version |
 |----------------|-----------------|-----------------------------|
+| 2.4.0          | 1.11.1          | 1.0.0                       |
 | 2.3.21         | 1.10.3          | 1.0.0-rc14                  |
 | 2.1.21         | 1.8.2           | 1.0.0-rc13                  |
 | 2.1.10         | 1.7.3           | 1.0.0-rc11                  |

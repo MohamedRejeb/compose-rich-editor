@@ -56,7 +56,7 @@ internal class RichSpan(
         var parent = this.parent
 
         while (parent != null) {
-            spanStyle = parent.spanStyle.merge(spanStyle)
+            spanStyle = parent.spanStyle.customMerge(spanStyle)
             parent = parent.parent
         }
 

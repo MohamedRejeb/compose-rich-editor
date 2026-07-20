@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
@@ -95,7 +96,7 @@ internal fun AnnotatedString.Builder.appendRichSpan(
             else
                 parent.richSpanStyle
 
-        parent.spanStyle = parent.spanStyle.merge(firstChild.spanStyle)
+        parent.spanStyle = parent.spanStyle.customMerge(firstChild.spanStyle)
         parent.richSpanStyle = richSpanStyle
         parent.text = firstChild.text
         parent.textRange = firstChild.textRange
@@ -121,7 +122,7 @@ internal fun AnnotatedString.Builder.append(
 ): Int {
     var index = startIndex
 
-    withStyle(richSpan.spanStyle.merge(resolveRichSpanStyleStyle(state, richSpan.richSpanStyle))) {
+    withStyle(effectiveSpanStyle(state, richSpan)) {
         if (richSpan.richSpanStyle is RichSpanStyle.Image) {
             // Image owns a single placeholder char in the raw text;
             // appendCustomContent (via appendInlineContent) emits that
@@ -235,7 +236,7 @@ internal fun AnnotatedString.Builder.append(
 ): Int {
     var index = startIndex
 
-    withStyle(richSpan.spanStyle.merge(resolveRichSpanStyleStyle(state, richSpan.richSpanStyle))) {
+    withStyle(effectiveSpanStyle(state, richSpan)) {
         richSpan.textRange = TextRange(index, index + richSpan.text.length)
 
         // Image owns a single placeholder char in the raw text;
@@ -274,6 +275,24 @@ internal fun AnnotatedString.Builder.append(
  * for [RichSpanStyle.Token] spans when the trigger is known. Falls back to the style
  * encoded on the [RichSpanStyle] itself (which, for Token, is a neutral default).
  */
+
+/**
+ * The style pushed for a span: its own style merged with its [RichSpanStyle]'s, with
+ * the textDecoration combined with the inherited one. Builder nesting would let this
+ * span's decoration replace the parent's, dropping underline or strikethrough when
+ * the two are nested.
+ */
+@OptIn(ExperimentalRichTextApi::class)
+private fun effectiveSpanStyle(state: RichTextState, richSpan: RichSpan): SpanStyle {
+    val spanStyle = richSpan.spanStyle.merge(resolveRichSpanStyleStyle(state, richSpan.richSpanStyle))
+    val inheritedDecoration = richSpan.parent?.fullSpanStyle?.textDecoration ?: return spanStyle
+    val ownDecoration = spanStyle.textDecoration ?: return spanStyle
+    if (inheritedDecoration == ownDecoration) return spanStyle
+    return spanStyle.copy(
+        textDecoration = TextDecoration.combine(listOf(inheritedDecoration, ownDecoration)),
+    )
+}
+
 @OptIn(ExperimentalRichTextApi::class)
 private fun resolveRichSpanStyleStyle(
     state: RichTextState,

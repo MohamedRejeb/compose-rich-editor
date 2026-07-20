@@ -34,7 +34,7 @@ jobs:
         run: ./gradlew apiCheck
 
   test:
-    runs-on: macos-15
+    runs-on: macos-26
 
     steps:
       - uses: actions/checkout@v7
@@ -60,7 +60,7 @@ jobs:
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [test, api-check]
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v7
       - name: Set up JDK 17

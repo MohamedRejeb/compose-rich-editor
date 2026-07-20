@@ -17,6 +17,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInWindow
@@ -229,17 +231,24 @@ public fun BasicRichTextEditor(
         // when the text contains multiple paragraphs.
         LaunchedEffect(interactionSource) {
             interactionSource.interactions.collect { interaction ->
-                if (interaction is PressInteraction.Press) {
-                    val pressPosition = interaction.pressPosition
-                    val topPadding = with(density) { contentPadding.calculateTopPadding().toPx() }
-                    val startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() }
+                when (interaction) {
+                    is PressInteraction.Press -> {
+                        state.onSelectionGestureStart()
 
-                    adjustTextIndicatorOffset(
-                        pressPosition = pressPosition,
-                        state = state,
-                        topPadding = topPadding,
-                        startPadding = startPadding,
-                    )
+                        val pressPosition = interaction.pressPosition
+                        val topPadding = with(density) { contentPadding.calculateTopPadding().toPx() }
+                        val startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() }
+
+                        adjustTextIndicatorOffset(
+                            pressPosition = pressPosition,
+                            state = state,
+                            topPadding = topPadding,
+                            startPadding = startPadding,
+                        )
+                    }
+
+                    is PressInteraction.Release,
+                    is PressInteraction.Cancel -> state.onSelectionGestureEnd()
                 }
             }
         }
@@ -301,6 +310,25 @@ public fun BasicRichTextEditor(
                         Modifier
                     else
                         Modifier
+                            // Passive pointer observer feeding the geometric selection
+                            // clamp; never consumes events.
+                            .pointerInput(state) {
+                                val topPadding = with(density) { contentPadding.calculateTopPadding().toPx() }
+                                val startPadding =
+                                    with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() }
+                                awaitPointerEventScope {
+                                    while (true) {
+                                        val event = awaitPointerEvent(PointerEventPass.Initial)
+                                        val change = event.changes.firstOrNull { it.pressed } ?: continue
+                                        state.onSelectionGesturePointerMove(
+                                            Offset(
+                                                change.position.x - startPadding,
+                                                change.position.y - topPadding,
+                                            )
+                                        )
+                                    }
+                                }
+                            }
                             // Workaround for Desktop to fix a bug in BasicTextField where it doesn't select the correct text
                             // when the text contains multiple paragraphs.
                             .adjustTextIndicatorOffset(

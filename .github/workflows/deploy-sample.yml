@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up JDK
         uses: actions/setup-java@v5
@@ -24,7 +24,7 @@ jobs:
         run: ./gradlew :sample:web:wasmJsBrowserDistribution
 
       - name: Deploy to Netlify
-        uses: nwtgck/actions-netlify@v3
+        uses: nwtgck/actions-netlify@v4
         with:
           publish-dir: ./sample/web/build/dist/wasmJs/productionExecutable
           production-deploy: true

@@ -31,7 +31,8 @@ class RichTextStateHtmlParserDecodeTest {
 
         val parsedHtml = RichTextStateHtmlParser.decode(richTextState)
 
-        assertEquals(html, parsedHtml)
+        // "&excl;" decodes to "!", which needs no entity on re-encode.
+        assertEquals("<br><p>Hello World!</p>", parsedHtml)
     }
 
     @Test
@@ -354,18 +355,23 @@ class RichTextStateHtmlParserDecodeTest {
 
     @Test
     fun testDecodeListsWithDifferentLevels() {
+        // Nested lists are children of their parent <li> (#736).
         val expectedHtml = """
             <ol>
-                <li>F</li>
-                <ol><li>FFO</li><li>FSO</li></ol>
-                <ul>
-                    <li>FFU</li><li>FSU</li>
-                    <ul><li>FSU3</li></ul>
-                </ul>
+                <li>F
+                    <ol><li>FFO</li><li>FSO</li></ol>
+                    <ul>
+                        <li>FFU</li>
+                        <li>FSU
+                            <ul><li>FSU3</li></ul>
+                        </li>
+                    </ul>
+                </li>
             </ol>
             <ul>
-                <li>FFU</li>
-                <ol><li>FFO</li></ol>
+                <li>FFU
+                    <ol><li>FFO</li></ol>
+                </li>
             </ul>
             <p>Last</p>
         """
@@ -513,13 +519,13 @@ class RichTextStateHtmlParserDecodeTest {
 
         // Test end range
         assertEquals(
-            "<p>World&excl;</p>",
+            "<p>World!</p>",
             richTextState.toHtml(TextRange(6, 12))
         )
 
         // Test full range
         assertEquals(
-            "<p>Hello World&excl;</p>",
+            "<p>Hello World!</p>",
             richTextState.toHtml(TextRange(0, 12))
         )
 
@@ -742,4 +748,17 @@ class RichTextStateHtmlParserDecodeTest {
         val expectedHtmlPart = "<h2>Paragraph 2</h2>"
         assertTrue(html.contains(expectedHtmlPart), "Generated HTML should contain $expectedHtmlPart")
     }
+
+    @Test
+    fun testDecodeLineBreakContinuationFollowedByNestedList() {
+        // The nested list must stay inside the parent <li> even when the item's
+        // content ends with a <br> continuation (#736).
+        val html = "<ul><li>a<br>b<ul><li>c</li></ul></li></ul>"
+
+        val state = RichTextState()
+        state.setHtml(html)
+
+        assertEquals(html, state.toHtml())
+    }
+
 }

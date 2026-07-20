@@ -161,6 +161,7 @@ internal class OrderedList private constructor(
             initialLevel = level,
             initialStyleType = styleType,
             initialPrefixAlignment = prefixAlignment,
+            startFrom = startFrom,
         )
 
     override fun equals(other: Any?): Boolean {

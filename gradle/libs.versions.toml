@@ -1,14 +1,14 @@
 [versions]
 agp = "8.13.2"
-kotlin = "2.3.21"
-compose = "1.10.3"
-material3 = "1.10.0-alpha05"
+kotlin = "2.4.0"
+compose = "1.11.1"
+material3 = "1.11.0-alpha07"
 material-icons-extended = "1.7.3"
 dokka = "2.2.0"
 
 ksoup = "0.6.0"
-jetbrainsMarkdown = "0.7.3"
-coil = "3.4.0"
+jetbrainsMarkdown = "0.7.7"
+coil = "3.5.0"
 
 vanniktech-maven-publish = "0.36.0"
 
@@ -17,12 +17,12 @@ java = "17"
 # For sample
 androidx-appcompat = "1.7.1"
 activity-compose = "1.13.0"
-richeditor = "1.0.0-rc13"
-coroutines = "1.10.2"
-ktor = "3.4.3"
+richeditor = "1.0.0-rc14"
+coroutines = "1.11.0"
+ktor = "3.5.1"
 android-minSdk = "23"
 android-compileSdk = "37"
-lifecycle = "2.10.0"
+lifecycle = "2.11.0-beta01"
 navigation = "2.9.2"
 
 [libraries]

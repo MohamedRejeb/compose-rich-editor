@@ -9,6 +9,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.*
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.sp
@@ -432,8 +433,12 @@ internal object CssEncoder {
         if (cssTextIndent.isBlank()) return null
 
         val textUnit = parseCssTextSize(cssTextIndent)
-        return if (textUnit.isSpecified) TextIndent(textUnit, textUnit)
-            else null
+        if (!textUnit.isSpecified) return null
+
+        val spUnit =
+            if (textUnit.type == TextUnitType.Em) (textUnit.value * 16).sp
+            else textUnit
+        return TextIndent(spUnit, spUnit)
     }
 
     /**

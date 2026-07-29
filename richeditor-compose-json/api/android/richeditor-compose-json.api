@@ -1,9 +1,11 @@
 public final class com/mohamedrejeb/richeditor/json/MalformedRichTextJsonException : java/lang/IllegalArgumentException {
+	public static final field $stable I
 	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
 public final class com/mohamedrejeb/richeditor/json/RichTextDocumentCodec {
+	public static final field $stable I
 	public static final field INSTANCE Lcom/mohamedrejeb/richeditor/json/RichTextDocumentCodec;
 	public final fun decode (Lkotlinx/serialization/json/JsonObject;)Lcom/mohamedrejeb/richeditor/document/RichTextDocument;
 	public final fun decodeFromString (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/document/RichTextDocument;
@@ -21,6 +23,7 @@ public final class com/mohamedrejeb/richeditor/json/RichTextStateJsonKt {
 }
 
 public final class com/mohamedrejeb/richeditor/json/UnsupportedRichTextJsonVersionException : java/lang/IllegalArgumentException {
+	public static final field $stable I
 	public fun <init> (I)V
 	public final fun getDocumentVersion ()I
 }

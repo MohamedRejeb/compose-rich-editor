@@ -28,7 +28,7 @@ class RichTextDocumentEncoderBlockTest {
     }
 
     @Test
-    fun `list paragraphs map to list item types with 0-based indent, prefix excluded from text`() {
+    fun `list paragraphs map to list item types with 0-based indent and prefix excluded from text`() {
         val state = RichTextState().apply { setHtml("<ol start=\"3\"><li>One</li></ol><ul><li>Two</li></ul>") }
         val doc = RichTextDocumentEncoder.encode(state)
         assertEquals(RichTextBlockType.ListItem(ordered = true, indent = 0, startNumber = 3), doc.blocks[0].type)

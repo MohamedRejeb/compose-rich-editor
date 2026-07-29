@@ -21,7 +21,7 @@ class RichTextDocumentCodecEncodeTest {
     }
 
     @Test
-    fun `golden document with heading, alignment, marks, and ordered list`() {
+    fun `golden document with heading alignment marks and ordered list`() {
         val doc = RichTextDocument(
             blocks = listOf(
                 RichTextBlock(text = "Title", headingLevel = 1),

@@ -54,6 +54,7 @@ nav:
   - 'Getting Started': getting_started.md
   - 'Core':
     - 'RichTextState': rich_text_state.md
+    - 'Document model': rich_text_document.md
   - 'Styling':
     - 'Span Style': span_style.md
     - 'Paragraph Style': paragraph_style.md
@@ -69,6 +70,7 @@ nav:
   - 'Import / Export':
     - 'HTML import/export': html_import_export.md
     - 'Markdown import/export': markdown_import_export.md
+    - 'JSON import/export': json_import_export.md
   - 'Reference':
     - 'FAQ': faq.md
     - 'Upgrading from 0.x to 1.x': upgrading.md

@@ -223,6 +223,360 @@ abstract interface com.mohamedrejeb.richeditor.paragraph.type/OrderedListStyleTy
     }
 }
 
+sealed interface com.mohamedrejeb.richeditor.document/RichTextBlockType { // com.mohamedrejeb.richeditor.document/RichTextBlockType|null[0]
+    final class ListItem : com.mohamedrejeb.richeditor.document/RichTextBlockType { // com.mohamedrejeb.richeditor.document/RichTextBlockType.ListItem|null[0]
+        constructor <init>(kotlin/Boolean, kotlin/Int = ..., kotlin/Int? = ...) // com.mohamedrejeb.richeditor.document/RichTextBlockType.ListItem.<init>|<init>(kotlin.Boolean;kotlin.Int;kotlin.Int?){}[0]
+
+        final val indent // com.mohamedrejeb.richeditor.document/RichTextBlockType.ListItem.indent|{}indent[0]
+            final fun <get-indent>(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextBlockType.ListItem.indent.<get-indent>|<get-indent>(){}[0]
+        final val ordered // com.mohamedrejeb.richeditor.document/RichTextBlockType.ListItem.ordered|{}ordered[0]
+            final fun <get-ordered>(): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextBlockType.ListItem.ordered.<get-ordered>|<get-ordered>(){}[0]
+        final val startNumber // com.mohamedrejeb.richeditor.document/RichTextBlockType.ListItem.startNumber|{}startNumber[0]
+            final fun <get-startNumber>(): kotlin/Int? // com.mohamedrejeb.richeditor.document/RichTextBlockType.ListItem.startNumber.<get-startNumber>|<get-startNumber>(){}[0]
+
+        final fun component1(): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextBlockType.ListItem.component1|component1(){}[0]
+        final fun component2(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextBlockType.ListItem.component2|component2(){}[0]
+        final fun component3(): kotlin/Int? // com.mohamedrejeb.richeditor.document/RichTextBlockType.ListItem.component3|component3(){}[0]
+        final fun copy(kotlin/Boolean = ..., kotlin/Int = ..., kotlin/Int? = ...): com.mohamedrejeb.richeditor.document/RichTextBlockType.ListItem // com.mohamedrejeb.richeditor.document/RichTextBlockType.ListItem.copy|copy(kotlin.Boolean;kotlin.Int;kotlin.Int?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextBlockType.ListItem.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextBlockType.ListItem.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextBlockType.ListItem.toString|toString(){}[0]
+    }
+
+    final object Paragraph : com.mohamedrejeb.richeditor.document/RichTextBlockType { // com.mohamedrejeb.richeditor.document/RichTextBlockType.Paragraph|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextBlockType.Paragraph.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextBlockType.Paragraph.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextBlockType.Paragraph.toString|toString(){}[0]
+    }
+}
+
+sealed interface com.mohamedrejeb.richeditor.document/RichTextSpanMark { // com.mohamedrejeb.richeditor.document/RichTextSpanMark|null[0]
+    abstract val range // com.mohamedrejeb.richeditor.document/RichTextSpanMark.range|{}range[0]
+        abstract fun <get-range>(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.range.<get-range>|<get-range>(){}[0]
+
+    final class BaselineShift : com.mohamedrejeb.richeditor.document/RichTextSpanMark { // com.mohamedrejeb.richeditor.document/RichTextSpanMark.BaselineShift|null[0]
+        constructor <init>(kotlin.ranges/IntRange, kotlin/Float) // com.mohamedrejeb.richeditor.document/RichTextSpanMark.BaselineShift.<init>|<init>(kotlin.ranges.IntRange;kotlin.Float){}[0]
+
+        final val multiplier // com.mohamedrejeb.richeditor.document/RichTextSpanMark.BaselineShift.multiplier|{}multiplier[0]
+            final fun <get-multiplier>(): kotlin/Float // com.mohamedrejeb.richeditor.document/RichTextSpanMark.BaselineShift.multiplier.<get-multiplier>|<get-multiplier>(){}[0]
+        final val range // com.mohamedrejeb.richeditor.document/RichTextSpanMark.BaselineShift.range|{}range[0]
+            final fun <get-range>(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.BaselineShift.range.<get-range>|<get-range>(){}[0]
+
+        final fun component1(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.BaselineShift.component1|component1(){}[0]
+        final fun component2(): kotlin/Float // com.mohamedrejeb.richeditor.document/RichTextSpanMark.BaselineShift.component2|component2(){}[0]
+        final fun copy(kotlin.ranges/IntRange = ..., kotlin/Float = ...): com.mohamedrejeb.richeditor.document/RichTextSpanMark.BaselineShift // com.mohamedrejeb.richeditor.document/RichTextSpanMark.BaselineShift.copy|copy(kotlin.ranges.IntRange;kotlin.Float){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextSpanMark.BaselineShift.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextSpanMark.BaselineShift.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.BaselineShift.toString|toString(){}[0]
+    }
+
+    final class Bold : com.mohamedrejeb.richeditor.document/RichTextSpanMark { // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Bold|null[0]
+        constructor <init>(kotlin.ranges/IntRange) // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Bold.<init>|<init>(kotlin.ranges.IntRange){}[0]
+
+        final val range // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Bold.range|{}range[0]
+            final fun <get-range>(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Bold.range.<get-range>|<get-range>(){}[0]
+
+        final fun component1(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Bold.component1|component1(){}[0]
+        final fun copy(kotlin.ranges/IntRange = ...): com.mohamedrejeb.richeditor.document/RichTextSpanMark.Bold // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Bold.copy|copy(kotlin.ranges.IntRange){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Bold.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Bold.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Bold.toString|toString(){}[0]
+    }
+
+    final class CodeSpan : com.mohamedrejeb.richeditor.document/RichTextSpanMark { // com.mohamedrejeb.richeditor.document/RichTextSpanMark.CodeSpan|null[0]
+        constructor <init>(kotlin.ranges/IntRange) // com.mohamedrejeb.richeditor.document/RichTextSpanMark.CodeSpan.<init>|<init>(kotlin.ranges.IntRange){}[0]
+
+        final val range // com.mohamedrejeb.richeditor.document/RichTextSpanMark.CodeSpan.range|{}range[0]
+            final fun <get-range>(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.CodeSpan.range.<get-range>|<get-range>(){}[0]
+
+        final fun component1(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.CodeSpan.component1|component1(){}[0]
+        final fun copy(kotlin.ranges/IntRange = ...): com.mohamedrejeb.richeditor.document/RichTextSpanMark.CodeSpan // com.mohamedrejeb.richeditor.document/RichTextSpanMark.CodeSpan.copy|copy(kotlin.ranges.IntRange){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextSpanMark.CodeSpan.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextSpanMark.CodeSpan.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.CodeSpan.toString|toString(){}[0]
+    }
+
+    final class FontSize : com.mohamedrejeb.richeditor.document/RichTextSpanMark { // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontSize|null[0]
+        constructor <init>(kotlin.ranges/IntRange, androidx.compose.ui.unit/TextUnit) // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontSize.<init>|<init>(kotlin.ranges.IntRange;androidx.compose.ui.unit.TextUnit){}[0]
+
+        final val range // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontSize.range|{}range[0]
+            final fun <get-range>(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontSize.range.<get-range>|<get-range>(){}[0]
+        final val size // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontSize.size|{}size[0]
+            final fun <get-size>(): androidx.compose.ui.unit/TextUnit // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontSize.size.<get-size>|<get-size>(){}[0]
+
+        final fun component1(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontSize.component1|component1(){}[0]
+        final fun component2(): androidx.compose.ui.unit/TextUnit // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontSize.component2|component2(){}[0]
+        final fun copy(kotlin.ranges/IntRange = ..., androidx.compose.ui.unit/TextUnit = ...): com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontSize // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontSize.copy|copy(kotlin.ranges.IntRange;androidx.compose.ui.unit.TextUnit){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontSize.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontSize.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontSize.toString|toString(){}[0]
+    }
+
+    final class FontWeight : com.mohamedrejeb.richeditor.document/RichTextSpanMark { // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontWeight|null[0]
+        constructor <init>(kotlin.ranges/IntRange, kotlin/Int) // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontWeight.<init>|<init>(kotlin.ranges.IntRange;kotlin.Int){}[0]
+
+        final val range // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontWeight.range|{}range[0]
+            final fun <get-range>(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontWeight.range.<get-range>|<get-range>(){}[0]
+        final val weight // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontWeight.weight|{}weight[0]
+            final fun <get-weight>(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontWeight.weight.<get-weight>|<get-weight>(){}[0]
+
+        final fun component1(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontWeight.component1|component1(){}[0]
+        final fun component2(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontWeight.component2|component2(){}[0]
+        final fun copy(kotlin.ranges/IntRange = ..., kotlin/Int = ...): com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontWeight // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontWeight.copy|copy(kotlin.ranges.IntRange;kotlin.Int){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontWeight.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontWeight.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.FontWeight.toString|toString(){}[0]
+    }
+
+    final class Highlight : com.mohamedrejeb.richeditor.document/RichTextSpanMark { // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Highlight|null[0]
+        constructor <init>(kotlin.ranges/IntRange, kotlin/Long) // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Highlight.<init>|<init>(kotlin.ranges.IntRange;kotlin.Long){}[0]
+
+        final val argb // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Highlight.argb|{}argb[0]
+            final fun <get-argb>(): kotlin/Long // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Highlight.argb.<get-argb>|<get-argb>(){}[0]
+        final val range // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Highlight.range|{}range[0]
+            final fun <get-range>(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Highlight.range.<get-range>|<get-range>(){}[0]
+
+        final fun component1(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Highlight.component1|component1(){}[0]
+        final fun component2(): kotlin/Long // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Highlight.component2|component2(){}[0]
+        final fun copy(kotlin.ranges/IntRange = ..., kotlin/Long = ...): com.mohamedrejeb.richeditor.document/RichTextSpanMark.Highlight // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Highlight.copy|copy(kotlin.ranges.IntRange;kotlin.Long){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Highlight.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Highlight.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Highlight.toString|toString(){}[0]
+    }
+
+    final class Image : com.mohamedrejeb.richeditor.document/RichTextSpanMark { // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Image|null[0]
+        constructor <init>(kotlin.ranges/IntRange, kotlin/String, androidx.compose.ui.unit/TextUnit = ..., androidx.compose.ui.unit/TextUnit = ..., kotlin/String? = ...) // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Image.<init>|<init>(kotlin.ranges.IntRange;kotlin.String;androidx.compose.ui.unit.TextUnit;androidx.compose.ui.unit.TextUnit;kotlin.String?){}[0]
+
+        final val description // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Image.description|{}description[0]
+            final fun <get-description>(): kotlin/String? // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Image.description.<get-description>|<get-description>(){}[0]
+        final val height // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Image.height|{}height[0]
+            final fun <get-height>(): androidx.compose.ui.unit/TextUnit // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Image.height.<get-height>|<get-height>(){}[0]
+        final val range // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Image.range|{}range[0]
+            final fun <get-range>(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Image.range.<get-range>|<get-range>(){}[0]
+        final val url // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Image.url|{}url[0]
+            final fun <get-url>(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Image.url.<get-url>|<get-url>(){}[0]
+        final val width // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Image.width|{}width[0]
+            final fun <get-width>(): androidx.compose.ui.unit/TextUnit // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Image.width.<get-width>|<get-width>(){}[0]
+
+        final fun component1(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Image.component1|component1(){}[0]
+        final fun component2(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Image.component2|component2(){}[0]
+        final fun component3(): androidx.compose.ui.unit/TextUnit // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Image.component3|component3(){}[0]
+        final fun component4(): androidx.compose.ui.unit/TextUnit // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Image.component4|component4(){}[0]
+        final fun component5(): kotlin/String? // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Image.component5|component5(){}[0]
+        final fun copy(kotlin.ranges/IntRange = ..., kotlin/String = ..., androidx.compose.ui.unit/TextUnit = ..., androidx.compose.ui.unit/TextUnit = ..., kotlin/String? = ...): com.mohamedrejeb.richeditor.document/RichTextSpanMark.Image // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Image.copy|copy(kotlin.ranges.IntRange;kotlin.String;androidx.compose.ui.unit.TextUnit;androidx.compose.ui.unit.TextUnit;kotlin.String?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Image.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Image.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Image.toString|toString(){}[0]
+    }
+
+    final class Italic : com.mohamedrejeb.richeditor.document/RichTextSpanMark { // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Italic|null[0]
+        constructor <init>(kotlin.ranges/IntRange) // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Italic.<init>|<init>(kotlin.ranges.IntRange){}[0]
+
+        final val range // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Italic.range|{}range[0]
+            final fun <get-range>(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Italic.range.<get-range>|<get-range>(){}[0]
+
+        final fun component1(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Italic.component1|component1(){}[0]
+        final fun copy(kotlin.ranges/IntRange = ...): com.mohamedrejeb.richeditor.document/RichTextSpanMark.Italic // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Italic.copy|copy(kotlin.ranges.IntRange){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Italic.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Italic.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Italic.toString|toString(){}[0]
+    }
+
+    final class LetterSpacing : com.mohamedrejeb.richeditor.document/RichTextSpanMark { // com.mohamedrejeb.richeditor.document/RichTextSpanMark.LetterSpacing|null[0]
+        constructor <init>(kotlin.ranges/IntRange, androidx.compose.ui.unit/TextUnit) // com.mohamedrejeb.richeditor.document/RichTextSpanMark.LetterSpacing.<init>|<init>(kotlin.ranges.IntRange;androidx.compose.ui.unit.TextUnit){}[0]
+
+        final val range // com.mohamedrejeb.richeditor.document/RichTextSpanMark.LetterSpacing.range|{}range[0]
+            final fun <get-range>(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.LetterSpacing.range.<get-range>|<get-range>(){}[0]
+        final val size // com.mohamedrejeb.richeditor.document/RichTextSpanMark.LetterSpacing.size|{}size[0]
+            final fun <get-size>(): androidx.compose.ui.unit/TextUnit // com.mohamedrejeb.richeditor.document/RichTextSpanMark.LetterSpacing.size.<get-size>|<get-size>(){}[0]
+
+        final fun component1(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.LetterSpacing.component1|component1(){}[0]
+        final fun component2(): androidx.compose.ui.unit/TextUnit // com.mohamedrejeb.richeditor.document/RichTextSpanMark.LetterSpacing.component2|component2(){}[0]
+        final fun copy(kotlin.ranges/IntRange = ..., androidx.compose.ui.unit/TextUnit = ...): com.mohamedrejeb.richeditor.document/RichTextSpanMark.LetterSpacing // com.mohamedrejeb.richeditor.document/RichTextSpanMark.LetterSpacing.copy|copy(kotlin.ranges.IntRange;androidx.compose.ui.unit.TextUnit){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextSpanMark.LetterSpacing.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextSpanMark.LetterSpacing.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.LetterSpacing.toString|toString(){}[0]
+    }
+
+    final class Link : com.mohamedrejeb.richeditor.document/RichTextSpanMark { // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Link|null[0]
+        constructor <init>(kotlin.ranges/IntRange, kotlin/String) // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Link.<init>|<init>(kotlin.ranges.IntRange;kotlin.String){}[0]
+
+        final val range // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Link.range|{}range[0]
+            final fun <get-range>(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Link.range.<get-range>|<get-range>(){}[0]
+        final val url // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Link.url|{}url[0]
+            final fun <get-url>(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Link.url.<get-url>|<get-url>(){}[0]
+
+        final fun component1(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Link.component1|component1(){}[0]
+        final fun component2(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Link.component2|component2(){}[0]
+        final fun copy(kotlin.ranges/IntRange = ..., kotlin/String = ...): com.mohamedrejeb.richeditor.document/RichTextSpanMark.Link // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Link.copy|copy(kotlin.ranges.IntRange;kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Link.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Link.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Link.toString|toString(){}[0]
+    }
+
+    final class Shadow : com.mohamedrejeb.richeditor.document/RichTextSpanMark { // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Shadow|null[0]
+        constructor <init>(kotlin.ranges/IntRange, kotlin/Long, kotlin/Float, kotlin/Float, kotlin/Float) // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Shadow.<init>|<init>(kotlin.ranges.IntRange;kotlin.Long;kotlin.Float;kotlin.Float;kotlin.Float){}[0]
+
+        final val argb // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Shadow.argb|{}argb[0]
+            final fun <get-argb>(): kotlin/Long // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Shadow.argb.<get-argb>|<get-argb>(){}[0]
+        final val blurRadius // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Shadow.blurRadius|{}blurRadius[0]
+            final fun <get-blurRadius>(): kotlin/Float // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Shadow.blurRadius.<get-blurRadius>|<get-blurRadius>(){}[0]
+        final val offsetX // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Shadow.offsetX|{}offsetX[0]
+            final fun <get-offsetX>(): kotlin/Float // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Shadow.offsetX.<get-offsetX>|<get-offsetX>(){}[0]
+        final val offsetY // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Shadow.offsetY|{}offsetY[0]
+            final fun <get-offsetY>(): kotlin/Float // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Shadow.offsetY.<get-offsetY>|<get-offsetY>(){}[0]
+        final val range // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Shadow.range|{}range[0]
+            final fun <get-range>(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Shadow.range.<get-range>|<get-range>(){}[0]
+
+        final fun component1(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Shadow.component1|component1(){}[0]
+        final fun component2(): kotlin/Long // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Shadow.component2|component2(){}[0]
+        final fun component3(): kotlin/Float // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Shadow.component3|component3(){}[0]
+        final fun component4(): kotlin/Float // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Shadow.component4|component4(){}[0]
+        final fun component5(): kotlin/Float // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Shadow.component5|component5(){}[0]
+        final fun copy(kotlin.ranges/IntRange = ..., kotlin/Long = ..., kotlin/Float = ..., kotlin/Float = ..., kotlin/Float = ...): com.mohamedrejeb.richeditor.document/RichTextSpanMark.Shadow // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Shadow.copy|copy(kotlin.ranges.IntRange;kotlin.Long;kotlin.Float;kotlin.Float;kotlin.Float){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Shadow.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Shadow.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Shadow.toString|toString(){}[0]
+    }
+
+    final class Strikethrough : com.mohamedrejeb.richeditor.document/RichTextSpanMark { // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Strikethrough|null[0]
+        constructor <init>(kotlin.ranges/IntRange) // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Strikethrough.<init>|<init>(kotlin.ranges.IntRange){}[0]
+
+        final val range // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Strikethrough.range|{}range[0]
+            final fun <get-range>(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Strikethrough.range.<get-range>|<get-range>(){}[0]
+
+        final fun component1(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Strikethrough.component1|component1(){}[0]
+        final fun copy(kotlin.ranges/IntRange = ...): com.mohamedrejeb.richeditor.document/RichTextSpanMark.Strikethrough // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Strikethrough.copy|copy(kotlin.ranges.IntRange){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Strikethrough.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Strikethrough.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Strikethrough.toString|toString(){}[0]
+    }
+
+    final class TextColor : com.mohamedrejeb.richeditor.document/RichTextSpanMark { // com.mohamedrejeb.richeditor.document/RichTextSpanMark.TextColor|null[0]
+        constructor <init>(kotlin.ranges/IntRange, kotlin/Long) // com.mohamedrejeb.richeditor.document/RichTextSpanMark.TextColor.<init>|<init>(kotlin.ranges.IntRange;kotlin.Long){}[0]
+
+        final val argb // com.mohamedrejeb.richeditor.document/RichTextSpanMark.TextColor.argb|{}argb[0]
+            final fun <get-argb>(): kotlin/Long // com.mohamedrejeb.richeditor.document/RichTextSpanMark.TextColor.argb.<get-argb>|<get-argb>(){}[0]
+        final val range // com.mohamedrejeb.richeditor.document/RichTextSpanMark.TextColor.range|{}range[0]
+            final fun <get-range>(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.TextColor.range.<get-range>|<get-range>(){}[0]
+
+        final fun component1(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.TextColor.component1|component1(){}[0]
+        final fun component2(): kotlin/Long // com.mohamedrejeb.richeditor.document/RichTextSpanMark.TextColor.component2|component2(){}[0]
+        final fun copy(kotlin.ranges/IntRange = ..., kotlin/Long = ...): com.mohamedrejeb.richeditor.document/RichTextSpanMark.TextColor // com.mohamedrejeb.richeditor.document/RichTextSpanMark.TextColor.copy|copy(kotlin.ranges.IntRange;kotlin.Long){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextSpanMark.TextColor.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextSpanMark.TextColor.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.TextColor.toString|toString(){}[0]
+    }
+
+    final class Token : com.mohamedrejeb.richeditor.document/RichTextSpanMark { // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Token|null[0]
+        constructor <init>(kotlin.ranges/IntRange, kotlin/String, kotlin/String, kotlin/String) // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Token.<init>|<init>(kotlin.ranges.IntRange;kotlin.String;kotlin.String;kotlin.String){}[0]
+
+        final val id // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Token.id|{}id[0]
+            final fun <get-id>(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Token.id.<get-id>|<get-id>(){}[0]
+        final val label // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Token.label|{}label[0]
+            final fun <get-label>(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Token.label.<get-label>|<get-label>(){}[0]
+        final val range // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Token.range|{}range[0]
+            final fun <get-range>(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Token.range.<get-range>|<get-range>(){}[0]
+        final val trigger // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Token.trigger|{}trigger[0]
+            final fun <get-trigger>(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Token.trigger.<get-trigger>|<get-trigger>(){}[0]
+
+        final fun component1(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Token.component1|component1(){}[0]
+        final fun component2(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Token.component2|component2(){}[0]
+        final fun component3(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Token.component3|component3(){}[0]
+        final fun component4(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Token.component4|component4(){}[0]
+        final fun copy(kotlin.ranges/IntRange = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ...): com.mohamedrejeb.richeditor.document/RichTextSpanMark.Token // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Token.copy|copy(kotlin.ranges.IntRange;kotlin.String;kotlin.String;kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Token.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Token.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Token.toString|toString(){}[0]
+    }
+
+    final class Underline : com.mohamedrejeb.richeditor.document/RichTextSpanMark { // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Underline|null[0]
+        constructor <init>(kotlin.ranges/IntRange) // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Underline.<init>|<init>(kotlin.ranges.IntRange){}[0]
+
+        final val range // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Underline.range|{}range[0]
+            final fun <get-range>(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Underline.range.<get-range>|<get-range>(){}[0]
+
+        final fun component1(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Underline.component1|component1(){}[0]
+        final fun copy(kotlin.ranges/IntRange = ...): com.mohamedrejeb.richeditor.document/RichTextSpanMark.Underline // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Underline.copy|copy(kotlin.ranges.IntRange){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Underline.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Underline.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Underline.toString|toString(){}[0]
+    }
+
+    final class Unknown : com.mohamedrejeb.richeditor.document/RichTextSpanMark { // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Unknown|null[0]
+        constructor <init>(kotlin.ranges/IntRange, kotlin/String, kotlin/String) // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Unknown.<init>|<init>(kotlin.ranges.IntRange;kotlin.String;kotlin.String){}[0]
+
+        final val kind // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Unknown.kind|{}kind[0]
+            final fun <get-kind>(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Unknown.kind.<get-kind>|<get-kind>(){}[0]
+        final val range // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Unknown.range|{}range[0]
+            final fun <get-range>(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Unknown.range.<get-range>|<get-range>(){}[0]
+        final val rawJson // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Unknown.rawJson|{}rawJson[0]
+            final fun <get-rawJson>(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Unknown.rawJson.<get-rawJson>|<get-rawJson>(){}[0]
+
+        final fun component1(): kotlin.ranges/IntRange // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Unknown.component1|component1(){}[0]
+        final fun component2(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Unknown.component2|component2(){}[0]
+        final fun component3(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Unknown.component3|component3(){}[0]
+        final fun copy(kotlin.ranges/IntRange = ..., kotlin/String = ..., kotlin/String = ...): com.mohamedrejeb.richeditor.document/RichTextSpanMark.Unknown // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Unknown.copy|copy(kotlin.ranges.IntRange;kotlin.String;kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Unknown.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Unknown.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextSpanMark.Unknown.toString|toString(){}[0]
+    }
+}
+
+final class com.mohamedrejeb.richeditor.document/RichTextBlock { // com.mohamedrejeb.richeditor.document/RichTextBlock|null[0]
+    constructor <init>(kotlin/String, com.mohamedrejeb.richeditor.document/RichTextBlockType = ..., kotlin.collections/List<com.mohamedrejeb.richeditor.document/RichTextSpanMark> = ..., kotlin/Int = ..., androidx.compose.ui.text.style/TextAlign = ..., androidx.compose.ui.text.style/TextDirection = ..., androidx.compose.ui.unit/TextUnit = ..., androidx.compose.ui.text.style/TextIndent? = ..., kotlin/Boolean = ...) // com.mohamedrejeb.richeditor.document/RichTextBlock.<init>|<init>(kotlin.String;com.mohamedrejeb.richeditor.document.RichTextBlockType;kotlin.collections.List<com.mohamedrejeb.richeditor.document.RichTextSpanMark>;kotlin.Int;androidx.compose.ui.text.style.TextAlign;androidx.compose.ui.text.style.TextDirection;androidx.compose.ui.unit.TextUnit;androidx.compose.ui.text.style.TextIndent?;kotlin.Boolean){}[0]
+
+    final val headingLevel // com.mohamedrejeb.richeditor.document/RichTextBlock.headingLevel|{}headingLevel[0]
+        final fun <get-headingLevel>(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextBlock.headingLevel.<get-headingLevel>|<get-headingLevel>(){}[0]
+    final val isLineBreak // com.mohamedrejeb.richeditor.document/RichTextBlock.isLineBreak|{}isLineBreak[0]
+        final fun <get-isLineBreak>(): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextBlock.isLineBreak.<get-isLineBreak>|<get-isLineBreak>(){}[0]
+    final val lineHeight // com.mohamedrejeb.richeditor.document/RichTextBlock.lineHeight|{}lineHeight[0]
+        final fun <get-lineHeight>(): androidx.compose.ui.unit/TextUnit // com.mohamedrejeb.richeditor.document/RichTextBlock.lineHeight.<get-lineHeight>|<get-lineHeight>(){}[0]
+    final val spans // com.mohamedrejeb.richeditor.document/RichTextBlock.spans|{}spans[0]
+        final fun <get-spans>(): kotlin.collections/List<com.mohamedrejeb.richeditor.document/RichTextSpanMark> // com.mohamedrejeb.richeditor.document/RichTextBlock.spans.<get-spans>|<get-spans>(){}[0]
+    final val text // com.mohamedrejeb.richeditor.document/RichTextBlock.text|{}text[0]
+        final fun <get-text>(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextBlock.text.<get-text>|<get-text>(){}[0]
+    final val textAlign // com.mohamedrejeb.richeditor.document/RichTextBlock.textAlign|{}textAlign[0]
+        final fun <get-textAlign>(): androidx.compose.ui.text.style/TextAlign // com.mohamedrejeb.richeditor.document/RichTextBlock.textAlign.<get-textAlign>|<get-textAlign>(){}[0]
+    final val textDirection // com.mohamedrejeb.richeditor.document/RichTextBlock.textDirection|{}textDirection[0]
+        final fun <get-textDirection>(): androidx.compose.ui.text.style/TextDirection // com.mohamedrejeb.richeditor.document/RichTextBlock.textDirection.<get-textDirection>|<get-textDirection>(){}[0]
+    final val textIndent // com.mohamedrejeb.richeditor.document/RichTextBlock.textIndent|{}textIndent[0]
+        final fun <get-textIndent>(): androidx.compose.ui.text.style/TextIndent? // com.mohamedrejeb.richeditor.document/RichTextBlock.textIndent.<get-textIndent>|<get-textIndent>(){}[0]
+    final val type // com.mohamedrejeb.richeditor.document/RichTextBlock.type|{}type[0]
+        final fun <get-type>(): com.mohamedrejeb.richeditor.document/RichTextBlockType // com.mohamedrejeb.richeditor.document/RichTextBlock.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextBlock.component1|component1(){}[0]
+    final fun component2(): com.mohamedrejeb.richeditor.document/RichTextBlockType // com.mohamedrejeb.richeditor.document/RichTextBlock.component2|component2(){}[0]
+    final fun component3(): kotlin.collections/List<com.mohamedrejeb.richeditor.document/RichTextSpanMark> // com.mohamedrejeb.richeditor.document/RichTextBlock.component3|component3(){}[0]
+    final fun component4(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextBlock.component4|component4(){}[0]
+    final fun component5(): androidx.compose.ui.text.style/TextAlign // com.mohamedrejeb.richeditor.document/RichTextBlock.component5|component5(){}[0]
+    final fun component6(): androidx.compose.ui.text.style/TextDirection // com.mohamedrejeb.richeditor.document/RichTextBlock.component6|component6(){}[0]
+    final fun component7(): androidx.compose.ui.unit/TextUnit // com.mohamedrejeb.richeditor.document/RichTextBlock.component7|component7(){}[0]
+    final fun component8(): androidx.compose.ui.text.style/TextIndent? // com.mohamedrejeb.richeditor.document/RichTextBlock.component8|component8(){}[0]
+    final fun component9(): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextBlock.component9|component9(){}[0]
+    final fun copy(kotlin/String = ..., com.mohamedrejeb.richeditor.document/RichTextBlockType = ..., kotlin.collections/List<com.mohamedrejeb.richeditor.document/RichTextSpanMark> = ..., kotlin/Int = ..., androidx.compose.ui.text.style/TextAlign = ..., androidx.compose.ui.text.style/TextDirection = ..., androidx.compose.ui.unit/TextUnit = ..., androidx.compose.ui.text.style/TextIndent? = ..., kotlin/Boolean = ...): com.mohamedrejeb.richeditor.document/RichTextBlock // com.mohamedrejeb.richeditor.document/RichTextBlock.copy|copy(kotlin.String;com.mohamedrejeb.richeditor.document.RichTextBlockType;kotlin.collections.List<com.mohamedrejeb.richeditor.document.RichTextSpanMark>;kotlin.Int;androidx.compose.ui.text.style.TextAlign;androidx.compose.ui.text.style.TextDirection;androidx.compose.ui.unit.TextUnit;androidx.compose.ui.text.style.TextIndent?;kotlin.Boolean){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextBlock.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextBlock.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextBlock.toString|toString(){}[0]
+}
+
+final class com.mohamedrejeb.richeditor.document/RichTextDocument { // com.mohamedrejeb.richeditor.document/RichTextDocument|null[0]
+    constructor <init>(kotlin.collections/List<com.mohamedrejeb.richeditor.document/RichTextBlock>) // com.mohamedrejeb.richeditor.document/RichTextDocument.<init>|<init>(kotlin.collections.List<com.mohamedrejeb.richeditor.document.RichTextBlock>){}[0]
+
+    final val blocks // com.mohamedrejeb.richeditor.document/RichTextDocument.blocks|{}blocks[0]
+        final fun <get-blocks>(): kotlin.collections/List<com.mohamedrejeb.richeditor.document/RichTextBlock> // com.mohamedrejeb.richeditor.document/RichTextDocument.blocks.<get-blocks>|<get-blocks>(){}[0]
+
+    final fun component1(): kotlin.collections/List<com.mohamedrejeb.richeditor.document/RichTextBlock> // com.mohamedrejeb.richeditor.document/RichTextDocument.component1|component1(){}[0]
+    final fun copy(kotlin.collections/List<com.mohamedrejeb.richeditor.document/RichTextBlock> = ...): com.mohamedrejeb.richeditor.document/RichTextDocument // com.mohamedrejeb.richeditor.document/RichTextDocument.copy|copy(kotlin.collections.List<com.mohamedrejeb.richeditor.document.RichTextBlock>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.document/RichTextDocument.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.document/RichTextDocument.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.document/RichTextDocument.toString|toString(){}[0]
+
+    final object Companion { // com.mohamedrejeb.richeditor.document/RichTextDocument.Companion|null[0]
+        final fun empty(): com.mohamedrejeb.richeditor.document/RichTextDocument // com.mohamedrejeb.richeditor.document/RichTextDocument.Companion.empty|empty(){}[0]
+    }
+}
+
 final class com.mohamedrejeb.richeditor.model.history/RichTextHistory { // com.mohamedrejeb.richeditor.model.history/RichTextHistory|null[0]
     final val canRedo // com.mohamedrejeb.richeditor.model.history/RichTextHistory.canRedo|{}canRedo[0]
         final fun <get-canRedo>(): kotlin/Boolean // com.mohamedrejeb.richeditor.model.history/RichTextHistory.canRedo.<get-canRedo>|<get-canRedo>(){}[0]
@@ -447,11 +801,14 @@ final class com.mohamedrejeb.richeditor.model/RichTextState { // com.mohamedreje
     final fun setHeadingStyle(com.mohamedrejeb.richeditor.model/HeadingStyle) // com.mohamedrejeb.richeditor.model/RichTextState.setHeadingStyle|setHeadingStyle(com.mohamedrejeb.richeditor.model.HeadingStyle){}[0]
     final fun setHtml(kotlin/String): com.mohamedrejeb.richeditor.model/RichTextState // com.mohamedrejeb.richeditor.model/RichTextState.setHtml|setHtml(kotlin.String){}[0]
     final fun setMarkdown(kotlin/String): com.mohamedrejeb.richeditor.model/RichTextState // com.mohamedrejeb.richeditor.model/RichTextState.setMarkdown|setMarkdown(kotlin.String){}[0]
+    final fun setRichTextDocument(com.mohamedrejeb.richeditor.document/RichTextDocument): com.mohamedrejeb.richeditor.model/RichTextState // com.mohamedrejeb.richeditor.model/RichTextState.setRichTextDocument|setRichTextDocument(com.mohamedrejeb.richeditor.document.RichTextDocument){}[0]
     final fun setText(kotlin/String, androidx.compose.ui.text/TextRange = ...): com.mohamedrejeb.richeditor.model/RichTextState // com.mohamedrejeb.richeditor.model/RichTextState.setText|setText(kotlin.String;androidx.compose.ui.text.TextRange){}[0]
     final fun toHtml(): kotlin/String // com.mohamedrejeb.richeditor.model/RichTextState.toHtml|toHtml(){}[0]
     final fun toHtml(androidx.compose.ui.text/TextRange): kotlin/String // com.mohamedrejeb.richeditor.model/RichTextState.toHtml|toHtml(androidx.compose.ui.text.TextRange){}[0]
     final fun toMarkdown(): kotlin/String // com.mohamedrejeb.richeditor.model/RichTextState.toMarkdown|toMarkdown(){}[0]
     final fun toMarkdown(androidx.compose.ui.text/TextRange): kotlin/String // com.mohamedrejeb.richeditor.model/RichTextState.toMarkdown|toMarkdown(androidx.compose.ui.text.TextRange){}[0]
+    final fun toRichTextDocument(): com.mohamedrejeb.richeditor.document/RichTextDocument // com.mohamedrejeb.richeditor.model/RichTextState.toRichTextDocument|toRichTextDocument(){}[0]
+    final fun toRichTextDocument(androidx.compose.ui.text/TextRange): com.mohamedrejeb.richeditor.document/RichTextDocument // com.mohamedrejeb.richeditor.model/RichTextState.toRichTextDocument|toRichTextDocument(androidx.compose.ui.text.TextRange){}[0]
     final fun toText(): kotlin/String // com.mohamedrejeb.richeditor.model/RichTextState.toText|toText(){}[0]
     final fun toText(androidx.compose.ui.text/TextRange): kotlin/String // com.mohamedrejeb.richeditor.model/RichTextState.toText|toText(androidx.compose.ui.text.TextRange){}[0]
     final fun toggleCode() // com.mohamedrejeb.richeditor.model/RichTextState.toggleCode|toggleCode(){}[0]
@@ -540,6 +897,26 @@ final object com.mohamedrejeb.richeditor.ui.material3/RichTextEditorDefaults { /
     final fun richTextEditorWithoutLabelPadding(androidx.compose.ui.unit/Dp = ..., androidx.compose.ui.unit/Dp = ..., androidx.compose.ui.unit/Dp = ..., androidx.compose.ui.unit/Dp = ...): androidx.compose.foundation.layout/PaddingValues // com.mohamedrejeb.richeditor.ui.material3/RichTextEditorDefaults.richTextEditorWithoutLabelPadding|richTextEditorWithoutLabelPadding(androidx.compose.ui.unit.Dp;androidx.compose.ui.unit.Dp;androidx.compose.ui.unit.Dp;androidx.compose.ui.unit.Dp){}[0]
 }
 
+final val com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextBlock$stableprop // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextBlock$stableprop|#static{}com_mohamedrejeb_richeditor_document_RichTextBlock$stableprop[0]
+final val com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextBlockType_ListItem$stableprop // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextBlockType_ListItem$stableprop|#static{}com_mohamedrejeb_richeditor_document_RichTextBlockType_ListItem$stableprop[0]
+final val com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextBlockType_Paragraph$stableprop // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextBlockType_Paragraph$stableprop|#static{}com_mohamedrejeb_richeditor_document_RichTextBlockType_Paragraph$stableprop[0]
+final val com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextDocument$stableprop // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextDocument$stableprop|#static{}com_mohamedrejeb_richeditor_document_RichTextDocument$stableprop[0]
+final val com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_BaselineShift$stableprop // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_BaselineShift$stableprop|#static{}com_mohamedrejeb_richeditor_document_RichTextSpanMark_BaselineShift$stableprop[0]
+final val com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Bold$stableprop // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Bold$stableprop|#static{}com_mohamedrejeb_richeditor_document_RichTextSpanMark_Bold$stableprop[0]
+final val com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_CodeSpan$stableprop // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_CodeSpan$stableprop|#static{}com_mohamedrejeb_richeditor_document_RichTextSpanMark_CodeSpan$stableprop[0]
+final val com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_FontSize$stableprop // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_FontSize$stableprop|#static{}com_mohamedrejeb_richeditor_document_RichTextSpanMark_FontSize$stableprop[0]
+final val com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_FontWeight$stableprop // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_FontWeight$stableprop|#static{}com_mohamedrejeb_richeditor_document_RichTextSpanMark_FontWeight$stableprop[0]
+final val com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Highlight$stableprop // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Highlight$stableprop|#static{}com_mohamedrejeb_richeditor_document_RichTextSpanMark_Highlight$stableprop[0]
+final val com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Image$stableprop // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Image$stableprop|#static{}com_mohamedrejeb_richeditor_document_RichTextSpanMark_Image$stableprop[0]
+final val com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Italic$stableprop // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Italic$stableprop|#static{}com_mohamedrejeb_richeditor_document_RichTextSpanMark_Italic$stableprop[0]
+final val com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_LetterSpacing$stableprop // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_LetterSpacing$stableprop|#static{}com_mohamedrejeb_richeditor_document_RichTextSpanMark_LetterSpacing$stableprop[0]
+final val com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Link$stableprop // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Link$stableprop|#static{}com_mohamedrejeb_richeditor_document_RichTextSpanMark_Link$stableprop[0]
+final val com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Shadow$stableprop // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Shadow$stableprop|#static{}com_mohamedrejeb_richeditor_document_RichTextSpanMark_Shadow$stableprop[0]
+final val com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Strikethrough$stableprop // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Strikethrough$stableprop|#static{}com_mohamedrejeb_richeditor_document_RichTextSpanMark_Strikethrough$stableprop[0]
+final val com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_TextColor$stableprop // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_TextColor$stableprop|#static{}com_mohamedrejeb_richeditor_document_RichTextSpanMark_TextColor$stableprop[0]
+final val com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Token$stableprop // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Token$stableprop|#static{}com_mohamedrejeb_richeditor_document_RichTextSpanMark_Token$stableprop[0]
+final val com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Underline$stableprop // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Underline$stableprop|#static{}com_mohamedrejeb_richeditor_document_RichTextSpanMark_Underline$stableprop[0]
+final val com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Unknown$stableprop // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Unknown$stableprop|#static{}com_mohamedrejeb_richeditor_document_RichTextSpanMark_Unknown$stableprop[0]
 final val com.mohamedrejeb.richeditor.model.history/com_mohamedrejeb_richeditor_model_history_CommitTrigger_Delete$stableprop // com.mohamedrejeb.richeditor.model.history/com_mohamedrejeb_richeditor_model_history_CommitTrigger_Delete$stableprop|#static{}com_mohamedrejeb_richeditor_model_history_CommitTrigger_Delete$stableprop[0]
 final val com.mohamedrejeb.richeditor.model.history/com_mohamedrejeb_richeditor_model_history_CommitTrigger_Formatting$stableprop // com.mohamedrejeb.richeditor.model.history/com_mohamedrejeb_richeditor_model_history_CommitTrigger_Formatting$stableprop|#static{}com_mohamedrejeb_richeditor_model_history_CommitTrigger_Formatting$stableprop[0]
 final val com.mohamedrejeb.richeditor.model.history/com_mohamedrejeb_richeditor_model_history_CommitTrigger_LineBreak$stableprop // com.mohamedrejeb.richeditor.model.history/com_mohamedrejeb_richeditor_model_history_CommitTrigger_LineBreak$stableprop|#static{}com_mohamedrejeb_richeditor_model_history_CommitTrigger_LineBreak$stableprop[0]
@@ -589,6 +966,26 @@ final fun (androidx.compose.ui.text.style/TextDecoration).com.mohamedrejeb.riche
 final fun (androidx.compose.ui.text/TextLayoutResult).com.mohamedrejeb.richeditor.utils/getBoundingBoxes(kotlin/Int, kotlin/Int, kotlin/Boolean = ...): kotlin.collections/List<androidx.compose.ui.geometry/Rect> // com.mohamedrejeb.richeditor.utils/getBoundingBoxes|getBoundingBoxes@androidx.compose.ui.text.TextLayoutResult(kotlin.Int;kotlin.Int;kotlin.Boolean){}[0]
 final fun (kotlin/Float).com.mohamedrejeb.richeditor.utils/maxDecimals(kotlin/Int): kotlin/Float // com.mohamedrejeb.richeditor.utils/maxDecimals|maxDecimals@kotlin.Float(kotlin.Int){}[0]
 final fun <#A: kotlin/Any?> com.mohamedrejeb.richeditor.ui.material3/TriggerSuggestions(com.mohamedrejeb.richeditor.model/RichTextState, kotlin/String, kotlin/Function1<kotlin/String, kotlin.collections/List<#A>>, kotlin/Function1<#A, com.mohamedrejeb.richeditor.model/RichSpanStyle.Token>, androidx.compose.ui/Modifier?, androidx.compose.ui.unit/Dp, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Shape?, kotlin/Int, kotlin/Function3<#A, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.mohamedrejeb.richeditor.ui.material3/TriggerSuggestions|TriggerSuggestions(com.mohamedrejeb.richeditor.model.RichTextState;kotlin.String;kotlin.Function1<kotlin.String,kotlin.collections.List<0:0>>;kotlin.Function1<0:0,com.mohamedrejeb.richeditor.model.RichSpanStyle.Token>;androidx.compose.ui.Modifier?;androidx.compose.ui.unit.Dp;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Shape?;kotlin.Int;kotlin.Function3<0:0,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){0§<kotlin.Any?>}[0]
+final fun com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextBlock$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextBlock$stableprop_getter|com_mohamedrejeb_richeditor_document_RichTextBlock$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextBlockType_ListItem$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextBlockType_ListItem$stableprop_getter|com_mohamedrejeb_richeditor_document_RichTextBlockType_ListItem$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextBlockType_Paragraph$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextBlockType_Paragraph$stableprop_getter|com_mohamedrejeb_richeditor_document_RichTextBlockType_Paragraph$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextDocument$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextDocument$stableprop_getter|com_mohamedrejeb_richeditor_document_RichTextDocument$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_BaselineShift$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_BaselineShift$stableprop_getter|com_mohamedrejeb_richeditor_document_RichTextSpanMark_BaselineShift$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Bold$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Bold$stableprop_getter|com_mohamedrejeb_richeditor_document_RichTextSpanMark_Bold$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_CodeSpan$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_CodeSpan$stableprop_getter|com_mohamedrejeb_richeditor_document_RichTextSpanMark_CodeSpan$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_FontSize$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_FontSize$stableprop_getter|com_mohamedrejeb_richeditor_document_RichTextSpanMark_FontSize$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_FontWeight$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_FontWeight$stableprop_getter|com_mohamedrejeb_richeditor_document_RichTextSpanMark_FontWeight$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Highlight$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Highlight$stableprop_getter|com_mohamedrejeb_richeditor_document_RichTextSpanMark_Highlight$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Image$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Image$stableprop_getter|com_mohamedrejeb_richeditor_document_RichTextSpanMark_Image$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Italic$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Italic$stableprop_getter|com_mohamedrejeb_richeditor_document_RichTextSpanMark_Italic$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_LetterSpacing$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_LetterSpacing$stableprop_getter|com_mohamedrejeb_richeditor_document_RichTextSpanMark_LetterSpacing$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Link$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Link$stableprop_getter|com_mohamedrejeb_richeditor_document_RichTextSpanMark_Link$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Shadow$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Shadow$stableprop_getter|com_mohamedrejeb_richeditor_document_RichTextSpanMark_Shadow$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Strikethrough$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Strikethrough$stableprop_getter|com_mohamedrejeb_richeditor_document_RichTextSpanMark_Strikethrough$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_TextColor$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_TextColor$stableprop_getter|com_mohamedrejeb_richeditor_document_RichTextSpanMark_TextColor$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Token$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Token$stableprop_getter|com_mohamedrejeb_richeditor_document_RichTextSpanMark_Token$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Underline$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Underline$stableprop_getter|com_mohamedrejeb_richeditor_document_RichTextSpanMark_Underline$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Unknown$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.document/com_mohamedrejeb_richeditor_document_RichTextSpanMark_Unknown$stableprop_getter|com_mohamedrejeb_richeditor_document_RichTextSpanMark_Unknown$stableprop_getter(){}[0]
 final fun com.mohamedrejeb.richeditor.model.history/com_mohamedrejeb_richeditor_model_history_CommitTrigger_Delete$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.model.history/com_mohamedrejeb_richeditor_model_history_CommitTrigger_Delete$stableprop_getter|com_mohamedrejeb_richeditor_model_history_CommitTrigger_Delete$stableprop_getter(){}[0]
 final fun com.mohamedrejeb.richeditor.model.history/com_mohamedrejeb_richeditor_model_history_CommitTrigger_Formatting$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.model.history/com_mohamedrejeb_richeditor_model_history_CommitTrigger_Formatting$stableprop_getter|com_mohamedrejeb_richeditor_model_history_CommitTrigger_Formatting$stableprop_getter(){}[0]
 final fun com.mohamedrejeb.richeditor.model.history/com_mohamedrejeb_richeditor_model_history_CommitTrigger_LineBreak$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.model.history/com_mohamedrejeb_richeditor_model_history_CommitTrigger_LineBreak$stableprop_getter|com_mohamedrejeb_richeditor_model_history_CommitTrigger_LineBreak$stableprop_getter(){}[0]

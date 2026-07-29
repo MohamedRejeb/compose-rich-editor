@@ -5642,10 +5642,37 @@ public class RichTextState internal constructor(
         return RichTextStateMarkdownParser.decode(state)
     }
 
-    internal fun toRichTextDocument(): RichTextDocument =
-        RichTextDocumentEncoder.encode(this)
+    /**
+     * Returns an immutable, structural snapshot of the editor content.
+     *
+     * Two states with the same visible content and styling return equal documents, which makes
+     * this the right value for test assertions and change detection. Reading this inside a
+     * snapshot observer (for example `snapshotFlow { state.toRichTextDocument() }`) re-emits
+     * on every content change.
+     */
+    public fun toRichTextDocument(): RichTextDocument {
+        // Snapshot read: content edits always update annotatedString, so observers invalidate.
+        annotatedString
+        return RichTextDocumentEncoder.encode(this)
+    }
 
-    internal fun setRichTextDocument(document: RichTextDocument): RichTextState {
+    /**
+     * Returns a [RichTextDocument] containing only the content inside [range].
+     *
+     * @param range The [TextRange] to snapshot.
+     */
+    public fun toRichTextDocument(range: TextRange): RichTextDocument {
+        annotatedString
+        return RichTextDocumentEncoder.encode(extractRangeState(range))
+    }
+
+    /**
+     * Replaces the editor content with [document]. Selection moves to the end and undo history
+     * is cleared, matching [setHtml].
+     *
+     * @param document The [RichTextDocument] to load.
+     */
+    public fun setRichTextDocument(document: RichTextDocument): RichTextState {
         history.onProgrammaticReplace()
         updateRichParagraphList(RichTextDocumentDecoder.decode(document))
         return this

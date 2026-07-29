@@ -4,6 +4,317 @@ public abstract interface annotation class com/mohamedrejeb/richeditor/annotatio
 public abstract interface annotation class com/mohamedrejeb/richeditor/annotation/InternalRichTextApi : java/lang/annotation/Annotation {
 }
 
+public final class com/mohamedrejeb/richeditor/document/RichTextBlock {
+	public static final field $stable I
+	public synthetic fun <init> (Ljava/lang/String;Lcom/mohamedrejeb/richeditor/document/RichTextBlockType;Ljava/util/List;IIIJLandroidx/compose/ui/text/style/TextIndent;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/mohamedrejeb/richeditor/document/RichTextBlockType;Ljava/util/List;IIIJLandroidx/compose/ui/text/style/TextIndent;ZLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/mohamedrejeb/richeditor/document/RichTextBlockType;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()I
+	public final fun component5-e0LSkKk ()I
+	public final fun component6-s_7X-co ()I
+	public final fun component7-XSAIIZE ()J
+	public final fun component8 ()Landroidx/compose/ui/text/style/TextIndent;
+	public final fun component9 ()Z
+	public final fun copy-g33h39Y (Ljava/lang/String;Lcom/mohamedrejeb/richeditor/document/RichTextBlockType;Ljava/util/List;IIIJLandroidx/compose/ui/text/style/TextIndent;Z)Lcom/mohamedrejeb/richeditor/document/RichTextBlock;
+	public static synthetic fun copy-g33h39Y$default (Lcom/mohamedrejeb/richeditor/document/RichTextBlock;Ljava/lang/String;Lcom/mohamedrejeb/richeditor/document/RichTextBlockType;Ljava/util/List;IIIJLandroidx/compose/ui/text/style/TextIndent;ZILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextBlock;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHeadingLevel ()I
+	public final fun getLineHeight-XSAIIZE ()J
+	public final fun getSpans ()Ljava/util/List;
+	public final fun getText ()Ljava/lang/String;
+	public final fun getTextAlign-e0LSkKk ()I
+	public final fun getTextDirection-s_7X-co ()I
+	public final fun getTextIndent ()Landroidx/compose/ui/text/style/TextIndent;
+	public final fun getType ()Lcom/mohamedrejeb/richeditor/document/RichTextBlockType;
+	public fun hashCode ()I
+	public final fun isLineBreak ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/mohamedrejeb/richeditor/document/RichTextBlockType {
+}
+
+public final class com/mohamedrejeb/richeditor/document/RichTextBlockType$ListItem : com/mohamedrejeb/richeditor/document/RichTextBlockType {
+	public static final field $stable I
+	public fun <init> (ZILjava/lang/Integer;)V
+	public synthetic fun <init> (ZILjava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()I
+	public final fun component3 ()Ljava/lang/Integer;
+	public final fun copy (ZILjava/lang/Integer;)Lcom/mohamedrejeb/richeditor/document/RichTextBlockType$ListItem;
+	public static synthetic fun copy$default (Lcom/mohamedrejeb/richeditor/document/RichTextBlockType$ListItem;ZILjava/lang/Integer;ILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextBlockType$ListItem;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getIndent ()I
+	public final fun getOrdered ()Z
+	public final fun getStartNumber ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/document/RichTextBlockType$Paragraph : com/mohamedrejeb/richeditor/document/RichTextBlockType {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/mohamedrejeb/richeditor/document/RichTextBlockType$Paragraph;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/document/RichTextDocument {
+	public static final field $stable I
+	public static final field Companion Lcom/mohamedrejeb/richeditor/document/RichTextDocument$Companion;
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lcom/mohamedrejeb/richeditor/document/RichTextDocument;
+	public static synthetic fun copy$default (Lcom/mohamedrejeb/richeditor/document/RichTextDocument;Ljava/util/List;ILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextDocument;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBlocks ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/document/RichTextDocument$Companion {
+	public final fun empty ()Lcom/mohamedrejeb/richeditor/document/RichTextDocument;
+}
+
+public abstract interface class com/mohamedrejeb/richeditor/document/RichTextSpanMark {
+	public abstract fun getRange ()Lkotlin/ranges/IntRange;
+}
+
+public final class com/mohamedrejeb/richeditor/document/RichTextSpanMark$BaselineShift : com/mohamedrejeb/richeditor/document/RichTextSpanMark {
+	public static final field $stable I
+	public fun <init> (Lkotlin/ranges/IntRange;F)V
+	public final fun component1 ()Lkotlin/ranges/IntRange;
+	public final fun component2 ()F
+	public final fun copy (Lkotlin/ranges/IntRange;F)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$BaselineShift;
+	public static synthetic fun copy$default (Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$BaselineShift;Lkotlin/ranges/IntRange;FILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$BaselineShift;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMultiplier ()F
+	public fun getRange ()Lkotlin/ranges/IntRange;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/document/RichTextSpanMark$Bold : com/mohamedrejeb/richeditor/document/RichTextSpanMark {
+	public static final field $stable I
+	public fun <init> (Lkotlin/ranges/IntRange;)V
+	public final fun component1 ()Lkotlin/ranges/IntRange;
+	public final fun copy (Lkotlin/ranges/IntRange;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Bold;
+	public static synthetic fun copy$default (Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Bold;Lkotlin/ranges/IntRange;ILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Bold;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getRange ()Lkotlin/ranges/IntRange;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/document/RichTextSpanMark$CodeSpan : com/mohamedrejeb/richeditor/document/RichTextSpanMark {
+	public static final field $stable I
+	public fun <init> (Lkotlin/ranges/IntRange;)V
+	public final fun component1 ()Lkotlin/ranges/IntRange;
+	public final fun copy (Lkotlin/ranges/IntRange;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$CodeSpan;
+	public static synthetic fun copy$default (Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$CodeSpan;Lkotlin/ranges/IntRange;ILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$CodeSpan;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getRange ()Lkotlin/ranges/IntRange;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/document/RichTextSpanMark$FontSize : com/mohamedrejeb/richeditor/document/RichTextSpanMark {
+	public static final field $stable I
+	public synthetic fun <init> (Lkotlin/ranges/IntRange;JLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lkotlin/ranges/IntRange;
+	public final fun component2-XSAIIZE ()J
+	public final fun copy-mpE4wyQ (Lkotlin/ranges/IntRange;J)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$FontSize;
+	public static synthetic fun copy-mpE4wyQ$default (Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$FontSize;Lkotlin/ranges/IntRange;JILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$FontSize;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getRange ()Lkotlin/ranges/IntRange;
+	public final fun getSize-XSAIIZE ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/document/RichTextSpanMark$FontWeight : com/mohamedrejeb/richeditor/document/RichTextSpanMark {
+	public static final field $stable I
+	public fun <init> (Lkotlin/ranges/IntRange;I)V
+	public final fun component1 ()Lkotlin/ranges/IntRange;
+	public final fun component2 ()I
+	public final fun copy (Lkotlin/ranges/IntRange;I)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$FontWeight;
+	public static synthetic fun copy$default (Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$FontWeight;Lkotlin/ranges/IntRange;IILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$FontWeight;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getRange ()Lkotlin/ranges/IntRange;
+	public final fun getWeight ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/document/RichTextSpanMark$Highlight : com/mohamedrejeb/richeditor/document/RichTextSpanMark {
+	public static final field $stable I
+	public fun <init> (Lkotlin/ranges/IntRange;J)V
+	public final fun component1 ()Lkotlin/ranges/IntRange;
+	public final fun component2 ()J
+	public final fun copy (Lkotlin/ranges/IntRange;J)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Highlight;
+	public static synthetic fun copy$default (Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Highlight;Lkotlin/ranges/IntRange;JILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Highlight;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getArgb ()J
+	public fun getRange ()Lkotlin/ranges/IntRange;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/document/RichTextSpanMark$Image : com/mohamedrejeb/richeditor/document/RichTextSpanMark {
+	public static final field $stable I
+	public synthetic fun <init> (Lkotlin/ranges/IntRange;Ljava/lang/String;JJLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lkotlin/ranges/IntRange;Ljava/lang/String;JJLjava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lkotlin/ranges/IntRange;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3-XSAIIZE ()J
+	public final fun component4-XSAIIZE ()J
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy-sN_kXSM (Lkotlin/ranges/IntRange;Ljava/lang/String;JJLjava/lang/String;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Image;
+	public static synthetic fun copy-sN_kXSM$default (Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Image;Lkotlin/ranges/IntRange;Ljava/lang/String;JJLjava/lang/String;ILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Image;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getHeight-XSAIIZE ()J
+	public fun getRange ()Lkotlin/ranges/IntRange;
+	public final fun getUrl ()Ljava/lang/String;
+	public final fun getWidth-XSAIIZE ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/document/RichTextSpanMark$Italic : com/mohamedrejeb/richeditor/document/RichTextSpanMark {
+	public static final field $stable I
+	public fun <init> (Lkotlin/ranges/IntRange;)V
+	public final fun component1 ()Lkotlin/ranges/IntRange;
+	public final fun copy (Lkotlin/ranges/IntRange;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Italic;
+	public static synthetic fun copy$default (Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Italic;Lkotlin/ranges/IntRange;ILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Italic;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getRange ()Lkotlin/ranges/IntRange;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/document/RichTextSpanMark$LetterSpacing : com/mohamedrejeb/richeditor/document/RichTextSpanMark {
+	public static final field $stable I
+	public synthetic fun <init> (Lkotlin/ranges/IntRange;JLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lkotlin/ranges/IntRange;
+	public final fun component2-XSAIIZE ()J
+	public final fun copy-mpE4wyQ (Lkotlin/ranges/IntRange;J)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$LetterSpacing;
+	public static synthetic fun copy-mpE4wyQ$default (Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$LetterSpacing;Lkotlin/ranges/IntRange;JILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$LetterSpacing;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getRange ()Lkotlin/ranges/IntRange;
+	public final fun getSize-XSAIIZE ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/document/RichTextSpanMark$Link : com/mohamedrejeb/richeditor/document/RichTextSpanMark {
+	public static final field $stable I
+	public fun <init> (Lkotlin/ranges/IntRange;Ljava/lang/String;)V
+	public final fun component1 ()Lkotlin/ranges/IntRange;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Lkotlin/ranges/IntRange;Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Link;
+	public static synthetic fun copy$default (Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Link;Lkotlin/ranges/IntRange;Ljava/lang/String;ILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Link;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getRange ()Lkotlin/ranges/IntRange;
+	public final fun getUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/document/RichTextSpanMark$Shadow : com/mohamedrejeb/richeditor/document/RichTextSpanMark {
+	public static final field $stable I
+	public fun <init> (Lkotlin/ranges/IntRange;JFFF)V
+	public final fun component1 ()Lkotlin/ranges/IntRange;
+	public final fun component2 ()J
+	public final fun component3 ()F
+	public final fun component4 ()F
+	public final fun component5 ()F
+	public final fun copy (Lkotlin/ranges/IntRange;JFFF)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Shadow;
+	public static synthetic fun copy$default (Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Shadow;Lkotlin/ranges/IntRange;JFFFILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Shadow;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getArgb ()J
+	public final fun getBlurRadius ()F
+	public final fun getOffsetX ()F
+	public final fun getOffsetY ()F
+	public fun getRange ()Lkotlin/ranges/IntRange;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/document/RichTextSpanMark$Strikethrough : com/mohamedrejeb/richeditor/document/RichTextSpanMark {
+	public static final field $stable I
+	public fun <init> (Lkotlin/ranges/IntRange;)V
+	public final fun component1 ()Lkotlin/ranges/IntRange;
+	public final fun copy (Lkotlin/ranges/IntRange;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Strikethrough;
+	public static synthetic fun copy$default (Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Strikethrough;Lkotlin/ranges/IntRange;ILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Strikethrough;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getRange ()Lkotlin/ranges/IntRange;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/document/RichTextSpanMark$TextColor : com/mohamedrejeb/richeditor/document/RichTextSpanMark {
+	public static final field $stable I
+	public fun <init> (Lkotlin/ranges/IntRange;J)V
+	public final fun component1 ()Lkotlin/ranges/IntRange;
+	public final fun component2 ()J
+	public final fun copy (Lkotlin/ranges/IntRange;J)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$TextColor;
+	public static synthetic fun copy$default (Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$TextColor;Lkotlin/ranges/IntRange;JILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$TextColor;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getArgb ()J
+	public fun getRange ()Lkotlin/ranges/IntRange;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/document/RichTextSpanMark$Token : com/mohamedrejeb/richeditor/document/RichTextSpanMark {
+	public static final field $stable I
+	public fun <init> (Lkotlin/ranges/IntRange;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Lkotlin/ranges/IntRange;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Lkotlin/ranges/IntRange;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Token;
+	public static synthetic fun copy$default (Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Token;Lkotlin/ranges/IntRange;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Token;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getLabel ()Ljava/lang/String;
+	public fun getRange ()Lkotlin/ranges/IntRange;
+	public final fun getTrigger ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/document/RichTextSpanMark$Underline : com/mohamedrejeb/richeditor/document/RichTextSpanMark {
+	public static final field $stable I
+	public fun <init> (Lkotlin/ranges/IntRange;)V
+	public final fun component1 ()Lkotlin/ranges/IntRange;
+	public final fun copy (Lkotlin/ranges/IntRange;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Underline;
+	public static synthetic fun copy$default (Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Underline;Lkotlin/ranges/IntRange;ILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Underline;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getRange ()Lkotlin/ranges/IntRange;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/document/RichTextSpanMark$Unknown : com/mohamedrejeb/richeditor/document/RichTextSpanMark {
+	public static final field $stable I
+	public fun <init> (Lkotlin/ranges/IntRange;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Lkotlin/ranges/IntRange;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Lkotlin/ranges/IntRange;Ljava/lang/String;Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Unknown;
+	public static synthetic fun copy$default (Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Unknown;Lkotlin/ranges/IntRange;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Unknown;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKind ()Ljava/lang/String;
+	public fun getRange ()Lkotlin/ranges/IntRange;
+	public final fun getRawJson ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class com/mohamedrejeb/richeditor/model/DefaultImageLoader : com/mohamedrejeb/richeditor/model/ImageLoader {
 	public static final field $stable I
 	public static final field INSTANCE Lcom/mohamedrejeb/richeditor/model/DefaultImageLoader;
@@ -249,6 +560,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun setHeadingStyle (Lcom/mohamedrejeb/richeditor/model/HeadingStyle;)V
 	public final fun setHtml (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public final fun setMarkdown (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
+	public final fun setRichTextDocument (Lcom/mohamedrejeb/richeditor/document/RichTextDocument;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public final fun setSelection-5zc-tL8 (J)V
 	public final fun setText-FDrldGo (Ljava/lang/String;J)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public static synthetic fun setText-FDrldGo$default (Lcom/mohamedrejeb/richeditor/model/RichTextState;Ljava/lang/String;JILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
@@ -256,6 +568,8 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun toHtml-5zc-tL8 (J)Ljava/lang/String;
 	public final fun toMarkdown ()Ljava/lang/String;
 	public final fun toMarkdown-5zc-tL8 (J)Ljava/lang/String;
+	public final fun toRichTextDocument ()Lcom/mohamedrejeb/richeditor/document/RichTextDocument;
+	public final fun toRichTextDocument-5zc-tL8 (J)Lcom/mohamedrejeb/richeditor/document/RichTextDocument;
 	public final fun toText ()Ljava/lang/String;
 	public final fun toText-5zc-tL8 (J)Ljava/lang/String;
 	public final fun toggleCode ()V

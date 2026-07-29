@@ -18,6 +18,7 @@ import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
+import com.mohamedrejeb.richeditor.utils.InlineContentPlaceholder
 
 @OptIn(ExperimentalRichTextApi::class)
 internal object RichTextDocumentDecoder {
@@ -53,18 +54,25 @@ internal object RichTextDocumentDecoder {
                 }
         }
 
-        val cuts = sortedSetOf(0, block.text.length)
-        block.spans.forEach { mark ->
-            cuts += mark.range.first
-            cuts += mark.range.last + 1
-        }
-        cuts.toList().zipWithNext().forEach { (segStart, segEnd) ->
+        val cuts = buildSet {
+            add(0)
+            add(block.text.length)
+            block.spans.forEach { mark ->
+                add(mark.range.first)
+                add(mark.range.last + 1)
+            }
+        }.sorted()
+        cuts.zipWithNext().forEach { (segStart, segEnd) ->
             if (segStart >= segEnd) return@forEach
             val covering = block.spans.filter { it.range.first <= segStart && segEnd - 1 <= it.range.last }
             val richStyle = covering.richSpanStyleWithPrecedence()
             paragraph.children += RichSpan(
                 paragraph = paragraph,
-                text = if (richStyle is RichSpanStyle.Image) "" else block.text.substring(segStart, segEnd),
+                // Image spans own a single inline-content placeholder char in the raw text
+                // so span textRanges line up with the rendered annotated string (see #466
+                // and RichTextStateHtmlParser's img handling).
+                text = if (richStyle is RichSpanStyle.Image) InlineContentPlaceholder
+                       else block.text.substring(segStart, segEnd),
                 spanStyle = covering.mergedSpanStyle(),
                 richSpanStyle = richStyle,
             )

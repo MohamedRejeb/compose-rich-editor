@@ -33,6 +33,9 @@ import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.util.fastForEachReversed
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.document.RichTextDocument
+import com.mohamedrejeb.richeditor.document.RichTextDocumentDecoder
+import com.mohamedrejeb.richeditor.document.RichTextDocumentEncoder
 import com.mohamedrejeb.richeditor.model.history.CommitTrigger
 import com.mohamedrejeb.richeditor.model.history.RichTextHistory
 import com.mohamedrejeb.richeditor.model.history.RichTextHistoryHost
@@ -5637,6 +5640,15 @@ public class RichTextState internal constructor(
     public fun toMarkdown(range: TextRange): String {
         val state = extractRangeState(range)
         return RichTextStateMarkdownParser.decode(state)
+    }
+
+    internal fun toRichTextDocument(): RichTextDocument =
+        RichTextDocumentEncoder.encode(this)
+
+    internal fun setRichTextDocument(document: RichTextDocument): RichTextState {
+        history.onProgrammaticReplace()
+        updateRichParagraphList(RichTextDocumentDecoder.decode(document))
+        return this
     }
 
     /**

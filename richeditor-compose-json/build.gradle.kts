@@ -1,0 +1,84 @@
+@file:OptIn(ExperimentalWasmDsl::class)
+
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+plugins {
+    alias(libs.plugins.kotlinMultiplatform)
+    alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.bcv)
+    id("module.publication")
+}
+
+kotlin {
+    explicitApi()
+    applyDefaultHierarchyTemplate()
+
+    androidTarget {
+        publishLibraryVariants("release")
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
+
+    jvm("desktop") {
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
+
+    js {
+        browser {
+            testTask {
+                enabled = false
+            }
+        }
+    }
+
+    wasmJs {
+        browser {
+            testTask {
+                enabled = true
+            }
+        }
+    }
+
+    iosArm64()
+    iosSimulatorArm64()
+
+    sourceSets.commonMain.dependencies {
+        api(projects.richeditorCompose)
+
+        implementation(libs.compose.ui)
+
+        implementation(libs.kotlinx.serialization.json)
+    }
+
+    sourceSets.commonTest.dependencies {
+        implementation(kotlin("test"))
+    }
+}
+
+android {
+    namespace = "com.mohamedrejeb.richeditor.json"
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
+
+    defaultConfig {
+        minSdk = libs.versions.android.minSdk.get().toInt()
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
+apiValidation {
+    @OptIn(kotlinx.validation.ExperimentalBCVApi::class)
+    klib {
+        enabled = true
+    }
+}

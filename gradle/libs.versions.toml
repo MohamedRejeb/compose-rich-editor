@@ -9,6 +9,7 @@ dokka = "2.2.0"
 ksoup = "0.6.0"
 jetbrainsMarkdown = "0.7.8"
 coil = "3.5.0"
+kotlinx-serialization = "1.9.0"
 
 vanniktech-maven-publish = "0.36.0"
 
@@ -41,6 +42,7 @@ compose-ui-test = { group = "org.jetbrains.compose.ui", name = "ui-test", versio
 compose-ui-test-junit4 = { group = "org.jetbrains.compose.ui", name = "ui-test-junit4", version.ref = "compose" }
 
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 
 gradlePlugin-android = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 gradlePlugin-jetbrainsCompose = { module = "org.jetbrains.compose:compose-gradle-plugin", version.ref = "compose" }

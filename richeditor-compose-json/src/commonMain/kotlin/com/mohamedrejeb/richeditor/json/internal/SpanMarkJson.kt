@@ -2,6 +2,7 @@ package com.mohamedrejeb.richeditor.json.internal
 
 import androidx.compose.ui.unit.isSpecified
 import com.mohamedrejeb.richeditor.document.RichTextSpanMark
+import com.mohamedrejeb.richeditor.json.MalformedRichTextJsonException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -74,6 +75,79 @@ private fun JsonObjectBuilder.putRange(range: IntRange) {
 
 private fun androidx.compose.ui.unit.TextUnit.unitName(): String =
     if (type == androidx.compose.ui.unit.TextUnitType.Em) "em" else "sp"
+
+internal fun decodeMark(json: JsonObject): RichTextSpanMark {
+    val kind = (json["k"] as? JsonPrimitive)?.takeIf { it.isString }?.content
+        ?: throw MalformedRichTextJsonException("Span mark is missing its \"k\" field")
+    val range = decodeRange(json)
+    return when (kind) {
+        "bold" -> RichTextSpanMark.Bold(range)
+        "italic" -> RichTextSpanMark.Italic(range)
+        "underline" -> RichTextSpanMark.Underline(range)
+        "strike" -> RichTextSpanMark.Strikethrough(range)
+        "code" -> RichTextSpanMark.CodeSpan(range)
+        "link" -> RichTextSpanMark.Link(range, url = json.requireString("url", kind))
+        "color" -> RichTextSpanMark.TextColor(range, argb = json.requireString("argb", kind).parseArgbHex())
+        "highlight" -> RichTextSpanMark.Highlight(range, argb = json.requireString("argb", kind).parseArgbHex())
+        "font-size" -> RichTextSpanMark.FontSize(range, size = textUnitFromJson(json))
+        "font-weight" -> RichTextSpanMark.FontWeight(range, weight = json.requireInt("value", kind))
+        "letter-spacing" -> RichTextSpanMark.LetterSpacing(range, size = textUnitFromJson(json))
+        "baseline-shift" -> RichTextSpanMark.BaselineShift(range, multiplier = json.requireFloat("value", kind))
+        "shadow" -> RichTextSpanMark.Shadow(
+            range = range,
+            argb = json.requireString("argb", kind).parseArgbHex(),
+            offsetX = json.requireFloat("x", kind),
+            offsetY = json.requireFloat("y", kind),
+            blurRadius = json.requireFloat("blur", kind),
+        )
+        "image" -> RichTextSpanMark.Image(
+            range = range,
+            url = json.requireString("url", kind),
+            width = (json["width"] as? JsonObject)?.let(::textUnitFromJson)
+                ?: androidx.compose.ui.unit.TextUnit.Unspecified,
+            height = (json["height"] as? JsonObject)?.let(::textUnitFromJson)
+                ?: androidx.compose.ui.unit.TextUnit.Unspecified,
+            description = (json["alt"] as? JsonPrimitive)?.takeIf { it.isString }?.content,
+        )
+        "token" -> RichTextSpanMark.Token(
+            range = range,
+            trigger = json.requireString("trigger", kind),
+            id = json.requireString("id", kind),
+            label = json.requireString("label", kind),
+        )
+        else -> RichTextSpanMark.Unknown(
+            range = range,
+            kind = kind,
+            rawJson = Json.encodeToString(JsonObject.serializer(), json),
+        )
+    }
+}
+
+private fun decodeRange(json: JsonObject): IntRange {
+    val array = json["r"] as? JsonArray
+        ?: throw MalformedRichTextJsonException("Span mark is missing its \"r\" range")
+    if (array.size != 2) {
+        throw MalformedRichTextJsonException("Span range must have exactly two elements, had ${array.size}")
+    }
+    val first = (array[0] as? JsonPrimitive)?.content?.toIntOrNull()
+    val last = (array[1] as? JsonPrimitive)?.content?.toIntOrNull()
+    if (first == null || last == null || first > last) {
+        throw MalformedRichTextJsonException("Invalid span range: $array")
+    }
+    return first..last
+}
+
+private fun JsonObject.requireString(key: String, kind: String): String =
+    (this[key] as? JsonPrimitive)?.takeIf { it.isString }?.content
+        ?: throw MalformedRichTextJsonException("Mark \"$kind\" is missing its \"$key\" field")
+
+private fun JsonObject.requireInt(key: String, kind: String): Int =
+    (this[key] as? JsonPrimitive)?.content?.toIntOrNull()
+        ?: throw MalformedRichTextJsonException("Mark \"$kind\" is missing its \"$key\" field")
+
+private fun JsonObject.requireFloat(key: String, kind: String): Float =
+    (this[key] as? JsonPrimitive)?.content?.toFloatOrNull()
+        ?: throw MalformedRichTextJsonException("Mark \"$kind\" is missing its \"$key\" field")
 
 internal fun RichTextSpanMark.kindName(): String = when (this) {
     is RichTextSpanMark.Bold -> "bold"

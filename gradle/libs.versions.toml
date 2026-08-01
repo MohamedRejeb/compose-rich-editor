@@ -1,6 +1,6 @@
 [versions]
 agp = "8.13.2"
-kotlin = "2.4.0"
+kotlin = "2.4.10"
 compose = "1.11.1"
 material3 = "1.11.0-alpha07"
 material-icons-extended = "1.7.3"

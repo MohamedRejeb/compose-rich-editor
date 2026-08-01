@@ -98,7 +98,6 @@ kotlin {
 android {
     namespace = "com.mohamedrejeb.richeditor.sample.common"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
-    sourceSets["main"].resources.srcDirs("src/commonMain/resources")
 
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()

@@ -1,6 +1,8 @@
 package com.mohamedrejeb.richeditor.clipboard
 
 import android.content.ClipData
+import android.content.ClipboardManager
+import androidx.compose.ui.platform.AndroidClipboard
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.Clipboard
 import com.mohamedrejeb.richeditor.model.RichTextState
@@ -29,7 +31,17 @@ internal actual fun createRichTextClipboardManager(
 internal class AndroidRichTextClipboardManager(
     private val richTextState: RichTextState,
     private val clipboard: Clipboard,
-) : RichTextClipboardManager, Clipboard by clipboard {
+) : RichTextClipboardManager, AndroidClipboard, Clipboard by clipboard {
+
+    /**
+     * Compose foundation requires the [androidx.compose.ui.platform.LocalClipboard]
+     * instance to be an [AndroidClipboard] and reaches the platform
+     * [ClipboardManager] through it (#744). Delegate to the wrapped platform
+     * clipboard's manager. Diagnosis credit: @ErnestoOlalla, PR #745.
+     */
+    override val clipboardManager: ClipboardManager
+        get() = (clipboard as? AndroidClipboard)?.clipboardManager
+            ?: error("AndroidRichTextClipboardManager requires the platform AndroidClipboard")
 
     override suspend fun getClipEntry(): ClipEntry? {
         try {

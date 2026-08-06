@@ -65,6 +65,16 @@ kotlin {
         implementation(libs.jetbrains.markdown)
     }
 
+    sourceSets.androidMain.dependencies {
+        // Compile-time-only stub holding the real androidx.compose.ui.platform.AndroidClipboard
+        // interface, extracted verbatim from ui-android:1.12.0-beta01 (Apache-2.0). The type
+        // only exists in compose-ui 1.12+, and depending on that artifact directly would force
+        // compileSdk 37 / AGP 9.1 on this module. compileOnly => never packaged in the AAR;
+        // at runtime the type is used only when the host app ships compose-ui 1.12+
+        // (see AndroidRichTextClipboardManager.kt runtime gating).
+        compileOnly(files("libs/compose-ui-1.12-clipboard-stub.jar"))
+    }
+
     sourceSets.commonTest.dependencies {
         implementation(kotlin("test"))
         implementation(libs.compose.ui.test)

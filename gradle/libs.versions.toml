@@ -1,13 +1,13 @@
 [versions]
 agp = "9.3.0"
-kotlin = "2.4.0"
+kotlin = "2.4.10"
 compose = "1.12.0-beta03"
 material3 = "1.12.0-alpha03"
 material-icons-extended = "1.7.3"
 dokka = "2.2.0"
 
 ksoup = "0.6.0"
-jetbrainsMarkdown = "0.7.7"
+jetbrainsMarkdown = "0.7.8"
 coil = "3.5.0"
 
 vanniktech-maven-publish = "0.36.0"
@@ -17,9 +17,9 @@ java = "17"
 # For sample
 androidx-appcompat = "1.7.1"
 activity-compose = "1.13.0"
-richeditor = "1.0.0-rc14"
+richeditor = "1.0.0"
 coroutines = "1.11.0"
-ktor = "3.5.1"
+ktor = "3.5.2"
 android-minSdk = "23"
 android-compileSdk = "37"
 lifecycle = "2.11.0"

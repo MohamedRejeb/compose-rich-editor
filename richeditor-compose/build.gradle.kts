@@ -50,6 +50,7 @@ kotlin {
                 enabled = false
             }
         }
+        binaries.executable()
     }
 
     wasmJs {
@@ -58,6 +59,7 @@ kotlin {
                 enabled = true
             }
         }
+        binaries.executable()
     }
 
     iosArm64()

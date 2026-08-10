@@ -32,8 +32,14 @@ kotlin {
         }
     }
 
-    js(IR).browser()
-    wasmJs().browser()
+    js(IR) {
+        browser()
+        binaries.executable()
+    }
+    wasmJs {
+        browser()
+        binaries.executable()
+    }
 
     listOf(
         iosArm64(),

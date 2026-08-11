@@ -35,6 +35,10 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         // Blank-looking paragraphs that are real content (empty <li>, entity-encoded
         // whitespace) and must survive recycling and the blank-paragraph cleanup.
         val preservedBlankParagraphs = mutableSetOf<RichParagraph>()
+        // Whether each currently open <p>/heading came from an explicit tag; implied
+        // opens (Ksoup normalizing invalid nesting) must not preserve blank
+        // paragraphs on close. See #779.
+        val explicitParagraphOpens = mutableListOf<Boolean>()
         var currentRichSpan: RichSpan? = null
         var currentListLevel = 0
         // Tracks the next item number per list nesting level for ordered lists.
@@ -91,10 +95,16 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     preservedBlankParagraphs.add(currentRichParagraph)
                 }
             }
-            .onOpenTag { name, attributes, _ ->
+            .onOpenTag { name, attributes, isImplied ->
                 val lastOpenedTag = openedTags.lastOrNull()?.first
 
                 openedTags.add(name to attributes)
+
+                // Pair paragraph-like opens with their closes so an explicitly empty
+                // element can be told apart from Ksoup's browser-style normalization
+                // of invalid nesting (implied opens/closes). See #779.
+                if (name == "p" || name in HeadingStyle.headingTags)
+                    explicitParagraphOpens.add(!isImplied)
 
                 if (name in skippedHtmlElements) {
                     return@onOpenTag
@@ -170,6 +180,12 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                             currentRichParagraph
                         else
                             RichParagraph()
+
+                    // A recycled paragraph stops being the spare added after the
+                    // previous block close; forget its spare bookkeeping so an
+                    // explicitly empty element closing on it can be detected (#779).
+                    if (isCurrentRichParagraphBlank)
+                        toKeepEmptyParagraphIndexSet.remove(richParagraphList.lastIndex)
 
                     // Only assign paragraph type if not already handled above
                     val paragraphType: ParagraphType =
@@ -291,8 +307,14 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     }
                 }
             }
-            .onCloseTag { name, _ ->
+            .onCloseTag { name, isImplied ->
                 openedTags.removeLastOrNull()
+
+                val isExplicitParagraphPair =
+                    if (name == "p" || name in HeadingStyle.headingTags)
+                        (explicitParagraphOpens.removeLastOrNull() == true) && !isImplied
+                    else
+                        false
 
                 val lastRichParagraph = richParagraphList.lastOrNull()
                 val isCurrentRichParagraphBlank = lastRichParagraph?.isBlank() == true &&
@@ -305,6 +327,23 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                             preservedBlankParagraphs.add(paragraph)
                         }
                     }
+                }
+
+                // An explicitly closed empty <p> or heading is an intentional blank
+                // line; protect its paragraph from being recycled by the next block
+                // open and from the final blank-paragraph sweep (#779). Paragraphs
+                // created by <br>, left over from an inner block close, or produced
+                // by Ksoup's implied open/close normalization keep their existing
+                // handling.
+                if (
+                    isExplicitParagraphPair &&
+                    lastRichParagraph != null &&
+                    isCurrentRichParagraphBlank &&
+                    !lastRichParagraph.isFromLineBreak &&
+                    richParagraphList.lastIndex !in lineBreakParagraphIndexSet &&
+                    richParagraphList.lastIndex !in toKeepEmptyParagraphIndexSet
+                ) {
+                    preservedBlankParagraphs.add(lastRichParagraph)
                 }
 
                 val isCurrentTagBlockElement = name in htmlBlockElements && name != "li"

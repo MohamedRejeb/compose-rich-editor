@@ -60,6 +60,14 @@ import kotlin.time.Duration.Companion.seconds
 
 private val RichTextStateHistoryClockStart = kotlin.time.TimeSource.Monotonic.markNow()
 
+// Window after a physical key press during which a caret step is treated as
+// keyboard navigation rather than an IME batch edit (#779).
+private const val PhysicalKeyNavigationWindowMs = 300L
+
+// Window after an IME edit during which a caret step over a paragraph separator
+// is treated as the follow-up of a split suggestion-pick batch (#779).
+private const val ImeEditFollowUpWindowMs = 300L
+
 /**
  * Keeps a selection gesture live across Android's press Cancel at long-press start
  * and short mid-drag pauses.
@@ -297,19 +305,20 @@ public class RichTextState internal constructor(
      * @throws IllegalArgumentException if [label] does not start with the trigger character.
      */
     @ExperimentalRichTextApi
-    public fun insertToken(triggerId: String, id: String, label: String): Unit = recordHistory(CommitTrigger.Structural) {
-        val query = _activeTriggerQuery
-        checkNotNull(query) { "No active trigger query to commit" }
-        check(query.triggerId == triggerId) {
-            "Active query is for '${query.triggerId}', not '$triggerId'"
+    public fun insertToken(triggerId: String, id: String, label: String): Unit =
+        recordHistory(CommitTrigger.Structural) {
+            val query = _activeTriggerQuery
+            checkNotNull(query) { "No active trigger query to commit" }
+            check(query.triggerId == triggerId) {
+                "Active query is for '${query.triggerId}', not '$triggerId'"
+            }
+            val trigger = findTrigger(triggerId)
+            checkNotNull(trigger) { "Trigger '$triggerId' is not registered" }
+            require(label.isNotEmpty() && label.first() == trigger.char) {
+                "Token label must start with trigger char '${trigger.char}', got '$label'"
+            }
+            performInsertToken(query = query, triggerId = triggerId, id = id, label = label)
         }
-        val trigger = findTrigger(triggerId)
-        checkNotNull(trigger) { "Trigger '$triggerId' is not registered" }
-        require(label.isNotEmpty() && label.first() == trigger.char) {
-            "Token label must start with trigger char '${trigger.char}', got '$label'"
-        }
-        performInsertToken(query = query, triggerId = triggerId, id = id, label = label)
-    }
 
     /**
      * Dismiss the active trigger query without inserting a token. Leaves the typed text in place
@@ -397,6 +406,21 @@ public class RichTextState internal constructor(
         private set
 
     private var lastPressPosition: Offset? by mutableStateOf(null)
+
+    // Monotonic timestamp of the last physical key press; distinguishes hardware
+    // caret navigation from IME batch edits in [isImeBoundarySpaceRefresh] (#779).
+    private var lastPhysicalKeyEventMs: Long? = null
+
+    internal fun notePhysicalKeyEvent() {
+        lastPhysicalKeyEventMs = currentMonotonicMs()
+    }
+
+    // Caret position and timestamp right after the last IME text edit or
+    // composition commit. Lets [isImeBoundarySpaceRefresh] recognize the split
+    // form of a suggestion pick, where the word commit and the trailing-space
+    // refresh arrive as separate value updates (#779).
+    private var lastImeEditCaret: Int = -1
+    private var lastImeEditMs: Long? = null
 
     // lastActivity keeps the gesture alive through Android's press Cancel at
     // long-press start; each routed non-collapsed selection change refreshes it.
@@ -1264,12 +1288,13 @@ public class RichTextState internal constructor(
      * @see [addParagraphStyle]
      * @see [removeParagraphStyle]
      */
-    public fun toggleParagraphStyle(paragraphStyle: ParagraphStyle): Unit = recordHistory(CommitTrigger.Formatting) {
-        if (currentParagraphStyle.isSpecifiedFieldsEquals(paragraphStyle))
-            removeParagraphStyle(paragraphStyle)
-        else
-            addParagraphStyle(paragraphStyle)
-    }
+    public fun toggleParagraphStyle(paragraphStyle: ParagraphStyle): Unit =
+        recordHistory(CommitTrigger.Formatting) {
+            if (currentParagraphStyle.isSpecifiedFieldsEquals(paragraphStyle))
+                removeParagraphStyle(paragraphStyle)
+            else
+                addParagraphStyle(paragraphStyle)
+        }
 
     /**
      * Add new [ParagraphStyle] to the [currentParagraphStyle]
@@ -1285,29 +1310,31 @@ public class RichTextState internal constructor(
      * @see [removeParagraphStyle]
      * @see [toggleParagraphStyle]
      */
-    public fun addParagraphStyle(paragraphStyle: ParagraphStyle): Unit = recordHistory(CommitTrigger.Formatting) {
-        if (!currentParagraphStyle.isSpecifiedFieldsEquals(paragraphStyle)) {
-            // If the selection is collapsed, we add the paragraph style to the paragraph containing the selection
-            if (selection.collapsed) {
-                val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return@recordHistory
-                paragraph.paragraphStyle = paragraph.paragraphStyle.merge(paragraphStyle)
-                clearLineBreakContinuations(paragraph)
-            }
-            // If the selection is not collapsed, we add the paragraph style to all the paragraphs in the selection
-            else {
-                val paragraphs = getRichParagraphListByTextRange(selection)
-                if (paragraphs.isEmpty()) return@recordHistory
-                paragraphs.fastForEach {
-                    it.paragraphStyle = it.paragraphStyle.merge(paragraphStyle)
-                    clearLineBreakContinuations(it)
+    public fun addParagraphStyle(paragraphStyle: ParagraphStyle): Unit =
+        recordHistory(CommitTrigger.Formatting) {
+            if (!currentParagraphStyle.isSpecifiedFieldsEquals(paragraphStyle)) {
+                // If the selection is collapsed, we add the paragraph style to the paragraph containing the selection
+                if (selection.collapsed) {
+                    val paragraph =
+                        getRichParagraphByTextIndex(selection.min - 1) ?: return@recordHistory
+                    paragraph.paragraphStyle = paragraph.paragraphStyle.merge(paragraphStyle)
+                    clearLineBreakContinuations(paragraph)
                 }
+                // If the selection is not collapsed, we add the paragraph style to all the paragraphs in the selection
+                else {
+                    val paragraphs = getRichParagraphListByTextRange(selection)
+                    if (paragraphs.isEmpty()) return@recordHistory
+                    paragraphs.fastForEach {
+                        it.paragraphStyle = it.paragraphStyle.merge(paragraphStyle)
+                        clearLineBreakContinuations(it)
+                    }
+                }
+                // We update the annotated string to reflect the changes
+                updateAnnotatedString()
+                // We update the current paragraph style to reflect the changes
+                updateCurrentParagraphStyle()
             }
-            // We update the annotated string to reflect the changes
-            updateAnnotatedString()
-            // We update the current paragraph style to reflect the changes
-            updateCurrentParagraphStyle()
         }
-    }
 
     /**
      * Remove an existing [ParagraphStyle] from the [currentParagraphStyle]
@@ -1323,29 +1350,31 @@ public class RichTextState internal constructor(
      * @see [addParagraphStyle]
      * @see [toggleParagraphStyle]
      */
-    public fun removeParagraphStyle(paragraphStyle: ParagraphStyle): Unit = recordHistory(CommitTrigger.Formatting) {
-        if (currentParagraphStyle.isSpecifiedFieldsEquals(paragraphStyle)) {
-            // If the selection is collapsed, we remove the paragraph style from the paragraph containing the selection
-            if (selection.collapsed) {
-                val paragraph = getRichParagraphByTextIndex(selection.min - 1) ?: return@recordHistory
-                paragraph.paragraphStyle = paragraph.paragraphStyle.unmerge(paragraphStyle)
-                clearLineBreakContinuations(paragraph)
-            }
-            // If the selection is not collapsed, we remove the paragraph style from all the paragraphs in the selection
-            else {
-                val paragraphs = getRichParagraphListByTextRange(selection)
-                if (paragraphs.isEmpty()) return@recordHistory
-                paragraphs.fastForEach {
-                    it.paragraphStyle = it.paragraphStyle.unmerge(paragraphStyle)
-                    clearLineBreakContinuations(it)
+    public fun removeParagraphStyle(paragraphStyle: ParagraphStyle): Unit =
+        recordHistory(CommitTrigger.Formatting) {
+            if (currentParagraphStyle.isSpecifiedFieldsEquals(paragraphStyle)) {
+                // If the selection is collapsed, we remove the paragraph style from the paragraph containing the selection
+                if (selection.collapsed) {
+                    val paragraph =
+                        getRichParagraphByTextIndex(selection.min - 1) ?: return@recordHistory
+                    paragraph.paragraphStyle = paragraph.paragraphStyle.unmerge(paragraphStyle)
+                    clearLineBreakContinuations(paragraph)
                 }
+                // If the selection is not collapsed, we remove the paragraph style from all the paragraphs in the selection
+                else {
+                    val paragraphs = getRichParagraphListByTextRange(selection)
+                    if (paragraphs.isEmpty()) return@recordHistory
+                    paragraphs.fastForEach {
+                        it.paragraphStyle = it.paragraphStyle.unmerge(paragraphStyle)
+                        clearLineBreakContinuations(it)
+                    }
+                }
+                // We update the annotated string to reflect the changes
+                updateAnnotatedString()
+                // We update the current paragraph style to reflect the changes
+                updateCurrentParagraphStyle()
             }
-            // We update the annotated string to reflect the changes
-            updateAnnotatedString()
-            // We update the current paragraph style to reflect the changes
-            updateCurrentParagraphStyle()
         }
-    }
 
     public fun toggleUnorderedList(): Unit = recordHistory(CommitTrigger.Structural) {
         val paragraphs = getRichParagraphListByTextRange(selection)
@@ -1779,6 +1808,9 @@ public class RichTextState internal constructor(
      * @return true if the list level was increased or decreased, false otherwise.
      */
     internal fun onPreviewKeyEvent(event: KeyEvent): Boolean {
+        if (event.type == KeyEventType.KeyDown)
+            notePhysicalKeyEvent()
+
         // Undo/redo shortcuts - intercepted before BasicTextField's built-in handler
         // so rich-model snapshots rewind instead of plain-text TextFieldValue state.
         if (!suppressUndoShortcuts && event.type == KeyEventType.KeyDown && !event.isAltPressed) {
@@ -1789,6 +1821,7 @@ public class RichTextState internal constructor(
                         history.undo()
                         return true
                     }
+
                     Key.Z if event.isShiftPressed -> {
                         history.redo()
                         return true
@@ -2001,13 +2034,16 @@ public class RichTextState internal constructor(
                 if (added.contains('\n')) CommitTrigger.LineBreak
                 else CommitTrigger.Typing(addedText = added, caret = caret)
             }
+
             newText.length < oldText.length ->
                 CommitTrigger.Delete(caret = newTextFieldValue.selection.min)
             // Same-length replacement (autocorrect rewrite): its own undo group.
             newText != oldText ->
                 CommitTrigger.Structural
+
             newTextFieldValue.selection != textFieldValue.selection ->
                 CommitTrigger.SelectionJump
+
             else -> null
         }
     }
@@ -2016,17 +2052,26 @@ public class RichTextState internal constructor(
         // Classify the change for history before any mutation happens.
         val pendingHtml = pendingClipboardHtml
         val isPaste = pendingHtml != null &&
-            newTextFieldValue.text.length > textFieldValue.text.length
+                newTextFieldValue.text.length > textFieldValue.text.length
         val trigger: CommitTrigger? = when {
             isPaste -> CommitTrigger.Paste
             else -> classifyTextChange(newTextFieldValue)
         }
         val before = if (trigger != null) beginHistoryRecord() else null
+        val previousText = textFieldValue.text
+        val previousComposition = textFieldValue.composition
 
         try {
             onTextFieldValueChangeInner(newTextFieldValue, isPaste, pendingHtml)
         } finally {
             if (trigger != null) finishHistoryRecord(trigger, before)
+            if (
+                newTextFieldValue.text != previousText ||
+                (previousComposition != null && newTextFieldValue.composition == null)
+            ) {
+                lastImeEditCaret = textFieldValue.selection.min
+                lastImeEditMs = currentMonotonicMs()
+            }
         }
     }
 
@@ -2087,8 +2132,13 @@ public class RichTextState internal constructor(
                     val legacyStart = oldTextFieldValue.selection.min
                     val legacyDescribesChange =
                         legacyStart in 0..oldText.length &&
-                            newText.substring(0, legacyStart) == oldText.substring(0, legacyStart) &&
-                            newText.substring(legacyStart + insertedLength) == oldText.substring(legacyStart)
+                                newText.substring(0, legacyStart) == oldText.substring(
+                            0,
+                            legacyStart
+                        ) &&
+                                newText.substring(legacyStart + insertedLength) == oldText.substring(
+                            legacyStart
+                        )
                     handleAddingCharacters(
                         startTypeIndex = if (legacyDescribesChange) legacyStart else commonPrefix,
                         typedCharsCount = insertedLength,
@@ -2101,9 +2151,14 @@ public class RichTextState internal constructor(
                     val legacyMin = tempTextFieldValue.selection.min
                     val legacyDescribesChange =
                         legacyMin in 0..newText.length &&
-                            legacyMin + removedLength <= oldText.length &&
-                            oldText.substring(0, legacyMin) == newText.substring(0, legacyMin) &&
-                            oldText.substring(legacyMin + removedLength) == newText.substring(legacyMin)
+                                legacyMin + removedLength <= oldText.length &&
+                                oldText.substring(0, legacyMin) == newText.substring(
+                            0,
+                            legacyMin
+                        ) &&
+                                oldText.substring(legacyMin + removedLength) == newText.substring(
+                            legacyMin
+                        )
                     handleRemovingCharacters(
                         minRemoveIndex = if (legacyDescribesChange) legacyMin else commonPrefix,
                         removedCharsCount = removedLength,
@@ -2118,10 +2173,12 @@ public class RichTextState internal constructor(
                     val selMax = oldTextFieldValue.selection.max
                     val selReplacementLength = newText.length - selMin - (oldText.length - selMax)
                     val selectionDescribesChange = !oldTextFieldValue.selection.collapsed &&
-                        selReplacementLength >= 0 &&
-                        selMin + selReplacementLength <= newText.length &&
-                        newText.substring(0, selMin) == oldText.substring(0, selMin) &&
-                        newText.substring(selMin + selReplacementLength) == oldText.substring(selMax)
+                            selReplacementLength >= 0 &&
+                            selMin + selReplacementLength <= newText.length &&
+                            newText.substring(0, selMin) == oldText.substring(0, selMin) &&
+                            newText.substring(selMin + selReplacementLength) == oldText.substring(
+                        selMax
+                    )
 
                     val removeStart: Int
                     val removeEnd: Int
@@ -2156,8 +2213,8 @@ public class RichTextState internal constructor(
                         val insertPosition = textFieldValue.selection.min
                             .coerceIn(0, textFieldValue.text.length)
                         val stepTwoText = textFieldValue.text.substring(0, insertPosition) +
-                            replacement +
-                            textFieldValue.text.substring(insertPosition)
+                                replacement +
+                                textFieldValue.text.substring(insertPosition)
                         // If the removal didn't rewrite surrounding text, the IME's
                         // reported caret is still valid; keep it.
                         tempTextFieldValue = actualNewTextFieldValue.copy(
@@ -2179,6 +2236,28 @@ public class RichTextState internal constructor(
                 }
             }
         } else if (tempTextFieldValue.selection != textFieldValue.selection) {
+            if (isImeBoundarySpaceRefresh(oldTextFieldValue, tempTextFieldValue)) {
+                // Same-word suggestion pick at a paragraph end (#779): the IME batch
+                // (Gboard setSelection + commitText, Samsung deleteSurroundingText +
+                // commitText) nets to unchanged text with the caret stepped over the
+                // paragraph separator. Materialize the space the IME believes it
+                // committed so the caret stays at the end of the current paragraph.
+                val boundary = oldTextFieldValue.selection.min
+                val text = tempTextFieldValue.text
+                tempTextFieldValue = tempTextFieldValue.copy(
+                    text = text.substring(0, boundary) + " " + text.substring(boundary),
+                    selection = TextRange(boundary + 1),
+                )
+                justInsertedListParagraph = false
+                handleAddingCharacters(
+                    startTypeIndex = boundary,
+                    typedCharsCount = 1,
+                    positionFromSelection = false,
+                )
+                updateTextFieldValue()
+                return
+            }
+
             val gestureAdjusted = adjustGestureSelection(tempTextFieldValue.selection)
             if (gestureAdjusted != tempTextFieldValue.selection)
                 tempTextFieldValue = tempTextFieldValue.copy(selection = gestureAdjusted)
@@ -2192,6 +2271,66 @@ public class RichTextState internal constructor(
 
         // Update text field value
         updateTextFieldValue()
+    }
+
+    /**
+     * True when a selection-only change matches the IME "trailing space refresh"
+     * a suggestion pick performs at a paragraph end (#779): the caret steps
+     * across the paragraph separator while either the picked word's composition,
+     * ending exactly at the boundary, is committed in the same value update
+     * (single-batch pick), or an IME edit that ended exactly at the boundary
+     * happened moments before (split pick: word commit and space refresh arrive
+     * as separate value updates). Plain caret navigation matches neither signal;
+     * press and hardware-key driven moves are excluded explicitly.
+     */
+    private fun isImeBoundarySpaceRefresh(
+        oldValue: TextFieldValue,
+        newValue: TextFieldValue,
+    ): Boolean {
+        if (singleParagraphMode) return false
+        if (lastPressPosition != null) return false
+        if (!oldValue.selection.collapsed || !newValue.selection.collapsed) return false
+        val boundary = oldValue.selection.min
+        if (newValue.selection.min != boundary + 1) return false
+        if (newValue.composition != null) return false
+
+        val composition = oldValue.composition
+        val commitsCompositionAtBoundary =
+            composition != null && composition.max == boundary
+        val lastEditMs = lastImeEditMs
+        val followsImeEditAtBoundary =
+            composition == null &&
+                    lastImeEditCaret == boundary &&
+                    lastEditMs != null &&
+                    currentMonotonicMs() - lastEditMs <= ImeEditFollowUpWindowMs
+        if (!commitsCompositionAtBoundary && !followsImeEditAtBoundary) return false
+
+        val lastKeyMs = lastPhysicalKeyEventMs
+        if (lastKeyMs != null && currentMonotonicMs() - lastKeyMs <= PhysicalKeyNavigationWindowMs)
+            return false
+        return isParagraphSeparatorIndex(boundary)
+    }
+
+    /**
+     * True when [index] is the position of the separator space that follows a
+     * non-last paragraph in the raw text.
+     */
+    private fun isParagraphSeparatorIndex(index: Int): Boolean {
+        var position = 0
+        for (i in 0 until richParagraphList.lastIndex) {
+            position += paragraphLength(richParagraphList[i])
+            if (position == index) return true
+            if (position > index) return false
+            position++
+        }
+        return false
+    }
+
+    private fun paragraphLength(paragraph: RichParagraph): Int {
+        fun spanLength(span: RichSpan): Int =
+            span.text.length + span.children.sumOf { spanLength(it) }
+        return paragraph.type.startRichSpan.text.length +
+                paragraph.children.sumOf { spanLength(it) }
     }
 
     /**
@@ -2244,7 +2383,7 @@ public class RichTextState internal constructor(
             // breaks selection on Android (#730, #731).
             val maskAffected =
                 (!textFieldValue.selection.collapsed || !tempTextFieldValue.selection.collapsed) &&
-                    treeHasBackgroundSpans()
+                        treeHasBackgroundSpans()
             if (maskAffected) {
                 updateAnnotatedString(tempTextFieldValue)
             } else {
@@ -2784,19 +2923,19 @@ public class RichTextState internal constructor(
                 // and restore the prefix instead of demoting. See PR #722.
                 val isImeStartTextEcho =
                     justInsertedListParagraph &&
-                    textFieldValue.selection.collapsed &&
-                    minParagraphOldType is ConfigurableListLevel &&
-                    minRichSpan.paragraph.isEmpty() &&
-                    removedCharsCount == minParagraphStartTextLength &&
-                    minRemoveIndex == minParagraphFirstChildMinIndex - minParagraphStartTextLength
+                            textFieldValue.selection.collapsed &&
+                            minParagraphOldType is ConfigurableListLevel &&
+                            minRichSpan.paragraph.isEmpty() &&
+                            removedCharsCount == minParagraphStartTextLength &&
+                            minRemoveIndex == minParagraphFirstChildMinIndex - minParagraphStartTextLength
 
                 if (isImeStartTextEcho) {
                     val startText = minRichSpan.paragraph.type.startText
                     val insertAt = minRemoveIndex.coerceIn(0, tempTextFieldValue.text.length)
                     tempTextFieldValue = tempTextFieldValue.copy(
                         text = tempTextFieldValue.text.substring(0, insertAt) +
-                            startText +
-                            tempTextFieldValue.text.substring(insertAt),
+                                startText +
+                                tempTextFieldValue.text.substring(insertAt),
                         selection = TextRange(
                             (tempTextFieldValue.selection.start + startText.length)
                                 .coerceAtLeast(0),
@@ -2835,8 +2974,8 @@ public class RichTextState internal constructor(
         val maxPrefixStart = maxParagraphFirstChildMinIndex - maxParagraphStartTextLength
         val removalCutsMaxPrefix =
             maxParagraphStartTextLength > 0 &&
-                maxRemoveIndex > maxPrefixStart &&
-                maxRemoveIndex < maxParagraphFirstChildMinIndex
+                    maxRemoveIndex > maxPrefixStart &&
+                    maxRemoveIndex < maxParagraphFirstChildMinIndex
 
         // Handle Remove the max paragraph custom text
         if (
@@ -4630,8 +4769,8 @@ public class RichTextState internal constructor(
 
     private fun isSelectionGestureLive(): Boolean =
         treatSelectionChangesAsGesture ||
-            selectionGesturePressed ||
-            selectionGestureLastActivity?.let { it.elapsedNow() < SelectionGestureGrace } == true
+                selectionGesturePressed ||
+                selectionGestureLastActivity?.let { it.elapsedNow() < SelectionGestureGrace } == true
 
     /**
      * Corrects the moving edge of a drag selection: it may not extend below the

@@ -1,9 +1,12 @@
 package com.mohamedrejeb.richeditor.json
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import com.mohamedrejeb.richeditor.model.HeadingStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import kotlin.random.Random
 import kotlin.test.Test
@@ -34,7 +37,7 @@ class RichTextJsonRoundTripFuzzTest {
 
     private fun applyRandomOperation(state: RichTextState, random: Random) {
         val length = state.annotatedString.text.length
-        when (random.nextInt(7)) {
+        when (random.nextInt(12)) {
             0 -> state.setText(state.annotatedString.text + " word${random.nextInt(100)}")
             1 -> if (length > 1) {
                 state.selection = randomRange(random, length)
@@ -53,6 +56,23 @@ class RichTextJsonRoundTripFuzzTest {
             6 -> if (length > 1) {
                 state.selection = randomRange(random, length)
                 state.toggleCodeSpan()
+            }
+            7 -> state.setHeadingStyle(HeadingStyle.fromLevel(random.nextInt(7)))
+            8 -> if (length > 1) {
+                state.selection = randomRange(random, length)
+                state.toggleSpanStyle(SpanStyle(fontSize = (12 + random.nextInt(3) * 8).sp))
+            }
+            9 -> if (length > 1) {
+                state.selection = randomRange(random, length)
+                state.toggleSpanStyle(SpanStyle(color = if (random.nextBoolean()) Color.Red else Color.Blue))
+            }
+            10 -> if (length > 1) {
+                state.selection = randomRange(random, length)
+                state.toggleSpanStyle(SpanStyle(background = Color.Yellow))
+            }
+            11 -> if (length > 1) {
+                state.selection = randomRange(random, length)
+                state.toggleSpanStyle(SpanStyle(letterSpacing = 2.sp))
             }
         }
     }

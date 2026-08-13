@@ -73,8 +73,9 @@ Each mark is `{"k": kind, "r": [first, last], ...}` with an inclusive range. Kin
 
 - **Versioned**: every document carries `"v"`. Documents from newer schema versions are rejected with `UnsupportedRichTextJsonVersionException` instead of being decoded lossily.
 - **Canonical**: the same content always encodes to the same string, so JSON strings can be compared for equality in tests and caches.
-- **Idempotent round-trip**: `toJson` after `setJson` returns the identical string.
-- **Unknown preservation**: mark kinds this version does not understand decode as `RichTextSpanMark.Unknown` and re-encode verbatim, so documents from newer or extended producers survive a decode/encode cycle losslessly. Unknown marks are not rendered when applied to a `RichTextState`.
+- **Idempotent round-trip**: `toJson` after `setJson` returns the identical string for any document made of editor-representable content (everything in the tables above except `Unknown` marks).
+- **Unknown preservation at the codec level**: mark kinds this version does not understand decode as `RichTextSpanMark.Unknown` and `RichTextDocumentCodec` re-encodes them verbatim, so passing documents through the codec is lossless. Loading into a `RichTextState` is different: the editor cannot represent unknown marks, so `setJson` followed by `toJson` drops them. To keep forward-compatible data intact, store the original JSON and treat the editor as a consumer, or merge edited output with the preserved marks yourself.
+- **Strict validation**: structurally invalid input (non-finite numbers, out-of-range font weights, malformed `argb`, negative indents) fails fast with `MalformedRichTextJsonException` rather than producing a document that cannot be re-encoded. `start` may be negative, matching the HTML `start` attribute.
 - **v2 compatible**: the envelope, block fields, and the core mark kinds (`bold` through `highlight`) match the upcoming richeditor v2 document format, so stored v1 documents remain readable there.
 
 ## Error handling

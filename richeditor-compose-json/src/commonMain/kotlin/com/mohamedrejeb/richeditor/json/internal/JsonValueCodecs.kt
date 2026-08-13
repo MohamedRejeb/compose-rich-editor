@@ -13,10 +13,15 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.put
 
 internal fun Long.toArgbHex(): String =
-    toString(16).uppercase().padStart(8, '0')
+    (this and 0xFFFFFFFFL).toString(16).uppercase().padStart(8, '0')
 
-internal fun String.parseArgbHex(): Long =
-    toLongOrNull(16) ?: throw MalformedRichTextJsonException("Invalid argb hex value: $this")
+internal fun String.parseArgbHex(): Long {
+    val isValid = length == 8 && all { it.isDigit() || it in 'a'..'f' || it in 'A'..'F' }
+    if (!isValid) {
+        throw MalformedRichTextJsonException("argb must be exactly 8 hex digits, was \"$this\"")
+    }
+    return toLong(16)
+}
 
 internal fun TextUnit.toJsonObject(): JsonObject = buildJsonObject {
     put("value", value.toDouble())
@@ -24,8 +29,8 @@ internal fun TextUnit.toJsonObject(): JsonObject = buildJsonObject {
 }
 
 internal fun textUnitFromJson(json: JsonObject): TextUnit {
-    val value = (json["value"] as? JsonPrimitive)?.doubleOrNull
-        ?: throw MalformedRichTextJsonException("Missing \"value\" in unit object")
+    val value = (json["value"] as? JsonPrimitive)?.doubleOrNull?.takeIf { it.isFinite() }
+        ?: throw MalformedRichTextJsonException("Missing or non-finite \"value\" in unit object")
     val unit = (json["unit"] as? JsonPrimitive)?.contentOrNull
         ?: throw MalformedRichTextJsonException("Missing \"unit\" in unit object")
     val type = when (unit) {
@@ -60,6 +65,8 @@ internal fun TextDirection.toJsonName(): String? = when (this) {
     TextDirection.Ltr -> "ltr"
     TextDirection.Rtl -> "rtl"
     TextDirection.Content -> "content"
+    TextDirection.ContentOrLtr -> "content-or-ltr"
+    TextDirection.ContentOrRtl -> "content-or-rtl"
     else -> null
 }
 
@@ -67,5 +74,7 @@ internal fun textDirectionFromJson(name: String): TextDirection = when (name) {
     "ltr" -> TextDirection.Ltr
     "rtl" -> TextDirection.Rtl
     "content" -> TextDirection.Content
+    "content-or-ltr" -> TextDirection.ContentOrLtr
+    "content-or-rtl" -> TextDirection.ContentOrRtl
     else -> throw MalformedRichTextJsonException("Unknown dir value: $name")
 }

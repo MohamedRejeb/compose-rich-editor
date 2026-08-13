@@ -28,22 +28,25 @@ internal fun decodeBlock(json: JsonObject): RichTextBlock {
         decodeMark(markObject)
     } ?: emptyList()
 
-    val (type, headingLevel) = when (typeName) {
-        "paragraph" -> RichTextBlockType.Paragraph to 0
-        "heading" -> RichTextBlockType.Paragraph to json.requireBlockInt("level")
-        "list-item" -> {
-            val ordered = (json["ordered"] as? JsonPrimitive)?.booleanOrNull
-                ?: throw MalformedRichTextJsonException("list-item block is missing its \"ordered\" field")
-            RichTextBlockType.ListItem(
-                ordered = ordered,
-                indent = (json["indent"] as? JsonPrimitive)?.content?.toIntOrNull() ?: 0,
-                startNumber = if (ordered) (json["start"] as? JsonPrimitive)?.content?.toIntOrNull() else null,
-            ) to ((json["heading"] as? JsonPrimitive)?.content?.toIntOrNull() ?: 0)
-        }
-        else -> throw MalformedRichTextJsonException("Unknown block type: $typeName")
-    }
-
+    // The model types validate their own invariants (indent bounds, heading range, mark
+    // bounds); everything constructed here stays inside the try so those violations
+    // surface as MalformedRichTextJsonException, never as raw IllegalArgumentException.
     return try {
+        val (type, headingLevel) = when (typeName) {
+            "paragraph" -> RichTextBlockType.Paragraph to 0
+            "heading" -> RichTextBlockType.Paragraph to json.requireBlockInt("level")
+            "list-item" -> {
+                val ordered = (json["ordered"] as? JsonPrimitive)?.booleanOrNull
+                    ?: throw MalformedRichTextJsonException("list-item block is missing its \"ordered\" field")
+                RichTextBlockType.ListItem(
+                    ordered = ordered,
+                    indent = (json["indent"] as? JsonPrimitive)?.content?.toIntOrNull() ?: 0,
+                    startNumber = if (ordered) (json["start"] as? JsonPrimitive)?.content?.toIntOrNull() else null,
+                ) to ((json["heading"] as? JsonPrimitive)?.content?.toIntOrNull() ?: 0)
+            }
+            else -> throw MalformedRichTextJsonException("Unknown block type: $typeName")
+        }
+
         RichTextBlock(
             text = text,
             type = type,

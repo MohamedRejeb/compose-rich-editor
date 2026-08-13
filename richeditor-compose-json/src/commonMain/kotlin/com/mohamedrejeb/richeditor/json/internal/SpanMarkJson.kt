@@ -16,12 +16,14 @@ import kotlinx.serialization.json.put
 
 internal fun encodeMark(mark: RichTextSpanMark): JsonObject {
     if (mark is RichTextSpanMark.Unknown) {
-        // Re-emit the preserved payload verbatim, but keep k and r authoritative.
-        val raw = Json.parseToJsonElement(mark.rawJson).jsonObject
+        // Re-emit the preserved payload verbatim, but keep k and r authoritative. rawJson
+        // is a public, unvalidated field, so a payload that is not a JSON object degrades
+        // to a bare mark instead of crashing the encode.
+        val raw = runCatching { Json.parseToJsonElement(mark.rawJson).jsonObject }.getOrNull()
         return buildJsonObject {
             put("k", mark.kind)
             putRange(mark.range)
-            raw.forEach { (key, value) -> if (key != "k" && key != "r") put(key, value) }
+            raw?.forEach { (key, value) -> if (key != "k" && key != "r") put(key, value) }
         }
     }
     return buildJsonObject {
@@ -90,7 +92,13 @@ internal fun decodeMark(json: JsonObject): RichTextSpanMark {
         "color" -> RichTextSpanMark.TextColor(range, argb = json.requireString("argb", kind).parseArgbHex())
         "highlight" -> RichTextSpanMark.Highlight(range, argb = json.requireString("argb", kind).parseArgbHex())
         "font-size" -> RichTextSpanMark.FontSize(range, size = textUnitFromJson(json))
-        "font-weight" -> RichTextSpanMark.FontWeight(range, weight = json.requireInt("value", kind))
+        "font-weight" -> {
+            val weight = json.requireInt("value", kind)
+            if (weight !in 1..1000) {
+                throw MalformedRichTextJsonException("font-weight value must be in 1..1000, was $weight")
+            }
+            RichTextSpanMark.FontWeight(range, weight = weight)
+        }
         "letter-spacing" -> RichTextSpanMark.LetterSpacing(range, size = textUnitFromJson(json))
         "baseline-shift" -> RichTextSpanMark.BaselineShift(range, multiplier = json.requireFloat("value", kind))
         "shadow" -> RichTextSpanMark.Shadow(
@@ -146,8 +154,10 @@ private fun JsonObject.requireInt(key: String, kind: String): Int =
         ?: throw MalformedRichTextJsonException("Mark \"$kind\" is missing its \"$key\" field")
 
 private fun JsonObject.requireFloat(key: String, kind: String): Float =
-    (this[key] as? JsonPrimitive)?.content?.toFloatOrNull()
-        ?: throw MalformedRichTextJsonException("Mark \"$kind\" is missing its \"$key\" field")
+    (this[key] as? JsonPrimitive)?.content?.toFloatOrNull()?.takeIf { it.isFinite() }
+        ?: throw MalformedRichTextJsonException(
+            "Mark \"$kind\" is missing a finite \"$key\" field"
+        )
 
 internal fun RichTextSpanMark.kindName(): String = when (this) {
     is RichTextSpanMark.Bold -> "bold"

@@ -3965,11 +3965,12 @@ public class RichTextState internal constructor(
                     index + 1,
                     toShiftRichSpanList
                 )
-            }
 
-            // Remove empty RichSpan.
-            if (previousRichSpan?.isEmpty() == true) {
-                richSpan.paragraph.children.removeAt(index)
+                // Remove empty RichSpan. Guarded by the index check: previousRichSpan may
+                // be nested rather than a direct child, in which case indexOf returns -1.
+                if (previousRichSpan?.isEmpty() == true) {
+                    richSpan.paragraph.children.removeAt(index)
+                }
             }
         } else {
             val index = parentRichSpan.children.indexOf(previousRichSpan)
@@ -3978,11 +3979,11 @@ public class RichTextState internal constructor(
                     index + 1,
                     toShiftRichSpanList
                 )
-            }
 
-            // Remove empty RichSpan.
-            if (previousRichSpan?.isEmpty() == true) {
-                parentRichSpan.children.removeAt(index)
+                // Remove empty RichSpan. Guarded by the index check, same as above.
+                if (previousRichSpan?.isEmpty() == true) {
+                    parentRichSpan.children.removeAt(index)
+                }
             }
         }
 

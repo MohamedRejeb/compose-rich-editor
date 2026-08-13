@@ -24,7 +24,7 @@ import kotlin.test.assertTrue
 class ToggleStyleNestedSpanRemovalCrashTest {
 
     @Test
-    fun `seeded edit sequence with heading, code span, and style toggles does not crash`() {
+    fun `seeded edit sequence with heading and code span and style toggles does not crash`() {
         val random = Random(1_013L)
         val state = RichTextState()
         repeat(20) { applyOperation(state, random) }

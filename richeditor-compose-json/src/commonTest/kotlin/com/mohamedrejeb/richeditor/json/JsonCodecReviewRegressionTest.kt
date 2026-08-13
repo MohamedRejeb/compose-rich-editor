@@ -48,7 +48,7 @@ class JsonCodecReviewRegressionTest {
     }
 
     @Test
-    fun `negative list indent is malformed, not a raw exception`() {
+    fun `negative list indent is malformed and not a raw exception`() {
         val failure = assertFailsWith<MalformedRichTextJsonException> {
             RichTextDocumentCodec.decodeFromString(
                 """{"v":1,"blocks":[{"id":"b0","type":"list-item","ordered":true,"indent":-1,"text":"x","spans":[]}]}"""

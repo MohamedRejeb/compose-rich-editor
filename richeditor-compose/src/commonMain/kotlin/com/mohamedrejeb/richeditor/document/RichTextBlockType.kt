@@ -6,7 +6,8 @@ public sealed interface RichTextBlockType {
 
     /**
      * A list item. [indent] is the 0-based nesting depth. [startNumber] restarts ordered
-     * numbering at this item (only meaningful for ordered lists).
+     * numbering at this item (only meaningful for ordered lists). Negative values are
+     * allowed, matching the HTML `start` attribute.
      */
     public data class ListItem(
         public val ordered: Boolean,
@@ -16,7 +17,6 @@ public sealed interface RichTextBlockType {
         init {
             require(indent >= 0) { "indent must be >= 0, was $indent" }
             require(startNumber == null || ordered) { "startNumber requires an ordered list" }
-            require(startNumber == null || startNumber >= 0) { "startNumber must be >= 0" }
         }
     }
 }

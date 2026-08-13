@@ -7,6 +7,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.isSpecified
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.HeadingStyle
@@ -24,12 +25,14 @@ internal const val InlineImagePlaceholder: Char = '￼'
 @OptIn(ExperimentalRichTextApi::class)
 internal object RichTextDocumentEncoder {
 
-    fun encode(state: RichTextState): RichTextDocument =
-        RichTextDocument(
+    fun encode(state: RichTextState): RichTextDocument {
+        val orderedCounters = mutableMapOf<Int, Int>()
+        return RichTextDocument(
             blocks = state.richParagraphList
-                .map { paragraph -> encodeParagraph(paragraph) }
+                .map { paragraph -> encodeParagraph(paragraph, orderedCounters) }
                 .ifEmpty { listOf(RichTextBlock(text = "")) },
         )
+    }
 
     private data class Leaf(
         val start: Int,
@@ -38,22 +41,39 @@ internal object RichTextDocumentEncoder {
         val richSpanStyle: RichSpanStyle,
     )
 
-    private fun encodeParagraph(paragraph: RichParagraph): RichTextBlock {
+    private fun encodeParagraph(
+        paragraph: RichParagraph,
+        orderedCounters: MutableMap<Int, Int>,
+    ): RichTextBlock {
         val text = StringBuilder()
         val leaves = mutableListOf<Leaf>()
         paragraph.children.forEach { collectLeaves(it, text, leaves) }
 
         val type = when (val paragraphType = paragraph.type) {
-            is OrderedList -> RichTextBlockType.ListItem(
-                ordered = true,
-                indent = paragraphType.level - 1,
-                startNumber = paragraphType.startFrom.takeIf { it != 1 },
-            )
-            is UnorderedList -> RichTextBlockType.ListItem(
-                ordered = false,
-                indent = paragraphType.level - 1,
-            )
-            else -> RichTextBlockType.Paragraph
+            is OrderedList -> {
+                // Emit startNumber whenever the visible number differs from what document
+                // order alone would derive, so restarted lists and partial range snapshots
+                // keep the numbers the user actually sees.
+                orderedCounters.keys.filter { it > paragraphType.level }.forEach(orderedCounters::remove)
+                val derivedNumber = (orderedCounters[paragraphType.level] ?: 0) + 1
+                orderedCounters[paragraphType.level] = paragraphType.number
+                RichTextBlockType.ListItem(
+                    ordered = true,
+                    indent = paragraphType.level - 1,
+                    startNumber = paragraphType.number.takeIf { it != derivedNumber },
+                )
+            }
+            is UnorderedList -> {
+                orderedCounters.keys.filter { it >= paragraphType.level }.forEach(orderedCounters::remove)
+                RichTextBlockType.ListItem(
+                    ordered = false,
+                    indent = paragraphType.level - 1,
+                )
+            }
+            else -> {
+                orderedCounters.clear()
+                RichTextBlockType.Paragraph
+            }
         }
 
         // Heading visuals are baked into the paragraph style by parsers and toggleHeading;
@@ -84,8 +104,10 @@ internal object RichTextDocumentEncoder {
     private fun collectLeaves(span: RichSpan, out: StringBuilder, leaves: MutableList<Leaf>) {
         val richStyle = span.richSpanStyle
         val text = when {
+            // Range extraction empties the text of out-of-range atomic spans but keeps the
+            // node; an image only occupies a slot while its own placeholder text survives.
             richStyle is RichSpanStyle.Image ->
-                if (richStyle.model is String) InlineImagePlaceholder.toString() else ""
+                if (richStyle.model is String && span.text.isNotEmpty()) InlineImagePlaceholder.toString() else ""
             else -> span.text
         }
         if (text.isNotEmpty()) {
@@ -131,8 +153,13 @@ internal object RichTextDocumentEncoder {
             .map { (range, argb) -> RichTextSpanMark.Highlight(range, argb) }
         marks += valueRuns(runsSource) { it.spanStyle.fontSize.takeIf { size -> size.isSpecified } }
             .map { (range, size) -> RichTextSpanMark.FontSize(range, size) }
+        // Weight 400 is the global default and stays implicit, except inside headings where
+        // the baked default is bold: there an explicit 400 is a user override worth keeping.
+        val isHeading = headingStyle != HeadingStyle.Normal
         marks += valueRuns(runsSource) {
-            it.spanStyle.fontWeight?.weight?.takeIf { weight -> weight != 400 && weight != 700 }
+            it.spanStyle.fontWeight?.weight?.takeIf { weight ->
+                weight != 700 && (weight != 400 || isHeading)
+            }
         }.map { (range, weight) -> RichTextSpanMark.FontWeight(range, weight) }
         marks += valueRuns(runsSource) { it.spanStyle.letterSpacing.takeIf { size -> size.isSpecified } }
             .map { (range, size) -> RichTextSpanMark.LetterSpacing(range, size) }
@@ -155,8 +182,10 @@ internal object RichTextDocumentEncoder {
                     marks += RichTextSpanMark.Image(
                         range = leaf.start..leaf.endExclusive - 1,
                         url = url,
-                        width = rich.width,
-                        height = rich.height,
+                        // 0.sp is the parser's sentinel for a missing width/height attribute;
+                        // keep it out of the canonical document so round-trips stay identical.
+                        width = rich.width.takeIf { it.isSpecified && it.value != 0f } ?: TextUnit.Unspecified,
+                        height = rich.height.takeIf { it.isSpecified && it.value != 0f } ?: TextUnit.Unspecified,
                         description = rich.contentDescription?.takeIf { it.isNotEmpty() },
                     )
                 }

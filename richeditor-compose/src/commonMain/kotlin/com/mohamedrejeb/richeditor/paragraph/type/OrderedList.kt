@@ -154,6 +154,14 @@ internal class OrderedList private constructor(
         )
 
     override fun copy(): ParagraphType =
+        copy(startFrom = startFrom)
+
+    /**
+     * Full-fidelity copy with a different [startFrom]. Used by range extraction to pin the
+     * item's visible [number] as the extract's starting number, so a snapshot beginning
+     * mid-list keeps the numbering the user sees.
+     */
+    fun copy(startFrom: Int): OrderedList =
         OrderedList(
             number = number,
             initialIndent = indent,

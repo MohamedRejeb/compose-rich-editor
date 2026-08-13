@@ -5488,7 +5488,10 @@ public class RichTextState internal constructor(
      * @param range The [TextRange] to extract.
      * @return A new [RichTextState] with only the content in the range.
      */
-    private fun extractRangeState(range: TextRange): RichTextState {
+    private fun extractRangeState(
+        range: TextRange,
+        preserveListNumbers: Boolean = false,
+    ): RichTextState {
         val textLength = annotatedString.text.length
         val rangeStart = range.min.coerceIn(0, textLength)
         val rangeEnd = range.max.coerceIn(0, textLength)
@@ -5525,6 +5528,15 @@ public class RichTextState internal constructor(
 
             // This paragraph has content within the range, copy and trim
             val newParagraph = paragraph.copy()
+
+            // Document snapshots pin the visible number as the copy's start value, since
+            // the extracted state renumbers first-at-level items from startFrom. Clipboard
+            // copies keep the default and deliberately restart at 1.
+            if (preserveListNumbers) {
+                (paragraph.type as? OrderedList)?.let { orderedList ->
+                    newParagraph.type = orderedList.copy(startFrom = orderedList.number)
+                }
+            }
 
             // Trim children spans to only include text within [rangeStart, rangeEnd)
             trimSpanList(newParagraph.children, rangeStart, rangeEnd)
@@ -5663,7 +5675,9 @@ public class RichTextState internal constructor(
      */
     public fun toRichTextDocument(range: TextRange): RichTextDocument {
         annotatedString
-        return RichTextDocumentEncoder.encode(extractRangeState(range))
+        return RichTextDocumentEncoder.encode(
+            extractRangeState(range, preserveListNumbers = true),
+        )
     }
 
     /**

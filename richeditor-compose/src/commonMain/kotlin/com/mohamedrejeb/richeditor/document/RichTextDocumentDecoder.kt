@@ -19,6 +19,7 @@ import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import com.mohamedrejeb.richeditor.utils.InlineContentPlaceholder
+import com.mohamedrejeb.richeditor.utils.customMerge
 
 @OptIn(ExperimentalRichTextApi::class)
 internal object RichTextDocumentDecoder {
@@ -81,10 +82,16 @@ internal object RichTextDocumentDecoder {
             paragraph.children += RichSpan(paragraph = paragraph)
         }
 
-        // Applied after children exist so the heading visuals get baked into the spans,
-        // matching what parsers and toggleHeading produce.
+        // Bake heading visuals the way parsers do: heading defaults act as the base style
+        // and user marks win over them, so explicit overrides (font size, weight 400) are
+        // never clobbered on decode. Direct headingStyle assignment is the parser path.
         if (block.headingLevel > 0) {
-            paragraph.applyHeadingStyle(HeadingStyle.fromLevel(block.headingLevel))
+            val headingStyle = HeadingStyle.fromLevel(block.headingLevel)
+            paragraph.headingStyle = headingStyle
+            paragraph.children.forEach { span ->
+                span.spanStyle = headingStyle.defaultSpanStyle.customMerge(span.spanStyle)
+            }
+            paragraph.paragraphStyle = headingStyle.defaultParagraphStyle.merge(paragraph.paragraphStyle)
         }
         return paragraph
     }

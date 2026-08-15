@@ -8,13 +8,17 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.composeMultiplatform)
-    alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.androidKotlinMultiplatformLibrary)
 }
 
 kotlin {
     applyDefaultHierarchyTemplate()
 
-    androidTarget {
+    android {
+        namespace = "com.mohamedrejeb.richeditor.sample.common"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
+
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
@@ -28,8 +32,14 @@ kotlin {
         }
     }
 
-    js(IR).browser()
-    wasmJs().browser()
+    js(IR) {
+        browser()
+        binaries.executable()
+    }
+    wasmJs {
+        browser()
+        binaries.executable()
+    }
 
     listOf(
         iosArm64(),
@@ -92,20 +102,5 @@ kotlin {
 
     sourceSets.wasmJsMain.dependencies {
         implementation(libs.ktor.client.wasm)
-    }
-}
-
-android {
-    namespace = "com.mohamedrejeb.richeditor.sample.common"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
-    sourceSets["main"].resources.srcDirs("src/commonMain/resources")
-
-    defaultConfig {
-        minSdk = libs.versions.android.minSdk.get().toInt()
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
     }
 }

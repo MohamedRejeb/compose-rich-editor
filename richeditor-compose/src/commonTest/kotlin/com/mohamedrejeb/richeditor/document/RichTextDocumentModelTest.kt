@@ -25,6 +25,11 @@ class RichTextDocumentModelTest {
         assertFailsWith<IllegalArgumentException> {
             RichTextBlock(text = "ab", spans = listOf(RichTextSpanMark.Bold(range = 0..2)))
         }
+    }
+
+    @Test
+    fun `block rejects empty mark range`() {
+        // 1..0 is an empty IntRange: a mark must cover at least one character.
         assertFailsWith<IllegalArgumentException> {
             RichTextBlock(text = "ab", spans = listOf(RichTextSpanMark.Bold(range = 1..0)))
         }

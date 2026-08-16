@@ -215,13 +215,13 @@ internal object RichTextDocumentEncoder {
             if (value != null && value == currentValue && leaf.start == currentEnd) {
                 currentEnd = leaf.endExclusive
             } else {
-                currentValue?.let { runs += (currentStart..currentEnd - 1) to it }
+                currentValue?.let { runs += currentStart..<currentEnd to it }
                 currentValue = value
                 currentStart = leaf.start
                 currentEnd = leaf.endExclusive
             }
         }
-        currentValue?.let { runs += (currentStart..currentEnd - 1) to it }
+        currentValue?.let { runs += currentStart..<currentEnd to it }
         return runs
     }
 

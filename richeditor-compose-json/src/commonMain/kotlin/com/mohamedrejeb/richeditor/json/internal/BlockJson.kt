@@ -7,6 +7,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.isSpecified
 import com.mohamedrejeb.richeditor.document.RichTextBlock
 import com.mohamedrejeb.richeditor.document.RichTextBlockType
+import com.mohamedrejeb.richeditor.document.RichTextSpanMark
 import com.mohamedrejeb.richeditor.json.MalformedRichTextJsonException
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -106,5 +107,11 @@ internal fun encodeBlock(block: RichTextBlock, index: Int): JsonObject = buildJs
     }
     if (block.isLineBreak) put("br", true)
     put("text", block.text)
-    put("spans", buildJsonArray { block.spans.forEach { add(encodeMark(it)) } })
+    // Custom marks carry in-memory RichSpanStyle instances the JSON format cannot represent.
+    put(
+        "spans",
+        buildJsonArray {
+            block.spans.forEach { if (it !is RichTextSpanMark.Custom) add(encodeMark(it)) }
+        },
+    )
 }

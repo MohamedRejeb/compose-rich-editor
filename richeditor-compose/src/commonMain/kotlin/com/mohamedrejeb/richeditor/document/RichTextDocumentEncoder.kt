@@ -176,6 +176,12 @@ internal object RichTextDocumentEncoder {
                     blurRadius = shadow.blurRadius,
                 )
             }
+        marks += valueRuns(runsSource) { leaf ->
+            leaf.richSpanStyle.takeUnless {
+                it is RichSpanStyle.Default || it is RichSpanStyle.Link || it is RichSpanStyle.Code ||
+                    it is RichSpanStyle.Image || it is RichSpanStyle.Token
+            }
+        }.map { (range, style) -> RichTextSpanMark.Custom(range, style) }
         runsSource.forEach { leaf ->
             when (val rich = leaf.richSpanStyle) {
                 is RichSpanStyle.Image -> (rich.model as? String)?.let { url ->
@@ -242,6 +248,7 @@ internal object RichTextDocumentEncoder {
         is RichTextSpanMark.Image -> 13
         is RichTextSpanMark.Token -> 14
         is RichTextSpanMark.Unknown -> 15
+        is RichTextSpanMark.Custom -> 16
     }
 
     private fun Color.toArgbLong(): Long = toArgb().toLong() and 0xFFFFFFFFL

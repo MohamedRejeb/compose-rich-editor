@@ -120,7 +120,7 @@ internal object RichTextDocumentDecoder {
                 )
                 is RichTextSpanMark.Link, is RichTextSpanMark.CodeSpan,
                 is RichTextSpanMark.Image, is RichTextSpanMark.Token,
-                is RichTextSpanMark.Unknown -> Unit
+                is RichTextSpanMark.Unknown, is RichTextSpanMark.Custom -> Unit
             }
         }
         if (decorations.isNotEmpty()) {
@@ -129,7 +129,7 @@ internal object RichTextDocumentDecoder {
         return style
     }
 
-    /** Precedence when several rich-span marks cover one segment: Image, Token, Link, CodeSpan. */
+    /** Precedence when several rich-span marks cover one segment: Image, Token, Link, CodeSpan, Custom. */
     private fun List<RichTextSpanMark>.richSpanStyleWithPrecedence(): RichSpanStyle {
         (firstOrNull { it is RichTextSpanMark.Image } as? RichTextSpanMark.Image)?.let { image ->
             return RichSpanStyle.Image(
@@ -146,6 +146,9 @@ internal object RichTextDocumentDecoder {
             return RichSpanStyle.Link(url = link.url)
         }
         if (any { it is RichTextSpanMark.CodeSpan }) return RichSpanStyle.Code()
+        (firstOrNull { it is RichTextSpanMark.Custom } as? RichTextSpanMark.Custom)?.let { custom ->
+            return custom.style
+        }
         return RichSpanStyle.Default
     }
 

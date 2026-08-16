@@ -803,7 +803,7 @@ class RichTextStateTest {
 
     @OptIn(ExperimentalRichTextApi::class)
     @Test
-    fun testResetRichSpanStylesOnLineBreakOnTheMiddleOrParagraph() {
+    fun testKeepRichSpanStylesOnLineBreakInTheMiddleOfParagraph() {
 
         val richTextState = RichTextState(
             initialRichParagraphList = listOf(
@@ -830,7 +830,9 @@ class RichTextStateTest {
         )
 
         assertEquals("Hel\nlo", richTextState.toText())
-        assertIs<RichSpanStyle.Default>(richTextState.currentRichSpanStyle)
+        // A mid-span line break keeps the rich span style on both halves, so the caret
+        // at the start of the second half reports the split span's style.
+        assertIs<RichSpanStyle.Code>(richTextState.currentRichSpanStyle)
     }
 
     @OptIn(ExperimentalRichTextApi::class)

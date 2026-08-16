@@ -156,6 +156,17 @@ public class RichTextConfig internal constructor(
      * Default is `true`.
      */
     public var exitListOnEmptyItem: Boolean = true
+
+    /**
+     * Whether copy and paste carry rich text (HTML) formatting.
+     *
+     * When false, paste inserts plain text only, styled by the editor's normal insertion
+     * logic (inheriting from the caret context like typed text), and copy writes plain
+     * text only. The web clipboard event handlers follow the same rule.
+     *
+     * Default is `true`.
+     */
+    public var richClipboardEnabled: Boolean = true
 }
 
 internal const val DefaultListIndent = 38

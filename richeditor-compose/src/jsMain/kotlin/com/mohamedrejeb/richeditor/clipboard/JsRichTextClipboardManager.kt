@@ -39,6 +39,9 @@ internal class JsRichTextClipboardManager(
 ) : RichTextClipboardManager, Clipboard by clipboard {
 
     override suspend fun getClipEntry(): ClipEntry? {
+        if (!richTextState.config.richClipboardEnabled)
+            return clipboard.getClipEntry()
+
         try {
             val items: Array<ClipboardItem> = clipboard.nativeClipboard.read().await()
 
@@ -60,6 +63,11 @@ internal class JsRichTextClipboardManager(
     }
 
     override suspend fun setClipEntry(clipEntry: ClipEntry?) {
+        if (!richTextState.config.richClipboardEnabled) {
+            clipboard.setClipEntry(clipEntry)
+            return
+        }
+
         if (clipEntry == null) {
             clipboard.setClipEntry(null)
             return

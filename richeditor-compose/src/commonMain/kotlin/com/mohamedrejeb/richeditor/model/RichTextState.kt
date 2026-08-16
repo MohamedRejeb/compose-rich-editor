@@ -2053,7 +2053,9 @@ public class RichTextState internal constructor(
 
     internal fun onTextFieldValueChange(newTextFieldValue: TextFieldValue) {
         // Classify the change for history before any mutation happens.
-        val pendingHtml = pendingClipboardHtml
+        // With rich clipboard disabled, stashed HTML is ignored and the pasted text flows
+        // through the normal insertion path, inheriting styles at the caret like typed text.
+        val pendingHtml = pendingClipboardHtml.takeIf { config.richClipboardEnabled }
         val isPaste = pendingHtml != null &&
                 newTextFieldValue.text.length > textFieldValue.text.length
         val trigger: CommitTrigger? = when {
@@ -3643,7 +3645,9 @@ public class RichTextState internal constructor(
                     richSpan.richSpanStyle
             },
     ) {
-        if (richSpanFullSpanStyle == newSpanStyle && newRichSpanStyle::class == richSpan.richSpanStyle::class) return
+        // Reference comparison: a same-class rich span style with a different value (or a
+        // re-applied equal instance carrying a new payload) must still replace the stored one.
+        if (richSpanFullSpanStyle == newSpanStyle && newRichSpanStyle === richSpan.richSpanStyle) return
 
         if (
             (toRemoveSpanStyle == SpanStyle() || !richSpanFullSpanStyle.isSpecifiedFieldsEquals(
@@ -4170,7 +4174,15 @@ public class RichTextState internal constructor(
             richSpan.textRange.min + beforeText.length
         )
 
-        // We don't copy the current rich span style to the new rich span
+        // A mid-span split keeps the rich span style on both halves. Empty tails start
+        // clean (the empty-paragraph case is styled by preserveStyleOnEmptyLine), and an
+        // atomic span's style is only carried along when the whole span moves.
+        val richSpanFullStyle = richSpan.fullStyle
+        val newRichSpanStyle =
+            if (afterText.isEmpty() || (richSpanFullStyle.isAtomic && beforeText.isNotEmpty()))
+                RichSpanStyle.Default
+            else
+                richSpanFullStyle
         val newRichSpan = RichSpan(
             paragraph = newRichParagraph,
             parent = null,
@@ -4180,6 +4192,7 @@ public class RichTextState internal constructor(
                 startIndex + afterText.length
             ),
             spanStyle = richSpan.fullSpanStyle,
+            richSpanStyle = newRichSpanStyle,
         )
 
         newRichParagraph.children.add(newRichSpan)
@@ -5682,15 +5695,42 @@ public class RichTextState internal constructor(
     }
 
     /**
-     * Replaces the editor content with [document]. Selection moves to the end and undo history
-     * is cleared, matching [setHtml].
+     * Replaces the editor content with [document]. Undo history is cleared, matching [setHtml].
      *
      * @param document The [RichTextDocument] to load.
+     * @param selection The selection to apply after the load, coerced into the new text bounds.
+     * When null, the selection moves to the end.
      */
-    public fun setRichTextDocument(document: RichTextDocument): RichTextState {
+    public fun setRichTextDocument(
+        document: RichTextDocument,
+        selection: TextRange? = null,
+    ): RichTextState {
         history.onProgrammaticReplace()
         updateRichParagraphList(RichTextDocumentDecoder.decode(document))
+        if (selection != null) {
+            val textLength = annotatedString.text.length
+            updateTextFieldValue(
+                textFieldValue.copy(
+                    selection = TextRange(
+                        selection.start.coerceIn(0, textLength),
+                        selection.end.coerceIn(0, textLength),
+                    ),
+                ),
+            )
+        }
         return this
+    }
+
+    /**
+     * Re-resolves all span styles from the current tree without changing the content, the
+     * selection, or the undo history. Call this after an external resource a custom
+     * [RichSpanStyle] depends on (for example an async-loaded font) becomes available, since
+     * style lambdas are otherwise only re-evaluated on content changes.
+     */
+    public fun invalidateStyles() {
+        val currentSelection = selection
+        updateRichParagraphList()
+        updateTextFieldValue(textFieldValue.copy(selection = currentSelection))
     }
 
     /**

@@ -176,4 +176,6 @@ internal fun RichTextSpanMark.kindName(): String = when (this) {
     is RichTextSpanMark.Image -> "image"
     is RichTextSpanMark.Token -> "token"
     is RichTextSpanMark.Unknown -> kind
+    is RichTextSpanMark.Custom ->
+        error("Custom marks are not part of the JSON format; filter them before encoding")
 }

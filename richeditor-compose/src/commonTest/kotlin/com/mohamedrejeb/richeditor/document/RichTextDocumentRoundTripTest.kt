@@ -41,4 +41,15 @@ class RichTextDocumentRoundTripTest {
             assertEquals(state.toText(), rebuilt.toText(), "Text changed for: $html")
         }
     }
+
+    @Test
+    fun `block texts joined with newline match toText for prefix-free content`() {
+        val state = RichTextState().apply {
+            setHtml("<p>First <b>bold</b></p><h2>Heading</h2><p>Third paragraph</p>")
+        }
+
+        val document = state.toRichTextDocument()
+
+        assertEquals(state.toText(), document.blocks.joinToString("\n") { it.text })
+    }
 }

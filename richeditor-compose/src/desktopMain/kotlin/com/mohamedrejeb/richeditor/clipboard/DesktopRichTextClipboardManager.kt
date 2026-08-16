@@ -38,6 +38,9 @@ internal class DesktopRichTextClipboardManager(
 ) : RichTextClipboardManager, Clipboard by clipboard {
 
     override suspend fun getClipEntry(): ClipEntry? {
+        if (!richTextState.config.richClipboardEnabled)
+            return clipboard.getClipEntry()
+
         try {
             val transferable = awtClipboard?.getContents(null)
             if (transferable != null && transferable.isDataFlavorSupported(DataFlavor.fragmentHtmlFlavor)) {
@@ -55,6 +58,11 @@ internal class DesktopRichTextClipboardManager(
     }
 
     override suspend fun setClipEntry(clipEntry: ClipEntry?) {
+        if (!richTextState.config.richClipboardEnabled) {
+            clipboard.setClipEntry(clipEntry)
+            return
+        }
+
         if (clipEntry == null) {
             clipboard.setClipEntry(null)
             return

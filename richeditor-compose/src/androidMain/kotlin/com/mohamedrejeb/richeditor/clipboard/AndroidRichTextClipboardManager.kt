@@ -32,6 +32,9 @@ internal class AndroidRichTextClipboardManager(
 ) : RichTextClipboardManager, Clipboard by clipboard {
 
     override suspend fun getClipEntry(): ClipEntry? {
+        if (!richTextState.config.richClipboardEnabled)
+            return clipboard.getClipEntry()
+
         try {
             val entry = clipboard.getClipEntry() ?: return null
             val clipData = entry.clipData
@@ -49,6 +52,11 @@ internal class AndroidRichTextClipboardManager(
     }
 
     override suspend fun setClipEntry(clipEntry: ClipEntry?) {
+        if (!richTextState.config.richClipboardEnabled) {
+            clipboard.setClipEntry(clipEntry)
+            return
+        }
+
         if (clipEntry == null) {
             clipboard.setClipEntry(null)
             return

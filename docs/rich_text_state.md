@@ -51,6 +51,16 @@ richTextState.config.unorderedListIndent = 20
 richTextState.config.exitListOnEmptyItem = true  // Exit list when pressing Enter on empty item
 ```
 
+### Clipboard
+
+By default, copy and paste carry rich text: copying writes HTML alongside plain text, and pasting from a browser or another rich text app imports its formatting (bold, underline, links, lists, and so on). Set `richClipboardEnabled` to `false` to restrict the clipboard to plain text:
+
+```kotlin
+richTextState.config.richClipboardEnabled = false
+```
+
+When disabled, paste inserts plain text styled by the editor's normal insertion logic (it inherits the style at the caret, exactly like typed text), and copy writes plain text only. The web clipboard event handlers (Ctrl+C/V/X on JS and Wasm) follow the same rule.
+
 ## Text Operations
 
 ### Selection Management

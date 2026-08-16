@@ -120,6 +120,20 @@ public final class com/mohamedrejeb/richeditor/document/RichTextSpanMark$CodeSpa
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class com/mohamedrejeb/richeditor/document/RichTextSpanMark$Custom : com/mohamedrejeb/richeditor/document/RichTextSpanMark {
+	public static final field $stable I
+	public fun <init> (Lkotlin/ranges/IntRange;Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;)V
+	public final fun component1 ()Lkotlin/ranges/IntRange;
+	public final fun component2 ()Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;
+	public final fun copy (Lkotlin/ranges/IntRange;Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Custom;
+	public static synthetic fun copy$default (Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Custom;Lkotlin/ranges/IntRange;Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;ILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextSpanMark$Custom;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getRange ()Lkotlin/ranges/IntRange;
+	public final fun getStyle ()Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class com/mohamedrejeb/richeditor/document/RichTextSpanMark$FontSize : com/mohamedrejeb/richeditor/document/RichTextSpanMark {
 	public static final field $stable I
 	public synthetic fun <init> (Lkotlin/ranges/IntRange;JLkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -462,6 +476,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public final fun getOrderedListIndent ()I
 	public final fun getOrderedListStyleType ()Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType;
 	public final fun getPreserveStyleOnEmptyLine ()Z
+	public final fun getRichClipboardEnabled ()Z
 	public final fun getUnorderedListIndent ()I
 	public final fun getUnorderedListStyleType ()Lcom/mohamedrejeb/richeditor/paragraph/type/UnorderedListStyleType;
 	public final fun setCodeSpanBackgroundColor-8_81llA (J)V
@@ -476,6 +491,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public final fun setOrderedListIndent (I)V
 	public final fun setOrderedListStyleType (Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType;)V
 	public final fun setPreserveStyleOnEmptyLine (Z)V
+	public final fun setRichClipboardEnabled (Z)V
 	public final fun setUnorderedListIndent (I)V
 	public final fun setUnorderedListStyleType (Lcom/mohamedrejeb/richeditor/paragraph/type/UnorderedListStyleType;)V
 }
@@ -532,6 +548,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun insertMarkdown (Ljava/lang/String;I)V
 	public final fun insertMarkdownAfterSelection (Ljava/lang/String;)V
 	public final fun insertToken (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun invalidateStyles ()V
 	public final fun isCode ()Z
 	public final fun isCodeSpan ()Z
 	public final fun isLink ()Z
@@ -560,7 +577,8 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun setHeadingStyle (Lcom/mohamedrejeb/richeditor/model/HeadingStyle;)V
 	public final fun setHtml (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public final fun setMarkdown (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
-	public final fun setRichTextDocument (Lcom/mohamedrejeb/richeditor/document/RichTextDocument;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
+	public final fun setRichTextDocument-psREZIo (Lcom/mohamedrejeb/richeditor/document/RichTextDocument;Landroidx/compose/ui/text/TextRange;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
+	public static synthetic fun setRichTextDocument-psREZIo$default (Lcom/mohamedrejeb/richeditor/model/RichTextState;Lcom/mohamedrejeb/richeditor/document/RichTextDocument;Landroidx/compose/ui/text/TextRange;ILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public final fun setSelection-5zc-tL8 (J)V
 	public final fun setText-FDrldGo (Ljava/lang/String;J)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public static synthetic fun setText-FDrldGo$default (Lcom/mohamedrejeb/richeditor/model/RichTextState;Ljava/lang/String;JILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/model/RichTextState;

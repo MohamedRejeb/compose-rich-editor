@@ -15,9 +15,12 @@ val selectionDocument = state.toRichTextDocument(state.selection)
 
 // Replace the editor content from a document.
 state.setRichTextDocument(document)
+
+// Optionally pass the selection to apply after the load.
+state.setRichTextDocument(document, selection = TextRange(0, 5))
 ```
 
-`setRichTextDocument` clears undo history and moves the selection to the end, matching `setHtml`.
+`setRichTextDocument` clears undo history, matching `setHtml`. Without an explicit `selection` the caret moves to the end.
 
 ## Structure
 
@@ -55,8 +58,36 @@ Styling is expressed as marks with inclusive ranges:
 | `Image` | `url`, `width`, `height`, `description` | Inline images |
 | `Token` | `trigger`, `id`, `label` | Mentions and triggers |
 | `Unknown` | `kind`, `rawJson` | Forward compatibility (see JSON docs) |
+| `Custom` | `style: RichSpanStyle` | App-defined rich span styles, carried by instance |
 
 The document is canonical: adjacent runs with equal styling merge into a single mark, marks are deterministically ordered, and heading or list visuals never appear as marks (they are carried by `headingLevel` and the block type).
+
+## Character space
+
+Mark ranges are inclusive character ranges over the owning block's `text`, in the same UTF-16 units as `annotatedString.text`. Each block is one paragraph, and `toText()` joins paragraphs with `\n`, so for content without list prefixes the block texts joined with `\n` are exactly `toText()` and a mark's global offset is its block-local offset plus the lengths of the preceding blocks and one separator each. List prefixes ("1. ", "• ") exist only in the rendered text, never in block text or mark ranges.
+
+## Custom span styles
+
+An app-defined `RichSpanStyle` (any class implementing the interface that is not one of the built-ins) survives the document as `RichTextSpanMark.Custom`, carrying the exact instance that was applied in the editor. Loading a document applies the carried instances back, so custom payloads (for example an app-domain font identity) round-trip without any registration:
+
+```kotlin
+class FontRunStyle(
+    val slug: String,
+    val fontFamily: FontFamily?, // render resource, excluded from equals
+) : RichSpanStyle { /* ... */ }
+
+state.addRichSpan(FontRunStyle("amiri", family), TextRange(0, 5))
+val custom = state.toRichTextDocument().blocks.first().spans
+    .filterIsInstance<RichTextSpanMark.Custom>()
+    .first()
+// custom.style is the same FontRunStyle instance
+```
+
+The style's own `equals` drives the document semantics: adjacent runs whose styles compare equal coalesce into one `Custom` mark, and applying a same-class style over an overlapping range replaces it in the overlap (last write wins). Keep render resources out of `equals` so differently-resolved instances of the same logical style still merge.
+
+If a custom style resolves an external resource lazily (an async-loaded font, for example), call `state.invalidateStyles()` once the resource is available: style lambdas are only re-evaluated on content changes, and `invalidateStyles` re-runs them without touching the content, the selection, or the undo history.
+
+When several rich-span marks cover the same characters on load, one wins per segment in this order: `Image`, `Token`, `Link`, `CodeSpan`, `Custom`.
 
 ## Testing your editor
 
@@ -101,6 +132,7 @@ LaunchedEffect(state) {
 - `RichSpanStyle.Code` visual parameters (corner radius, stroke, padding) are not captured; a `CodeSpan` mark decodes with defaults.
 - Inline images whose `model` is not a `String` cannot be represented and are dropped from the snapshot.
 - `Unknown` marks survive `RichTextDocumentCodec` round-trips but are not applied to a `RichTextState` when a document is loaded, so loading and re-saving through the editor drops them.
+- `Custom` marks are in-memory only: the JSON codec skips them because it cannot serialize arbitrary styles. Persist custom payloads in your own model.
 - A range snapshot (`toRichTextDocument(range)`) preserves the visible numbering of ordered list items via `startNumber`; clipboard copies intentionally restart numbering at 1.
 
 ## Related

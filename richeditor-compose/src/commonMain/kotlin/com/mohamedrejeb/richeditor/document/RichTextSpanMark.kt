@@ -1,6 +1,8 @@
 package com.mohamedrejeb.richeditor.document
 
 import androidx.compose.ui.unit.TextUnit
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.model.RichSpanStyle
 
 /** A styling mark over an inclusive character [range] of a [RichTextBlock]'s text. */
 public sealed interface RichTextSpanMark {
@@ -79,5 +81,16 @@ public sealed interface RichTextSpanMark {
         override val range: IntRange,
         public val kind: String,
         public val rawJson: String,
+    ) : RichTextSpanMark
+
+    /**
+     * An app-defined [RichSpanStyle] over [range], carried by instance. Equality follows the
+     * style's own equals, which also drives coalescing of adjacent runs. In-memory only: the
+     * JSON codec skips Custom marks because it cannot serialize arbitrary styles.
+     */
+    @ExperimentalRichTextApi
+    public data class Custom(
+        override val range: IntRange,
+        public val style: RichSpanStyle,
     ) : RichTextSpanMark
 }

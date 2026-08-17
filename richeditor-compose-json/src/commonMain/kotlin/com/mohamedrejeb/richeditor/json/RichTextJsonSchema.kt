@@ -1,7 +1,10 @@
 package com.mohamedrejeb.richeditor.json
 
-/** Version written to the "v" field of every serialized document. */
-internal const val CURRENT_JSON_SCHEMA_VERSION: Int = 1
+/**
+ * Version written to the "v" field of every serialized document. Compare a stored
+ * document's "v" against this to check compatibility before calling [setJson].
+ */
+public const val CURRENT_JSON_SCHEMA_VERSION: Int = 1
 
 /** Thrown by [setJson] when JSON is structurally invalid for the rich text schema. */
 public class MalformedRichTextJsonException internal constructor(

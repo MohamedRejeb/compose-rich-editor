@@ -2,6 +2,10 @@ public final class com/mohamedrejeb/richeditor/json/MalformedRichTextJsonExcepti
 	public static final field $stable I
 }
 
+public final class com/mohamedrejeb/richeditor/json/RichTextJsonSchemaKt {
+	public static final field CURRENT_JSON_SCHEMA_VERSION I
+}
+
 public final class com/mohamedrejeb/richeditor/json/RichTextStateJsonKt {
 	public static final fun setJson (Lcom/mohamedrejeb/richeditor/model/RichTextState;Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public static final fun toJson (Lcom/mohamedrejeb/richeditor/model/RichTextState;)Ljava/lang/String;

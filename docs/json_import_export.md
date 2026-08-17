@@ -28,7 +28,7 @@ These two extensions are the whole public API of the module. To work with the st
 
 ## Format
 
-The envelope is `{"v": 1, "blocks": [...]}` where `v` is the schema version. Example:
+The envelope is `{"v": 1, "blocks": [...]}` where `v` is the schema version. The version this library reads and writes is exposed as `CURRENT_JSON_SCHEMA_VERSION`, so stored documents can be checked for compatibility before calling `setJson`. Example:
 
 ```json
 {

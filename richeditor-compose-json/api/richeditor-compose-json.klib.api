@@ -13,6 +13,9 @@ final class com.mohamedrejeb.richeditor.json/UnsupportedRichTextJsonVersionExcep
         final fun <get-documentVersion>(): kotlin/Int // com.mohamedrejeb.richeditor.json/UnsupportedRichTextJsonVersionException.documentVersion.<get-documentVersion>|<get-documentVersion>(){}[0]
 }
 
+final const val com.mohamedrejeb.richeditor.json/CURRENT_JSON_SCHEMA_VERSION // com.mohamedrejeb.richeditor.json/CURRENT_JSON_SCHEMA_VERSION|{}CURRENT_JSON_SCHEMA_VERSION[0]
+    final fun <get-CURRENT_JSON_SCHEMA_VERSION>(): kotlin/Int // com.mohamedrejeb.richeditor.json/CURRENT_JSON_SCHEMA_VERSION.<get-CURRENT_JSON_SCHEMA_VERSION>|<get-CURRENT_JSON_SCHEMA_VERSION>(){}[0]
+
 final val com.mohamedrejeb.richeditor.json/com_mohamedrejeb_richeditor_json_MalformedRichTextJsonException$stableprop // com.mohamedrejeb.richeditor.json/com_mohamedrejeb_richeditor_json_MalformedRichTextJsonException$stableprop|#static{}com_mohamedrejeb_richeditor_json_MalformedRichTextJsonException$stableprop[0]
 final val com.mohamedrejeb.richeditor.json/com_mohamedrejeb_richeditor_json_UnsupportedRichTextJsonVersionException$stableprop // com.mohamedrejeb.richeditor.json/com_mohamedrejeb_richeditor_json_UnsupportedRichTextJsonVersionException$stableprop|#static{}com_mohamedrejeb_richeditor_json_UnsupportedRichTextJsonVersionException$stableprop[0]
 

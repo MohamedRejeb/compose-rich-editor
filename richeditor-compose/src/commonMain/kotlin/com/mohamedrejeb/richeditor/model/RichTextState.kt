@@ -5672,13 +5672,11 @@ public class RichTextState internal constructor(
      * Returns an immutable, structural snapshot of the editor content.
      *
      * Two states with the same visible content and styling return equal documents, which makes
-     * this the right value for test assertions and change detection. Reading this inside a
-     * snapshot observer (for example `snapshotFlow { state.toRichTextDocument() }`) re-emits
-     * on every content change.
+     * this the right value for test assertions and change detection. Like [toHtml], this is a
+     * plain conversion; to observe content changes, observe [annotatedString] and convert:
+     * `snapshotFlow { state.annotatedString }.map { state.toRichTextDocument() }`.
      */
     public fun toRichTextDocument(): RichTextDocument {
-        // Snapshot read: content edits always update annotatedString, so observers invalidate.
-        annotatedString
         return RichTextDocumentEncoder.encode(this)
     }
 
@@ -5688,7 +5686,6 @@ public class RichTextState internal constructor(
      * @param range The [TextRange] to snapshot.
      */
     public fun toRichTextDocument(range: TextRange): RichTextDocument {
-        annotatedString
         return RichTextDocumentEncoder.encode(
             extractRangeState(range, preserveListNumbers = true),
         )

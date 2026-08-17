@@ -115,11 +115,12 @@ fun `toolbar bold button bolds the selection`() {
 }
 ```
 
-To observe content changes, read the document inside a snapshot observer:
+`toRichTextDocument()` is a plain conversion, like `toHtml()`. To observe content changes, observe `annotatedString` (which updates on every edit) and convert:
 
 ```kotlin
 LaunchedEffect(state) {
-    snapshotFlow { state.toRichTextDocument() }
+    snapshotFlow { state.annotatedString }
+        .map { state.toRichTextDocument() }
         .distinctUntilChanged()
         .collect { document -> viewModel.onContentChanged(document) }
 }

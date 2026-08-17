@@ -131,7 +131,7 @@ LaunchedEffect(state) {
 - Ordered and unordered list marker styles are config-level and not captured; only `ordered`, `indent`, and `startNumber` are.
 - `RichSpanStyle.Code` visual parameters (corner radius, stroke, padding) are not captured; a `CodeSpan` mark decodes with defaults.
 - Inline images whose `model` is not a `String` cannot be represented and are dropped from the snapshot.
-- `Unknown` marks survive `RichTextDocumentCodec` round-trips but are not applied to a `RichTextState` when a document is loaded, so loading and re-saving through the editor drops them.
+- `Unknown` marks are not applied to a `RichTextState` when a document is loaded, so loading and re-saving JSON through the editor drops them (see the JSON docs).
 - `Custom` marks are in-memory only: the JSON codec skips them because it cannot serialize arbitrary styles. Persist custom payloads in your own model.
 - A range snapshot (`toRichTextDocument(range)`) preserves the visible numbering of ordered list items via `startNumber`; clipboard copies intentionally restart numbering at 1.
 

@@ -21,11 +21,11 @@ import kotlinx.serialization.json.put
  * safe to compare, cache, and store. Unknown mark kinds survive a decode/encode cycle
  * verbatim, keeping documents from newer or extended producers lossless.
  */
-public object RichTextDocumentCodec {
+internal object RichTextDocumentCodec {
 
     private val json: Json = Json { prettyPrint = false }
 
-    public fun encode(document: RichTextDocument): JsonObject = buildJsonObject {
+    fun encode(document: RichTextDocument): JsonObject = buildJsonObject {
         put("v", CURRENT_JSON_SCHEMA_VERSION)
         put(
             "blocks",
@@ -35,7 +35,7 @@ public object RichTextDocumentCodec {
         )
     }
 
-    public fun encodeToString(document: RichTextDocument): String =
+    fun encodeToString(document: RichTextDocument): String =
         json.encodeToString(JsonObject.serializer(), encode(document))
 
     /**
@@ -45,7 +45,7 @@ public object RichTextDocumentCodec {
      * @throws UnsupportedRichTextJsonVersionException when the document declares a schema
      * version newer than [CURRENT_JSON_SCHEMA_VERSION].
      */
-    public fun decodeFromString(jsonString: String): RichTextDocument {
+    fun decodeFromString(jsonString: String): RichTextDocument {
         val element = try {
             json.parseToJsonElement(jsonString)
         } catch (e: SerializationException) {
@@ -56,7 +56,7 @@ public object RichTextDocumentCodec {
         return decode(jsonObject)
     }
 
-    public fun decode(json: JsonObject): RichTextDocument {
+    fun decode(json: JsonObject): RichTextDocument {
         val version = (json["v"] as? JsonPrimitive)?.intOrNull
             ?: throw MalformedRichTextJsonException("Missing or invalid \"v\" field")
         if (version < 1) throw MalformedRichTextJsonException("Invalid schema version $version")

@@ -166,6 +166,7 @@ public class RichTextConfig internal constructor(
      *
      * Default is `true`.
      */
+    @ExperimentalRichTextApi
     public var richClipboardEnabled: Boolean = true
 }
 

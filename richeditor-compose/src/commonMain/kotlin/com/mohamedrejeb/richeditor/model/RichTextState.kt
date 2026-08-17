@@ -5676,6 +5676,7 @@ public class RichTextState internal constructor(
      * plain conversion; to observe content changes, observe [annotatedString] and convert:
      * `snapshotFlow { state.annotatedString }.map { state.toRichTextDocument() }`.
      */
+    @ExperimentalRichTextApi
     public fun toRichTextDocument(): RichTextDocument {
         return RichTextDocumentEncoder.encode(this)
     }
@@ -5685,6 +5686,7 @@ public class RichTextState internal constructor(
      *
      * @param range The [TextRange] to snapshot.
      */
+    @ExperimentalRichTextApi
     public fun toRichTextDocument(range: TextRange): RichTextDocument {
         return RichTextDocumentEncoder.encode(
             extractRangeState(range, preserveListNumbers = true),
@@ -5698,6 +5700,7 @@ public class RichTextState internal constructor(
      * @param selection The selection to apply after the load, coerced into the new text bounds.
      * When null, the selection moves to the end.
      */
+    @ExperimentalRichTextApi
     public fun setRichTextDocument(
         document: RichTextDocument,
         selection: TextRange? = null,
@@ -5724,6 +5727,7 @@ public class RichTextState internal constructor(
      * [RichSpanStyle] depends on (for example an async-loaded font) becomes available, since
      * style lambdas are otherwise only re-evaluated on content changes.
      */
+    @ExperimentalRichTextApi
     public fun invalidateStyles() {
         val currentSelection = selection
         updateRichParagraphList()

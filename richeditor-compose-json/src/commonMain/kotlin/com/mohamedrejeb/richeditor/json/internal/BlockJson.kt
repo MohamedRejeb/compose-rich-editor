@@ -1,3 +1,5 @@
+@file:OptIn(com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi::class)
+
 package com.mohamedrejeb.richeditor.json.internal
 
 import androidx.compose.ui.text.style.TextAlign

@@ -4,12 +4,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.TextUnit
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 
 /**
  * One paragraph of content. [text] is the flattened paragraph text (list prefixes excluded,
  * one U+FFFC placeholder per inline image). Styling is carried by [spans] as inclusive
  * character ranges over [text].
  */
+@ExperimentalRichTextApi
 public data class RichTextBlock(
     public val text: String,
     public val type: RichTextBlockType = RichTextBlockType.Paragraph,

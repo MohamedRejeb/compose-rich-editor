@@ -1,8 +1,10 @@
 package com.mohamedrejeb.richeditor.json
 
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichTextState
 
 /** Serializes the editor content to versioned rich text JSON (schema v1). */
+@ExperimentalRichTextApi
 public fun RichTextState.toJson(): String =
     RichTextDocumentCodec.encodeToString(toRichTextDocument())
 
@@ -13,5 +15,6 @@ public fun RichTextState.toJson(): String =
  * @throws MalformedRichTextJsonException on structurally invalid input
  * @throws UnsupportedRichTextJsonVersionException when the document is from a newer schema
  */
+@ExperimentalRichTextApi
 public fun RichTextState.setJson(json: String): RichTextState =
     setRichTextDocument(RichTextDocumentCodec.decodeFromString(json))

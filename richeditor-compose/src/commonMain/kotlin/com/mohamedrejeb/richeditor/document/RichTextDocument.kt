@@ -1,5 +1,7 @@
 package com.mohamedrejeb.richeditor.document
 
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+
 /**
  * Immutable, structural snapshot of rich text content.
  *
@@ -7,6 +9,7 @@ package com.mohamedrejeb.richeditor.document
  * independent of how the editor represented them internally. Suitable for test assertions,
  * persistence, and change observation.
  */
+@ExperimentalRichTextApi
 public data class RichTextDocument(
     public val blocks: List<RichTextBlock>,
 ) {

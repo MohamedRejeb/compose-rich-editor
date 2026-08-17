@@ -5,6 +5,7 @@ import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 
 /** A styling mark over an inclusive character [range] of a [RichTextBlock]'s text. */
+@ExperimentalRichTextApi
 public sealed interface RichTextSpanMark {
     public val range: IntRange
 

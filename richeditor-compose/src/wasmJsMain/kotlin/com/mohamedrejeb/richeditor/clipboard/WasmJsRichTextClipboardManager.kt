@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalWasmJsInterop::class)
+@file:OptIn(ExperimentalWasmJsInterop::class, com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi::class)
 
 package com.mohamedrejeb.richeditor.clipboard
 

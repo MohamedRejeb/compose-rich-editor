@@ -1,5 +1,8 @@
 package com.mohamedrejeb.richeditor.document
 
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+
+@ExperimentalRichTextApi
 public sealed interface RichTextBlockType {
 
     public data object Paragraph : RichTextBlockType

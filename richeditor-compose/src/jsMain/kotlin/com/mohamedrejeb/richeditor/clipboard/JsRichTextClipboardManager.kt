@@ -53,6 +53,11 @@ internal class JsRichTextClipboardManager(
                     val html = getBlobText(blob).await() as? String
                     if (html != null) {
                         richTextState.pendingClipboardHtml = html
+                        if ("text/plain" in item.types) {
+                            val textBlob = item.getType("text/plain").await<Blob>()
+                            richTextState.pendingClipboardPlainText =
+                                getBlobText(textBlob).await() as? String
+                        }
                     }
                     break
                 }

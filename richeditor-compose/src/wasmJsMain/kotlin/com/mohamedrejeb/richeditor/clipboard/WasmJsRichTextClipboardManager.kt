@@ -55,6 +55,12 @@ internal class WasmJsRichTextClipboardManager(
                     val blob: JsAny = item.getType("text/html".toJsString()).await<JsAny>()
                     val html = getBlobText(blob).await<JsString>().toString()
                     richTextState.pendingClipboardHtml = html
+                    val hasPlain = (0 until types.length).any { types[it].toString() == "text/plain" }
+                    if (hasPlain) {
+                        val textBlob: JsAny = item.getType("text/plain".toJsString()).await<JsAny>()
+                        richTextState.pendingClipboardPlainText =
+                            getBlobText(textBlob).await<JsString>().toString()
+                    }
                     break
                 }
             }

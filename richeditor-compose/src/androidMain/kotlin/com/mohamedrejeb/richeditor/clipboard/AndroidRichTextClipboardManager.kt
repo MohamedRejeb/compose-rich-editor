@@ -44,6 +44,8 @@ internal class AndroidRichTextClipboardManager(
                 val htmlText = clipData.getItemAt(0).htmlText
                 if (htmlText != null) {
                     richTextState.pendingClipboardHtml = htmlText
+                    richTextState.pendingClipboardPlainText =
+                        clipData.getItemAt(0).text?.toString()
                 }
             }
             return entry

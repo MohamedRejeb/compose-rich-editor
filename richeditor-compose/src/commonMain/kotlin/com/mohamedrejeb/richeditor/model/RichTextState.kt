@@ -160,6 +160,13 @@ public class RichTextState internal constructor(
     internal var pendingClipboardHtml: String? = null
 
     /**
+     * The plain text of the same clipboard content as [pendingClipboardHtml], stashed by the
+     * platform clipboard managers. It is what the platform inserts on paste, so the next
+     * text change can be recognized as a paste structurally instead of by length growth.
+     */
+    internal var pendingClipboardPlainText: String? = null
+
+    /**
      * The last non-collapsed selection. Updated whenever the selection changes from a
      * non-collapsed range to a different value. Used by clipboard managers on platforms
      * (e.g. Android) where the selection collapses before [setClipEntry] is called.
@@ -2065,7 +2072,7 @@ public class RichTextState internal constructor(
         // through the normal insertion path, inheriting styles at the caret like typed text.
         val pendingHtml = pendingClipboardHtml.takeIf { config.richClipboardEnabled }
         val isPaste = pendingHtml != null &&
-                newTextFieldValue.text.length > textFieldValue.text.length
+                isPasteTextChange(textFieldValue, newTextFieldValue, pendingClipboardPlainText)
         val trigger: CommitTrigger? = when {
             isPaste -> CommitTrigger.Paste
             else -> classifyTextChange(newTextFieldValue)
@@ -2088,6 +2095,35 @@ public class RichTextState internal constructor(
         }
     }
 
+    /**
+     * Whether the change from [old] to [new] is the paste that follows a clipboard read.
+     * With [expectedPlainText] available, a paste is recognized structurally: the old
+     * selection replaced by exactly that text (newline-normalized), which also covers
+     * pastes shorter than the replaced selection. Without it, the legacy grow-only
+     * heuristic applies, which keeps a stale stash from hijacking typing or deletion.
+     */
+    private fun isPasteTextChange(
+        old: TextFieldValue,
+        new: TextFieldValue,
+        expectedPlainText: String?,
+    ): Boolean {
+        if (expectedPlainText == null)
+            return new.text.length > old.text.length
+
+        val selMin = old.selection.min
+        val selMax = old.selection.max
+        val insertedLength = new.text.length - (old.text.length - (selMax - selMin))
+        if (insertedLength <= 0 || selMin + insertedLength > new.text.length) return false
+        if (!new.text.regionMatches(0, old.text, 0, selMin)) return false
+        if (!new.text.regionMatches(selMin + insertedLength, old.text, selMax, old.text.length - selMax)) return false
+
+        val inserted = new.text.substring(selMin, selMin + insertedLength)
+        return inserted.normalizeNewlines() == expectedPlainText.normalizeNewlines()
+    }
+
+    private fun String.normalizeNewlines(): String =
+        replace("\r\n", "\n").replace('\r', '\n')
+
     private fun onTextFieldValueChangeInner(
         newTextFieldValue: TextFieldValue,
         isPaste: Boolean,
@@ -2095,6 +2131,7 @@ public class RichTextState internal constructor(
     ) {
         if (isPaste) {
             pendingClipboardHtml = null
+            pendingClipboardPlainText = null
             val position = selection.min
             // Suppress nested history captures during the remove+insert so the entire
             // paste is a single undo group attributable to the top-level trigger.
@@ -2109,6 +2146,7 @@ public class RichTextState internal constructor(
             return
         }
         pendingClipboardHtml = null
+        pendingClipboardPlainText = null
 
         tempTextFieldValue = newTextFieldValue
 

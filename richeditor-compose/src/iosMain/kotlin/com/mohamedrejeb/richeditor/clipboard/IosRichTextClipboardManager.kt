@@ -50,6 +50,7 @@ internal class IosRichTextClipboardManager(
                     ?.toString()
                 if (html != null) {
                     richTextState.pendingClipboardHtml = html
+                    richTextState.pendingClipboardPlainText = pasteboard.string
                 }
             }
         } catch (e: Exception) {

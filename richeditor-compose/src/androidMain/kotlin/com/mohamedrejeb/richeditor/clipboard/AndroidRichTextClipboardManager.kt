@@ -55,7 +55,15 @@ internal class AndroidRichTextClipboardManager(
 
     override suspend fun setClipEntry(clipEntry: ClipEntry?) {
         if (!richTextState.config.richClipboardEnabled) {
-            clipboard.setClipEntry(clipEntry)
+            val copySelection = richTextState.copySelection
+            if (clipEntry == null || copySelection == null || copySelection.collapsed) {
+                clipboard.setClipEntry(clipEntry)
+                return
+            }
+            // The raw ClipEntry carries the editor's internal rendering (paragraphs joined
+            // by spaces, list prefixes included); a plain-text copy must use toText.
+            val text = richTextState.toText(copySelection)
+            clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("text", text)))
             return
         }
 

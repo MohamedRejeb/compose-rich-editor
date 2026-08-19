@@ -52,17 +52,37 @@ class DesktopRichTextClipboardManagerConfigTest {
     }
 
     @Test
-    fun `disabled rich clipboard delegates copy to the plain clipboard`() = runBlocking {
-        val state = stateWithSelection()
+    fun `disabled rich clipboard writes newline joined plain text without html`() = runBlocking {
+        val state = RichTextState()
+        state.setHtml("<p>Hello</p><p>World</p>")
+        state.selection = TextRange(0, state.annotatedString.text.length)
         state.config.richClipboardEnabled = false
         val clipboard = FakeClipboard()
         val manager = createRichTextClipboardManager(state, clipboard)
 
-        val entry = ClipEntry(StringSelection("Hello"))
+        manager.setClipEntry(ClipEntry(StringSelection("raw")))
+
+        val contents = clipboard.awt.getContents(null)
+        assertTrue(contents != null && !contents.isDataFlavorSupported(DataFlavor.fragmentHtmlFlavor))
+        assertEquals(
+            "Hello\nWorld",
+            contents.getTransferData(DataFlavor.stringFlavor) as String,
+        )
+        assertEquals(0, clipboard.delegateCalls)
+    }
+
+    @Test
+    fun `disabled rich clipboard without a selection delegates the raw entry`() = runBlocking {
+        val state = RichTextState()
+        state.setText("Hello")
+        state.config.richClipboardEnabled = false
+        val clipboard = FakeClipboard()
+        val manager = createRichTextClipboardManager(state, clipboard)
+
+        val entry = ClipEntry(StringSelection("raw"))
         manager.setClipEntry(entry)
 
         assertEquals(1, clipboard.delegateCalls)
         assertSame(entry, clipboard.delegatedEntry)
-        assertTrue(clipboard.awt.getContents(null) == null)
     }
 }

@@ -67,7 +67,19 @@ internal class WasmJsRichTextClipboardManager(
 
     override suspend fun setClipEntry(clipEntry: ClipEntry?) {
         if (!richTextState.config.richClipboardEnabled) {
-            clipboard.setClipEntry(clipEntry)
+            val copySelection = richTextState.copySelection
+            if (clipEntry == null || copySelection == null || copySelection.collapsed) {
+                clipboard.setClipEntry(clipEntry)
+                return
+            }
+            // The raw ClipEntry carries the editor's internal rendering (paragraphs joined
+            // by spaces, list prefixes included); a plain-text copy must use toText.
+            try {
+                val item = createTextClipboardItem(richTextState.toText(copySelection).toJsString())
+                clipboard.nativeClipboard.write(item).await<Nothing>()
+            } catch (e: Exception) {
+                clipboard.setClipEntry(clipEntry)
+            }
             return
         }
 
@@ -107,6 +119,15 @@ private fun createHtmlClipboardItem(html: JsString, text: JsString): JsArray<Cli
     """
     [new ClipboardItem({
         'text/html': new Blob([html], { type: 'text/html' }),
+        'text/plain': new Blob([text], { type: 'text/plain' })
+    })]
+    """
+)
+
+@OptIn(ExperimentalComposeUiApi::class)
+private fun createTextClipboardItem(text: JsString): JsArray<ClipboardItem> = js(
+    """
+    [new ClipboardItem({
         'text/plain': new Blob([text], { type: 'text/plain' })
     })]
     """

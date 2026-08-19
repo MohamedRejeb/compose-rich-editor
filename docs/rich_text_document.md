@@ -87,6 +87,8 @@ The style's own `equals` drives the document semantics: adjacent runs whose styl
 
 If a custom style resolves an external resource lazily (an async-loaded font, for example), call `state.invalidateStyles()` once the resource is available: style lambdas are only re-evaluated on content changes, and `invalidateStyles` re-runs them without touching the content, the selection, or the undo history.
 
+To persist custom styles through JSON and HTML as well, register a descriptor on `state.spanStyleRegistry`; see [Custom span styles](custom_span_styles.md).
+
 When several rich-span marks cover the same characters on load, one wins per segment in this order: `Image`, `Token`, `Link`, `CodeSpan`, `Custom`.
 
 ## Testing your editor
@@ -130,10 +132,9 @@ LaunchedEffect(state) {
 
 - `RichTextConfig` (link color, list markers, indent widths, and so on) is presentation, not content, and is not part of the document.
 - Ordered and unordered list marker styles are config-level and not captured; only `ordered`, `indent`, and `startNumber` are.
-- `RichSpanStyle.Code` visual parameters (corner radius, stroke, padding) are not captured; a `CodeSpan` mark decodes with defaults.
 - Inline images whose `model` is not a `String` cannot be represented and are dropped from the snapshot.
 - `Unknown` marks are not applied to a `RichTextState` when a document is loaded, so loading and re-saving JSON through the editor drops them (see the JSON docs).
-- `Custom` marks are in-memory only: the JSON codec skips them because it cannot serialize arbitrary styles. Persist custom payloads in your own model.
+- `Custom` marks serialize only when a descriptor is registered on the state's `spanStyleRegistry`; without one the JSON and HTML codecs skip them. See [Custom span styles](custom_span_styles.md).
 - A range snapshot (`toRichTextDocument(range)`) preserves the visible numbering of ordered list items via `startNumber`; clipboard copies intentionally restart numbering at 1.
 
 ## Related

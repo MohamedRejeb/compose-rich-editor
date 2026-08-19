@@ -31,10 +31,13 @@ RichTextEditor(
 richTextState.config.linkColor = Color.Blue
 richTextState.config.linkTextDecoration = TextDecoration.Underline
 
-// Code block appearance
+// Code span appearance
 richTextState.config.codeSpanColor = Color.Yellow
 richTextState.config.codeSpanBackgroundColor = Color.Transparent
 richTextState.config.codeSpanStrokeColor = Color.LightGray
+richTextState.config.codeSpanCornerRadius = 8.sp
+richTextState.config.codeSpanStrokeWidth = 1.sp
+richTextState.config.codeSpanPadding = TextPaddingValues(horizontal = 2.sp, vertical = 2.sp)
 ```
 
 ### List Configuration

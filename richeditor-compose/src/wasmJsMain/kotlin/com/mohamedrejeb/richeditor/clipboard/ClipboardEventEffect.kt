@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalWasmJsInterop::class)
+@file:OptIn(ExperimentalWasmJsInterop::class, com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi::class)
 
 package com.mohamedrejeb.richeditor.clipboard
 
@@ -14,7 +14,9 @@ internal actual fun ClipboardEventEffect(richTextState: RichTextState) {
         val pasteHandler: (Event) -> Unit = handler@{ event ->
             if (!richTextState.isFocused) return@handler
 
-            val html = getClipboardDataHtml(event)?.toString()
+            val html =
+                if (richTextState.config.richClipboardEnabled) getClipboardDataHtml(event)?.toString()
+                else null
             if (!html.isNullOrBlank()) {
                 event.preventDefault()
                 event.stopPropagation()
@@ -40,10 +42,10 @@ internal actual fun ClipboardEventEffect(richTextState: RichTextState) {
             val selection = richTextState.copySelection ?: return@handler
             event.preventDefault()
             event.stopPropagation()
-            val html = richTextState.toHtml(selection)
-            val text = richTextState.toText(selection)
-            setClipboardData(event, "text/html".toJsString(), html.toJsString())
-            setClipboardData(event, "text/plain".toJsString(), text.toJsString())
+            if (richTextState.config.richClipboardEnabled) {
+                setClipboardData(event, "text/html".toJsString(), richTextState.toHtml(selection).toJsString())
+            }
+            setClipboardData(event, "text/plain".toJsString(), richTextState.toText(selection).toJsString())
         }
 
         val cutHandler: (Event) -> Unit = handler@{ event ->
@@ -52,10 +54,10 @@ internal actual fun ClipboardEventEffect(richTextState: RichTextState) {
             val selection = richTextState.copySelection ?: return@handler
             event.preventDefault()
             event.stopPropagation()
-            val html = richTextState.toHtml(selection)
-            val text = richTextState.toText(selection)
-            setClipboardData(event, "text/html".toJsString(), html.toJsString())
-            setClipboardData(event, "text/plain".toJsString(), text.toJsString())
+            if (richTextState.config.richClipboardEnabled) {
+                setClipboardData(event, "text/html".toJsString(), richTextState.toHtml(selection).toJsString())
+            }
+            setClipboardData(event, "text/plain".toJsString(), richTextState.toText(selection).toJsString())
             richTextState.removeSelectedText()
         }
 

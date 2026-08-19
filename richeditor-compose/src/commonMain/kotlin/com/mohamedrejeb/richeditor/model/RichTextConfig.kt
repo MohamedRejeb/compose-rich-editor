@@ -3,6 +3,7 @@ package com.mohamedrejeb.richeditor.model
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.paragraph.type.ListMarkerStyleBehavior
 import com.mohamedrejeb.richeditor.paragraph.type.ListPrefixAlignment
@@ -37,6 +38,24 @@ public class RichTextConfig internal constructor(
         }
 
     public var codeSpanStrokeColor: Color = Color.LightGray
+        set(value) {
+            field = value
+            updateText()
+        }
+
+    public var codeSpanCornerRadius: TextUnit = 8.sp
+        set(value) {
+            field = value
+            updateText()
+        }
+
+    public var codeSpanStrokeWidth: TextUnit = 1.sp
+        set(value) {
+            field = value
+            updateText()
+        }
+
+    public var codeSpanPadding: TextPaddingValues = TextPaddingValues(horizontal = 2.sp, vertical = 2.sp)
         set(value) {
             field = value
             updateText()
@@ -156,6 +175,18 @@ public class RichTextConfig internal constructor(
      * Default is `true`.
      */
     public var exitListOnEmptyItem: Boolean = true
+
+    /**
+     * Whether copy and paste carry rich text (HTML) formatting.
+     *
+     * When false, paste inserts plain text only, styled by the editor's normal insertion
+     * logic (inheriting from the caret context like typed text), and copy writes plain
+     * text only. The web clipboard event handlers follow the same rule.
+     *
+     * Default is `true`.
+     */
+    @ExperimentalRichTextApi
+    public var richClipboardEnabled: Boolean = true
 }
 
 internal const val DefaultListIndent = 38

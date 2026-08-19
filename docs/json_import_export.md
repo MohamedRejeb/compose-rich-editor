@@ -1,0 +1,95 @@
+# JSON import/export
+
+The `richeditor-compose-json` module serializes editor content to a stable, versioned JSON format built on the [document model](rich_text_document.md). Unlike HTML or Markdown, the JSON format is lossless for everything the editor supports, canonical (the same content always produces the same string), and safe to store, compare, and migrate.
+
+## Installation
+
+```kotlin
+dependencies {
+    implementation("com.mohamedrejeb.richeditor:richeditor-compose-json:1.0.0")
+}
+```
+
+Use the same version as `richeditor-compose`.
+
+## Basic usage
+
+```kotlin
+val state = rememberRichTextState()
+
+// Export
+val json: String = state.toJson()
+
+// Import
+state.setJson(json)
+```
+
+These two extensions are the whole public API of the module. To work with the structural snapshot instead of a state, combine them with the [document model](rich_text_document.md): `state.toRichTextDocument()` after `setJson`, or `setRichTextDocument` before `toJson`.
+
+## Format
+
+The envelope is `{"v": 1, "blocks": [...]}` where `v` is the schema version. The version this library reads and writes is exposed as `CURRENT_JSON_SCHEMA_VERSION`, so stored documents can be checked for compatibility before calling `setJson`. Example:
+
+```json
+{
+  "v": 1,
+  "blocks": [
+    {"id": "b0", "type": "heading", "level": 1, "text": "Title", "spans": []},
+    {"id": "b1", "type": "list-item", "ordered": true, "indent": 0, "text": "One", "spans": []},
+    {
+      "id": "b2",
+      "type": "paragraph",
+      "align": "center",
+      "text": "Hello bold link",
+      "spans": [
+        {"k": "bold", "r": [6, 9]},
+        {"k": "link", "r": [11, 14], "url": "https://example.com"}
+      ]
+    }
+  ]
+}
+```
+
+Block fields:
+
+| Field | When present | Meaning |
+|---|---|---|
+| `id` | always | `"b" + index`; accepted and ignored on import |
+| `type` | always | `paragraph`, `heading`, or `list-item` |
+| `level` | headings | Heading level 1 to 6 |
+| `ordered`, `indent`, `start` | list items | Ordered flag, 0-based nesting, numbering restart |
+| `align`, `dir`, `lineHeight`, `textIndent` | when set | Paragraph style |
+| `br` | line-break paragraphs | Paragraph created by `<br>` |
+| `text`, `spans` | always | Content and styling marks |
+
+Each mark is `{"k": kind, "r": [first, last], ...}` with an inclusive range. Kinds: `bold`, `italic`, `underline`, `strike`, `code`, `link` (`url`), `color` and `highlight` (`argb` as 8-char uppercase hex), `font-size` and `letter-spacing` (`value`, `unit`), `font-weight` (`value`), `baseline-shift` (`value`), `shadow` (`argb`, `x`, `y`, `blur`), `image` (`url`, `width`, `height`, `alt`), `token` (`trigger`, `id`, `label`).
+
+## Stability guarantees
+
+- **Versioned**: every document carries `"v"`. Documents from newer schema versions are rejected with `UnsupportedRichTextJsonVersionException` instead of being decoded lossily.
+- **Canonical**: the same content always encodes to the same string, so JSON strings can be compared for equality in tests and caches.
+- **Idempotent round-trip**: `toJson` after `setJson` returns the identical string for any document made of editor-representable content (everything in the tables above except `Unknown` marks).
+- **Unknown mark kinds are tolerated, not preserved**: a document from a newer or extended producer decodes without failing, but the editor cannot represent unknown marks, so `setJson` followed by `toJson` drops them. To keep forward-compatible data intact, store the original JSON and treat the editor as a consumer.
+- **Custom marks serialize through the registry**: a `RichTextSpanMark.Custom` is encoded as `{"k": kind, "r": [...], "attrs": {...}}` when a descriptor registered on the state's `spanStyleRegistry` opts into the JSON format, and skipped otherwise. On decode, unregistered custom kinds degrade to `Unknown`. See [Custom span styles](custom_span_styles.md).
+- **Strict validation**: structurally invalid input (non-finite numbers, out-of-range font weights, malformed `argb`, negative indents) fails fast with `MalformedRichTextJsonException` rather than producing a document that cannot be re-encoded. `start` may be negative, matching the HTML `start` attribute.
+- **v2 compatible**: the envelope, block fields, and the core mark kinds (`bold` through `highlight`) match the upcoming richeditor v2 document format, so stored v1 documents remain readable there.
+
+## Error handling
+
+```kotlin
+try {
+    state.setJson(json)
+} catch (e: MalformedRichTextJsonException) {
+    // Structurally invalid input
+} catch (e: UnsupportedRichTextJsonVersionException) {
+    // Written by a newer library version (e.documentVersion)
+}
+```
+
+Both extend `IllegalArgumentException`.
+
+## Related
+
+- [Document model](rich_text_document.md)
+- [HTML import/export](html_import_export.md)
+- [Markdown import/export](markdown_import_export.md)

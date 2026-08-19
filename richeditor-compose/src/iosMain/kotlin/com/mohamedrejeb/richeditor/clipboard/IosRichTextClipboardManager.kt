@@ -1,3 +1,5 @@
+@file:OptIn(com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi::class)
+
 package com.mohamedrejeb.richeditor.clipboard
 
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -37,6 +39,9 @@ internal class IosRichTextClipboardManager(
 ) : RichTextClipboardManager, Clipboard by clipboard {
 
     override suspend fun getClipEntry(): ClipEntry? {
+        if (!richTextState.config.richClipboardEnabled)
+            return clipboard.getClipEntry()
+
         try {
             val pasteboard = clipboard.nativeClipboard
             val htmlData = pasteboard.dataForPasteboardType(HTML_UTI)
@@ -45,6 +50,7 @@ internal class IosRichTextClipboardManager(
                     ?.toString()
                 if (html != null) {
                     richTextState.pendingClipboardHtml = html
+                    richTextState.pendingClipboardPlainText = pasteboard.string
                 }
             }
         } catch (e: Exception) {
@@ -55,6 +61,18 @@ internal class IosRichTextClipboardManager(
     }
 
     override suspend fun setClipEntry(clipEntry: ClipEntry?) {
+        if (!richTextState.config.richClipboardEnabled) {
+            val copySelection = richTextState.copySelection
+            if (clipEntry == null || copySelection == null || copySelection.collapsed) {
+                clipboard.setClipEntry(clipEntry)
+                return
+            }
+            // The raw ClipEntry carries the editor's internal rendering (paragraphs joined
+            // by spaces, list prefixes included); a plain-text copy must use toText.
+            clipboard.nativeClipboard.string = richTextState.toText(copySelection)
+            return
+        }
+
         if (clipEntry == null) {
             clipboard.setClipEntry(null)
             return

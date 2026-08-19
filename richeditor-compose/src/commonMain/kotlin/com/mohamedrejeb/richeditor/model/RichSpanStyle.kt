@@ -26,17 +26,37 @@ import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.utils.getBoundingBoxes
 import kotlin.random.Random
 
+/**
+ * A semantic span type: a style with identity and behavior beyond visual formatting
+ * (links, code spans, images, tokens, or app-defined types like font runs).
+ *
+ * Implementations should override equals/hashCode: editing semantics key off equality.
+ * Adjacent spans whose styles compare equal coalesce into one run, and applying a
+ * same-class style over an overlapping range replaces it in the overlap. Keep render
+ * resources (resolved fonts, painters) out of equals so differently-resolved instances
+ * of the same logical style still merge.
+ *
+ * To persist an app-defined style through JSON and HTML, register a
+ * [RichSpanStyleDescriptor] on [RichTextState.spanStyleRegistry].
+ */
 @ExperimentalRichTextApi
 public interface RichSpanStyle {
-    public val spanStyle: (RichTextConfig) -> SpanStyle
 
     /**
-     * If true, the user can add new text in the edges of the span,
-     * For example, if the span is "Hello" and the user adds "World" in the end, the span will be "Hello World"
-     * If false, the user can't add new text in the edges of the span,
-     * For example, if the span is a "Hello" link and the user adds "World" in the end, the "World" will be added in a separate a span,
+     * The visual [SpanStyle] this span applies to its text, resolved against [config]
+     * on every content rebuild (see [RichTextState.invalidateStyles] for re-resolving
+     * without a content change).
      */
-    public val acceptNewTextInTheEdges: Boolean
+    public fun getSpanStyle(config: RichTextConfig): SpanStyle
+
+    /**
+     * Whether text typed exactly at this span's edges joins the span. With a span "Hello",
+     * typing " World" at its end extends the span to "Hello World" when true; when false
+     * (links, tokens) the typed text starts a separate sibling span instead.
+     *
+     * Defaults to true.
+     */
+    public val acceptsNewTextAtEdges: Boolean get() = true
 
     /**
      * If true, the span is treated as a single atomic unit for editing:
@@ -47,13 +67,18 @@ public interface RichSpanStyle {
      */
     public val isAtomic: Boolean get() = false
 
+    /**
+     * Draws decoration behind or around the span's laid-out text (see [Code] for an
+     * example). Default draws nothing.
+     */
     public fun DrawScope.drawCustomStyle(
         layoutResult: TextLayoutResult,
         textRange: TextRange,
-        richTextConfig: RichTextConfig,
+        config: RichTextConfig,
         topPadding: Float = 0f,
         startPadding: Float = 0f,
-    )
+    ) {
+    }
 
     public fun AnnotatedString.Builder.appendCustomContent(
         richTextState: RichTextState
@@ -62,22 +87,13 @@ public interface RichSpanStyle {
     public class Link(
         public val url: String,
     ) : RichSpanStyle {
-        override val spanStyle: (RichTextConfig) -> SpanStyle = {
+        override fun getSpanStyle(config: RichTextConfig): SpanStyle =
             SpanStyle(
-                color = it.linkColor,
-                textDecoration = it.linkTextDecoration,
+                color = config.linkColor,
+                textDecoration = config.linkTextDecoration,
             )
-        }
 
-        override fun DrawScope.drawCustomStyle(
-            layoutResult: TextLayoutResult,
-            textRange: TextRange,
-            richTextConfig: RichTextConfig,
-            topPadding: Float,
-            startPadding: Float,
-        ): Unit = Unit
-
-        override val acceptNewTextInTheEdges: Boolean =
+        override val acceptsNewTextAtEdges: Boolean =
             false
 
         override fun equals(other: Any?): Boolean {
@@ -94,28 +110,28 @@ public interface RichSpanStyle {
         }
     }
 
-    public class Code(
-        private val cornerRadius: TextUnit = 8.sp,
-        private val strokeWidth: TextUnit = 1.sp,
-        private val padding: TextPaddingValues = TextPaddingValues(horizontal = 2.sp, vertical = 2.sp)
-    ) : RichSpanStyle {
-        override val spanStyle: (RichTextConfig) -> SpanStyle = {
+    /**
+     * Inline code span. All visuals (colors, corner radius, stroke width, padding) come
+     * from the codeSpan properties on [RichTextConfig].
+     */
+    public class Code : RichSpanStyle {
+        override fun getSpanStyle(config: RichTextConfig): SpanStyle =
             SpanStyle(
-                color = it.codeSpanColor,
+                color = config.codeSpanColor,
             )
-        }
 
         override fun DrawScope.drawCustomStyle(
             layoutResult: TextLayoutResult,
             textRange: TextRange,
-            richTextConfig: RichTextConfig,
+            config: RichTextConfig,
             topPadding: Float,
             startPadding: Float,
         ) {
             val path = Path()
-            val backgroundColor = richTextConfig.codeSpanBackgroundColor
-            val strokeColor = richTextConfig.codeSpanStrokeColor
-            val cornerRadius = CornerRadius(cornerRadius.toPx())
+            val backgroundColor = config.codeSpanBackgroundColor
+            val strokeColor = config.codeSpanStrokeColor
+            val padding = config.codeSpanPadding
+            val cornerRadius = CornerRadius(config.codeSpanCornerRadius.toPx())
             val boxes = layoutResult.getBoundingBoxes(
                 startOffset = textRange.start,
                 endOffset = textRange.end,
@@ -146,32 +162,15 @@ public interface RichSpanStyle {
                     path = path,
                     color = strokeColor,
                     style = Stroke(
-                        width = strokeWidth.toPx(),
+                        width = config.codeSpanStrokeWidth.toPx(),
                     )
                 )
             }
         }
 
-        override val acceptNewTextInTheEdges: Boolean =
-            true
+        override fun equals(other: Any?): Boolean = other is Code
 
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is Code) return false
-
-            if (cornerRadius != other.cornerRadius) return false
-            if (strokeWidth != other.strokeWidth) return false
-            if (padding != other.padding) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = cornerRadius.hashCode()
-            result = 31 * result + strokeWidth.hashCode()
-            result = 31 * result + padding.hashCode()
-            return result
-        }
+        override fun hashCode(): Int = this::class.hashCode()
     }
 
     public class Image(
@@ -229,16 +228,7 @@ public interface RichSpanStyle {
          */
         private val id: String = "richtext-img-${Random.nextLong().toULong().toString(16)}"
 
-        override val spanStyle: (RichTextConfig) -> SpanStyle =
-            { SpanStyle() }
-
-        override fun DrawScope.drawCustomStyle(
-            layoutResult: TextLayoutResult,
-            textRange: TextRange,
-            richTextConfig: RichTextConfig,
-            topPadding: Float,
-            startPadding: Float,
-        ): Unit = Unit
+        override fun getSpanStyle(config: RichTextConfig): SpanStyle = SpanStyle()
 
         override fun AnnotatedString.Builder.appendCustomContent(
             richTextState: RichTextState
@@ -345,7 +335,7 @@ public interface RichSpanStyle {
                 }
             )
 
-        override val acceptNewTextInTheEdges: Boolean =
+        override val acceptsNewTextAtEdges: Boolean =
             false
 
         override val isAtomic: Boolean = true
@@ -417,19 +407,10 @@ public interface RichSpanStyle {
         public val id: String,
         public val label: String,
     ) : RichSpanStyle {
-        override val spanStyle: (RichTextConfig) -> SpanStyle = {
-            SpanStyle(color = it.linkColor)
-        }
+        override fun getSpanStyle(config: RichTextConfig): SpanStyle =
+            SpanStyle(color = config.linkColor)
 
-        override fun DrawScope.drawCustomStyle(
-            layoutResult: TextLayoutResult,
-            textRange: TextRange,
-            richTextConfig: RichTextConfig,
-            topPadding: Float,
-            startPadding: Float,
-        ): Unit = Unit
-
-        override val acceptNewTextInTheEdges: Boolean = false
+        override val acceptsNewTextAtEdges: Boolean = false
 
         override val isAtomic: Boolean = true
 
@@ -451,19 +432,7 @@ public interface RichSpanStyle {
     }
 
     public data object Default : RichSpanStyle {
-        override val spanStyle: (RichTextConfig) -> SpanStyle =
-            { SpanStyle() }
-
-        override fun DrawScope.drawCustomStyle(
-            layoutResult: TextLayoutResult,
-            textRange: TextRange,
-            richTextConfig: RichTextConfig,
-            topPadding: Float,
-            startPadding: Float,
-        ): Unit = Unit
-
-        override val acceptNewTextInTheEdges: Boolean =
-            true
+        override fun getSpanStyle(config: RichTextConfig): SpanStyle = SpanStyle()
     }
 
     public companion object {

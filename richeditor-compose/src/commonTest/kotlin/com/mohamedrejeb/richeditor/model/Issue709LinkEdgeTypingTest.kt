@@ -7,7 +7,7 @@ import kotlin.test.assertTrue
 
 /**
  * Regression pins for #709: typing immediately after a hyperlink (whose
- * RichSpanStyle.Link has acceptNewTextInTheEdges = false) must land inline in the
+ * RichSpanStyle.Link has acceptsNewTextAtEdges = false) must land inline in the
  * link's paragraph. Three cooperating defects put it elsewhere: the following
  * sibling only accepted a left-edge position when first in a paragraph, the next
  * paragraph claimed any smaller textIndex, and the full-miss fallback appended to

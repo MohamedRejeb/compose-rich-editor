@@ -1,3 +1,5 @@
+@file:OptIn(com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi::class)
+
 package com.mohamedrejeb.richeditor.clipboard
 
 import androidx.compose.runtime.Composable
@@ -12,7 +14,9 @@ internal actual fun ClipboardEventEffect(richTextState: RichTextState) {
         val pasteHandler: (Event) -> Unit = handler@{ event ->
             if (!richTextState.isFocused) return@handler
 
-            val html = getClipboardDataHtml(event)
+            val html =
+                if (richTextState.config.richClipboardEnabled) getClipboardDataHtml(event)
+                else null
             if (!html.isNullOrBlank()) {
                 event.preventDefault()
                 event.stopPropagation()
@@ -38,10 +42,10 @@ internal actual fun ClipboardEventEffect(richTextState: RichTextState) {
             val selection = richTextState.copySelection ?: return@handler
             event.preventDefault()
             event.stopPropagation()
-            val html = richTextState.toHtml(selection)
-            val text = richTextState.toText(selection)
-            setClipboardData(event, "text/html", html)
-            setClipboardData(event, "text/plain", text)
+            if (richTextState.config.richClipboardEnabled) {
+                setClipboardData(event, "text/html", richTextState.toHtml(selection))
+            }
+            setClipboardData(event, "text/plain", richTextState.toText(selection))
         }
 
         val cutHandler: (Event) -> Unit = handler@{ event ->
@@ -50,10 +54,10 @@ internal actual fun ClipboardEventEffect(richTextState: RichTextState) {
             val selection = richTextState.copySelection ?: return@handler
             event.preventDefault()
             event.stopPropagation()
-            val html = richTextState.toHtml(selection)
-            val text = richTextState.toText(selection)
-            setClipboardData(event, "text/html", html)
-            setClipboardData(event, "text/plain", text)
+            if (richTextState.config.richClipboardEnabled) {
+                setClipboardData(event, "text/html", richTextState.toHtml(selection))
+            }
+            setClipboardData(event, "text/plain", richTextState.toText(selection))
             richTextState.removeSelectedText()
         }
 

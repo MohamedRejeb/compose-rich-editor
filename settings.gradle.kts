@@ -25,6 +25,7 @@ plugins {
 include(
     ":richeditor-compose",
     ":richeditor-compose-coil3",
+    ":richeditor-compose-json",
 
     ":sample:android",
     ":sample:desktop",

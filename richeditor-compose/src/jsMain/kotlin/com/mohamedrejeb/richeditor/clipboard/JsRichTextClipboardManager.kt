@@ -1,3 +1,5 @@
+@file:OptIn(com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi::class)
+
 package com.mohamedrejeb.richeditor.clipboard
 
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -39,6 +41,9 @@ internal class JsRichTextClipboardManager(
 ) : RichTextClipboardManager, Clipboard by clipboard {
 
     override suspend fun getClipEntry(): ClipEntry? {
+        if (!richTextState.config.richClipboardEnabled)
+            return clipboard.getClipEntry()
+
         try {
             val items: Array<ClipboardItem> = clipboard.nativeClipboard.read().await()
 
@@ -48,6 +53,11 @@ internal class JsRichTextClipboardManager(
                     val html = getBlobText(blob).await() as? String
                     if (html != null) {
                         richTextState.pendingClipboardHtml = html
+                        if ("text/plain" in item.types) {
+                            val textBlob = item.getType("text/plain").await<Blob>()
+                            richTextState.pendingClipboardPlainText =
+                                getBlobText(textBlob).await() as? String
+                        }
                     }
                     break
                 }
@@ -60,6 +70,23 @@ internal class JsRichTextClipboardManager(
     }
 
     override suspend fun setClipEntry(clipEntry: ClipEntry?) {
+        if (!richTextState.config.richClipboardEnabled) {
+            val copySelection = richTextState.copySelection
+            if (clipEntry == null || copySelection == null || copySelection.collapsed) {
+                clipboard.setClipEntry(clipEntry)
+                return
+            }
+            // The raw ClipEntry carries the editor's internal rendering (paragraphs joined
+            // by spaces, list prefixes included); a plain-text copy must use toText.
+            try {
+                val item = createTextClipboardItem(richTextState.toText(copySelection))
+                clipboard.nativeClipboard.write(item).await<Nothing>()
+            } catch (e: Exception) {
+                clipboard.setClipEntry(clipEntry)
+            }
+            return
+        }
+
         if (clipEntry == null) {
             clipboard.setClipEntry(null)
             return
@@ -96,6 +123,15 @@ private fun createHtmlClipboardItem(html: String, text: String): Array<Clipboard
     """
     [new ClipboardItem({
         'text/html': new Blob([html], { type: 'text/html' }),
+        'text/plain': new Blob([text], { type: 'text/plain' })
+    })]
+    """
+)
+
+@OptIn(ExperimentalComposeUiApi::class)
+private fun createTextClipboardItem(text: String): Array<ClipboardItem> = js(
+    """
+    [new ClipboardItem({
         'text/plain': new Blob([text], { type: 'text/plain' })
     })]
     """

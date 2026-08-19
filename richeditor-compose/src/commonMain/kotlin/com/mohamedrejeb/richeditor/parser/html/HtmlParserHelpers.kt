@@ -81,3 +81,41 @@ internal val skippedHtmlElements = setOf(
 )
 
 internal const val BrElement = "br"
+
+/** Span attribute carrying a registered custom style's kind. */
+internal const val CustomSpanKindAttr = "data-richeditor-kind"
+
+/** Span attribute carrying a registered custom style's attributes as an escaped k=v payload. */
+internal const val CustomSpanAttrsAttr = "data-richeditor-attrs"
+
+/**
+ * Encodes descriptor attributes as `key=value` pairs joined by `&`, percent-escaping the
+ * structural characters so keys and values survive verbatim. HTML attribute names are
+ * case-insensitive, which is why the map rides in one attribute value instead of one
+ * attribute per key.
+ */
+internal fun encodeCustomSpanAttrs(attributes: Map<String, String>): String =
+    attributes.entries.joinToString("&") { (key, value) ->
+        "${escapeCustomSpanToken(key)}=${escapeCustomSpanToken(value)}"
+    }
+
+internal fun decodeCustomSpanAttrs(payload: String): Map<String, String> =
+    if (payload.isEmpty()) {
+        emptyMap()
+    } else {
+        payload.split("&").associate { entry ->
+            val separator = entry.indexOf('=')
+            if (separator == -1) {
+                unescapeCustomSpanToken(entry) to ""
+            } else {
+                unescapeCustomSpanToken(entry.substring(0, separator)) to
+                    unescapeCustomSpanToken(entry.substring(separator + 1))
+            }
+        }
+    }
+
+private fun escapeCustomSpanToken(value: String): String =
+    value.replace("%", "%25").replace("&", "%26").replace("=", "%3D")
+
+private fun unescapeCustomSpanToken(value: String): String =
+    value.replace("%3D", "=").replace("%26", "&").replace("%25", "%")

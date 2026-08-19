@@ -16,14 +16,12 @@ import com.mohamedrejeb.richeditor.utils.getBoundingBoxes
 
 @OptIn(ExperimentalRichTextApi::class)
 object SpellCheck: RichSpanStyle {
-    override val spanStyle: (RichTextConfig) -> SpanStyle = {
-        SpanStyle()
-    }
+    override fun getSpanStyle(config: RichTextConfig): SpanStyle = SpanStyle()
 
     override fun DrawScope.drawCustomStyle(
         layoutResult: TextLayoutResult,
         textRange: TextRange,
-        richTextConfig: RichTextConfig,
+        config: RichTextConfig,
         topPadding: Float,
         startPadding: Float,
     ) {
@@ -49,5 +47,5 @@ object SpellCheck: RichSpanStyle {
         }
     }
 
-    override val acceptNewTextInTheEdges: Boolean = false
+    override val acceptsNewTextAtEdges: Boolean = false
 }

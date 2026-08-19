@@ -302,5 +302,5 @@ private fun resolveRichSpanStyleStyle(
         val trigger = state.findTrigger(richSpanStyle.triggerId)
         if (trigger != null) return trigger.style(state.config)
     }
-    return richSpanStyle.spanStyle(state.config)
+    return richSpanStyle.getSpanStyle(state.config)
 }

@@ -1,3 +1,5 @@
+@file:OptIn(com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi::class)
+
 package com.mohamedrejeb.richeditor.clipboard
 
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -38,6 +40,9 @@ internal class DesktopRichTextClipboardManager(
 ) : RichTextClipboardManager, Clipboard by clipboard {
 
     override suspend fun getClipEntry(): ClipEntry? {
+        if (!richTextState.config.richClipboardEnabled)
+            return clipboard.getClipEntry()
+
         try {
             val transferable = awtClipboard?.getContents(null)
             if (transferable != null && transferable.isDataFlavorSupported(DataFlavor.fragmentHtmlFlavor)) {
@@ -46,6 +51,12 @@ internal class DesktopRichTextClipboardManager(
                         transferable.getTransferData(DataFlavor.fragmentHtmlFlavor)
                     } as String
                 richTextState.pendingClipboardHtml = rawHtmlText
+                if (transferable.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+                    richTextState.pendingClipboardPlainText =
+                        withContext(Dispatchers.IO) {
+                            transferable.getTransferData(DataFlavor.stringFlavor)
+                        } as? String
+                }
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -55,6 +66,18 @@ internal class DesktopRichTextClipboardManager(
     }
 
     override suspend fun setClipEntry(clipEntry: ClipEntry?) {
+        if (!richTextState.config.richClipboardEnabled) {
+            val copySelection = richTextState.copySelection
+            if (clipEntry == null || copySelection == null || copySelection.collapsed) {
+                clipboard.setClipEntry(clipEntry)
+                return
+            }
+            // The raw ClipEntry carries the editor's internal rendering (paragraphs joined
+            // by spaces, list prefixes included); a plain-text copy must use toText.
+            awtClipboard?.setContents(StringSelection(richTextState.toText(copySelection)), null)
+            return
+        }
+
         if (clipEntry == null) {
             clipboard.setClipEntry(null)
             return

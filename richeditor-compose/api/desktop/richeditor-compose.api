@@ -695,6 +695,7 @@ public final class com/mohamedrejeb/richeditor/model/history/RichTextHistory {
 	public final fun getCanUndo ()Z
 	public final fun getCoalesceWindowMs ()J
 	public final fun getLimit ()I
+	public final fun group (Lkotlin/jvm/functions/Function0;)Ljava/lang/Object;
 	public final fun redo ()Z
 	public final fun setCoalesceWindowMs (J)V
 	public final fun setLimit (I)V

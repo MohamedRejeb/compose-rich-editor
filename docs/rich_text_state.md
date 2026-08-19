@@ -168,6 +168,32 @@ into a single undo step. The following always start a new group:
 - Caret moves (do not push a snapshot but seal the pending group, so the next
   typed character starts a fresh undo step)
 
+### Grouping edits into one undo step
+
+A multi-step programmatic edit (for example applying a style to several
+disjoint ranges) normally records one undo entry per call. Wrap the calls in
+`state.history.group { }` to record everything committed inside the block as a
+single entry:
+
+```kotlin
+state.history.group {
+    state.addSpanStyle(SpanStyle(color = Color.Red), TextRange(0, 3))
+    state.addSpanStyle(SpanStyle(color = Color.Red), TextRange(8, 13))
+}
+```
+
+One undo restores the state from before the block; one redo reapplies the whole
+block. The function is marked `@ExperimentalRichTextApi`.
+
+- Works for every commit kind inside the block: formatting, rich spans, text
+  replacement, list and paragraph toggles.
+- Entering the group seals any pending typing group, and the group itself is
+  sealed on exit, so surrounding edits never merge into it.
+- Nested `group` calls join the outermost group.
+- A block that commits nothing adds no entry.
+- If the block throws, whatever it already committed is kept as one undo entry
+  and the exception is rethrown.
+
 ### Opt out
 
 Pass `undoBehavior = UndoBehavior.Disabled` to any editor composable to fall

@@ -3,6 +3,7 @@ package com.mohamedrejeb.richeditor.model.history
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import kotlin.time.TimeSource
 
 /**
@@ -38,6 +39,15 @@ public class RichTextHistory internal constructor(
     private var canUndoState by mutableStateOf(false)
     private var canRedoState by mutableStateOf(false)
 
+    /** Re-entrancy depth of [group]; > 0 while a grouping block runs. */
+    private var groupingDepth: Int = 0
+
+    /** Pre-block snapshot of the active [group]; null when inactive or invalidated. */
+    private var groupingBefore: RichTextSnapshot? = null
+
+    /** True once the active [group] has pushed its undo entry. */
+    private var groupingHasEntry: Boolean = false
+
     /** Maximum groups retained on the undo stack. `0` disables history. */
     public var limit: Int = limit
         set(value) {
@@ -63,6 +73,7 @@ public class RichTextHistory internal constructor(
         host.restoreState(group.before)
         redoStack.addLast(group)
         coalescer.reset()
+        invalidateActiveGrouping()
         refreshDerivedState()
         return true
     }
@@ -72,6 +83,7 @@ public class RichTextHistory internal constructor(
         host.restoreState(group.after)
         undoStack.addLast(group)
         coalescer.reset()
+        invalidateActiveGrouping()
         refreshDerivedState()
         return true
     }
@@ -80,7 +92,43 @@ public class RichTextHistory internal constructor(
         undoStack.clear()
         redoStack.clear()
         coalescer.reset()
+        invalidateActiveGrouping()
         refreshDerivedState()
+    }
+
+    /**
+     * Runs [block] and records every commit made inside it as a single undo entry,
+     * regardless of the commit kinds involved (typing, formatting, structural, paste).
+     *
+     * Entering the group seals any pending coalesced typing/deletion group, and the
+     * group itself is sealed on exit, so surrounding commits never merge into it.
+     * Undo restores the state captured just before [block] ran; redo restores the
+     * state after its last commit. Nested calls join the outermost group. A block
+     * that commits nothing adds no entry. If [block] throws, whatever it already
+     * committed is kept as one undo entry and the exception is rethrown.
+     */
+    @ExperimentalRichTextApi
+    public fun <R> group(block: () -> R): R {
+        if (groupingDepth > 0) {
+            groupingDepth++
+            try {
+                return block()
+            } finally {
+                groupingDepth--
+            }
+        }
+        coalescer.reset()
+        groupingDepth = 1
+        groupingBefore = host.captureState(clock())
+        groupingHasEntry = false
+        try {
+            return block()
+        } finally {
+            groupingDepth = 0
+            groupingBefore = null
+            groupingHasEntry = false
+            refreshDerivedState()
+        }
     }
 
     internal fun onProgrammaticReplace() {
@@ -112,6 +160,15 @@ public class RichTextHistory internal constructor(
             return
         }
         redoStack.clear()
+        if (groupingDepth > 0) {
+            if (!groupingHasEntry) {
+                val before = groupingBefore ?: beforeSnapshot
+                undoStack.addLast(UndoGroup(before = before, after = before))
+                trimUndoStackToLimit()
+                groupingHasEntry = true
+            }
+            return
+        }
         val now = clock()
         if (coalescer.shouldStartNewGroup(trigger, now)) {
             undoStack.addLast(UndoGroup(before = beforeSnapshot, after = beforeSnapshot))
@@ -129,8 +186,23 @@ public class RichTextHistory internal constructor(
         val tail = undoStack.lastOrNull() ?: return
         val after = host.captureState(now)
         undoStack[undoStack.lastIndex] = tail.copy(after = after)
-        coalescer.noteCommit(trigger, now)
+        // Commits inside a group never feed the coalescer: the group was sealed on
+        // entry and must stay sealed so commits after it start fresh entries.
+        if (groupingDepth == 0) {
+            coalescer.noteCommit(trigger, now)
+        }
         refreshDerivedState()
+    }
+
+    /**
+     * Undo, redo, and clear invalidate the active group's pushed entry (it may have
+     * been popped, moved, or wiped). The next commit inside the group opens a fresh
+     * entry from its own pre-commit snapshot.
+     */
+    private fun invalidateActiveGrouping() {
+        if (groupingDepth == 0) return
+        groupingBefore = null
+        groupingHasEntry = false
     }
 
     private fun trimUndoStackToLimit() {

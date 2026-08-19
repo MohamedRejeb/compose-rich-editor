@@ -612,6 +612,7 @@ final class com.mohamedrejeb.richeditor.model.history/RichTextHistory { // com.m
         final fun <get-limit>(): kotlin/Int // com.mohamedrejeb.richeditor.model.history/RichTextHistory.limit.<get-limit>|<get-limit>(){}[0]
         final fun <set-limit>(kotlin/Int) // com.mohamedrejeb.richeditor.model.history/RichTextHistory.limit.<set-limit>|<set-limit>(kotlin.Int){}[0]
 
+    final fun <#A1: kotlin/Any?> group(kotlin/Function0<#A1>): #A1 // com.mohamedrejeb.richeditor.model.history/RichTextHistory.group|group(kotlin.Function0<0:0>){0§<kotlin.Any?>}[0]
     final fun clear() // com.mohamedrejeb.richeditor.model.history/RichTextHistory.clear|clear(){}[0]
     final fun redo(): kotlin/Boolean // com.mohamedrejeb.richeditor.model.history/RichTextHistory.redo|redo(){}[0]
     final fun undo(): kotlin/Boolean // com.mohamedrejeb.richeditor.model.history/RichTextHistory.undo|undo(){}[0]

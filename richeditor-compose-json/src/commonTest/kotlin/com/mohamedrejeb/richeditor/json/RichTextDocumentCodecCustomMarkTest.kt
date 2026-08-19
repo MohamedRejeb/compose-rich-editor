@@ -1,9 +1,6 @@
 package com.mohamedrejeb.richeditor.json
 
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextLayoutResult
-import androidx.compose.ui.text.TextRange
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.document.RichTextBlock
 import com.mohamedrejeb.richeditor.document.RichTextDocument
@@ -15,15 +12,7 @@ import kotlin.test.assertEquals
 
 @OptIn(ExperimentalRichTextApi::class)
 private class AppStyle : RichSpanStyle {
-    override val spanStyle: (RichTextConfig) -> SpanStyle = { SpanStyle() }
-    override val acceptNewTextInTheEdges: Boolean = true
-    override fun DrawScope.drawCustomStyle(
-        layoutResult: TextLayoutResult,
-        textRange: TextRange,
-        richTextConfig: RichTextConfig,
-        topPadding: Float,
-        startPadding: Float,
-    ): Unit = Unit
+    override fun getSpanStyle(config: RichTextConfig): SpanStyle = SpanStyle()
 }
 
 @OptIn(ExperimentalRichTextApi::class)
@@ -43,8 +32,8 @@ class RichTextDocumentCodecCustomMarkTest {
             ),
         )
 
-        val decoded = RichTextDocumentCodec.decodeFromString(
-            RichTextDocumentCodec.encodeToString(document),
+        val decoded = codecDecode(
+            codecEncode(document),
         )
 
         val expected = RichTextDocument(

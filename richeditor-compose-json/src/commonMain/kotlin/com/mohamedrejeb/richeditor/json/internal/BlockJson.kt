@@ -11,6 +11,7 @@ import com.mohamedrejeb.richeditor.document.RichTextBlock
 import com.mohamedrejeb.richeditor.document.RichTextBlockType
 import com.mohamedrejeb.richeditor.document.RichTextSpanMark
 import com.mohamedrejeb.richeditor.json.MalformedRichTextJsonException
+import com.mohamedrejeb.richeditor.model.RichSpanStyleRegistry
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -20,7 +21,7 @@ import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
-internal fun decodeBlock(json: JsonObject): RichTextBlock {
+internal fun decodeBlock(json: JsonObject, registry: RichSpanStyleRegistry): RichTextBlock {
     val typeName = (json["type"] as? JsonPrimitive)?.takeIf { it.isString }?.content
         ?: throw MalformedRichTextJsonException("Block is missing its \"type\" field")
     val text = (json["text"] as? JsonPrimitive)?.takeIf { it.isString }?.content
@@ -28,7 +29,7 @@ internal fun decodeBlock(json: JsonObject): RichTextBlock {
     val spans = (json["spans"] as? JsonArray)?.map { element ->
         val markObject = element as? JsonObject
             ?: throw MalformedRichTextJsonException("Span mark must be an object")
-        decodeMark(markObject)
+        decodeMark(markObject, registry)
     } ?: emptyList()
 
     // The model types validate their own invariants (indent bounds, heading range, mark
@@ -78,7 +79,11 @@ private fun JsonObject.requireBlockInt(key: String): Int =
     (this[key] as? JsonPrimitive)?.content?.toIntOrNull()
         ?: throw MalformedRichTextJsonException("Block is missing its \"$key\" field")
 
-internal fun encodeBlock(block: RichTextBlock, index: Int): JsonObject = buildJsonObject {
+internal fun encodeBlock(
+    block: RichTextBlock,
+    index: Int,
+    registry: RichSpanStyleRegistry,
+): JsonObject = buildJsonObject {
     put("id", "b$index")
     val type = block.type
     when {
@@ -109,11 +114,12 @@ internal fun encodeBlock(block: RichTextBlock, index: Int): JsonObject = buildJs
     }
     if (block.isLineBreak) put("br", true)
     put("text", block.text)
-    // Custom marks carry in-memory RichSpanStyle instances the JSON format cannot represent.
+    // Custom marks are carried only when a registered descriptor opts into the JSON format;
+    // encodeMark returns null for the rest and they are skipped.
     put(
         "spans",
         buildJsonArray {
-            block.spans.forEach { if (it !is RichTextSpanMark.Custom) add(encodeMark(it)) }
+            block.spans.forEach { mark -> encodeMark(mark, registry)?.let(::add) }
         },
     )
 }

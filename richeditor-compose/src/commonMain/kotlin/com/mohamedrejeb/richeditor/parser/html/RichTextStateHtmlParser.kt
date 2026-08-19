@@ -19,14 +19,21 @@ import com.mohamedrejeb.richeditor.utils.InlineContentPlaceholder
 import com.mohamedrejeb.richeditor.utils.customMerge
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastForEachIndexed
-import androidx.compose.ui.util.fastForEachReversed
 import com.mohamedrejeb.richeditor.paragraph.type.ConfigurableListLevel
 import com.mohamedrejeb.richeditor.utils.diff
 
 internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
     @OptIn(ExperimentalRichTextApi::class)
-    override fun encode(input: String): RichTextState {
+    override fun encode(input: String): RichTextState =
+        encode(input, RichSpanStyleRegistry())
+
+    /**
+     * Parses [input] resolving custom spans (`data-richeditor-kind`) through [registry],
+     * which should be the target state's [RichTextState.spanStyleRegistry].
+     */
+    @OptIn(ExperimentalRichTextApi::class)
+    fun encode(input: String, registry: RichSpanStyleRegistry): RichTextState {
         val openedTags = mutableListOf<Pair<String, Map<String, String>>>()
         val stringBuilder = StringBuilder()
         val richParagraphList = mutableListOf(RichParagraph())
@@ -232,7 +239,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                         currentRichSpan = null
                     }
                 } else if (name != BrElement) {
-                    val richSpanStyle = encodeHtmlElementToRichSpanStyle(name, attributes)
+                    val richSpanStyle = encodeHtmlElementToRichSpanStyle(name, attributes, registry)
 
                     val currentRichParagraph = richParagraphList.last()
                     val newRichSpan = RichSpan(paragraph = currentRichParagraph)
@@ -283,7 +290,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                             val cssSpanStyle = CssEncoder.parseCssStyleMapToSpanStyle(cssStyleMap)
                             val tagSpanStyle = htmlElementsSpanStyleEncodeMap[name]
                             val tagWithCssSpanStyle = cssSpanStyle.customMerge(tagSpanStyle)
-                            val richSpanStyle = encodeHtmlElementToRichSpanStyle(name, attributes)
+                            val richSpanStyle = encodeHtmlElementToRichSpanStyle(name, attributes, registry)
 
                             val newRichSpan = RichSpan(
                                 children = mutableListOf(),
@@ -439,7 +446,10 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         )
     }
 
+    @OptIn(ExperimentalRichTextApi::class)
     override fun decode(richTextState: RichTextState): String {
+        val registry = richTextState.spanStyleRegistry
+
         if (richTextState.richParagraphList.isEmpty())
             return "<p></p>"
 
@@ -511,6 +521,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                             richSpan = richSpan,
                             headingStyle = headingStyle,
                             textContext = textContext,
+                            registry = registry,
                         )
                     )
                 }
@@ -616,6 +627,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                             richSpan = richSpan,
                             headingStyle = headingStyle,
                             textContext = textContext,
+                            registry = registry,
                         )
                     )
                 }
@@ -663,6 +675,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         parentFormattingTags: List<String> = emptyList(),
         headingStyle: HeadingStyle = HeadingStyle.Normal,
         textContext: HtmlTextEmitContext = HtmlTextEmitContext(afterCollapsibleSpace = false),
+        registry: RichSpanStyleRegistry,
     ): String {
         val stringBuilder = StringBuilder()
 
@@ -670,7 +683,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         if (richSpan.isEmpty()) return ""
 
         // Get HTML element and attributes
-        val spanHtml = decodeHtmlElementFromRichSpanStyle(richSpan.richSpanStyle)
+        val spanHtml = decodeHtmlElementFromRichSpanStyle(richSpan.richSpanStyle, registry)
         val tagName = spanHtml.first
         val tagAttributes = spanHtml.second
 
@@ -737,6 +750,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     parentFormattingTags = parentFormattingTags + htmlTags,
                     headingStyle = headingStyle,
                     textContext = textContext,
+                    registry = registry,
                 )
             )
         }
@@ -760,6 +774,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
     private fun encodeHtmlElementToRichSpanStyle(
         tagName: String,
         attributes: Map<String, String>,
+        registry: RichSpanStyleRegistry,
     ): RichSpanStyle =
         when (tagName) {
             "a" ->
@@ -777,9 +792,12 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 )
 
             "span" -> {
+                val customKind = attributes[CustomSpanKindAttr]
                 val triggerId = attributes["data-trigger"]
                 val tokenId = attributes["data-id"]
-                if (!triggerId.isNullOrEmpty() && !tokenId.isNullOrEmpty()) {
+                if (customKind != null) {
+                    decodeCustomSpanStyle(customKind, attributes[CustomSpanAttrsAttr], registry)
+                } else if (!triggerId.isNullOrEmpty() && !tokenId.isNullOrEmpty()) {
                     // Label is filled in at close-tag time once the inner text has accumulated.
                     RichSpanStyle.Token(
                         triggerId = triggerId,
@@ -796,11 +814,32 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         }
 
     /**
+     * Resolves a custom span through [registry]. HTML import is lenient by design (foreign
+     * clipboard content must never fail a paste), so an unregistered kind, an opted-out
+     * format, or a failing decoder all degrade to plain text instead of throwing.
+     */
+    @OptIn(ExperimentalRichTextApi::class)
+    fun decodeCustomSpanStyle(
+        kind: String,
+        attrsPayload: String?,
+        registry: RichSpanStyleRegistry,
+    ): RichSpanStyle {
+        val descriptor = registry.find(kind, RichTextFormat.Html)
+            ?: return RichSpanStyle.Default
+        return try {
+            descriptor.decode(decodeCustomSpanAttrs(attrsPayload.orEmpty()))
+        } catch (_: Exception) {
+            null
+        } ?: RichSpanStyle.Default
+    }
+
+    /**
      * Decodes HTML elements from [RichSpanStyle].
      */
     @OptIn(ExperimentalRichTextApi::class)
     private fun decodeHtmlElementFromRichSpanStyle(
         richSpanStyle: RichSpanStyle,
+        registry: RichSpanStyleRegistry,
     ): Pair<String, Map<String, String>> =
         when (richSpanStyle) {
             is RichSpanStyle.Link ->
@@ -828,8 +867,21 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     "data-id" to richSpanStyle.id,
                 )
 
-            else ->
+            is RichSpanStyle.Default ->
                 "span" to emptyMap()
+
+            else -> {
+                val descriptor = registry.findForStyle(richSpanStyle, RichTextFormat.Html)
+                if (descriptor != null) {
+                    val attrs = descriptor.encode(richSpanStyle)
+                    "span" to buildMap {
+                        put(CustomSpanKindAttr, descriptor.kind)
+                        if (attrs.isNotEmpty()) put(CustomSpanAttrsAttr, encodeCustomSpanAttrs(attrs))
+                    }
+                } else {
+                    "span" to emptyMap()
+                }
+            }
         }
 
     /**

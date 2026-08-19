@@ -5,6 +5,8 @@ package com.mohamedrejeb.richeditor.json.internal
 import androidx.compose.ui.unit.isSpecified
 import com.mohamedrejeb.richeditor.document.RichTextSpanMark
 import com.mohamedrejeb.richeditor.json.MalformedRichTextJsonException
+import com.mohamedrejeb.richeditor.model.RichSpanStyleRegistry
+import com.mohamedrejeb.richeditor.model.RichTextFormat
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -16,7 +18,24 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 
-internal fun encodeMark(mark: RichTextSpanMark): JsonObject {
+/**
+ * Encodes [mark], or returns null for a custom mark whose style has no registered
+ * descriptor opted into the JSON format (the mark is then skipped).
+ */
+internal fun encodeMark(mark: RichTextSpanMark, registry: RichSpanStyleRegistry): JsonObject? {
+    if (mark is RichTextSpanMark.Custom) {
+        val descriptor = registry.findForStyle(mark.style, RichTextFormat.Json) ?: return null
+        return buildJsonObject {
+            put("k", descriptor.kind)
+            putRange(mark.range)
+            put(
+                "attrs",
+                buildJsonObject {
+                    descriptor.encode(mark.style).forEach { (key, value) -> put(key, value) }
+                },
+            )
+        }
+    }
     if (mark is RichTextSpanMark.Unknown) {
         // Re-emit the preserved payload verbatim, but keep k and r authoritative. rawJson
         // is a public, unvalidated field, so a payload that is not a JSON object degrades
@@ -80,7 +99,7 @@ private fun JsonObjectBuilder.putRange(range: IntRange) {
 private fun androidx.compose.ui.unit.TextUnit.unitName(): String =
     if (type == androidx.compose.ui.unit.TextUnitType.Em) "em" else "sp"
 
-internal fun decodeMark(json: JsonObject): RichTextSpanMark {
+internal fun decodeMark(json: JsonObject, registry: RichSpanStyleRegistry): RichTextSpanMark {
     val kind = (json["k"] as? JsonPrimitive)?.takeIf { it.isString }?.content
         ?: throw MalformedRichTextJsonException("Span mark is missing its \"k\" field")
     val range = decodeRange(json)
@@ -125,12 +144,41 @@ internal fun decodeMark(json: JsonObject): RichTextSpanMark {
             id = json.requireString("id", kind),
             label = json.requireString("label", kind),
         )
-        else -> RichTextSpanMark.Unknown(
-            range = range,
-            kind = kind,
-            rawJson = Json.encodeToString(JsonObject.serializer(), json),
-        )
+        else -> decodeCustomMark(json, kind, range, registry)
+            ?: RichTextSpanMark.Unknown(
+                range = range,
+                kind = kind,
+                rawJson = Json.encodeToString(JsonObject.serializer(), json),
+            )
     }
+}
+
+/**
+ * Decodes a registered custom kind to a [RichTextSpanMark.Custom], or returns null so the
+ * caller degrades to [RichTextSpanMark.Unknown] (unregistered kind, JSON format opted out,
+ * an attrs shape this version cannot read, or the descriptor's decoder declined the
+ * attributes). Only a throwing decoder is fatal: that is an app bug, not foreign data.
+ */
+private fun decodeCustomMark(
+    json: JsonObject,
+    kind: String,
+    range: IntRange,
+    registry: RichSpanStyleRegistry,
+): RichTextSpanMark? {
+    val descriptor = registry.find(kind, RichTextFormat.Json) ?: return null
+    val attributes = (json["attrs"] as? JsonObject).orEmpty().mapValues { (_, value) ->
+        // A non-primitive value means a newer producer extended the attrs shape; degrade
+        // to Unknown (preserving the raw payload) instead of failing the whole load.
+        (value as? JsonPrimitive)?.content ?: return null
+    }
+    val style = try {
+        descriptor.decode(attributes)
+    } catch (e: MalformedRichTextJsonException) {
+        throw e
+    } catch (e: Exception) {
+        throw MalformedRichTextJsonException("Decoder for custom mark kind \"$kind\" failed", e)
+    }
+    return style?.let { RichTextSpanMark.Custom(range = range, style = it) }
 }
 
 private fun decodeRange(json: JsonObject): IntRange {
@@ -179,5 +227,5 @@ internal fun RichTextSpanMark.kindName(): String = when (this) {
     is RichTextSpanMark.Token -> "token"
     is RichTextSpanMark.Unknown -> kind
     is RichTextSpanMark.Custom ->
-        error("Custom marks are not part of the JSON format; filter them before encoding")
+        error("Unreachable: encodeMark handles Custom marks before kindName is consulted")
 }

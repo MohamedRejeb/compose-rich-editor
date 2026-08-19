@@ -42,9 +42,9 @@ class RichTextDocumentCodecMarkKindsTest {
             val doc = RichTextDocument(
                 blocks = listOf(RichTextBlock(text = "abcd", spans = listOf(mark))),
             )
-            val json = RichTextDocumentCodec.encodeToString(doc)
+            val json = codecEncode(doc)
             assertTrue(json.contains("\"k\":\"$kind\""), "Missing kind $kind in: $json")
-            assertEquals(doc, RichTextDocumentCodec.decodeFromString(json), "Round-trip failed for $kind")
+            assertEquals(doc, codecDecode(json), "Round-trip failed for $kind")
         }
     }
 }

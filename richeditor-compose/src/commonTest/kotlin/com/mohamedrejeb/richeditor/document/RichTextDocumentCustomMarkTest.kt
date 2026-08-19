@@ -1,8 +1,6 @@
 package com.mohamedrejeb.richeditor.document
 
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -28,19 +26,10 @@ internal class FontRunStyle(
     val fontFamily: FontFamily? = null,
     acceptsEdges: Boolean = true,
 ) : RichSpanStyle {
-    override val spanStyle: (RichTextConfig) -> SpanStyle = {
+    override fun getSpanStyle(config: RichTextConfig): SpanStyle =
         SpanStyle(fontFamily = fontFamily)
-    }
 
-    override val acceptNewTextInTheEdges: Boolean = acceptsEdges
-
-    override fun DrawScope.drawCustomStyle(
-        layoutResult: TextLayoutResult,
-        textRange: TextRange,
-        richTextConfig: RichTextConfig,
-        topPadding: Float,
-        startPadding: Float,
-    ): Unit = Unit
+    override val acceptsNewTextAtEdges: Boolean = acceptsEdges
 
     override fun equals(other: Any?): Boolean =
         other is FontRunStyle && slug == other.slug && axes == other.axes

@@ -86,8 +86,10 @@ public sealed interface RichTextSpanMark {
 
     /**
      * An app-defined [RichSpanStyle] over [range], carried by instance. Equality follows the
-     * style's own equals, which also drives coalescing of adjacent runs. In-memory only: the
-     * JSON codec skips Custom marks because it cannot serialize arbitrary styles.
+     * style's own equals, which also drives coalescing of adjacent runs. Serialized by the
+     * JSON and HTML codecs only when a matching [com.mohamedrejeb.richeditor.model.RichSpanStyleDescriptor]
+     * is registered on the state's [com.mohamedrejeb.richeditor.model.RichSpanStyleRegistry];
+     * skipped otherwise.
      */
     @ExperimentalRichTextApi
     public data class Custom(

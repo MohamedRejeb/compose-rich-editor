@@ -597,6 +597,14 @@ public class RichTextState internal constructor(
         }
     )
 
+    /**
+     * Descriptors for app-defined [RichSpanStyle]s, consulted by the serialization carriers
+     * (JSON, HTML) when custom styles are exported or imported through this state. Register
+     * once per state; see [RichSpanStyleDescriptor].
+     */
+    @ExperimentalRichTextApi
+    public val spanStyleRegistry: RichSpanStyleRegistry = RichSpanStyleRegistry()
+
     init {
         updateRichParagraphList(initialRichParagraphList)
     }
@@ -2430,9 +2438,9 @@ public class RichTextState internal constructor(
             val resolvedStyle =
                 if (richSpanStyle is RichSpanStyle.Token)
                     findTrigger(richSpanStyle.triggerId)?.style(config)
-                        ?: richSpanStyle.spanStyle(config)
+                        ?: richSpanStyle.getSpanStyle(config)
                 else
-                    richSpanStyle.spanStyle(config)
+                    richSpanStyle.getSpanStyle(config)
             if (resolvedStyle.background.isSpecified) return true
 
             return richSpan.children.any { spanHasBackground(it) }
@@ -5116,7 +5124,7 @@ public class RichTextState internal constructor(
      */
     public fun setHtml(html: String): RichTextState {
         history.onProgrammaticReplace()
-        val richParagraphList = RichTextStateHtmlParser.encode(html).richParagraphList
+        val richParagraphList = RichTextStateHtmlParser.encode(html, spanStyleRegistry).richParagraphList
         updateRichParagraphList(richParagraphList)
         return this
     }
@@ -5127,7 +5135,7 @@ public class RichTextState internal constructor(
      * @param html The html content to insert.
      */
     public fun insertHtmlAfterSelection(html: String) {
-        val newParagraphs = RichTextStateHtmlParser.encode(html).richParagraphList
+        val newParagraphs = RichTextStateHtmlParser.encode(html, spanStyleRegistry).richParagraphList
         val position = selection.max
 
         selection = TextRange(selection.max)
@@ -5159,7 +5167,7 @@ public class RichTextState internal constructor(
      * @param position The position at which to insert the html content.
      */
     public fun insertHtml(html: String, position: Int) {
-        val newParagraphs = RichTextStateHtmlParser.encode(html).richParagraphList
+        val newParagraphs = RichTextStateHtmlParser.encode(html, spanStyleRegistry).richParagraphList
 
         insertParagraphs(
             newParagraphs = newParagraphs,
@@ -5174,7 +5182,7 @@ public class RichTextState internal constructor(
      */
     public fun setMarkdown(markdown: String): RichTextState {
         history.onProgrammaticReplace()
-        val richParagraphList = RichTextStateMarkdownParser.encode(markdown).richParagraphList
+        val richParagraphList = RichTextStateMarkdownParser.encode(markdown, spanStyleRegistry).richParagraphList
         updateRichParagraphList(richParagraphList)
         return this
     }
@@ -5185,7 +5193,7 @@ public class RichTextState internal constructor(
      * @param markdown The markdown content to insert.
      */
     public fun insertMarkdownAfterSelection(markdown: String) {
-        val newParagraphs = RichTextStateMarkdownParser.encode(markdown).richParagraphList
+        val newParagraphs = RichTextStateMarkdownParser.encode(markdown, spanStyleRegistry).richParagraphList
         val position = selection.max
 
         selection = TextRange(selection.max)
@@ -5217,7 +5225,7 @@ public class RichTextState internal constructor(
      * @param position The position at which to insert the markdown content.
      */
     public fun insertMarkdown(markdown: String, position: Int) {
-        val newParagraphs = RichTextStateMarkdownParser.encode(markdown).richParagraphList
+        val newParagraphs = RichTextStateMarkdownParser.encode(markdown, spanStyleRegistry).richParagraphList
 
         insertParagraphs(
             newParagraphs = newParagraphs,
@@ -5331,13 +5339,26 @@ public class RichTextState internal constructor(
      *
      * @param newRichParagraphList The [RichParagraph]s to update the [RichTextState] with.
      */
-    internal fun updateRichParagraphList(newRichParagraphList: List<RichParagraph>) {
+    internal fun updateRichParagraphList(
+        newRichParagraphList: List<RichParagraph>,
+        newSelection: TextRange? = null,
+    ) {
         richParagraphList.clear()
         richParagraphList.addAll(newRichParagraphList)
-        updateRichParagraphList()
+        updateRichParagraphList(newSelection = newSelection)
     }
 
-    internal fun updateRichParagraphList() {
+    /**
+     * Rebuilds the annotated string and text field value from the paragraph tree.
+     *
+     * @param newSelection Selection to apply, coerced into the new text bounds; null keeps
+     * the previous selection adjusted by the length delta.
+     * @param newComposition Composition to keep (dropped when out of bounds); null clears it.
+     */
+    internal fun updateRichParagraphList(
+        newSelection: TextRange? = null,
+        newComposition: TextRange? = null,
+    ) {
         if (richParagraphList.isEmpty())
             richParagraphList.add(RichParagraph())
 
@@ -5393,14 +5414,24 @@ public class RichTextState internal constructor(
             }
         }
 
-        val selectionIndex =
-            (textFieldValue.selection.min + (annotatedString.text.length - beforeTextLength))
-                .coerceIn(0, annotatedString.text.length)
+        val textLength = annotatedString.text.length
+        val selection =
+            if (newSelection != null)
+                TextRange(
+                    newSelection.start.coerceIn(0, textLength),
+                    newSelection.end.coerceIn(0, textLength),
+                )
+            else
+                TextRange(
+                    (textFieldValue.selection.min + (textLength - beforeTextLength))
+                        .coerceIn(0, textLength)
+                )
 
         styledRichSpanList.clear()
         textFieldValue = TextFieldValue(
             text = annotatedString.text,
-            selection = TextRange(selectionIndex),
+            selection = selection,
+            composition = newComposition?.takeIf { it.min >= 0 && it.max <= textLength },
         )
         // Snapshot by value: see the matching note in `updateAnnotatedString`.
         val transformed = annotatedString
@@ -5512,6 +5543,7 @@ public class RichTextState internal constructor(
 
         if (rangeStart >= rangeEnd) {
             return RichTextState(listOf(RichParagraph()))
+                .also { it.spanStyleRegistry.copyFrom(spanStyleRegistry) }
         }
 
         val resultParagraphs = mutableListOf<RichParagraph>()
@@ -5563,7 +5595,10 @@ public class RichTextState internal constructor(
             resultParagraphs.add(RichParagraph())
         }
 
+        // The extracted state serializes through its own registry (e.g. toHtml(range) on
+        // every clipboard copy), so it must carry the source state's registrations.
         return RichTextState(resultParagraphs)
+            .also { it.spanStyleRegistry.copyFrom(spanStyleRegistry) }
     }
 
     /**
@@ -5706,32 +5741,42 @@ public class RichTextState internal constructor(
         selection: TextRange? = null,
     ): RichTextState {
         history.onProgrammaticReplace()
-        updateRichParagraphList(RichTextDocumentDecoder.decode(document))
-        if (selection != null) {
-            val textLength = annotatedString.text.length
-            updateTextFieldValue(
-                textFieldValue.copy(
-                    selection = TextRange(
-                        selection.start.coerceIn(0, textLength),
-                        selection.end.coerceIn(0, textLength),
-                    ),
-                ),
-            )
-        }
+        // The rebuild coerces the selection into the new text bounds, so MAX_VALUE lands
+        // the caret at the end of the loaded content.
+        updateRichParagraphList(
+            RichTextDocumentDecoder.decode(document),
+            newSelection = selection ?: TextRange(Int.MAX_VALUE),
+        )
         return this
     }
 
     /**
      * Re-resolves all span styles from the current tree without changing the content, the
-     * selection, or the undo history. Call this after an external resource a custom
-     * [RichSpanStyle] depends on (for example an async-loaded font) becomes available, since
-     * style lambdas are otherwise only re-evaluated on content changes.
+     * selection, the IME composition, staged style toggles, or the undo history. Call this
+     * after an external resource a custom [RichSpanStyle] depends on (for example an
+     * async-loaded font) becomes available, since style lambdas are otherwise only
+     * re-evaluated on content changes.
      */
     @ExperimentalRichTextApi
     public fun invalidateStyles() {
-        val currentSelection = selection
-        updateRichParagraphList()
-        updateTextFieldValue(textFieldValue.copy(selection = currentSelection))
+        val currentTextFieldValue = textFieldValue
+        // The rebuild resets staged (collapsed-selection) style toggles; a pure style
+        // refresh must not swallow them, so capture and restore around it.
+        val pendingAddSpanStyle = toAddSpanStyle
+        val pendingRemoveSpanStyle = toRemoveSpanStyle
+        val pendingAddRichSpanStyle = toAddRichSpanStyle
+        val pendingRemoveRichSpanStyleKClass = toRemoveRichSpanStyleKClass
+
+        updateRichParagraphList(
+            newSelection = currentTextFieldValue.selection,
+            newComposition = currentTextFieldValue.composition,
+        )
+
+        toAddSpanStyle = pendingAddSpanStyle
+        toRemoveSpanStyle = pendingRemoveSpanStyle
+        toAddRichSpanStyle = pendingAddRichSpanStyle
+        toRemoveRichSpanStyleKClass = pendingRemoveRichSpanStyleKClass
+        updateCurrentSpanStyle()
     }
 
     /**

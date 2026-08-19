@@ -9,7 +9,7 @@ class RichTextDocumentCodecDecodeTest {
 
     @Test
     fun `decodes the golden document`() {
-        val doc = RichTextDocumentCodec.decodeFromString(
+        val doc = codecDecode(
             """{"v":1,"blocks":[{"id":"b0","type":"heading","level":1,"text":"Title","spans":[]}]}"""
         )
         assertEquals(1, doc.blocks.single().headingLevel)
@@ -18,10 +18,10 @@ class RichTextDocumentCodecDecodeTest {
 
     @Test
     fun `block ids are ignored`() {
-        val a = RichTextDocumentCodec.decodeFromString(
+        val a = codecDecode(
             """{"v":1,"blocks":[{"id":"x","type":"paragraph","text":"a","spans":[]}]}"""
         )
-        val b = RichTextDocumentCodec.decodeFromString(
+        val b = codecDecode(
             """{"v":1,"blocks":[{"id":"y","type":"paragraph","text":"a","spans":[]}]}"""
         )
         assertEquals(a, b)
@@ -29,7 +29,7 @@ class RichTextDocumentCodecDecodeTest {
 
     @Test
     fun `unknown mark kind is preserved`() {
-        val doc = RichTextDocumentCodec.decodeFromString(
+        val doc = codecDecode(
             """{"v":1,"blocks":[{"id":"b0","type":"paragraph","text":"ab","spans":[{"k":"sparkle","r":[0,1],"level":9}]}]}"""
         )
         val unknown = doc.blocks.single().spans.single() as RichTextSpanMark.Unknown
@@ -40,26 +40,26 @@ class RichTextDocumentCodecDecodeTest {
     @Test
     fun `newer version is rejected`() {
         assertFailsWith<UnsupportedRichTextJsonVersionException> {
-            RichTextDocumentCodec.decodeFromString("""{"v":2,"blocks":[]}""")
+            codecDecode("""{"v":2,"blocks":[]}""")
         }
     }
 
     @Test
     fun `missing or invalid version is malformed`() {
         assertFailsWith<MalformedRichTextJsonException> {
-            RichTextDocumentCodec.decodeFromString("""{"blocks":[]}""")
+            codecDecode("""{"blocks":[]}""")
         }
         assertFailsWith<MalformedRichTextJsonException> {
-            RichTextDocumentCodec.decodeFromString("""{"v":0,"blocks":[]}""")
+            codecDecode("""{"v":0,"blocks":[]}""")
         }
         assertFailsWith<MalformedRichTextJsonException> {
-            RichTextDocumentCodec.decodeFromString("not json")
+            codecDecode("not json")
         }
         assertFailsWith<MalformedRichTextJsonException> {
-            RichTextDocumentCodec.decodeFromString("""{"v":1}""")
+            codecDecode("""{"v":1}""")
         }
         assertFailsWith<MalformedRichTextJsonException> {
-            RichTextDocumentCodec.decodeFromString(
+            codecDecode(
                 """{"v":1,"blocks":[{"id":"b0","type":"paragraph","text":"a","spans":[{"k":"bold","r":[0,5]}]}]}"""
             )
         }

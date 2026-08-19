@@ -10,6 +10,7 @@ import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.HeadingStyle
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
+import com.mohamedrejeb.richeditor.model.RichSpanStyleRegistry
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.ConfigurableListLevel
@@ -18,7 +19,10 @@ import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import com.mohamedrejeb.richeditor.parser.RichTextStateParser
+import com.mohamedrejeb.ksoup.entities.KsoupEntities
 import com.mohamedrejeb.richeditor.parser.html.BrElement
+import com.mohamedrejeb.richeditor.parser.html.CustomSpanAttrsAttr
+import com.mohamedrejeb.richeditor.parser.html.CustomSpanKindAttr
 import com.mohamedrejeb.richeditor.parser.html.RichTextStateHtmlParser
 import com.mohamedrejeb.richeditor.parser.html.htmlElementsSpanStyleEncodeMap
 import com.mohamedrejeb.richeditor.parser.utils.*
@@ -34,7 +38,15 @@ import org.intellij.markdown.flavours.gfm.GFMTokenTypes
 internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
     @OptIn(ExperimentalRichTextApi::class)
-    override fun encode(input: String): RichTextState {
+    override fun encode(input: String): RichTextState =
+        encode(input, RichSpanStyleRegistry())
+
+    /**
+     * Parses [input] resolving custom spans in inline HTML through [registry], which should
+     * be the target state's [RichTextState.spanStyleRegistry].
+     */
+    @OptIn(ExperimentalRichTextApi::class)
+    fun encode(input: String, registry: RichSpanStyleRegistry): RichTextState {
         val openedNodes = mutableListOf<ASTNode>()
         val openedHtmlTags = mutableListOf<String>()
         val richParagraphList = mutableListOf(RichParagraph())
@@ -349,6 +361,18 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                         val newRichSpan = RichSpan(paragraph = currentRichParagraph)
                         newRichSpan.spanStyle = tagSpanStyle ?: SpanStyle()
 
+                        // Inline HTML spans carry custom styles the same way full HTML does.
+                        val customKind =
+                            if (tagName == "span") inlineHtmlTagAttribute(tag, CustomSpanKindAttr)
+                            else null
+                        if (customKind != null) {
+                            newRichSpan.richSpanStyle = RichTextStateHtmlParser.decodeCustomSpanStyle(
+                                kind = customKind,
+                                attrsPayload = inlineHtmlTagAttribute(tag, CustomSpanAttrsAttr),
+                                registry = registry,
+                            )
+                        }
+
                         if (currentRichSpan != null) {
                             newRichSpan.parent = currentRichSpan
                             currentRichSpan?.children?.add(newRichSpan)
@@ -377,7 +401,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 }
 
                 if (html.isNotBlank())
-                    richParagraphList.addAll(RichTextStateHtmlParser.encode(html).richParagraphList)
+                    richParagraphList.addAll(RichTextStateHtmlParser.encode(html, registry).richParagraphList)
 
                 // Todo: support HTML Block in markdown
             }
@@ -728,4 +752,11 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         MarkdownElementTypes.LIST_ITEM,
     )
 
+    /** Extracts a double-quoted attribute value from a raw inline HTML tag string. */
+    private fun inlineHtmlTagAttribute(tag: String, name: String): String? =
+        Regex("""$name\s*=\s*"([^"]*)"""", RegexOption.IGNORE_CASE)
+            .find(tag)
+            ?.groupValues
+            ?.getOrNull(1)
+            ?.let(KsoupEntities::decodeHtml)
 }

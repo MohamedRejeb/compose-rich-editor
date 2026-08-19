@@ -1,8 +1,6 @@
 package com.mohamedrejeb.richeditor.model
 
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontFamily
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
@@ -18,19 +16,8 @@ import kotlin.test.assertTrue
 private class ProviderFontStyle(
     private val provider: () -> FontFamily?,
 ) : RichSpanStyle {
-    override val spanStyle: (RichTextConfig) -> SpanStyle = {
+    override fun getSpanStyle(config: RichTextConfig): SpanStyle =
         SpanStyle(fontFamily = provider())
-    }
-
-    override val acceptNewTextInTheEdges: Boolean = true
-
-    override fun DrawScope.drawCustomStyle(
-        layoutResult: TextLayoutResult,
-        textRange: TextRange,
-        richTextConfig: RichTextConfig,
-        topPadding: Float,
-        startPadding: Float,
-    ): Unit = Unit
 }
 
 @OptIn(ExperimentalRichTextApi::class)
@@ -49,6 +36,41 @@ class RichTextStateInvalidateStylesTest {
 
         assertTrue(state.annotatedString.spanStyles.any { it.item.fontFamily == FontFamily.Serif })
         assertTrue(state.toText() == "Hello")
+    }
+
+    @Test
+    fun `invalidateStyles preserves an active ime composition`() {
+        val state = RichTextState()
+        state.setText("Hello")
+        state.onTextFieldValueChange(
+            androidx.compose.ui.text.input.TextFieldValue(
+                text = "Hello",
+                selection = TextRange(3),
+                composition = TextRange(0, 5),
+            ),
+        )
+        assertTrue(state.textFieldValue.composition == TextRange(0, 5))
+
+        state.invalidateStyles()
+
+        assertTrue(state.textFieldValue.composition == TextRange(0, 5))
+    }
+
+    @Test
+    fun `invalidateStyles keeps staged styles for the next typed text`() {
+        val state = RichTextState()
+        state.setText("Hello")
+        state.toggleSpanStyle(SpanStyle(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold))
+
+        state.invalidateStyles()
+
+        state.onTextFieldValueChange(
+            androidx.compose.ui.text.input.TextFieldValue("HelloX", selection = TextRange(6)),
+        )
+        assertTrue(
+            state.toRichTextDocument().blocks.single().spans
+                .any { it is com.mohamedrejeb.richeditor.document.RichTextSpanMark.Bold && it.range == 5..5 },
+        )
     }
 
     @Test

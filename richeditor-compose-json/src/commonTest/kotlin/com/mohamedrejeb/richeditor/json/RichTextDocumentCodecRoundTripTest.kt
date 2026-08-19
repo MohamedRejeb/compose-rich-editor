@@ -34,15 +34,15 @@ class RichTextDocumentCodecRoundTripTest {
                 ),
             ),
         )
-        assertEquals(doc, RichTextDocumentCodec.decodeFromString(RichTextDocumentCodec.encodeToString(doc)))
+        assertEquals(doc, codecDecode(codecEncode(doc)))
     }
 
     @Test
     fun `encode is idempotent through decode including unknown marks`() {
         val original =
             """{"v":1,"blocks":[{"id":"b0","type":"paragraph","text":"ab","spans":[{"k":"sparkle","r":[0,1],"level":9}]}]}"""
-        val once = RichTextDocumentCodec.encodeToString(RichTextDocumentCodec.decodeFromString(original))
-        val twice = RichTextDocumentCodec.encodeToString(RichTextDocumentCodec.decodeFromString(once))
+        val once = codecEncode(codecDecode(original))
+        val twice = codecEncode(codecDecode(once))
         assertEquals(once, twice)
         assertEquals(original, once)
     }

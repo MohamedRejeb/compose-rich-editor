@@ -29,6 +29,19 @@ class RichTextDocumentLoadTest {
     }
 
     @Test
+    fun `set rich text document without selection moves the caret to the end on a used state`() {
+        val state = RichTextState()
+        state.setText("Hi")
+        state.selection = TextRange(0)
+
+        state.setRichTextDocument(
+            RichTextDocument(blocks = listOf(RichTextBlock(text = "Hello world"))),
+        )
+
+        assertEquals(TextRange(11), state.selection)
+    }
+
+    @Test
     fun `set rich text document clears undo history`() {
         val state = RichTextState()
         state.setText("Before")

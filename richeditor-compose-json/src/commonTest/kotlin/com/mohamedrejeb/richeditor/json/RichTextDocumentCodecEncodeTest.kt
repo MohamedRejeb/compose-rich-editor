@@ -16,7 +16,7 @@ class RichTextDocumentCodecEncodeTest {
     fun `empty document`() {
         assertEquals(
             """{"v":1,"blocks":[{"id":"b0","type":"paragraph","text":"","spans":[]}]}""",
-            RichTextDocumentCodec.encodeToString(RichTextDocument.empty()),
+            codecEncode(RichTextDocument.empty()),
         )
     }
 
@@ -42,7 +42,7 @@ class RichTextDocumentCodecEncodeTest {
                 """{"id":"b1","type":"paragraph","align":"center","text":"Hello bold link","spans":[""" +
                 """{"k":"bold","r":[6,9]},{"k":"link","r":[11,14],"url":"https://example.com"}]},""" +
                 """{"id":"b2","type":"list-item","ordered":true,"indent":0,"text":"One","spans":[]}]}""",
-            RichTextDocumentCodec.encodeToString(doc),
+            codecEncode(doc),
         )
     }
 
@@ -65,7 +65,7 @@ class RichTextDocumentCodecEncodeTest {
                 """{"k":"color","r":[0,0],"argb":"FFFF0000"},""" +
                 """{"k":"highlight","r":[0,0],"argb":"FF00FF00"},""" +
                 """{"k":"font-size","r":[0,0],"value":20.0,"unit":"sp"}]}]}""",
-            RichTextDocumentCodec.encodeToString(doc),
+            codecEncode(doc),
         )
     }
 }

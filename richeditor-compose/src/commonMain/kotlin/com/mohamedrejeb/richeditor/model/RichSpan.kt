@@ -375,7 +375,7 @@ internal class RichSpan(
         // Set start text range
         textRange = TextRange(start = index, end = index + text.length)
 
-        if (!richSpanStyle.acceptNewTextInTheEdges && !ignoreCustomFiltering) {
+        if (!richSpanStyle.acceptsNewTextAtEdges && !ignoreCustomFiltering) {
             val fullTextRange = fullTextRange
             if (textIndex == fullTextRange.max - 1) {
                 index += fullTextRange.length

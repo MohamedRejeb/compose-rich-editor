@@ -23,15 +23,15 @@ class JsonCodecReviewRegressionTest {
     @Test
     fun `non-finite float values are malformed`() {
         assertFailsWith<MalformedRichTextJsonException> {
-            RichTextDocumentCodec.decodeFromString(blockJson("""{"k":"baseline-shift","r":[0,0],"value":"NaN"}"""))
+            codecDecode(blockJson("""{"k":"baseline-shift","r":[0,0],"value":"NaN"}"""))
         }
         assertFailsWith<MalformedRichTextJsonException> {
-            RichTextDocumentCodec.decodeFromString(
+            codecDecode(
                 blockJson("""{"k":"font-size","r":[0,0],"value":"Infinity","unit":"sp"}""")
             )
         }
         assertFailsWith<MalformedRichTextJsonException> {
-            RichTextDocumentCodec.decodeFromString(
+            codecDecode(
                 blockJson("""{"k":"shadow","r":[0,0],"argb":"FF000000","x":"NaN","y":0,"blur":0}""")
             )
         }
@@ -40,17 +40,17 @@ class JsonCodecReviewRegressionTest {
     @Test
     fun `font weight outside 1 to 1000 is malformed`() {
         assertFailsWith<MalformedRichTextJsonException> {
-            RichTextDocumentCodec.decodeFromString(blockJson("""{"k":"font-weight","r":[0,0],"value":5000}"""))
+            codecDecode(blockJson("""{"k":"font-weight","r":[0,0],"value":5000}"""))
         }
         assertFailsWith<MalformedRichTextJsonException> {
-            RichTextDocumentCodec.decodeFromString(blockJson("""{"k":"font-weight","r":[0,0],"value":0}"""))
+            codecDecode(blockJson("""{"k":"font-weight","r":[0,0],"value":0}"""))
         }
     }
 
     @Test
     fun `negative list indent is malformed and not a raw exception`() {
         val failure = assertFailsWith<MalformedRichTextJsonException> {
-            RichTextDocumentCodec.decodeFromString(
+            codecDecode(
                 """{"v":1,"blocks":[{"id":"b0","type":"list-item","ordered":true,"indent":-1,"text":"x","spans":[]}]}"""
             )
         }
@@ -59,7 +59,7 @@ class JsonCodecReviewRegressionTest {
 
     @Test
     fun `negative ordered start decodes successfully`() {
-        val doc = RichTextDocumentCodec.decodeFromString(
+        val doc = codecDecode(
             """{"v":1,"blocks":[{"id":"b0","type":"list-item","ordered":true,"indent":0,"start":-5,"text":"x","spans":[]}]}"""
         )
         assertEquals(
@@ -72,14 +72,14 @@ class JsonCodecReviewRegressionTest {
     fun `argb must be exactly 8 hex digits`() {
         listOf("FF0000", "-FF00000", "1FFFFFFFF", "GG000000", "").forEach { bad ->
             assertFailsWith<MalformedRichTextJsonException>("accepted argb \"$bad\"") {
-                RichTextDocumentCodec.decodeFromString(blockJson("""{"k":"color","r":[0,0],"argb":"$bad"}"""))
+                codecDecode(blockJson("""{"k":"color","r":[0,0],"argb":"$bad"}"""))
             }
         }
     }
 
     @Test
     fun `encode masks argb to 32 bits`() {
-        val json = RichTextDocumentCodec.encodeToString(
+        val json = codecEncode(
             RichTextDocument(
                 blocks = listOf(
                     RichTextBlock(
@@ -90,12 +90,12 @@ class JsonCodecReviewRegressionTest {
             ),
         )
         assertTrue(json.contains("\"argb\":\"FFFFFFFF\""), json)
-        RichTextDocumentCodec.decodeFromString(json)
+        codecDecode(json)
     }
 
     @Test
     fun `unknown mark with invalid rawJson still encodes`() {
-        val json = RichTextDocumentCodec.encodeToString(
+        val json = codecEncode(
             RichTextDocument(
                 blocks = listOf(
                     RichTextBlock(
@@ -108,7 +108,7 @@ class JsonCodecReviewRegressionTest {
             ),
         )
         assertTrue(json.contains("\"k\":\"sparkle\""), json)
-        RichTextDocumentCodec.decodeFromString(json)
+        codecDecode(json)
     }
 
     @Test
@@ -116,8 +116,8 @@ class JsonCodecReviewRegressionTest {
         val doc = RichTextDocument(
             blocks = listOf(RichTextBlock(text = "x", textDirection = TextDirection.ContentOrLtr)),
         )
-        val json = RichTextDocumentCodec.encodeToString(doc)
+        val json = codecEncode(doc)
         assertTrue(json.contains("\"dir\":\"content-or-ltr\""), json)
-        assertEquals(doc, RichTextDocumentCodec.decodeFromString(json))
+        assertEquals(doc, codecDecode(json))
     }
 }

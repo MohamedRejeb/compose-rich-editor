@@ -2073,6 +2073,9 @@ public class RichTextState internal constructor(
         val pendingHtml = pendingClipboardHtml.takeIf { config.richClipboardEnabled }
         val isPaste = pendingHtml != null &&
                 isPasteTextChange(textFieldValue, newTextFieldValue, pendingClipboardPlainText)
+        val replacedStyles =
+            if (isPaste) null
+            else captureReplacedSelectionStyles(textFieldValue, newTextFieldValue)
         val trigger: CommitTrigger? = when {
             isPaste -> CommitTrigger.Paste
             else -> classifyTextChange(newTextFieldValue)
@@ -2083,6 +2086,9 @@ public class RichTextState internal constructor(
 
         try {
             onTextFieldValueChangeInner(newTextFieldValue, isPaste, pendingHtml)
+            if (replacedStyles != null) {
+                applyReplacedSelectionStyles(replacedStyles)
+            }
         } finally {
             if (trigger != null) finishHistoryRecord(trigger, before)
             if (
@@ -2123,6 +2129,77 @@ public class RichTextState internal constructor(
 
     private fun String.normalizeNewlines(): String =
         replace("\r\n", "\n").replace('\r', '\n')
+
+    /**
+     * The styles at the start of a non-collapsed selection an edit is about to replace,
+     * captured before the tree mutates so the inserted text can inherit them (the platform
+     * typing-attributes convention) instead of the style before the caret.
+     */
+    private class ReplacedSelectionStyles(
+        val insertedRange: TextRange,
+        val spanStyle: SpanStyle,
+        val richSpanStyle: RichSpanStyle,
+    )
+
+    @OptIn(ExperimentalRichTextApi::class)
+    private fun captureReplacedSelectionStyles(
+        old: TextFieldValue,
+        new: TextFieldValue,
+    ): ReplacedSelectionStyles? {
+        if (new.text == old.text) return null
+        val selMin = old.selection.min
+        val selMax = old.selection.max
+        if (selMin == selMax) return null
+        val insertedLength = new.text.length - (old.text.length - (selMax - selMin))
+        if (insertedLength <= 0 || selMin + insertedLength > new.text.length) return null
+        if (!new.text.regionMatches(0, old.text, 0, selMin)) return null
+        if (!new.text.regionMatches(selMin + insertedLength, old.text, selMax, old.text.length - selMax)) return null
+
+        val selectionStartSpan = getRichSpanByTextIndex(selMin, true) ?: return null
+        return ReplacedSelectionStyles(
+            insertedRange = TextRange(selMin, selMin + insertedLength),
+            spanStyle = selectionStartSpan.fullSpanStyle,
+            richSpanStyle = selectionStartSpan.fullStyle,
+        )
+    }
+
+    /**
+     * Restyles the text that replaced a selection to the captured selection-start styles.
+     * Runs inside the surrounding history record, so the edit stays a single undo entry.
+     * Rich span styles are only inherited when they accept edge text and are not atomic,
+     * so replacing a whole link or image never linkifies or atomizes the typed text.
+     */
+    @OptIn(ExperimentalRichTextApi::class)
+    private fun applyReplacedSelectionStyles(replaced: ReplacedSelectionStyles) {
+        val range = replaced.insertedRange
+        val insertedSpan = getRichSpanByTextIndex(range.min, true) ?: return
+        val currentSpanStyle = insertedSpan.fullSpanStyle
+        val currentRichSpanStyle = insertedSpan.fullStyle
+
+        val inheritRich = replaced.richSpanStyle.acceptsNewTextAtEdges && !replaced.richSpanStyle.isAtomic
+        val spanDiffers = currentSpanStyle != replaced.spanStyle
+        val richDiffers = inheritRich && currentRichSpanStyle != replaced.richSpanStyle
+        if (!spanDiffers && !richDiffers) return
+
+        val wasSuppressed = suppressHistoryRecording
+        suppressHistoryRecording = true
+        val oldToAddRichSpanStyle = toAddRichSpanStyle
+        val oldToRemoveRichSpanStyleKClass = toRemoveRichSpanStyleKClass
+        try {
+            if (spanDiffers) {
+                if (currentSpanStyle != SpanStyle()) removeSpanStyle(currentSpanStyle, range)
+                if (replaced.spanStyle != SpanStyle()) addSpanStyle(replaced.spanStyle, range)
+            }
+            if (richDiffers) {
+                if (currentRichSpanStyle !is RichSpanStyle.Default) removeRichSpan(currentRichSpanStyle, range)
+                if (replaced.richSpanStyle !is RichSpanStyle.Default) addRichSpan(replaced.richSpanStyle, range)
+            }
+        } finally {
+            toAddRichSpanStyle = oldToAddRichSpanStyle
+            toRemoveRichSpanStyleKClass = oldToRemoveRichSpanStyleKClass
+            suppressHistoryRecording = wasSuppressed
+        }
+    }
 
     private fun onTextFieldValueChangeInner(
         newTextFieldValue: TextFieldValue,

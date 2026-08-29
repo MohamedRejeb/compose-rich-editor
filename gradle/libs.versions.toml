@@ -7,7 +7,7 @@ material-icons-extended = "1.7.3"
 dokka = "2.2.0"
 
 ksoup = "0.6.0"
-jetbrainsMarkdown = "0.7.8"
+jetbrainsMarkdown = "0.7.9"
 coil = "3.5.0"
 kotlinx-serialization = "1.11.0"
 

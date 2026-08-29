@@ -8,7 +8,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.composeMultiplatform)
-    alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.androidKotlinMultiplatformLibrary)
     alias(libs.plugins.bcv)
     id("module.publication")
 }
@@ -17,8 +17,13 @@ kotlin {
     explicitApi()
     applyDefaultHierarchyTemplate()
 
-    androidTarget {
-        publishLibraryVariants("release")
+    android {
+        namespace = "com.mohamedrejeb.richeditor.json"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
+
+        withHostTestBuilder {}
+
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
@@ -38,6 +43,7 @@ kotlin {
                 enabled = false
             }
         }
+        binaries.executable()
     }
 
     wasmJs {
@@ -46,6 +52,7 @@ kotlin {
                 enabled = true
             }
         }
+        binaries.executable()
     }
 
     iosArm64()
@@ -61,20 +68,6 @@ kotlin {
 
     sourceSets.commonTest.dependencies {
         implementation(kotlin("test"))
-    }
-}
-
-android {
-    namespace = "com.mohamedrejeb.richeditor.json"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
-
-    defaultConfig {
-        minSdk = libs.versions.android.minSdk.get().toInt()
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 

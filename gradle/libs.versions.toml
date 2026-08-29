@@ -11,7 +11,7 @@ jetbrainsMarkdown = "0.7.9"
 coil = "3.5.0"
 kotlinx-serialization = "1.11.0"
 
-vanniktech-maven-publish = "0.36.0"
+vanniktech-maven-publish = "0.37.0"
 
 java = "17"
 

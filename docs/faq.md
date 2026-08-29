@@ -31,7 +31,7 @@ dependencyResolutionManagement {
 Use the snapshot version:
 
 ```kotlin
-implementation("com.mohamedrejeb.richeditor:richeditor-compose:1.0.0-SNAPSHOT")
+implementation("com.mohamedrejeb.richeditor:richeditor-compose:1.2.0-SNAPSHOT")
 ```
 
 ⚠️ **Warning**: Snapshots are deployed for each new commit on `main` that passes CI. They can potentially contain breaking changes or may be unstable. Use at your own risk.

@@ -6,7 +6,7 @@ The `richeditor-compose-json` module serializes editor content to a stable, vers
 
 ```kotlin
 dependencies {
-    implementation("com.mohamedrejeb.richeditor:richeditor-compose-json:1.0.0")
+    implementation("com.mohamedrejeb.richeditor:richeditor-compose-json:1.1.0")
 }
 ```
 

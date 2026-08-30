@@ -18,10 +18,12 @@ import kotlin.test.assertEquals
  * paragraph and further typing landed there. Fixed by materializing the space
  * the IME believes it committed.
  *
- * Under the BTF2 pipeline the two halves of that gesture arrive on two different
- * channels: the word commit is a buffer change replayed by `applyChangeList`,
- * and the caret step is a selection change reported by the editor's selection
- * observer. The recognition therefore lives in `handleSelectionChanged`: a
+ * Under the BTF2 pipeline the word commit and the caret step can arrive together
+ * or split across two channels: the word commit is a buffer change replayed by
+ * `applyChangeList`, or, for a split pick, a whole-value change through the
+ * legacy `onTextFieldValueChange` bridge, while the caret step is always a
+ * selection change reported by the editor's selection observer. The
+ * recognition therefore lives in `handleSelectionChanged`: a
  * collapsed one-character step over a paragraph separator that either commits a
  * composition ending at that boundary or immediately follows an IME edit that
  * ended there. Plain caret navigation matches neither signal and is untouched.
@@ -61,7 +63,7 @@ class Issue779ParagraphSeparatorImeTest {
     }
 
     @Test
-    fun sameWordSuggestionPickAtParagraphEndStaysInParagraph() {
+    fun bufferChannelWordCommitThenSeparatorStepStaysInParagraph() {
         val state = RichTextState()
         state.setHtml("<p>Thi</p><p><br></p><p>Signature</p>")
         state.selection = TextRange(3)

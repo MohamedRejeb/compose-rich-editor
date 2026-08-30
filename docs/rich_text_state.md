@@ -209,6 +209,36 @@ back to `BasicTextField`'s native shortcuts. You can still call
 `state.history.limit` caps the undo stack (default 100 entries; oldest are
 evicted FIFO). `state.history.clear()` empties both stacks.
 
+## Scrolling
+
+`RichTextState` exposes the editor's internal scroll position as `scrollState`, a standard Compose `ScrollState`. It's hoisted on the state so app code can read, observe, or drive the editor's scrolling from outside the composable. Custom span overlays (rich span backgrounds, underlines, and similar custom drawing) track it automatically, no extra wiring required.
+
+```kotlin
+val state = rememberRichTextState()
+val coroutineScope = rememberCoroutineScope()
+
+// Read the current scroll offset
+val offset = state.scrollState.value
+
+// Observe scroll changes
+LaunchedEffect(state.scrollState) {
+    snapshotFlow { state.scrollState.value }.collect { value ->
+        println("Scrolled to: $value")
+    }
+}
+
+// Scroll to a position programmatically
+Button(
+    onClick = {
+        coroutineScope.launch {
+            state.scrollState.animateScrollTo(state.scrollState.maxValue)
+        }
+    }
+) {
+    Text("Scroll to bottom")
+}
+```
+
 ## Related Documentation
 
 - For styling text spans, see [Span Style](span_style.md)

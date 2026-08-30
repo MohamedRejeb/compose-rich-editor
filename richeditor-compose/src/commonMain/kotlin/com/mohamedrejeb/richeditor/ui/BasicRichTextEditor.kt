@@ -302,9 +302,19 @@ public fun BasicRichTextEditor(
                 decorationBox {
                     Layout(
                         content = { innerTextField() },
-                        modifier = Modifier.onPlaced { coords ->
-                            state.textFieldWindowPosition = coords.positionInWindow()
-                        }
+                        modifier = Modifier
+                            .onPlaced { coords ->
+                                state.textFieldWindowPosition = coords.positionInWindow()
+                            }
+                            // Only the inner text field is dimmed. The decoration content
+                            // around it already renders in the disabled colors the Material
+                            // wrappers compute, and dimming it again compounds the two.
+                            .then(
+                                if (enabled)
+                                    Modifier
+                                else
+                                    Modifier.alpha(DisabledStateAlpha)
+                            )
                     ) { measurables, constraints ->
                         val placeable = measurables.first().measure(constraints)
                         layout(placeable.width, placeable.height) {
@@ -326,15 +336,6 @@ public fun BasicRichTextEditor(
 
                     state.onPreviewKeyEvent(event)
                 }
-                // Placed before the draw modifiers so the layer dims the text, the span
-                // colors and the rich-span overlays together. BasicTextField's state
-                // overload has no VisualTransformation to carry the old text-only dim.
-                .then(
-                    if (enabled)
-                        Modifier
-                    else
-                        Modifier.alpha(DisabledStateAlpha)
-                )
                 .drawRichSpanStyle(
                     richTextState = state,
                     topPadding = with(density) { contentPadding.calculateTopPadding().toPx() },

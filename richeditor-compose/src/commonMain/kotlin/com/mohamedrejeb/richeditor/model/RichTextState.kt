@@ -2461,6 +2461,53 @@ public class RichTextState internal constructor(
         updateTextFieldValue()
     }
 
+    internal fun insertText(at: Int, text: String) {
+        val current = textFieldValue
+        tempTextFieldValue = current.copy(
+            text = current.text.substring(0, at) + text + current.text.substring(at),
+            selection = TextRange(at + text.length),
+        )
+        handleAddingCharacters(
+            startTypeIndex = at,
+            typedCharsCount = text.length,
+            positionFromSelection = false,
+        )
+        updateTextFieldValue()
+    }
+
+    internal fun deleteRange(range: TextRange) {
+        val current = textFieldValue
+        tempTextFieldValue = current.copy(
+            text = current.text.removeRange(range.min, range.max),
+            selection = TextRange(range.min),
+        )
+        handleRemovingCharacters(
+            minRemoveIndex = range.min,
+            removedCharsCount = range.max - range.min,
+        )
+        updateTextFieldValue()
+    }
+
+    /**
+     * Applies a single edit delta: replaces [originalRange] in the current text with [newText].
+     * Shared entry point for the BTF2 InputTransformation (via applyChangeList) and, after
+     * Task 8, the onTextFieldValueChange shim. Composes deleteRange and insertText; reversed
+     * ranges are normalised.
+     */
+    internal fun applyChange(originalRange: TextRange, newText: String) {
+        val textLength = textFieldValue.text.length
+        require(originalRange.min in 0..textLength && originalRange.max in 0..textLength) {
+            "applyChange: range $originalRange out of bounds for text of length $textLength"
+        }
+        val normalizedRange = TextRange(originalRange.min, originalRange.max)
+        if (!normalizedRange.collapsed) {
+            deleteRange(normalizedRange)
+        }
+        if (newText.isNotEmpty()) {
+            insertText(at = normalizedRange.min, text = newText)
+        }
+    }
+
     /**
      * True when a selection-only change matches the IME "trailing space refresh"
      * a suggestion pick performs at a paragraph end (#779): the caret steps

@@ -14,6 +14,7 @@ import androidx.compose.ui.test.runDesktopComposeUiTest
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import com.mohamedrejeb.richeditor.model.RichTextState
 import kotlin.test.Test
 import kotlin.test.assertNotNull
@@ -135,8 +136,26 @@ class StyleAppliesImmediatelyTest {
             state.addLink(text = "click", url = "https://example.com")
             waitForIdle()
 
-            // The model should reflect the link immediately.
+            // The link renders as an underlined, link-colored span; assert it reached both the
+            // model and BTF2's layout input rather than merely that a layout happened.
+            val linkedInModel = state.annotatedString.spanStyles.any { range ->
+                range.item.textDecoration == TextDecoration.Underline && range.start == 0 && range.end == 5
+            }
+            assertTrue(
+                linkedInModel,
+                "Expected an underlined link span over 0..5 in annotatedString. " +
+                    "Spans: ${state.annotatedString.spanStyles.map { "(${it.start}..${it.end} ${it.item.textDecoration})" }}",
+            )
+
             val layoutResult = state.textLayoutResult
             assertNotNull(layoutResult, "Expected textLayoutResult after addLink")
+            val linkedInLayout = layoutResult.layoutInput.text.spanStyles.any { range ->
+                range.item.textDecoration == TextDecoration.Underline && range.start == 0 && range.end == 5
+            }
+            assertTrue(
+                linkedInLayout,
+                "Expected the underlined link span over 0..5 in BTF2's layout input. " +
+                    "Spans: ${layoutResult.layoutInput.text.spanStyles.map { "(${it.start}..${it.end} ${it.item.textDecoration})" }}",
+            )
         }
 }

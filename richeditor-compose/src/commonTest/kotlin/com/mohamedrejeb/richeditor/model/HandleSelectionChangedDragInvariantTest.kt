@@ -1,6 +1,9 @@
 package com.mohamedrejeb.richeditor.model
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.font.FontWeight
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotSame
@@ -48,10 +51,22 @@ class HandleSelectionChangedDragInvariantTest {
         handleSelectionChanged(newSelection, fromGestureObserver = fromGestureObserver)
     }
 
+    /**
+     * The selection mask only changes the rendered output where a span carries a background
+     * color, so [RichTextState.updateAnnotatedString] is only reached on a selection transition
+     * in a document that has one (#635, guarded for #730 and #731). Every rebuild assertion
+     * below therefore needs a background span seeded first.
+     */
+    private fun stateWithBackgroundSpan(text: String): RichTextState {
+        val state = RichTextState()
+        state.setText(text)
+        state.addSpanStyle(SpanStyle(background = Color.Yellow), TextRange(0, text.length))
+        return state
+    }
+
     @Test
     fun `gesture observer skips annotatedString rebuild when both old and new selections are non-collapsed`() {
-        val state = RichTextState()
-        state.setText("hello world this is a longer line for dragging")
+        val state = stateWithBackgroundSpan("hello world this is a longer line for dragging")
 
         // Establish initial non-collapsed selection (drag has started).
         state.setSelectionAndHandle(TextRange(5, 7), fromGestureObserver = true)
@@ -75,8 +90,7 @@ class HandleSelectionChangedDragInvariantTest {
 
     @Test
     fun `gesture observer rebuilds annotatedString on collapsed to non-collapsed drag start`() {
-        val state = RichTextState()
-        state.setText("hello world")
+        val state = stateWithBackgroundSpan("hello world")
 
         // Drag starts: collapsed to non-collapsed.
         val annotatedBefore = state.annotatedString
@@ -94,8 +108,7 @@ class HandleSelectionChangedDragInvariantTest {
 
     @Test
     fun `gesture observer rebuilds annotatedString on non-collapsed to collapsed drag release`() {
-        val state = RichTextState()
-        state.setText("hello world")
+        val state = stateWithBackgroundSpan("hello world")
 
         // Establish a non-collapsed selection (mid-drag state).
         state.setSelectionAndHandle(TextRange(0, 5), fromGestureObserver = true)
@@ -116,8 +129,7 @@ class HandleSelectionChangedDragInvariantTest {
 
     @Test
     fun `gesture observer skips all side effects during mid-drag tick`() {
-        val state = RichTextState()
-        state.setText("hello world this is a longer line for dragging")
+        val state = stateWithBackgroundSpan("hello world this is a longer line for dragging")
 
         // Establish drag start: collapsed to non-collapsed (fires all side effects).
         state.setSelectionAndHandle(TextRange(5, 7), fromGestureObserver = true)
@@ -141,8 +153,7 @@ class HandleSelectionChangedDragInvariantTest {
 
     @Test
     fun `gesture observer fires all side effects on drag-release tick`() {
-        val state = RichTextState()
-        state.setText("hello world this is text")
+        val state = stateWithBackgroundSpan("hello world this is text")
 
         // Drag start.
         state.setSelectionAndHandle(TextRange(5, 7), fromGestureObserver = true)
@@ -168,9 +179,42 @@ class HandleSelectionChangedDragInvariantTest {
     }
 
     @Test
-    fun `programmatic caller rebuilds annotatedString on every non-collapsed change for issue 635 mask correctness`() {
+    fun `a document with no background spans does not rebuild annotatedString on a selection transition`() {
         val state = RichTextState()
-        state.setText("hello world this is text")
+        state.setText("hello world")
+
+        // No background span, so the mask cannot change the rendered output. Rebuilding here is
+        // exactly the mid-gesture visualTransformation churn that #730 and #731 pinned.
+        val annotatedBefore = state.annotatedString
+        state.setSelectionAndHandle(TextRange(0, 5), fromGestureObserver = true)
+
+        assertSame(
+            annotatedBefore,
+            state.annotatedString,
+            "a collapsed to non-collapsed transition must not rebuild annotatedString when no " +
+                "span carries a background color",
+        )
+    }
+
+    @Test
+    fun `a document with no background spans still refreshes the derived styles on a selection transition`() {
+        val state = RichTextState()
+        state.setText("hello world")
+        state.addSpanStyle(SpanStyle(fontWeight = FontWeight.Bold), TextRange(0, 5))
+        state.setSelectionAndHandle(TextRange(11), fromGestureObserver = true)
+
+        state.setSelectionAndHandle(TextRange(0, 5), fromGestureObserver = true)
+
+        assertEquals(
+            FontWeight.Bold,
+            state.currentSpanStyle.fontWeight,
+            "skipping the annotatedString rebuild must not skip the derived style refresh",
+        )
+    }
+
+    @Test
+    fun `programmatic caller rebuilds annotatedString on every non-collapsed change for issue 635 mask correctness`() {
+        val state = stateWithBackgroundSpan("hello world this is text")
 
         // Programmatic setter path (default fromGestureObserver = false). The mask logic must
         // continue to fire for every non-collapsed change to maintain Issue 635 behavior

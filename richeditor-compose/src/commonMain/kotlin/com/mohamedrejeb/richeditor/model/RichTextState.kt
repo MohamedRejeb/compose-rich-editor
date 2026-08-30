@@ -297,6 +297,13 @@ public class RichTextState internal constructor(
     private var lastHandledSelection: TextRange = TextRange.Zero
 
     /**
+     * The selection one observer tick before [lastHandledSelection]. [adjustGestureSelection]
+     * needs the drag's previous range to tell the moving edge from the anchor, and the legacy
+     * mirror can no longer serve as that memory now that it is refreshed on every tick.
+     */
+    private var selectionBeforeLastHandled: TextRange = TextRange.Zero
+
+    /**
      * Unified handler for selection changes from any source. When [fromGestureObserver] is
      * true and both old and new selections are non-collapsed (a mid-drag tick), ALL side
      * effects are skipped, [adjustGestureSelection] included: any Compose state mutation here
@@ -314,7 +321,16 @@ public class RichTextState internal constructor(
 
         val previousSelection = lastHandledSelection
         val wasCollapsed = previousSelection.collapsed
+        selectionBeforeLastHandled = previousSelection
         lastHandledSelection = newSelection
+
+        // The one thing that must happen on a gated tick too. The style mutators still read the
+        // mirror and hand it to updateTextFieldValue, so a mirror left behind by a multi-tick
+        // drag would write the old range back into the buffer and snap the user's selection
+        // back. Safe above the gate because no composable reads the mirror any more, so the
+        // write cannot recompose anything and cannot interrupt BTF2's pointer tracking.
+        if (textFieldValue.selection != newSelection)
+            textFieldValue = textFieldValue.copy(selection = newSelection)
 
         if (fromGestureObserver && !wasCollapsed && !newSelection.collapsed) {
             return
@@ -325,12 +341,13 @@ public class RichTextState internal constructor(
         // BTF2 is tracking the pointer.
         val adjusted =
             if (fromGestureObserver)
-                adjustGestureSelection(newSelection)
+                adjustGestureSelection(newSelection, previousSelection)
             else
                 newSelection
         if (adjusted != newSelection) {
             lastHandledSelection = adjusted
             setTextFieldStateFromValue(text = textFieldState.text.toString(), selection = adjusted)
+            textFieldValue = textFieldValue.copy(selection = adjusted)
         }
         val nowCollapsed = adjusted.collapsed
 
@@ -340,16 +357,18 @@ public class RichTextState internal constructor(
         if (!wasCollapsed)
             lastNonCollapsedSelection = previousSelection
 
-        // The legacy mirror lags the canonical selection on this path; the side effects below
-        // (and updateAnnotatedString's selection mask) read it, so bring it forward first.
-        if (textFieldValue.selection != adjusted)
-            textFieldValue = textFieldValue.copy(selection = adjusted)
-
-        val maskAffected = if (fromGestureObserver) {
-            wasCollapsed != nowCollapsed
-        } else {
-            !wasCollapsed || !nowCollapsed
-        }
+        // The annotatedString carries a selection-dependent mask that drops background colors
+        // underneath the live selection, so a transition in or out of a non-collapsed selection
+        // leaves the cached string stale (#635). The mask only changes the output when a span
+        // has a background color; rebuilding otherwise recreates the visualTransformation
+        // mid-gesture and breaks selection on Android (#730, #731).
+        val maskAffected =
+            (
+                if (fromGestureObserver)
+                    wasCollapsed != nowCollapsed
+                else
+                    !wasCollapsed || !nowCollapsed
+                ) && treeHasBackgroundSpans()
         if (maskAffected) {
             updateAnnotatedString(textFieldValue)
         }
@@ -613,7 +632,7 @@ public class RichTextState internal constructor(
         // The pointer is up now, so mutating state is safe: clamp where the selection came to
         // rest and let the side effects catch up against that range.
         val resting = textFieldState.selection
-        val adjusted = adjustGestureSelection(resting)
+        val adjusted = adjustGestureSelection(resting, selectionBeforeLastHandled)
         if (adjusted != resting) {
             setTextFieldStateFromValue(text = textFieldState.text.toString(), selection = adjusted)
             handleSelectionChanged(adjusted)
@@ -2580,7 +2599,10 @@ public class RichTextState internal constructor(
                 return
             }
 
-            val gestureAdjusted = adjustGestureSelection(tempTextFieldValue.selection)
+            val gestureAdjusted = adjustGestureSelection(
+                selection = tempTextFieldValue.selection,
+                previousSelection = textFieldValue.selection,
+            )
             if (gestureAdjusted != tempTextFieldValue.selection)
                 tempTextFieldValue = tempTextFieldValue.copy(selection = gestureAdjusted)
 
@@ -5219,7 +5241,10 @@ public class RichTextState internal constructor(
      * would select the virtual separator and highlight the next line). Select-all,
      * collapsed carets, and selections without a live gesture pass through untouched.
      */
-    private fun adjustGestureSelection(selection: TextRange): TextRange {
+    private fun adjustGestureSelection(
+        selection: TextRange,
+        previousSelection: TextRange,
+    ): TextRange {
         if (selection.collapsed || !isSelectionGestureLive())
             return selection
 
@@ -5229,7 +5254,7 @@ public class RichTextState internal constructor(
         // a backward drag the anchor is the max, legitimately below the pointer's
         // line. When both edges changed (first event of a gesture) the moving edge is
         // unknown and nothing is corrected.
-        val oldSelection = textFieldValue.selection
+        val oldSelection = previousSelection
         val movingEdgeIsMax = when {
             selection.start == oldSelection.start && selection.end != oldSelection.end ->
                 selection.end > selection.start
@@ -5871,6 +5896,11 @@ public class RichTextState internal constructor(
 
         // Update current paragraph style
         updateCurrentParagraphStyle()
+
+        // This load already ran the side effects for the selection it just wrote into the
+        // buffer, so the selection handler must not dedupe a later caret move against a marker
+        // that still holds its initial value.
+        lastHandledSelection = textFieldValue.selection
 
         // Check paragraphs type
         checkParagraphsType()

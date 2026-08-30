@@ -14,12 +14,16 @@ import org.junit.Test
 import kotlin.test.assertEquals
 
 /**
- * Pins the paragraph-edge clamp on the path the editor actually uses for gesture selections.
+ * Pins the paragraph-edge clamp where the editor now reaches it. Since the selection observer
+ * replaced the legacy onTextFieldValueChange bridge, `adjustGestureSelection` is reached only
+ * from `handleSelectionChanged` and `onSelectionGestureEnd`; the older suites
+ * (`DragSelectionParagraphEdgeTest`, `Issue730LongPressSelectionTest`) drive
+ * `onTextFieldValueChange` directly and no longer cover that path at all.
  *
- * Since the selection observer replaced the legacy onTextFieldValueChange bridge,
- * `adjustGestureSelection` is reached only from `handleSelectionChanged`. The model-level
- * suites (`DragSelectionParagraphEdgeTest`, `Issue730LongPressSelectionTest`) drive
- * `onTextFieldValueChange` directly and therefore no longer cover the live path at all.
+ * Only `mouse drag onto the next paragraph start is pulled back onto the dragged line` is
+ * UI-driven, and it is the one test here that exercises the real snapshotFlow observer. The
+ * rest call `handleSelectionChanged` and `onSelectionGestureEnd` directly: they pin the
+ * handler's contract, not the wiring that delivers ticks to it.
  */
 @OptIn(ExperimentalTestApi::class)
 class GestureSelectionClampObserverTest {
@@ -161,8 +165,8 @@ class GestureSelectionClampObserverTest {
             state.treatSelectionChangesAsGesture = true
 
             // Caret inside "beta", then one gesture extension landing on paragraph 2's start.
-            state.handleSelectionChanged(TextRange(6), fromGestureObserver = true)
-            state.handleSelectionChanged(TextRange(6, 11), fromGestureObserver = true)
+            state.dragTick(TextRange(6))
+            state.dragTick(TextRange(6, 11))
 
             assertEquals(TextRange(6, 10), state.selection)
         }
@@ -183,8 +187,8 @@ class GestureSelectionClampObserverTest {
             waitForIdle()
             state.treatSelectionChangesAsGesture = true
 
-            state.handleSelectionChanged(TextRange(6), fromGestureObserver = true)
-            state.handleSelectionChanged(TextRange(6, 13), fromGestureObserver = true)
+            state.dragTick(TextRange(6))
+            state.dragTick(TextRange(6, 13))
 
             assertEquals(TextRange(6, 13), state.selection)
         }

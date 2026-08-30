@@ -607,6 +607,17 @@ public class RichTextState internal constructor(
     internal fun onSelectionGestureEnd() {
         selectionGesturePressed = false
         selectionGestureLastActivity = kotlin.time.TimeSource.Monotonic.markNow()
+
+        // The drag's own ticks are all non-collapsed once it is under way, so the mid-drag gate
+        // in [handleSelectionChanged] skips them and only the first extension gets corrected.
+        // The pointer is up now, so mutating state is safe: clamp where the selection came to
+        // rest and let the side effects catch up against that range.
+        val resting = textFieldState.selection
+        val adjusted = adjustGestureSelection(resting)
+        if (adjusted != resting) {
+            setTextFieldStateFromValue(text = textFieldState.text.toString(), selection = adjusted)
+            handleSelectionChanged(adjusted)
+        }
     }
 
     // Latest pressed pointer position over the editor, feeding the geometric clamp

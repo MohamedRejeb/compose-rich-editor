@@ -24,6 +24,80 @@ import kotlin.test.assertEquals
 @OptIn(ExperimentalTestApi::class)
 class GestureSelectionClampObserverTest {
 
+    /**
+     * One drag tick as BTF2 delivers it: the platform writes the selection into the buffer and
+     * the editor's snapshotFlow collector calls the handler afterwards.
+     */
+    private fun RichTextState.dragTick(newSelection: TextRange) {
+        val previous = isApplyingProgrammaticSync
+        isApplyingProgrammaticSync = true
+        try {
+            textFieldState.edit { selection = newSelection }
+        } finally {
+            isApplyingProgrammaticSync = previous
+        }
+        handleSelectionChanged(newSelection, fromGestureObserver = true)
+    }
+
+    /**
+     * The realistic drag: several extensions in a row. Every tick after the first is
+     * non-collapsed on both sides, so the mid-drag gate skips it and the selection comes to rest
+     * uncorrected on the next paragraph's start offset. Ending the gesture must clamp it.
+     */
+    @Test
+    fun `a multi step drag has its resting selection clamped when the gesture ends`() {
+        val state = RichTextState()
+        // "alpha beta gamma delta": paragraph 2 starts at offset 11
+        state.setText("alpha beta\ngamma delta")
+        state.onSelectionGestureStart()
+
+        state.dragTick(TextRange(6, 8))
+        state.dragTick(TextRange(6, 9))
+        state.dragTick(TextRange(6, 11))
+
+        assertEquals(
+            TextRange(6, 11),
+            state.selection,
+            "mid-drag ticks must stay untouched while the pointer is down",
+        )
+
+        state.onSelectionGestureEnd()
+
+        assertEquals(TextRange(6, 10), state.selection)
+    }
+
+    @Test
+    fun `a drag that rests inside a paragraph is left alone when the gesture ends`() {
+        val state = RichTextState()
+        state.setText("alpha beta\ngamma delta")
+        state.onSelectionGestureStart()
+
+        state.dragTick(TextRange(6, 8))
+        state.dragTick(TextRange(6, 13))
+
+        state.onSelectionGestureEnd()
+
+        assertEquals(TextRange(6, 13), state.selection)
+    }
+
+    @Test
+    fun `ending a gesture on a collapsed caret changes nothing`() {
+        val state = RichTextState()
+        state.setText("alpha beta\ngamma delta")
+        state.onSelectionGestureStart()
+
+        state.dragTick(TextRange(11))
+
+        state.onSelectionGestureEnd()
+
+        assertEquals(TextRange(11), state.selection)
+    }
+
+    /**
+     * A single-step drag, so the one extension is a collapsed to non-collapsed tick and the
+     * clamp lands on it. This covers the first-extension correction; the resting-selection
+     * correction that a realistic multi-step drag needs is covered by the multi-step test above.
+     */
     @Test
     fun `mouse drag onto the next paragraph start is pulled back onto the dragged line`() =
         runDesktopComposeUiTest(width = 480, height = 360) {

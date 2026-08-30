@@ -141,8 +141,27 @@ public class RichTextState internal constructor(
 
     internal val richParagraphList = mutableStateListOf<RichParagraph>()
     internal var visualTransformation: VisualTransformation by mutableStateOf(VisualTransformation.None)
-    internal var textFieldValue by mutableStateOf(TextFieldValue())
-        private set
+
+    /**
+     * Computed view over [textFieldState] and [annotatedString], not a separate stored
+     * value. [pendingTextDuringSync] / [pendingSelectionDuringSync] take precedence so a
+     * read taken mid-[setTextFieldStateFromValue] replay (while [skipTextFieldStateSync]
+     * defers the real write) still sees the intended result. The text fallback reads
+     * [annotatedString] rather than [textFieldState] directly: the tree rebuild that
+     * precedes every [setTextFieldStateFromValue] call keeps it unconditionally current,
+     * so it always stays in bounds for whatever selection [pendingSelectionDuringSync]
+     * may still be holding once [pendingTextDuringSync] itself has been cleared.
+     */
+    internal val textFieldValue: TextFieldValue
+        get() {
+            val text = pendingTextDuringSync ?: annotatedString.text
+            val selection = pendingSelectionDuringSync ?: textFieldState.selection
+            return TextFieldValue(
+                text = text,
+                selection = selection,
+                composition = textFieldState.composition,
+            )
+        }
 
     internal val textFieldState: TextFieldState =
         TextFieldState(initialText = "", initialSelection = TextRange.Zero)
@@ -351,14 +370,6 @@ public class RichTextState internal constructor(
         selectionBeforeLastHandled = previousSelection
         lastHandledSelection = newSelection
 
-        // The one thing that must happen on a gated tick too. The style mutators still read the
-        // mirror and hand it to updateTextFieldValue, so a mirror left behind by a multi-tick
-        // drag would write the old range back into the buffer and snap the user's selection
-        // back. Safe above the gate because no composable reads the mirror any more, so the
-        // write cannot recompose anything and cannot interrupt BTF2's pointer tracking.
-        if (textFieldValue.selection != newSelection)
-            textFieldValue = textFieldValue.copy(selection = newSelection)
-
         if (fromGestureObserver && !wasCollapsed && !newSelection.collapsed) {
             return
         }
@@ -374,7 +385,6 @@ public class RichTextState internal constructor(
         if (adjusted != newSelection) {
             lastHandledSelection = adjusted
             setTextFieldStateFromValue(text = textFieldState.text.toString(), selection = adjusted)
-            textFieldValue = textFieldValue.copy(selection = adjusted)
         }
         val nowCollapsed = adjusted.collapsed
 
@@ -2722,8 +2732,7 @@ public class RichTextState internal constructor(
             if (maskAffected) {
                 updateAnnotatedString(tempTextFieldValue)
             } else {
-                textFieldValue = tempTextFieldValue
-                setTextFieldStateFromValue(text = textFieldValue.text, selection = textFieldValue.selection)
+                setTextFieldStateFromValue(text = tempTextFieldValue.text, selection = tempTextFieldValue.selection)
             }
         } else {
             // Update the annotatedString and the textFieldValue with the new values
@@ -2812,8 +2821,7 @@ public class RichTextState internal constructor(
                 snapshot.selection.start.coerceIn(0, textLen),
                 snapshot.selection.end.coerceIn(0, textLen),
             )
-            textFieldValue = textFieldValue.copy(selection = clampedSelection)
-            setTextFieldStateFromValue(text = textFieldValue.text, selection = textFieldValue.selection)
+            setTextFieldStateFromValue(text = textFieldValue.text, selection = clampedSelection)
             tempTextFieldValue = textFieldValue
 
             // Re-apply staged styles from the snapshot. updateRichParagraphList clears
@@ -3027,10 +3035,6 @@ public class RichTextState internal constructor(
         val clampedSelection = TextRange(
             newTextFieldValue.selection.start.coerceIn(0, newTextLength),
             newTextFieldValue.selection.end.coerceIn(0, newTextLength),
-        )
-        textFieldValue = newTextFieldValue.copy(
-            text = annotatedString.text,
-            selection = clampedSelection,
         )
         val styleOnlyChange =
             forStyleChange &&
@@ -5764,12 +5768,7 @@ public class RichTextState internal constructor(
                 )
 
         styledRichSpanList.clear()
-        textFieldValue = TextFieldValue(
-            text = annotatedString.text,
-            selection = selection,
-            composition = newComposition?.takeIf { it.min >= 0 && it.max <= textLength },
-        )
-        setTextFieldStateFromValue(text = textFieldValue.text, selection = textFieldValue.selection)
+        setTextFieldStateFromValue(text = annotatedString.text, selection = selection)
         // Snapshot by value: see the matching note in `updateAnnotatedString`.
         val transformed = annotatedString
         visualTransformation = VisualTransformation { _ ->

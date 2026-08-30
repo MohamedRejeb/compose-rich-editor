@@ -40,6 +40,13 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalTestApi::class, InternalComposeUiApi::class)
 class UndoRedoBtf2Test {
 
+    // BasicTextField's native key mapping ties undo to the OS shortcut modifier: Meta (Cmd)
+    // on macOS, Ctrl elsewhere. Only the test that exercises BTF2's own undo handler
+    // (undo behavior disabled) needs this; RichTextState.onPreviewKeyEvent accepts either
+    // modifier for its own interception regardless of platform.
+    private val nativeUndoModifierKey: Key =
+        if (System.getProperty("os.name") == "Mac OS X") Key.MetaLeft else Key.CtrlLeft
+
     private fun buildEditorTest(
         state: RichTextState,
         block: androidx.compose.ui.test.DesktopComposeUiTest.() -> Unit,
@@ -108,19 +115,37 @@ class UndoRedoBtf2Test {
 
             assertEquals("hello", state.annotatedString.text)
 
-            // Seal the typing group so deletion is its own undo step.
-            state.history.undo()
-            state.history.redo()
+            // A real Backspace key press through the editor. Typing and deletion always
+            // break coalescing (RichTextHistoryCoalescer), so this starts its own group
+            // without needing to seal the typing group first.
+            onNodeWithTag("editor").performKeyInput {
+                pressKey(Key.Backspace)
+            }
             waitForIdle()
 
-            // The text is restored; now undo should take us back to empty.
+            assertEquals(
+                "hell",
+                state.annotatedString.text,
+                "Backspace should delete the last character",
+            )
+            assertTrue(state.history.canUndo, "Expected canUndo after deletion")
+
+            state.history.undo()
+            waitForIdle()
+
+            assertEquals(
+                "hello",
+                state.annotatedString.text,
+                "After undo the deletion should be reverted",
+            )
+
             state.history.undo()
             waitForIdle()
 
             assertEquals(
                 "",
                 state.annotatedString.text,
-                "After undo text should be empty",
+                "After a second undo the typing should be reverted too",
             )
         }
     }
@@ -194,5 +219,35 @@ class UndoRedoBtf2Test {
         assertEquals("Hello", state.toText())
         state.history.undo()
         assertEquals("", state.toText())
+    }
+
+    @Test
+    fun `native undo survives a selection move when undo behavior is disabled`() = runDesktopComposeUiTest {
+        lateinit var state: RichTextState
+        setContent {
+            state = rememberRichTextState()
+            BasicRichTextEditor(
+                state = state,
+                modifier = Modifier.testTag("editor"),
+                undoBehavior = UndoBehavior.Disabled,
+            )
+        }
+        onNodeWithTag("editor").performTextInput("Hello")
+        waitForIdle()
+        // A programmatic selection move goes through setTextFieldStateFromValue's
+        // non-suppressed branch. It must not clear textFieldState.undoState here: with
+        // undo behavior disabled, the native stack is the documented fallback for Ctrl+Z.
+        state.selection = TextRange(0)
+        waitForIdle()
+        onNodeWithTag("editor").performKeyInput {
+            keyDown(nativeUndoModifierKey); pressKey(Key.Z); keyUp(nativeUndoModifierKey)
+        }
+        waitForIdle()
+        // With undo behavior disabled, onPreviewKeyEvent does not intercept the shortcut, so
+        // it falls through to BasicTextField's native undo, which must still hold the typing.
+        assertTrue(
+            state.textFieldState.text.toString() != "Hello",
+            "Expected the native undo stack to revert the typing",
+        )
     }
 }

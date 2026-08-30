@@ -201,9 +201,15 @@ public class RichTextState internal constructor(
             isApplyingProgrammaticSync = previous
         }
         // The library's RichTextHistory is the only undo authority; BTF2's internal stack
-        // must never accumulate entries it could replay outside our model.
-        @OptIn(ExperimentalFoundationApi::class)
-        textFieldState.undoState.clearHistory()
+        // must never accumulate entries it could replay outside our model. Gated on
+        // suppressUndoShortcuts: when UndoBehavior.Disabled, the native stack is the
+        // documented fallback for Ctrl/Cmd+Z and must survive programmatic writes like a
+        // selection move; when Enabled, onPreviewKeyEvent already makes it unreachable, so
+        // clearing here is defense in depth only.
+        if (!suppressUndoShortcuts) {
+            @OptIn(ExperimentalFoundationApi::class)
+            textFieldState.undoState.clearHistory()
+        }
     }
 
     internal val inlineContentMap = mutableStateMapOf<String, InlineTextContent>()

@@ -17,14 +17,16 @@ private fun classifyInputDeltas(deltas: List<InputDelta>, postEditCaret: Int): C
     val totalInserted = deltas.sumOf { it.newText.length }
     val totalDeleted = deltas.sumOf { it.originalRange.max - it.originalRange.min }
     val insertedText = deltas.joinToString("") { it.newText }
+    // Checked before the net-direction comparisons: Enter over a non-collapsed selection
+    // deletes more than it inserts, but it must still start its own undo group.
+    if (insertedText.contains('\n')) return CommitTrigger.LineBreak
     return when {
-        totalInserted > totalDeleted -> {
-            if (insertedText.contains('\n')) CommitTrigger.LineBreak
-            else CommitTrigger.Typing(addedText = insertedText, caret = postEditCaret)
-        }
+        totalInserted > totalDeleted -> CommitTrigger.Typing(addedText = insertedText, caret = postEditCaret)
         totalDeleted > totalInserted -> CommitTrigger.Delete(caret = postEditCaret)
-        totalInserted == 0 && totalDeleted == 0 -> null
-        else -> CommitTrigger.Typing(addedText = insertedText, caret = postEditCaret)
+        totalInserted == 0 -> null
+        // Same net length, non-empty: a same-length replacement (autocorrect rewrite),
+        // matching classifyTextChange's Structural case. Its own undo group.
+        else -> CommitTrigger.Structural
     }
 }
 
@@ -53,18 +55,32 @@ internal fun RichTextState.applyChangeList(buffer: TextFieldBuffer) {
     // clipboard's stashed plain text is the paste the clipboard manager announced.
     val pendingHtml = pendingClipboardHtml.takeIf { config.richClipboardEnabled }
     val expectedPlain = pendingClipboardPlainText
-    val pasteDelta = if (pendingHtml != null && expectedPlain != null) {
-        deltas.singleOrNull()?.takeIf {
+    if (pendingHtml != null && expectedPlain != null) {
+        val pasteDelta = deltas.singleOrNull()?.takeIf {
             it.newText.normalizeNewlinesForPaste() == expectedPlain.normalizeNewlinesForPaste()
         }
-    } else null
-    if (pasteDelta != null) {
-        recordHistoryForInput(CommitTrigger.Paste) {
-            selection = TextRange(pasteDelta.originalRange.min, pasteDelta.originalRange.max)
-            handleRecognizedPaste(pendingHtml!!)
+        if (pasteDelta != null) {
+            val previous = skipTextFieldStateSync
+            skipTextFieldStateSync = true
+            try {
+                recordHistoryForInput(CommitTrigger.Paste) {
+                    selection = TextRange(pasteDelta.originalRange.min, pasteDelta.originalRange.max)
+                    handleRecognizedPaste(pendingHtml)
+                }
+            } finally {
+                skipTextFieldStateSync = previous
+                // pendingTextDuringSync must not leak past the batch; pendingSelectionDuringSync
+                // is kept deliberately: the InputTransformation tail reads it after this returns.
+                pendingTextDuringSync = null
+            }
+            return
         }
-        return
     }
+
+    // The edit wasn't the announced paste (or none was pending): a stale stash must not
+    // survive to misclassify a later, unrelated edit as a paste.
+    pendingClipboardHtml = null
+    pendingClipboardPlainText = null
 
     // Style inheritance when typing over a non-collapsed selection: capture before the
     // tree mutates, restyle inside the same history record (single undo entry).

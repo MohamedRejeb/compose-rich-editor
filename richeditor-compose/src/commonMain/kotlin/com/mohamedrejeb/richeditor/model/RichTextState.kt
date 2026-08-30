@@ -263,13 +263,14 @@ public class RichTextState internal constructor(
      * new instance: BTF2 only re-runs the transformation when buffer text/selection change OR
      * the instance changes (reference check). Style-only mutations need the swap.
      */
-    internal var outputTransformation: OutputTransformation by mutableStateOf(
-        OutputTransformation { this@RichTextState.applyRichTextStyles(this) }
-    )
+    internal var outputTransformation: OutputTransformation by mutableStateOf(createOutputTransformation())
 
     private fun invalidateOutputTransformation() {
-        outputTransformation = OutputTransformation { this@RichTextState.applyRichTextStyles(this) }
+        outputTransformation = createOutputTransformation()
     }
+
+    private fun createOutputTransformation(): OutputTransformation =
+        OutputTransformation { this@RichTextState.applyRichTextStyles(this) }
 
     /**
      * The selection of the rich text.
@@ -2319,8 +2320,8 @@ public class RichTextState internal constructor(
         isPaste: Boolean,
         pendingHtml: String?,
     ) {
-        if (isPaste) {
-            handleRecognizedPaste(pendingHtml!!)
+        if (isPaste && pendingHtml != null) {
+            handleRecognizedPaste(pendingHtml)
             return
         }
         pendingClipboardHtml = null

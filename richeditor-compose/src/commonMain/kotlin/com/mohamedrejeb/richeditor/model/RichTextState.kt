@@ -299,8 +299,10 @@ public class RichTextState internal constructor(
     /**
      * Unified handler for selection changes from any source. When [fromGestureObserver] is
      * true and both old and new selections are non-collapsed (a mid-drag tick), ALL side
-     * effects are skipped: any Compose state mutation here recomposes and interrupts BTF2's
-     * pointer tracking, freezing the drag. Side effects catch up on the release tick.
+     * effects are skipped, [adjustGestureSelection] included: any Compose state mutation here
+     * recomposes and interrupts BTF2's pointer tracking, freezing the drag. Every tick that
+     * changes collapsedness runs the full pass, so a drag is corrected as it starts and any
+     * line-edge overshoot while the pointer is down is transient.
      *
      * This deliberately does not seal the pending undo group. The observer fires after every
      * keystroke (typing moves the selection), so a seal here would break typing coalescing;
@@ -312,12 +314,25 @@ public class RichTextState internal constructor(
 
         val previousSelection = lastHandledSelection
         val wasCollapsed = previousSelection.collapsed
-        val nowCollapsed = newSelection.collapsed
         lastHandledSelection = newSelection
 
-        if (fromGestureObserver && !wasCollapsed && !nowCollapsed) {
+        if (fromGestureObserver && !wasCollapsed && !newSelection.collapsed) {
             return
         }
+
+        // The paragraph-edge and pointer-line corrections for gesture selections (#730, #731).
+        // Applied only here, past the mid-drag gate, so a correction never writes state while
+        // BTF2 is tracking the pointer.
+        val adjusted =
+            if (fromGestureObserver)
+                adjustGestureSelection(newSelection)
+            else
+                newSelection
+        if (adjusted != newSelection) {
+            lastHandledSelection = adjusted
+            setTextFieldStateFromValue(text = textFieldState.text.toString(), selection = adjusted)
+        }
+        val nowCollapsed = adjusted.collapsed
 
         // Gesture selections no longer pass through updateTextFieldValue, which used to be
         // the only place this was tracked; clipboard managers on platforms that collapse the
@@ -327,8 +342,8 @@ public class RichTextState internal constructor(
 
         // The legacy mirror lags the canonical selection on this path; the side effects below
         // (and updateAnnotatedString's selection mask) read it, so bring it forward first.
-        if (textFieldValue.selection != newSelection)
-            textFieldValue = textFieldValue.copy(selection = newSelection)
+        if (textFieldValue.selection != adjusted)
+            textFieldValue = textFieldValue.copy(selection = adjusted)
 
         val maskAffected = if (fromGestureObserver) {
             wasCollapsed != nowCollapsed
@@ -338,6 +353,15 @@ public class RichTextState internal constructor(
         if (maskAffected) {
             updateAnnotatedString(textFieldValue)
         }
+
+        // BTF1 parity: updateTextFieldValue cleared the staged bags on every pass, its
+        // selection-only path included, so moving the caret discards styles staged for
+        // text that was never typed.
+        toAddSpanStyle = SpanStyle()
+        toRemoveSpanStyle = SpanStyle()
+        toAddRichSpanStyle = RichSpanStyle.Default
+        toRemoveRichSpanStyleKClass = RichSpanStyle.Default::class
+
         updateCurrentSpanStyle()
         updateCurrentParagraphStyle()
         refreshActiveTriggerQuery()

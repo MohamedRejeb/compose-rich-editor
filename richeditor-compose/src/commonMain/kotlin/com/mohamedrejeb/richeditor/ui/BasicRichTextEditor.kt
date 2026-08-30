@@ -15,6 +15,7 @@ import androidx.compose.foundation.text.input.TextFieldDecorator
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
@@ -328,6 +329,15 @@ public fun BasicRichTextEditor(
 
                     state.onPreviewKeyEvent(event)
                 }
+                // Placed before the draw modifiers so the layer dims the text, the span
+                // colors and the rich-span overlays together. BasicTextField's state
+                // overload has no VisualTransformation to carry the old text-only dim.
+                .then(
+                    if (enabled)
+                        Modifier
+                    else
+                        Modifier.alpha(DisabledStateAlpha)
+                )
                 .drawRichSpanStyle(
                     richTextState = state,
                     topPadding = with(density) { contentPadding.calculateTopPadding().toPx() },

@@ -337,11 +337,16 @@ public class RichTextState internal constructor(
 
     /**
      * Unified handler for selection changes from any source. When [fromGestureObserver] is
-     * true and both old and new selections are non-collapsed (a mid-drag tick), ALL side
-     * effects are skipped, [adjustGestureSelection] included: any Compose state mutation here
-     * recomposes and interrupts BTF2's pointer tracking, freezing the drag. Every tick that
-     * changes collapsedness runs the full pass, so a drag is corrected as it starts and any
-     * line-edge overshoot while the pointer is down is transient.
+     * true, a pointer gesture is live and both old and new selections are non-collapsed (a
+     * mid-drag tick), ALL side effects are skipped, [adjustGestureSelection] included: any
+     * Compose state mutation here recomposes and interrupts BTF2's pointer tracking, freezing
+     * the drag. Every tick that changes collapsedness runs the full pass, so a drag is
+     * corrected as it starts and any line-edge overshoot while the pointer is down is
+     * transient; [onSelectionGestureEnd] runs the deferred catch-up once the pointer is up.
+     *
+     * The liveness check matters because the observer reports keyboard extensions
+     * (shift+arrow on desktop) with [fromGestureObserver] set as well, and no gesture end
+     * ever follows those: gating them would leave the derived state stale indefinitely.
      *
      * This deliberately does not seal the pending undo group. The observer fires after every
      * keystroke (typing moves the selection), so a seal here would break typing coalescing;
@@ -372,7 +377,12 @@ public class RichTextState internal constructor(
         selectionBeforeLastHandled = previousSelection
         lastHandledSelection = newSelection
 
-        if (fromGestureObserver && !wasCollapsed && !newSelection.collapsed) {
+        if (
+            fromGestureObserver &&
+            !wasCollapsed &&
+            !newSelection.collapsed &&
+            isSelectionGestureLive()
+        ) {
             return
         }
 
@@ -396,21 +406,32 @@ public class RichTextState internal constructor(
         if (!wasCollapsed)
             lastNonCollapsedSelection = previousSelection
 
+        runSelectionSideEffects(
+            selectionMaskChanged =
+                if (fromGestureObserver)
+                    wasCollapsed != nowCollapsed
+                else
+                    !wasCollapsed || !nowCollapsed
+        )
+    }
+
+    /**
+     * The derived-state tail of [handleSelectionChanged]: the #635 background mask, the staged
+     * style bags, and the state the toolbar reads. Extracted so [onSelectionGestureEnd] can run
+     * the catch-up its gated mid-drag ticks skipped; routing that through the handler would not
+     * work, since it dedupes on [lastHandledSelection] and the resting selection is already
+     * recorded there.
+     *
+     * @param selectionMaskChanged whether the transition can change the rendered mask.
+     */
+    private fun runSelectionSideEffects(selectionMaskChanged: Boolean) {
         // The annotatedString carries a selection-dependent mask that drops background colors
         // underneath the live selection, so a transition in or out of a non-collapsed selection
         // leaves the cached string stale (#635). The mask only changes the output when a span
         // has a background color; rebuilding otherwise recreates the visualTransformation
         // mid-gesture and breaks selection on Android (#730, #731).
-        val maskAffected =
-            (
-                if (fromGestureObserver)
-                    wasCollapsed != nowCollapsed
-                else
-                    !wasCollapsed || !nowCollapsed
-                ) && treeHasBackgroundSpans()
-        if (maskAffected) {
+        if (selectionMaskChanged && treeHasBackgroundSpans())
             updateAnnotatedString(textFieldValue)
-        }
 
         // BTF1 parity: updateTextFieldValue cleared the staged bags on every pass, its
         // selection-only path included, so moving the caret discards styles staged for
@@ -697,7 +718,13 @@ public class RichTextState internal constructor(
         if (adjusted != resting) {
             setTextFieldStateFromValue(text = textFieldState.text.toString(), selection = adjusted)
             handleSelectionChanged(adjusted)
+            return
         }
+
+        // The clamp was a no-op, so the handler would dedupe the resting selection away and the
+        // ticks it gated would never catch up. Run their tail here instead.
+        if (!resting.collapsed)
+            runSelectionSideEffects(selectionMaskChanged = true)
     }
 
     // Latest pressed pointer position over the editor, feeding the geometric clamp

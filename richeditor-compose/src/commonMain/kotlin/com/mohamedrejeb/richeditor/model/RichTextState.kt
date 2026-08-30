@@ -1,5 +1,6 @@
 package com.mohamedrejeb.richeditor.model
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.input.OutputTransformation
@@ -199,6 +200,10 @@ public class RichTextState internal constructor(
         } finally {
             isApplyingProgrammaticSync = previous
         }
+        // The library's RichTextHistory is the only undo authority; BTF2's internal stack
+        // must never accumulate entries it could replay outside our model.
+        @OptIn(ExperimentalFoundationApi::class)
+        textFieldState.undoState.clearHistory()
     }
 
     internal val inlineContentMap = mutableStateMapOf<String, InlineTextContent>()

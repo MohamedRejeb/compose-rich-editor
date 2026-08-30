@@ -276,15 +276,72 @@ public class RichTextState internal constructor(
      * The selection of the rich text.
      */
     public var selection: TextRange
-        get() = textFieldValue.selection
+        get() = textFieldState.selection
         set(value) {
-            if (value.min >= 0 && value.max <= textFieldValue.text.length) {
-                val newTextFieldValue = textFieldValue.copy(selection = value)
-                updateTextFieldValue(newTextFieldValue)
-            }
+            if (value.min < 0 || value.max > textFieldState.text.length) return
+            if (textFieldState.selection == value) return
+            // Routes through setTextFieldStateFromValue so skipTextFieldStateSync is honored:
+            // a selection write during an InputTransformation replay (e.g. the paste branch)
+            // must not nest a textFieldState.edit inside the in-flight edit.
+            setTextFieldStateFromValue(text = textFieldState.text.toString(), selection = value)
+            handleSelectionChanged(value)
         }
 
-    public val composition: TextRange? get() = textFieldValue.composition
+    public val composition: TextRange? get() = textFieldState.composition
+
+    /**
+     * The selection last processed by [handleSelectionChanged] or by a completed
+     * [updateTextFieldValue] pass. Needed because [textFieldState] is already updated before
+     * the handler runs, so the previous value cannot be read from the state.
+     */
+    private var lastHandledSelection: TextRange = TextRange.Zero
+
+    /**
+     * Unified handler for selection changes from any source. When [fromGestureObserver] is
+     * true and both old and new selections are non-collapsed (a mid-drag tick), ALL side
+     * effects are skipped: any Compose state mutation here recomposes and interrupts BTF2's
+     * pointer tracking, freezing the drag. Side effects catch up on the release tick.
+     *
+     * This deliberately does not seal the pending undo group. The observer fires after every
+     * keystroke (typing moves the selection), so a seal here would break typing coalescing;
+     * the coalescer's caret-continuity rule already starts a new entry after a selection jump.
+     */
+    internal fun handleSelectionChanged(newSelection: TextRange, fromGestureObserver: Boolean = false) {
+        if (lastHandledSelection == newSelection) return
+        if (newSelection.min < 0 || newSelection.max > textFieldState.text.length) return
+
+        val previousSelection = lastHandledSelection
+        val wasCollapsed = previousSelection.collapsed
+        val nowCollapsed = newSelection.collapsed
+        lastHandledSelection = newSelection
+
+        if (fromGestureObserver && !wasCollapsed && !nowCollapsed) {
+            return
+        }
+
+        // Gesture selections no longer pass through updateTextFieldValue, which used to be
+        // the only place this was tracked; clipboard managers on platforms that collapse the
+        // selection before reading it still need the range the user had selected.
+        if (!wasCollapsed)
+            lastNonCollapsedSelection = previousSelection
+
+        // The legacy mirror lags the canonical selection on this path; the side effects below
+        // (and updateAnnotatedString's selection mask) read it, so bring it forward first.
+        if (textFieldValue.selection != newSelection)
+            textFieldValue = textFieldValue.copy(selection = newSelection)
+
+        val maskAffected = if (fromGestureObserver) {
+            wasCollapsed != nowCollapsed
+        } else {
+            !wasCollapsed || !nowCollapsed
+        }
+        if (maskAffected) {
+            updateAnnotatedString(textFieldValue)
+        }
+        updateCurrentSpanStyle()
+        updateCurrentParagraphStyle()
+        refreshActiveTriggerQuery()
+    }
 
     // --- Triggers (mentions, hashtags, commands, ...) ---
     //
@@ -727,7 +784,7 @@ public class RichTextState internal constructor(
         if (listIndent > -1)
             config.listIndent = listIndent
 
-        updateTextFieldValue(textFieldValue)
+        updateTextFieldValue(textFieldValue, forStyleChange = true)
     }
 
     // Text
@@ -1101,7 +1158,7 @@ public class RichTextState internal constructor(
                 paragraph.applyHeadingStyle(headingStyle)
             }
 
-            updateAnnotatedString()
+            updateAnnotatedString(forStyleChange = true)
             updateCurrentSpanStyle()
             updateCurrentParagraphStyle()
         }
@@ -1210,7 +1267,7 @@ public class RichTextState internal constructor(
 
         richSpan.richSpanStyle = linkStyle
 
-        updateTextFieldValue(textFieldValue)
+        updateTextFieldValue(textFieldValue, forStyleChange = true)
     }
 
     /**
@@ -1223,7 +1280,7 @@ public class RichTextState internal constructor(
 
         richSpan.richSpanStyle = RichSpanStyle.Default
 
-        updateTextFieldValue(textFieldValue)
+        updateTextFieldValue(textFieldValue, forStyleChange = true)
     }
 
     @Deprecated(
@@ -1423,7 +1480,7 @@ public class RichTextState internal constructor(
                     }
                 }
                 // We update the annotated string to reflect the changes
-                updateAnnotatedString()
+                updateAnnotatedString(forStyleChange = true)
                 // We update the current paragraph style to reflect the changes
                 updateCurrentParagraphStyle()
             }
@@ -1463,7 +1520,7 @@ public class RichTextState internal constructor(
                     }
                 }
                 // We update the annotated string to reflect the changes
-                updateAnnotatedString()
+                updateAnnotatedString(forStyleChange = true)
                 // We update the current paragraph style to reflect the changes
                 updateCurrentParagraphStyle()
             }
@@ -2630,8 +2687,13 @@ public class RichTextState internal constructor(
      * Handles updating the text field value and all the related states such as the [annotatedString] and [visualTransformation] to reflect the new text field value.
      *
      * @param newTextFieldValue the new text field value.
+     * @param forStyleChange true when the caller is a deliberate style mutation, so a rebuild
+     * that leaves the buffer text and selection untouched still has to reach BTF2.
      */
-    private fun updateTextFieldValue(newTextFieldValue: TextFieldValue = tempTextFieldValue) {
+    private fun updateTextFieldValue(
+        newTextFieldValue: TextFieldValue = tempTextFieldValue,
+        forStyleChange: Boolean = false,
+    ) {
         tempTextFieldValue = newTextFieldValue
 
         if (!singleParagraphMode) {
@@ -2685,7 +2747,7 @@ public class RichTextState internal constructor(
             }
         } else {
             // Update the annotatedString and the textFieldValue with the new values
-            updateAnnotatedString(tempTextFieldValue)
+            updateAnnotatedString(tempTextFieldValue, forStyleChange = forStyleChange)
         }
 
         // Clear un-applied styles
@@ -2702,6 +2764,10 @@ public class RichTextState internal constructor(
 
         // Re-detect active trigger query after every edit / selection change
         refreshActiveTriggerQuery()
+
+        // This pass already ran every side effect for the resulting selection, so the
+        // observer's echo of the write must be a no-op instead of running them again.
+        lastHandledSelection = textFieldValue.selection
 
         // Clear [tempTextFieldValue]
         tempTextFieldValue = TextFieldValue()
@@ -2778,6 +2844,8 @@ public class RichTextState internal constructor(
             updateCurrentSpanStyle()
             updateCurrentParagraphStyle()
             refreshActiveTriggerQuery()
+
+            lastHandledSelection = textFieldValue.selection
 
             tempTextFieldValue = TextFieldValue()
         } finally {
@@ -2900,10 +2968,17 @@ public class RichTextState internal constructor(
      * If no [newTextFieldValue] is passed, the [textFieldValue] will be used instead.
      *
      * @param newTextFieldValue the new text field value.
+     * @param forStyleChange true when the caller is a deliberate style mutation. A style-only
+     * rebuild leaves the buffer text and selection untouched, so BTF2 has no reason to re-run
+     * the [OutputTransformation] and would keep painting the pre-mutation styles; the
+     * transformation is swapped for a fresh instance to force it.
      * @see [textFieldValue]
      * @see [annotatedString]
      */
-    internal fun updateAnnotatedString(newTextFieldValue: TextFieldValue = textFieldValue) {
+    internal fun updateAnnotatedString(
+        newTextFieldValue: TextFieldValue = textFieldValue,
+        forStyleChange: Boolean = false,
+    ) {
         val newText =
             if (singleParagraphMode)
                 newTextFieldValue.text
@@ -2969,14 +3044,22 @@ public class RichTextState internal constructor(
 
         styledRichSpanList.clear()
         val newTextLength = annotatedString.text.length
+        val clampedSelection = TextRange(
+            newTextFieldValue.selection.start.coerceIn(0, newTextLength),
+            newTextFieldValue.selection.end.coerceIn(0, newTextLength),
+        )
         textFieldValue = newTextFieldValue.copy(
             text = annotatedString.text,
-            selection = TextRange(
-                newTextFieldValue.selection.start.coerceIn(0, newTextLength),
-                newTextFieldValue.selection.end.coerceIn(0, newTextLength),
-            ),
+            selection = clampedSelection,
         )
-        setTextFieldStateFromValue(text = textFieldValue.text, selection = textFieldValue.selection)
+        val styleOnlyChange =
+            forStyleChange &&
+                    textFieldState.text.toString() == annotatedString.text &&
+                    textFieldState.selection == clampedSelection
+        setTextFieldStateFromValue(text = annotatedString.text, selection = clampedSelection)
+        if (styleOnlyChange) {
+            invalidateOutputTransformation()
+        }
         // Snapshot by value: the lambda runs during measure, where a live
         // `annotatedString` read would race the textFieldValue captured at composition.
         val transformed = annotatedString
@@ -3916,7 +3999,7 @@ public class RichTextState internal constructor(
             )
         }
 
-        updateTextFieldValue(textFieldValue)
+        updateTextFieldValue(textFieldValue, forStyleChange = true)
     }
 
     /**
@@ -4864,7 +4947,7 @@ public class RichTextState internal constructor(
         }
 
         if (isParagraphUpdated)
-            updateTextFieldValue(textFieldValue)
+            updateTextFieldValue(textFieldValue, forStyleChange = true)
     }
 
     /**

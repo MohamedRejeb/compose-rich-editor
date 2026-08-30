@@ -236,16 +236,13 @@ public fun BasicRichTextEditor(
         }
     }
 
-    // Interim gesture-selection bridge: mouse and keyboard selections only reach
-    // textFieldState, while state.selection still reads the legacy mirror. Routing them
-    // through the legacy selection path preserves adjustGestureSelection and the
-    // press-position handling.
+    // textFieldState is canonical for the selection; this keeps the derived state
+    // (span style, paragraph style, trigger query, selection mask) in step with the
+    // selections BTF2 applies on its own for mouse drags and keyboard navigation.
     LaunchedEffect(state) {
         snapshotFlow { state.textFieldState.selection }
             .collect { newSelection ->
-                if (state.textFieldValue.selection != newSelection) {
-                    state.onTextFieldValueChange(state.textFieldValue.copy(selection = newSelection))
-                }
+                state.handleSelectionChanged(newSelection, fromGestureObserver = true)
             }
     }
 

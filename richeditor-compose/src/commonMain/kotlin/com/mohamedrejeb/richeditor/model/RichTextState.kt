@@ -2,6 +2,7 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.Saver
@@ -256,6 +257,19 @@ public class RichTextState internal constructor(
      */
     public var annotatedString: AnnotatedString by mutableStateOf(AnnotatedString(text = ""))
         private set
+
+    /**
+     * A var backed by snapshot state so invalidateOutputTransformation can replace it with a
+     * new instance: BTF2 only re-runs the transformation when buffer text/selection change OR
+     * the instance changes (reference check). Style-only mutations need the swap.
+     */
+    internal var outputTransformation: OutputTransformation by mutableStateOf(
+        OutputTransformation { this@RichTextState.applyRichTextStyles(this) }
+    )
+
+    private fun invalidateOutputTransformation() {
+        outputTransformation = OutputTransformation { this@RichTextState.applyRichTextStyles(this) }
+    }
 
     /**
      * The selection of the rich text.
@@ -2184,10 +2198,10 @@ public class RichTextState internal constructor(
         if (!new.text.regionMatches(selMin + insertedLength, old.text, selMax, old.text.length - selMax)) return false
 
         val inserted = new.text.substring(selMin, selMin + insertedLength)
-        return inserted.normalizeNewlines() == expectedPlainText.normalizeNewlines()
+        return inserted.normalizeNewlinesForPaste() == expectedPlainText.normalizeNewlinesForPaste()
     }
 
-    private fun String.normalizeNewlines(): String =
+    internal fun String.normalizeNewlinesForPaste(): String =
         replace("\r\n", "\n").replace('\r', '\n')
 
     /**
@@ -2195,7 +2209,7 @@ public class RichTextState internal constructor(
      * captured before the tree mutates so the inserted text can inherit them (the platform
      * typing-attributes convention) instead of the style before the caret.
      */
-    private class ReplacedSelectionStyles(
+    internal class ReplacedSelectionStyles(
         val insertedRange: TextRange,
         val spanStyle: SpanStyle,
         val richSpanStyle: RichSpanStyle,
@@ -2215,6 +2229,25 @@ public class RichTextState internal constructor(
         if (!new.text.regionMatches(0, old.text, 0, selMin)) return null
         if (!new.text.regionMatches(selMin + insertedLength, old.text, selMax, old.text.length - selMax)) return null
 
+        return captureReplacedSelectionStyles(
+            replacedRange = TextRange(selMin, selMax),
+            insertedLength = insertedLength,
+        )
+    }
+
+    /**
+     * Core of [captureReplacedSelectionStyles]: captures the styles at the start of
+     * [replacedRange] so text of [insertedLength] replacing it can inherit them. Shared by the
+     * shim overload above (which derives [replacedRange]/[insertedLength] by prefix/suffix
+     * diffing two [TextFieldValue]s) and the ChangeList replay in EditPipeline.kt (which
+     * already has the range as a buffer delta).
+     */
+    @OptIn(ExperimentalRichTextApi::class)
+    internal fun captureReplacedSelectionStyles(
+        replacedRange: TextRange,
+        insertedLength: Int,
+    ): ReplacedSelectionStyles? {
+        val selMin = replacedRange.min
         val selectionStartSpan = getRichSpanByTextIndex(selMin, true) ?: return null
         return ReplacedSelectionStyles(
             insertedRange = TextRange(selMin, selMin + insertedLength),
@@ -2230,7 +2263,7 @@ public class RichTextState internal constructor(
      * so replacing a whole link or image never linkifies or atomizes the typed text.
      */
     @OptIn(ExperimentalRichTextApi::class)
-    private fun applyReplacedSelectionStyles(replaced: ReplacedSelectionStyles) {
+    internal fun applyReplacedSelectionStyles(replaced: ReplacedSelectionStyles) {
         val range = replaced.insertedRange
         val insertedSpan = getRichSpanByTextIndex(range.min, true) ?: return
         val currentSpanStyle = insertedSpan.fullSpanStyle
@@ -2261,25 +2294,33 @@ public class RichTextState internal constructor(
         }
     }
 
+    /**
+     * Applies a recognized paste: replaces the current selection with [pendingHtml],
+     * suppressing nested history captures so the remove+insert is a single undo group
+     * attributable to the top-level [CommitTrigger.Paste]. Shared by the
+     * [onTextFieldValueChangeInner] shim path and the ChangeList replay in EditPipeline.kt.
+     */
+    internal fun handleRecognizedPaste(pendingHtml: String) {
+        pendingClipboardHtml = null
+        pendingClipboardPlainText = null
+        val position = selection.min
+        val wasSuppressed = suppressHistoryRecording
+        suppressHistoryRecording = true
+        try {
+            removeSelectedText()
+            insertHtml(html = pendingHtml, position = position)
+        } finally {
+            suppressHistoryRecording = wasSuppressed
+        }
+    }
+
     private fun onTextFieldValueChangeInner(
         newTextFieldValue: TextFieldValue,
         isPaste: Boolean,
         pendingHtml: String?,
     ) {
         if (isPaste) {
-            pendingClipboardHtml = null
-            pendingClipboardPlainText = null
-            val position = selection.min
-            // Suppress nested history captures during the remove+insert so the entire
-            // paste is a single undo group attributable to the top-level trigger.
-            val wasSuppressed = suppressHistoryRecording
-            suppressHistoryRecording = true
-            try {
-                removeSelectedText()
-                insertHtml(html = pendingHtml!!, position = position)
-            } finally {
-                suppressHistoryRecording = wasSuppressed
-            }
+            handleRecognizedPaste(pendingHtml!!)
             return
         }
         pendingClipboardHtml = null
@@ -2505,6 +2546,22 @@ public class RichTextState internal constructor(
         }
         if (newText.isNotEmpty()) {
             insertText(at = normalizedRange.min, text = newText)
+        }
+    }
+
+    /**
+     * Test-only stand-in for a single-delta buffer edit, ahead of the real ChangeList replay
+     * wired in Task 4. Classifies [originalRange]/[newText] into a [CommitTrigger] and applies
+     * the change inside one history record.
+     */
+    internal fun applyUserEditForTest(originalRange: TextRange, newText: String) {
+        val trigger = when {
+            newText.isNotEmpty() && newText.contains('\n') -> CommitTrigger.LineBreak
+            newText.isNotEmpty() -> CommitTrigger.Typing(addedText = newText, caret = originalRange.min + newText.length)
+            else -> CommitTrigger.Delete(caret = originalRange.min)
+        }
+        recordHistoryForInput(trigger) {
+            applyChange(originalRange = originalRange, newText = newText)
         }
     }
 
@@ -2747,6 +2804,21 @@ public class RichTextState internal constructor(
         historyRecordingDepth--
         history.onCommit(trigger, before)
         history.onAfterCommit(trigger)
+    }
+
+    /**
+     * Records [block] as one history commit attributed to [trigger], or runs it unrecorded
+     * when [trigger] is `null` (e.g. a change classified as no-op). Keeps [beginHistoryRecord]
+     * and [finishHistoryRecord] private while letting the EditPipeline.kt extension functions
+     * record history for the ChangeList replay.
+     */
+    internal inline fun <T> recordHistoryForInput(trigger: CommitTrigger?, block: () -> T): T {
+        val before = if (trigger != null) beginHistoryRecord() else null
+        return try {
+            block()
+        } finally {
+            if (trigger != null) finishHistoryRecord(trigger, before)
+        }
     }
 
     private inline fun <T> recordHistory(

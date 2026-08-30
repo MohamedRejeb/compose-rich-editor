@@ -297,6 +297,12 @@ public class RichTextState internal constructor(
      */
     internal var outputTransformation: OutputTransformation by mutableStateOf(createOutputTransformation())
 
+    /**
+     * Forces BTF2 to re-run the transformation after a style-only change, pinned by
+     * `StyleAppliesImmediatelyTest`. CMP 1.12 reads [outputTransformation] inside a snapshot,
+     * which makes the swap redundant today; it is kept deliberately, because the contract the
+     * test pins is the re-run and not the mechanism that triggers it.
+     */
     private fun invalidateOutputTransformation() {
         outputTransformation = createOutputTransformation()
     }
@@ -322,9 +328,11 @@ public class RichTextState internal constructor(
     public val composition: TextRange? get() = textFieldState.composition
 
     /**
-     * The selection last processed by [handleSelectionChanged] or by a completed
-     * [updateTextFieldValue] pass. Needed because [textFieldState] is already updated before
-     * the handler runs, so the previous value cannot be read from the state.
+     * The selection last processed by [handleSelectionChanged], or by a pass that already ran
+     * the side effects itself: [updateTextFieldValue], [updateRichParagraphList] and
+     * [restoreSnapshot] all write it so the observer's echo of their write is deduped away.
+     * Needed because [textFieldState] is already updated before the handler runs, so the
+     * previous value cannot be read from the state.
      */
     private var lastHandledSelection: TextRange = TextRange.Zero
 
@@ -653,7 +661,7 @@ public class RichTextState internal constructor(
     private var lastPressPosition: Offset? by mutableStateOf(null)
 
     // Monotonic timestamp of the last physical key press; distinguishes hardware
-    // caret navigation from IME batch edits in [isImeBoundarySpaceRefresh] (#779).
+    // caret navigation from IME batch edits in [isImeBoundarySpaceRefreshBtf2] (#779).
     private var lastPhysicalKeyEventMs: Long? = null
 
     internal fun notePhysicalKeyEvent() {

@@ -10,15 +10,16 @@ import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.runDesktopComposeUiTest
 import androidx.compose.ui.text.TextRange
 import com.mohamedrejeb.richeditor.model.RichTextState
-import org.junit.Test
+import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
  * Pins the paragraph-edge clamp where the editor now reaches it. Since the selection observer
  * replaced the legacy onTextFieldValueChange bridge, `adjustGestureSelection` is reached only
- * from `handleSelectionChanged` and `onSelectionGestureEnd`; the older suites
+ * from `handleSelectionChanged`, `onSelectionGestureEnd` and `applyShimSelectionChange` (the
+ * diff shim behind `onTextFieldValueChange`); the older suites
  * (`DragSelectionParagraphEdgeTest`, `Issue730LongPressSelectionTest`) drive
- * `onTextFieldValueChange` directly and no longer cover that path at all.
+ * `onTextFieldValueChange` directly and reach the clamp only through that shim.
  *
  * Only `mouse drag onto the next paragraph start is pulled back onto the dragged line` is
  * UI-driven, and it is the one test here that exercises the real snapshotFlow observer. The

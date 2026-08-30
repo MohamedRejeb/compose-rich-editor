@@ -68,7 +68,7 @@ CompositionLocalProvider(LocalUriHandler provides myUriHandler) {
 
 ### Why is the `visualTransformation` parameter on the decoration box composables deprecated?
 
-`RichTextEditorDecorationBox` and `OutlinedRichTextEditorDecorationBox` (in `RichTextEditorDefaults`) have overloads that accept a `visualTransformation` parameter. Those overloads are deprecated: the editor renders its styled output through the new text field pipeline, so the parameter is no longer applied and has no effect. Switch to the overload without `visualTransformation`.
+`RichTextEditorDecorationBox` and `OutlinedRichTextEditorDecorationBox` (in `RichTextEditorDefaults`) have overloads that accept a `visualTransformation` parameter. Those overloads are deprecated: the editor renders its styled output through an `OutputTransformation` it installs on the text field itself, so the parameter is no longer applied and has no effect. Switch to the overload without `visualTransformation`.
 
 ### How do I save/restore editor content?
 

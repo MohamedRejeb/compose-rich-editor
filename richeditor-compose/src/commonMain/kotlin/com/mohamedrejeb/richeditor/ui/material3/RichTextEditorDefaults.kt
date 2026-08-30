@@ -451,62 +451,8 @@ public object RichTextEditorDefaults {
         )
 
     /**
-     * A decoration box which helps creating custom text fields based on
-     * <a href="https://material.io/components/text-fields#filled-text-field" class="external" target="_blank">Material Design filled text field</a>.
-     *
-     * If your text field requires customising elements that aren't exposed by [TextField],
-     * consider using this decoration box to achieve the desired design.
-     *
-     * For example, if you need to create a dense text field, use [contentPadding] parameter to
-     * decrease the paddings around the input field. If you need to customise the bottom indicator,
-     * apply [indicatorLine] modifier to achieve that.
-     *
-     * See example of using [RichTextEditorDecorationBox] to build your own custom text field
-     * @sample androidx.compose.material3.samples.CustomTextFieldBasedOnDecorationBox
-     *
-     * @param value the input [String] shown by the text field
-     * @param innerTextField input text field that this decoration box wraps. You will pass here a
-     * framework-controlled composable parameter "innerTextField" from the decorationBox lambda of
-     * the [BasicTextField]
-     * @param enabled controls the enabled state of the text field. When `false`, this component
-     * will not respond to user input, and it will appear visually disabled and disabled to
-     * accessibility services. You must also pass the same value to the [BasicTextField] for it to
-     * adjust the behavior accordingly.
-     * @param singleLine indicates if this is a single line or multi line text field. You must pass
-     * the same value as to [BasicTextField].
-     * @param visualTransformation transforms the visual representation of the input [value]. You
-     * must pass the same value as to [BasicTextField].
-     * @param interactionSource the read-only [InteractionSource] representing the stream of
-     * [Interaction]s for this text field. You must first create and pass in your own `remember`ed
-     * [MutableInteractionSource] instance to the [BasicTextField] for it to dispatch events. And
-     * then pass the same instance to this decoration box to observe [Interaction]s and customize
-     * the appearance / behavior of this text field in different states.
-     * @param isError indicates if the text field's current value is in error state. If set to
-     * true, the label, bottom indicator and trailing icon by default will be displayed in error
-     * color.
-     * @param label the optional label to be displayed inside the text field container. The default
-     * text style for internal [Text] is [Typography.bodySmall] when the text field is in focus and
-     * [Typography.bodyLarge] when the text field is not in focus.
-     * @param placeholder the optional placeholder to be displayed when the text field is in focus
-     * and the input text is empty. The default text style for internal [Text] is
-     * [Typography.bodyLarge].
-     * @param leadingIcon the optional leading icon to be displayed at the beginning of the text
-     * field container
-     * @param trailingIcon the optional trailing icon to be displayed at the end of the text field
-     * container
-     * @param supportingText the optional supporting text to be displayed below the text field
-     * @param colors [RichTextEditorColors] that will be used to resolve the colors used for this text
-     * field in different states. See [TextFieldDefaults.textFieldColors].
-     * @param contentPadding the spacing values to apply internally between the internals of text
-     * field and the decoration box container. You can use it to implement dense text fields or
-     * simply to control horizontal padding. See [TextFieldDefaults.textFieldWithLabelPadding] and
-     * [TextFieldDefaults.textFieldWithoutLabelPadding]
-     * Note that if there's a label in the text field, the [top][PaddingValues.calculateTopPadding]
-     * padding will mean the distance from label's [last baseline][LastBaseline] to the top edge of
-     * the container. All other paddings mean the distance from the corresponding edge of the
-     * container to the corresponding edge of the closest to it element
-     * @param container the container to be drawn behind the text field. By default, this includes
-     * the bottom indicator line. Default colors for the container come from the [colors].
+     * Kept for source compatibility. `visualTransformation` is no longer applied; see the
+     * overload without it for the documented parameters.
      */
     @Composable
     @ExperimentalMaterial3Api
@@ -561,6 +507,62 @@ public object RichTextEditorDefaults {
         )
     }
 
+    /**
+     * A decoration box which helps creating custom text fields based on
+     * <a href="https://material.io/components/text-fields#filled-text-field" class="external" target="_blank">Material Design filled text field</a>.
+     *
+     * If your text field requires customising elements that aren't exposed by [TextField],
+     * consider using this decoration box to achieve the desired design.
+     *
+     * For example, if you need to create a dense text field, use [contentPadding] parameter to
+     * decrease the paddings around the input field. If you need to customise the bottom indicator,
+     * apply [indicatorLine] modifier to achieve that.
+     *
+     * See example of using [RichTextEditorDecorationBox] to build your own custom text field
+     * @sample androidx.compose.material3.samples.CustomTextFieldBasedOnDecorationBox
+     *
+     * @param value the input [String] shown by the text field
+     * @param innerTextField input text field that this decoration box wraps. You will pass here a
+     * framework-controlled composable parameter "innerTextField" from the decorationBox lambda of
+     * the [BasicTextField]
+     * @param enabled controls the enabled state of the text field. When `false`, this component
+     * will not respond to user input, and it will appear visually disabled and disabled to
+     * accessibility services. You must also pass the same value to the [BasicTextField] for it to
+     * adjust the behavior accordingly.
+     * @param singleLine indicates if this is a single line or multi line text field. You must pass
+     * the same value as to [BasicTextField].
+     * @param interactionSource the read-only [InteractionSource] representing the stream of
+     * [Interaction]s for this text field. You must first create and pass in your own `remember`ed
+     * [MutableInteractionSource] instance to the [BasicTextField] for it to dispatch events. And
+     * then pass the same instance to this decoration box to observe [Interaction]s and customize
+     * the appearance / behavior of this text field in different states.
+     * @param isError indicates if the text field's current value is in error state. If set to
+     * true, the label, bottom indicator and trailing icon by default will be displayed in error
+     * color.
+     * @param label the optional label to be displayed inside the text field container. The default
+     * text style for internal [Text] is [Typography.bodySmall] when the text field is in focus and
+     * [Typography.bodyLarge] when the text field is not in focus.
+     * @param placeholder the optional placeholder to be displayed when the text field is in focus
+     * and the input text is empty. The default text style for internal [Text] is
+     * [Typography.bodyLarge].
+     * @param leadingIcon the optional leading icon to be displayed at the beginning of the text
+     * field container
+     * @param trailingIcon the optional trailing icon to be displayed at the end of the text field
+     * container
+     * @param supportingText the optional supporting text to be displayed below the text field
+     * @param colors [RichTextEditorColors] that will be used to resolve the colors used for this text
+     * field in different states. See [TextFieldDefaults.textFieldColors].
+     * @param contentPadding the spacing values to apply internally between the internals of text
+     * field and the decoration box container. You can use it to implement dense text fields or
+     * simply to control horizontal padding. See [TextFieldDefaults.textFieldWithLabelPadding] and
+     * [TextFieldDefaults.textFieldWithoutLabelPadding]
+     * Note that if there's a label in the text field, the [top][PaddingValues.calculateTopPadding]
+     * padding will mean the distance from label's [last baseline][LastBaseline] to the top edge of
+     * the container. All other paddings mean the distance from the corresponding edge of the
+     * container to the corresponding edge of the closest to it element
+     * @param container the container to be drawn behind the text field. By default, this includes
+     * the bottom indicator line. Default colors for the container come from the [colors].
+     */
     @Composable
     @ExperimentalMaterial3Api
     public fun RichTextEditorDecorationBox(
@@ -608,59 +610,8 @@ public object RichTextEditorDefaults {
     }
 
     /**
-     * A decoration box which helps creating custom text fields based on
-     * <a href="https://material.io/components/text-fields#outlined-text-field" class="external" target="_blank">Material Design outlined text field</a>.
-     *
-     * If your text field requires customising elements that aren't exposed by [OutlinedTextField],
-     * consider using this decoration box to achieve the desired design.
-     *
-     * For example, if you need to create a dense outlined text field, use [contentPadding]
-     * parameter to decrease the paddings around the input field. If you need to change the
-     * thickness of the border, use [container] parameter to achieve that.
-     *
-     * Example of custom text field based on [OutlinedRichTextEditorDecorationBox]:
-     * @sample androidx.compose.material3.samples.CustomOutlinedTextFieldBasedOnDecorationBox
-     *
-     * @param value the input [String] shown by the text field
-     * @param innerTextField input text field that this decoration box wraps. You will pass here a
-     * framework-controlled composable parameter "innerTextField" from the decorationBox lambda of
-     * the [BasicTextField]
-     * @param enabled controls the enabled state of the text field. When `false`, this component
-     * will not respond to user input, and it will appear visually disabled and disabled to
-     * accessibility services. You must also pass the same value to the [BasicTextField] for it to
-     * adjust the behavior accordingly.
-     * @param singleLine indicates if this is a single line or multi line text field. You must pass
-     * the same value as to [BasicTextField].
-     * @param visualTransformation transforms the visual representation of the input [value]. You
-     * must pass the same value as to [BasicTextField].
-     * @param interactionSource the read-only [InteractionSource] representing the stream of
-     * [Interaction]s for this text field. You must first create and pass in your own `remember`ed
-     * [MutableInteractionSource] instance to the [BasicTextField] for it to dispatch events. And
-     * then pass the same instance to this decoration box to observe [Interaction]s and customize
-     * the appearance / behavior of this text field in different states.
-     * @param isError indicates if the text field's current value is in error state. If set to
-     * true, the label, bottom indicator and trailing icon by default will be displayed in error
-     * color.
-     * @param label the optional label to be displayed inside the text field container. The default
-     * text style for internal [Text] is [Typography.bodySmall] when the text field is in focus and
-     * [Typography.bodyLarge] when the text field is not in focus.
-     * @param placeholder the optional placeholder to be displayed when the text field is in focus
-     * and the input text is empty. The default text style for internal [Text] is
-     * [Typography.bodyLarge].
-     * @param leadingIcon the optional leading icon to be displayed at the beginning of the text
-     * field container
-     * @param trailingIcon the optional trailing icon to be displayed at the end of the text field
-     * container
-     * @param supportingText the optional supporting text to be displayed below the text field
-     * @param colors [RichTextEditorColors] that will be used to resolve the colors used for this text
-     * field in different states. See [TextFieldDefaults.outlinedTextFieldColors].
-     * @param contentPadding the spacing values to apply internally between the internals of text
-     * field and the decoration box container. You can use it to implement dense text fields or
-     * simply to control horizontal padding. See [TextFieldDefaults.outlinedTextFieldPadding].
-     * @param container the container to be drawn behind the text field. By default, this is
-     * transparent and only includes a border. The cutout in the border to fit the [label] will be
-     * automatically added by the framework. Note that by default the color of the border comes from
-     * the [colors].
+     * Kept for source compatibility. `visualTransformation` is no longer applied; see the
+     * overload without it for the documented parameters.
      */
     @Composable
     @ExperimentalMaterial3Api
@@ -708,6 +659,59 @@ public object RichTextEditorDefaults {
         )
     }
 
+    /**
+     * A decoration box which helps creating custom text fields based on
+     * <a href="https://material.io/components/text-fields#outlined-text-field" class="external" target="_blank">Material Design outlined text field</a>.
+     *
+     * If your text field requires customising elements that aren't exposed by [OutlinedTextField],
+     * consider using this decoration box to achieve the desired design.
+     *
+     * For example, if you need to create a dense outlined text field, use [contentPadding]
+     * parameter to decrease the paddings around the input field. If you need to change the
+     * thickness of the border, use [container] parameter to achieve that.
+     *
+     * Example of custom text field based on [OutlinedRichTextEditorDecorationBox]:
+     * @sample androidx.compose.material3.samples.CustomOutlinedTextFieldBasedOnDecorationBox
+     *
+     * @param value the input [String] shown by the text field
+     * @param innerTextField input text field that this decoration box wraps. You will pass here a
+     * framework-controlled composable parameter "innerTextField" from the decorationBox lambda of
+     * the [BasicTextField]
+     * @param enabled controls the enabled state of the text field. When `false`, this component
+     * will not respond to user input, and it will appear visually disabled and disabled to
+     * accessibility services. You must also pass the same value to the [BasicTextField] for it to
+     * adjust the behavior accordingly.
+     * @param singleLine indicates if this is a single line or multi line text field. You must pass
+     * the same value as to [BasicTextField].
+     * @param interactionSource the read-only [InteractionSource] representing the stream of
+     * [Interaction]s for this text field. You must first create and pass in your own `remember`ed
+     * [MutableInteractionSource] instance to the [BasicTextField] for it to dispatch events. And
+     * then pass the same instance to this decoration box to observe [Interaction]s and customize
+     * the appearance / behavior of this text field in different states.
+     * @param isError indicates if the text field's current value is in error state. If set to
+     * true, the label, bottom indicator and trailing icon by default will be displayed in error
+     * color.
+     * @param label the optional label to be displayed inside the text field container. The default
+     * text style for internal [Text] is [Typography.bodySmall] when the text field is in focus and
+     * [Typography.bodyLarge] when the text field is not in focus.
+     * @param placeholder the optional placeholder to be displayed when the text field is in focus
+     * and the input text is empty. The default text style for internal [Text] is
+     * [Typography.bodyLarge].
+     * @param leadingIcon the optional leading icon to be displayed at the beginning of the text
+     * field container
+     * @param trailingIcon the optional trailing icon to be displayed at the end of the text field
+     * container
+     * @param supportingText the optional supporting text to be displayed below the text field
+     * @param colors [RichTextEditorColors] that will be used to resolve the colors used for this text
+     * field in different states. See [TextFieldDefaults.outlinedTextFieldColors].
+     * @param contentPadding the spacing values to apply internally between the internals of text
+     * field and the decoration box container. You can use it to implement dense text fields or
+     * simply to control horizontal padding. See [TextFieldDefaults.outlinedTextFieldPadding].
+     * @param container the container to be drawn behind the text field. By default, this is
+     * transparent and only includes a border. The cutout in the border to fit the [label] will be
+     * automatically added by the framework. Note that by default the color of the border comes from
+     * the [colors].
+     */
     @Composable
     @ExperimentalMaterial3Api
     public fun OutlinedRichTextEditorDecorationBox(

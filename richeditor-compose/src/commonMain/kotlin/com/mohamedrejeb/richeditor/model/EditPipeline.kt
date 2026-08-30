@@ -112,6 +112,10 @@ internal fun RichTextState.applyChangeList(buffer: TextFieldBuffer) {
             pendingTextDuringSync = null
         }
     }
+
+    // Arms the #779 follow-up window: a suggestion pick's trailing-space refresh arrives
+    // as a bare caret step right after this edit.
+    noteImeEdit(caret = textFieldValue.selection.min)
 }
 
 /**

@@ -9,12 +9,26 @@ import kotlin.test.assertTrue
 
 class EditPipelineClassifyTest {
 
+    /**
+     * Replays one buffer edit the way the editor's InputTransformation does, then bridges
+     * the textFieldState mirror that applyChangeList deliberately suppresses mid-replay
+     * (in production the transformation's own buffer is already canonical), so the next
+     * toTextFieldBuffer() snapshot starts from the post-edit text.
+     */
+    private fun RichTextState.replayBufferEdit(range: TextRange, newText: String) {
+        val buffer = textFieldState.toTextFieldBuffer()
+        buffer.replace(range.min, range.max, newText)
+        applyChangeList(buffer)
+        setTextFieldStateFromValue(text = annotatedString.text, selection = textFieldValue.selection)
+        pendingSelectionDuringSync = null
+    }
+
     @Test
     fun `single insertion records one typing history entry`() {
         val state = RichTextState()
         state.setText("ab")
         state.history.clear()
-        state.applyUserEditForTest(originalRange = TextRange(2, 2), newText = "c")
+        state.replayBufferEdit(TextRange(2, 2), "c")
         assertEquals("abc", state.toText())
         assertTrue(state.history.canUndo)
         state.history.undo()
@@ -26,7 +40,7 @@ class EditPipelineClassifyTest {
         val state = RichTextState()
         state.setText("abc")
         state.history.clear()
-        state.applyUserEditForTest(originalRange = TextRange(2, 3), newText = "")
+        state.replayBufferEdit(TextRange(2, 3), "")
         assertEquals("ab", state.toText())
         assertTrue(state.history.canUndo)
         state.history.undo()
@@ -38,8 +52,8 @@ class EditPipelineClassifyTest {
         val state = RichTextState()
         state.setText("")
         state.history.clear()
-        state.applyUserEditForTest(originalRange = TextRange(0, 0), newText = "a")
-        state.applyUserEditForTest(originalRange = TextRange(1, 1), newText = "b")
+        state.replayBufferEdit(TextRange(0, 0), "a")
+        state.replayBufferEdit(TextRange(1, 1), "b")
         assertEquals("ab", state.toText())
         assertTrue(state.history.canUndo)
         state.history.undo()

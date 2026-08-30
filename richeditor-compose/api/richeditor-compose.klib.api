@@ -776,6 +776,8 @@ final class com.mohamedrejeb.richeditor.model/RichTextState { // com.mohamedreje
         final fun <get-isCodeSpan>(): kotlin/Boolean // com.mohamedrejeb.richeditor.model/RichTextState.isCodeSpan.<get-isCodeSpan>|<get-isCodeSpan>(){}[0]
     final val isLink // com.mohamedrejeb.richeditor.model/RichTextState.isLink|{}isLink[0]
         final fun <get-isLink>(): kotlin/Boolean // com.mohamedrejeb.richeditor.model/RichTextState.isLink.<get-isLink>|<get-isLink>(){}[0]
+    final val scrollState // com.mohamedrejeb.richeditor.model/RichTextState.scrollState|{}scrollState[0]
+        final fun <get-scrollState>(): androidx.compose.foundation/ScrollState // com.mohamedrejeb.richeditor.model/RichTextState.scrollState.<get-scrollState>|<get-scrollState>(){}[0]
     final val selectedLinkText // com.mohamedrejeb.richeditor.model/RichTextState.selectedLinkText|{}selectedLinkText[0]
         final fun <get-selectedLinkText>(): kotlin/String? // com.mohamedrejeb.richeditor.model/RichTextState.selectedLinkText.<get-selectedLinkText>|<get-selectedLinkText>(){}[0]
     final val selectedLinkUrl // com.mohamedrejeb.richeditor.model/RichTextState.selectedLinkUrl|{}selectedLinkUrl[0]

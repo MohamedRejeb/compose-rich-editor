@@ -1,6 +1,8 @@
 package com.mohamedrejeb.richeditor.model
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
@@ -139,6 +141,64 @@ public class RichTextState internal constructor(
     internal var visualTransformation: VisualTransformation by mutableStateOf(VisualTransformation.None)
     internal var textFieldValue by mutableStateOf(TextFieldValue())
         private set
+
+    internal val textFieldState: TextFieldState =
+        TextFieldState(initialText = "", initialSelection = TextRange.Zero)
+
+    /**
+     * Scroll position of the editor's internal text area. Hoisted so span overlays and
+     * app code can observe and control the editor's own scrolling.
+     */
+    public val scrollState: ScrollState = ScrollState(initial = 0)
+
+    /**
+     * When true, [setTextFieldStateFromValue] skips the textFieldState.edit call. Set by the
+     * editor's InputTransformation while it replays a user edit: the BTF2 buffer is already
+     * canonical there and a nested edit would re-enter the transformation.
+     * While suppressed, [pendingTextDuringSync] and [pendingSelectionDuringSync] record the
+     * intended values so consecutive primitives inside one applyChange see each other's
+     * results and the InputTransformation tail can reconcile the buffer.
+     */
+    internal var skipTextFieldStateSync: Boolean = false
+
+    internal var pendingTextDuringSync: String? = null
+
+    internal var pendingSelectionDuringSync: TextRange? = null
+
+    /**
+     * When true, the editor's InputTransformation returns early without calling
+     * applyChangeList. Set around every programmatic textFieldState.edit so the write is not
+     * re-interpreted as user input, which would corrupt richParagraphList by routing a
+     * wholesale text swap through the primitives.
+     */
+    internal var isApplyingProgrammaticSync: Boolean = false
+
+    internal fun setTextFieldStateFromValue(text: String, selection: TextRange) {
+        if (skipTextFieldStateSync) {
+            pendingTextDuringSync = text
+            pendingSelectionDuringSync = selection
+            return
+        }
+        pendingTextDuringSync = null
+        pendingSelectionDuringSync = null
+        val currentText = textFieldState.text.toString()
+        val currentSelection = textFieldState.selection
+        if (currentText == text && currentSelection == selection) return
+        val previous = isApplyingProgrammaticSync
+        isApplyingProgrammaticSync = true
+        try {
+            textFieldState.edit {
+                if (asCharSequence().toString() != text) {
+                    replace(0, length, text)
+                }
+                if (this.selection != selection) {
+                    this.selection = selection
+                }
+            }
+        } finally {
+            isApplyingProgrammaticSync = previous
+        }
+    }
 
     internal val inlineContentMap = mutableStateMapOf<String, InlineTextContent>()
     internal val usedInlineContentMapKeys = mutableSetOf<String>()
@@ -2516,6 +2576,7 @@ public class RichTextState internal constructor(
                 updateAnnotatedString(tempTextFieldValue)
             } else {
                 textFieldValue = tempTextFieldValue
+                setTextFieldStateFromValue(text = textFieldValue.text, selection = textFieldValue.selection)
             }
         } else {
             // Update the annotatedString and the textFieldValue with the new values
@@ -2601,6 +2662,7 @@ public class RichTextState internal constructor(
                 snapshot.selection.end.coerceIn(0, textLen),
             )
             textFieldValue = textFieldValue.copy(selection = clampedSelection)
+            setTextFieldStateFromValue(text = textFieldValue.text, selection = textFieldValue.selection)
             tempTextFieldValue = textFieldValue
 
             // Re-apply staged styles from the snapshot. updateRichParagraphList clears
@@ -2794,6 +2856,7 @@ public class RichTextState internal constructor(
                 newTextFieldValue.selection.end.coerceIn(0, newTextLength),
             ),
         )
+        setTextFieldStateFromValue(text = textFieldValue.text, selection = textFieldValue.selection)
         // Snapshot by value: the lambda runs during measure, where a live
         // `annotatedString` read would race the textFieldValue captured at composition.
         val transformed = annotatedString
@@ -5548,6 +5611,7 @@ public class RichTextState internal constructor(
             selection = selection,
             composition = newComposition?.takeIf { it.min >= 0 && it.max <= textLength },
         )
+        setTextFieldStateFromValue(text = textFieldValue.text, selection = textFieldValue.selection)
         // Snapshot by value: see the matching note in `updateAnnotatedString`.
         val transformed = annotatedString
         visualTransformation = VisualTransformation { _ ->

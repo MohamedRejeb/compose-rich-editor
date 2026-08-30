@@ -576,6 +576,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun getHistory ()Lcom/mohamedrejeb/richeditor/model/history/RichTextHistory;
 	public final fun getParagraphStyle-5zc-tL8 (J)Landroidx/compose/ui/text/ParagraphStyle;
 	public final fun getRichSpanStyle-5zc-tL8 (J)Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;
+	public final fun getScrollState ()Landroidx/compose/foundation/ScrollState;
 	public final fun getSelectedLinkText ()Ljava/lang/String;
 	public final fun getSelectedLinkUrl ()Ljava/lang/String;
 	public final fun getSelection-d9O1mEE ()J

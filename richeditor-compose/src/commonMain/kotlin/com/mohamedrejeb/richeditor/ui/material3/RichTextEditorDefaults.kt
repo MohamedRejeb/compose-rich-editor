@@ -510,12 +510,64 @@ public object RichTextEditorDefaults {
      */
     @Composable
     @ExperimentalMaterial3Api
+    @Deprecated(
+        message = "visualTransformation is no longer applied; the editor renders styled output via OutputTransformation. Use the overload without this parameter.",
+        replaceWith = ReplaceWith(
+            "RichTextEditorDecorationBox(value, innerTextField, enabled, singleLine, interactionSource, isError, label, placeholder, leadingIcon, trailingIcon, supportingText, shape, colors, contentPadding, container)"
+        ),
+        level = DeprecationLevel.WARNING,
+    )
     public fun RichTextEditorDecorationBox(
         value: String,
         innerTextField: @Composable () -> Unit,
         enabled: Boolean,
         singleLine: Boolean,
-        visualTransformation: VisualTransformation,
+        @Suppress("UNUSED_PARAMETER") visualTransformation: VisualTransformation,
+        interactionSource: InteractionSource,
+        isError: Boolean = false,
+        label: @Composable (() -> Unit)? = null,
+        placeholder: @Composable (() -> Unit)? = null,
+        leadingIcon: @Composable (() -> Unit)? = null,
+        trailingIcon: @Composable (() -> Unit)? = null,
+        supportingText: @Composable (() -> Unit)? = null,
+        shape: Shape = filledShape,
+        colors: RichTextEditorColors = richTextEditorColors(),
+        contentPadding: PaddingValues =
+            if (label == null) {
+                richTextEditorWithoutLabelPadding()
+            } else {
+                richTextEditorWithLabelPadding()
+            },
+        container: @Composable () -> Unit = {
+            FilledContainerBox(enabled, isError, interactionSource, colors, shape)
+        }
+    ) {
+        RichTextEditorDecorationBox(
+            value = value,
+            innerTextField = innerTextField,
+            enabled = enabled,
+            singleLine = singleLine,
+            interactionSource = interactionSource,
+            isError = isError,
+            label = label,
+            placeholder = placeholder,
+            leadingIcon = leadingIcon,
+            trailingIcon = trailingIcon,
+            supportingText = supportingText,
+            shape = shape,
+            colors = colors,
+            contentPadding = contentPadding,
+            container = container
+        )
+    }
+
+    @Composable
+    @ExperimentalMaterial3Api
+    public fun RichTextEditorDecorationBox(
+        value: String,
+        innerTextField: @Composable () -> Unit,
+        enabled: Boolean,
+        singleLine: Boolean,
         interactionSource: InteractionSource,
         isError: Boolean = false,
         label: @Composable (() -> Unit)? = null,
@@ -539,7 +591,7 @@ public object RichTextEditorDefaults {
             type = TextFieldType.Filled,
             value = value,
             innerTextField = innerTextField,
-            visualTransformation = visualTransformation,
+            visualTransformation = VisualTransformation.None,
             placeholder = placeholder,
             label = label,
             leadingIcon = leadingIcon,
@@ -612,12 +664,57 @@ public object RichTextEditorDefaults {
      */
     @Composable
     @ExperimentalMaterial3Api
+    @Deprecated(
+        message = "visualTransformation is no longer applied; the editor renders styled output via OutputTransformation. Use the overload without this parameter.",
+        replaceWith = ReplaceWith(
+            "OutlinedRichTextEditorDecorationBox(value, innerTextField, enabled, singleLine, interactionSource, isError, label, placeholder, leadingIcon, trailingIcon, supportingText, colors, contentPadding, container)"
+        ),
+        level = DeprecationLevel.WARNING,
+    )
     public fun OutlinedRichTextEditorDecorationBox(
         value: String,
         innerTextField: @Composable () -> Unit,
         enabled: Boolean,
         singleLine: Boolean,
-        visualTransformation: VisualTransformation,
+        @Suppress("UNUSED_PARAMETER") visualTransformation: VisualTransformation,
+        interactionSource: InteractionSource,
+        isError: Boolean = false,
+        label: @Composable (() -> Unit)? = null,
+        placeholder: @Composable (() -> Unit)? = null,
+        leadingIcon: @Composable (() -> Unit)? = null,
+        trailingIcon: @Composable (() -> Unit)? = null,
+        supportingText: @Composable (() -> Unit)? = null,
+        colors: RichTextEditorColors = outlinedRichTextEditorColors(),
+        contentPadding: PaddingValues = outlinedRichTextEditorPadding(),
+        container: @Composable () -> Unit = {
+            OutlinedBorderContainerBox(enabled, isError, interactionSource, colors)
+        }
+    ) {
+        OutlinedRichTextEditorDecorationBox(
+            value = value,
+            innerTextField = innerTextField,
+            enabled = enabled,
+            singleLine = singleLine,
+            interactionSource = interactionSource,
+            isError = isError,
+            label = label,
+            placeholder = placeholder,
+            leadingIcon = leadingIcon,
+            trailingIcon = trailingIcon,
+            supportingText = supportingText,
+            colors = colors,
+            contentPadding = contentPadding,
+            container = container
+        )
+    }
+
+    @Composable
+    @ExperimentalMaterial3Api
+    public fun OutlinedRichTextEditorDecorationBox(
+        value: String,
+        innerTextField: @Composable () -> Unit,
+        enabled: Boolean,
+        singleLine: Boolean,
         interactionSource: InteractionSource,
         isError: Boolean = false,
         label: @Composable (() -> Unit)? = null,
@@ -634,7 +731,7 @@ public object RichTextEditorDefaults {
         CommonDecorationBox(
             type = TextFieldType.Outlined,
             value = value,
-            visualTransformation = visualTransformation,
+            visualTransformation = VisualTransformation.None,
             innerTextField = innerTextField,
             placeholder = placeholder,
             label = label,

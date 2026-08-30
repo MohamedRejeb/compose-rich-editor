@@ -18,6 +18,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
@@ -137,8 +138,8 @@ public fun OutlinedRichTextEditor(
         undoBehavior = undoBehavior,
         decorationBox = @Composable { innerTextField ->
             TextFieldDefaults.OutlinedTextFieldDecorationBox(
-                value = state.textFieldValue.text,
-                visualTransformation = state.visualTransformation,
+                value = state.annotatedString.text,
+                visualTransformation = VisualTransformation.None,
                 innerTextField = innerTextField,
                 placeholder = placeholder,
                 label = label,

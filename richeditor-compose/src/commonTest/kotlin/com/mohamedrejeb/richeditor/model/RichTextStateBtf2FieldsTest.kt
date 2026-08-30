@@ -40,4 +40,20 @@ class RichTextStateBtf2FieldsTest {
             state.skipTextFieldStateSync = false
         }
     }
+
+    @Test
+    fun `setHtml with shorter content follows the caret delta contract`() {
+        val state = RichTextState()
+        state.setHtml("<p>12345678901234567890</p>")
+        state.selection = TextRange(state.annotatedString.text.length)
+        assertEquals(TextRange(20), state.selection)
+
+        // Delta contract (no explicit newSelection): new = (old + (newLength -
+        // oldLength)).coerceIn(0, newLength). old=20, oldLength=20, newLength=10,
+        // so new = (20 + (10 - 20)).coerceIn(0, 10) = 10, the caret staying at the
+        // document's end rather than jumping to its start.
+        state.setHtml("<p>1234567890</p>")
+
+        assertEquals(TextRange(10), state.selection)
+    }
 }

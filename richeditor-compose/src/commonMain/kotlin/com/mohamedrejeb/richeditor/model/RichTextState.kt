@@ -147,10 +147,12 @@ public class RichTextState internal constructor(
      * value. [pendingTextDuringSync] / [pendingSelectionDuringSync] take precedence so a
      * read taken mid-[setTextFieldStateFromValue] replay (while [skipTextFieldStateSync]
      * defers the real write) still sees the intended result. The text fallback reads
-     * [annotatedString] rather than [textFieldState] directly: the tree rebuild that
-     * precedes every [setTextFieldStateFromValue] call keeps it unconditionally current,
-     * so it always stays in bounds for whatever selection [pendingSelectionDuringSync]
-     * may still be holding once [pendingTextDuringSync] itself has been cleared.
+     * [annotatedString] rather than [textFieldState] directly: every text-changing
+     * [setTextFieldStateFromValue] call is preceded by a tree rebuild that keeps it
+     * unconditionally current, so it always stays in bounds for whatever selection
+     * [pendingSelectionDuringSync] may still be holding once [pendingTextDuringSync]
+     * itself has been cleared. Selection-only writes (no text change) don't rebuild the
+     * tree, but don't need to: [annotatedString] is already current for them too.
      */
     internal val textFieldValue: TextFieldValue
         get() {
@@ -5693,7 +5695,8 @@ public class RichTextState internal constructor(
      *
      * @param newSelection Selection to apply, coerced into the new text bounds; null keeps
      * the previous selection adjusted by the length delta.
-     * @param newComposition Composition to keep (dropped when out of bounds); null clears it.
+     * @param newComposition Currently inert: [textFieldState]'s own composition is never
+     * written from here, so this value is computed and discarded. Left for a later cleanup.
      */
     internal fun updateRichParagraphList(
         newSelection: TextRange? = null,
@@ -5703,6 +5706,12 @@ public class RichTextState internal constructor(
             richParagraphList.add(RichParagraph())
 
         val beforeTextLength = annotatedString.text.length
+        // Read before the rebuild below replaces `annotatedString`: after it, the computed
+        // `textFieldValue` would pair the NEW text with the OLD (not yet synced)
+        // `textFieldState.selection`, and TextFieldValue's constructor silently clamps that
+        // stale selection into the new (possibly shorter) text's bounds, corrupting the read
+        // this delta computation depends on.
+        val beforeSelectionMin = textFieldValue.selection.min
 
         val newStyledRichSpanList = mutableListOf<RichSpan>()
 
@@ -5763,7 +5772,7 @@ public class RichTextState internal constructor(
                 )
             else
                 TextRange(
-                    (textFieldValue.selection.min + (textLength - beforeTextLength))
+                    (beforeSelectionMin + (textLength - beforeTextLength))
                         .coerceIn(0, textLength)
                 )
 

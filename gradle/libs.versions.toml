@@ -1,5 +1,5 @@
 [versions]
-agp = "9.3.0"
+agp = "9.3.2"
 kotlin = "2.4.10"
 compose = "1.12.0"
 material3 = "1.12.0-alpha03"

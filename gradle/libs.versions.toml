@@ -18,7 +18,7 @@ java = "17"
 # For sample
 androidx-appcompat = "1.7.1"
 activity-compose = "1.13.0"
-richeditor = "1.0.0"
+richeditor = "1.1.0"
 coroutines = "1.11.0"
 ktor = "3.5.2"
 android-minSdk = "23"

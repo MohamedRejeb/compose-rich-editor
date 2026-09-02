@@ -3806,33 +3806,28 @@ public class RichTextState internal constructor(
     private fun checkForParagraphs() {
         var index = tempTextFieldValue.text.lastIndex
 
-        // Count newlines vs paragraph breaks to detect unprocessed newlines.
-        // This handles the case where IME sends a text update that removes our
-        // paragraph prefix (e.g. "2. ") but keeps the newline, the newline
-        // position ends up before the old selection, so the normal threshold
-        // would skip it. See #640.
-        // Lower the threshold to scan all newlines when there's a single paragraph but
-        // the text has newlines: autocorrect shortened text + added newline in one
-        // onValueChange call (the newline is before the old cursor, so the normal
-        // threshold would skip it). See #640.
-        val actualNewlines = tempTextFieldValue.text.count { it == '\n' }
-        val breakThreshold =
-            if (actualNewlines > 0 && richParagraphList.size == 1) 0
-            else textFieldValue.selection.min
-
+        // Every newline still in the text is an unprocessed paragraph break: the model's own
+        // text separates paragraphs with a space (updateAnnotatedString builds it with
+        // replace('\n', ' ')), so a '\n' here can only be one the platform just inserted.
+        // Scanning only from the pre-edit caret instead used to drop any break that landed
+        // behind it, which the BTF2 ChangeList replay produces whenever a delta lands before
+        // the caret: the newline then survived into the text and rendered as a literal space.
+        // The #640 cases (IME dropping a list prefix but keeping the newline, autocorrect
+        // shortening the text and adding a newline in one call) are the same shape and were
+        // covered by a single-paragraph escape hatch before.
         while (true) {
             // Search for the next paragraph
             index = tempTextFieldValue.text.lastIndexOf('\n', index)
 
             // If there are no more paragraphs, break
-            if (index < breakThreshold) break
+            if (index < 0) break
 
             // Get the rich span style at the index to split it between two paragraphs
             var richSpan = getRichSpanByTextIndex(index)
 
             // If the newline is at the end of the text (past all spans) during an IME revert
             // rebuild, use the last span of the last paragraph. See #640.
-            if (richSpan == null && index == tempTextFieldValue.text.lastIndex && breakThreshold == 0) {
+            if (richSpan == null && index == tempTextFieldValue.text.lastIndex) {
                 richSpan = richParagraphList.lastOrNull()?.getLastNonEmptyChild()
             }
 

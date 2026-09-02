@@ -4722,6 +4722,17 @@ public class RichTextState internal constructor(
         // Update the children paragraph of the second paragraph to the first paragraph.
         secondParagraph.updateChildrenParagraph(firstParagraph)
 
+        // A heading keeps its visuals on its spans, so spans joining one have to take them too.
+        // Without this, backspacing a paragraph into a heading left the heading half styled, and
+        // reloading the document (toHtml writes the whole paragraph as a heading) rendered it
+        // differently from what the user was looking at.
+        val headingStyle = firstParagraph.headingStyle
+        if (headingStyle != HeadingStyle.Normal) {
+            secondParagraph.children.fastForEach { richSpan ->
+                richSpan.spanStyle = richSpan.spanStyle.customMerge(headingStyle.defaultSpanStyle)
+            }
+        }
+
         // Add the children of the second paragraph to the first paragraph.
         firstParagraph.children.addAll(secondParagraph.children)
 

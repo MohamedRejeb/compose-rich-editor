@@ -2,6 +2,8 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text.input.TextFieldBuffer
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.TextRange
 import com.mohamedrejeb.richeditor.model.history.CommitTrigger
 
@@ -119,9 +121,45 @@ internal fun RichTextState.applyChangeList(buffer: TextFieldBuffer) {
 }
 
 /**
- * Projects annotatedString's style ranges into the BTF2 output buffer. The annotatedString
- * already encodes all ranges correctly; nothing else is needed here. Inter-paragraph
- * spacing is handled solely by LineHeightStyle.Trim.Both on the editor's text style.
+ * Reshapes the paragraph ranges so a trailing empty paragraph still renders a line.
+ *
+ * The builder appends each paragraph separator inside the *previous* paragraph's range, so a
+ * trailing empty paragraph gets a zero-length range at the end of the text. BTF2 styles the
+ * buffer through tracked ranges and drops collapsed ones, so that paragraph renders nothing;
+ * the legacy path kept it because it handed the whole AnnotatedString to the renderer.
+ *
+ * Walking backward, every degenerate range re-owns the separator character in front of it and
+ * the preceding range gives that character up, cascading when the shrink empties the preceding
+ * range in turn. A range that is still degenerate afterwards (only [0,0) on an empty document)
+ * is dropped.
+ *
+ * Accepted cosmetic: on a trailing empty line the caret sits after the invisible separator
+ * space, so it renders one space-width in from the line start.
+ */
+internal fun adjustDegenerateTrailingParagraphRanges(
+    ranges: List<AnnotatedString.Range<ParagraphStyle>>,
+): List<AnnotatedString.Range<ParagraphStyle>> {
+    if (ranges.none { it.start == it.end }) return ranges
+
+    val adjusted = ranges.toMutableList()
+    for (i in adjusted.indices.reversed()) {
+        val range = adjusted[i]
+        if (range.start != range.end || range.start == 0) continue
+
+        adjusted[i] = range.copy(start = range.start - 1)
+        val previous = adjusted.getOrNull(i - 1) ?: continue
+        // Only the range that actually owns that character can give it up.
+        if (previous.end != range.start) continue
+        adjusted[i - 1] = previous.copy(end = previous.end - 1)
+    }
+    return adjusted.filter { it.start != it.end }
+}
+
+/**
+ * Projects annotatedString's style ranges into the BTF2 output buffer. Span ranges are emitted
+ * as built; paragraph ranges go through [adjustDegenerateTrailingParagraphRanges] first, since
+ * BTF2 drops collapsed tracked ranges. Inter-paragraph spacing is handled solely by
+ * LineHeightStyle.Trim.Both on the editor's text style.
  */
 internal fun RichTextState.applyRichTextStyles(buffer: TextFieldBuffer) {
     val annotated = annotatedString
@@ -130,7 +168,7 @@ internal fun RichTextState.applyRichTextStyles(buffer: TextFieldBuffer) {
             buffer.addStyle(range.item, range.start, range.end)
         }
     }
-    annotated.paragraphStyles.forEach { range ->
+    adjustDegenerateTrailingParagraphRanges(annotated.paragraphStyles).forEach { range ->
         if (range.start in 0..buffer.length && range.end in 0..buffer.length) {
             buffer.addStyle(range.item, range.start, range.end)
         }

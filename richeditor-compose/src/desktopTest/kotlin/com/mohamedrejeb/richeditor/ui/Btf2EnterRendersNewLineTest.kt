@@ -42,6 +42,26 @@ class Btf2EnterRendersNewLineTest {
     }
 
     @Test
+    fun `enter on an empty document renders two lines`() = runDesktopComposeUiTest {
+        lateinit var state: RichTextState
+        setContent {
+            state = rememberRichTextState()
+            BasicRichTextEditor(state = state, modifier = Modifier.testTag("editor"))
+        }
+        onNodeWithTag("editor").performTextInput("\n")
+        waitForIdle()
+
+        assertEquals(2, state.richParagraphList.size, "model should have two paragraphs")
+        val layout = state.textLayoutResult
+        assertEquals(2, layout?.lineCount, "layout should render two lines on an empty document")
+        assertEquals(
+            1,
+            layout?.getLineForOffset(state.textFieldValue.text.length),
+            "the caret at text end should sit on the second line",
+        )
+    }
+
+    @Test
     fun `two enters render three lines immediately`() = runDesktopComposeUiTest {
         lateinit var state: RichTextState
         setContent {

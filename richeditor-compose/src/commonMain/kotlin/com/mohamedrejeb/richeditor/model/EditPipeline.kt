@@ -163,44 +163,34 @@ internal fun RichTextState.reconcileBufferWithModel(buffer: TextFieldBuffer) {
 }
 
 /**
- * Reshapes the paragraph ranges so a trailing empty paragraph still renders a line.
+ * Makes a trailing empty paragraph render its line by turning the separator space in front of it
+ * into a newline in the output buffer.
  *
  * The builder appends each paragraph separator inside the *previous* paragraph's range, so a
- * trailing empty paragraph gets a zero-length range at the end of the text. BTF2 styles the
- * buffer through tracked ranges and drops collapsed ones, so that paragraph renders nothing;
- * the legacy path kept it because it handed the whole AnnotatedString to the renderer.
+ * trailing empty paragraph gets a zero-length range at the end of the text. BTF2 styles the buffer
+ * through tracked ranges and drops collapsed ones, so that paragraph renders nothing. Shifting the
+ * ranges instead cannot work on an all-empty document: N empty paragraphs own only N-1 separators,
+ * so one line always goes missing. A newline makes MultiParagraph split natively, no range needed.
  *
- * Walking backward, every degenerate range re-owns the separator character in front of it and
- * the preceding range gives that character up, cascading when the shrink empties the preceding
- * range in turn. A range that is still degenerate afterwards (only [0,0) on an empty document)
- * is dropped.
- *
- * Accepted cosmetic: on a trailing empty line the caret sits after the invisible separator
- * space, so it renders one space-width in from the line start.
+ * The substitution is output-only (the model text keeps its space) and same-length, so every style
+ * offset stays valid and the caret at the end of the text lands on the new line.
  */
-internal fun adjustDegenerateTrailingParagraphRanges(
+internal fun substituteTrailingSeparatorWithNewline(
+    buffer: TextFieldBuffer,
     ranges: List<AnnotatedString.Range<ParagraphStyle>>,
-): List<AnnotatedString.Range<ParagraphStyle>> {
-    if (ranges.none { it.start == it.end }) return ranges
-
-    val adjusted = ranges.toMutableList()
-    for (i in adjusted.indices.reversed()) {
-        val range = adjusted[i]
-        if (range.start != range.end || range.start == 0) continue
-
-        adjusted[i] = range.copy(start = range.start - 1)
-        val previous = adjusted.getOrNull(i - 1) ?: continue
-        // Only the range that actually owns that character can give it up.
-        if (previous.end != range.start) continue
-        adjusted[i - 1] = previous.copy(end = previous.end - 1)
-    }
-    return adjusted.filter { it.start != it.end }
+): Boolean {
+    val last = ranges.lastOrNull() ?: return false
+    if (last.start != last.end) return false
+    if (last.start != buffer.length || buffer.length == 0) return false
+    if (buffer.asCharSequence()[buffer.length - 1] != ' ') return false
+    buffer.replace(buffer.length - 1, buffer.length, "\n")
+    return true
 }
 
 /**
- * Projects annotatedString's style ranges into the BTF2 output buffer. Span ranges are emitted
- * as built; paragraph ranges go through [adjustDegenerateTrailingParagraphRanges] first, since
- * BTF2 drops collapsed tracked ranges. Inter-paragraph spacing is handled solely by
+ * Projects annotatedString's style ranges into the BTF2 output buffer. Collapsed paragraph ranges
+ * are skipped, since BTF2 drops them anyway; the line they stand for is rendered by
+ * [substituteTrailingSeparatorWithNewline]. Inter-paragraph spacing is handled solely by
  * LineHeightStyle.Trim.Both on the editor's text style.
  */
 internal fun RichTextState.applyRichTextStyles(buffer: TextFieldBuffer) {
@@ -210,8 +200,9 @@ internal fun RichTextState.applyRichTextStyles(buffer: TextFieldBuffer) {
             buffer.addStyle(range.item, range.start, range.end)
         }
     }
-    adjustDegenerateTrailingParagraphRanges(annotated.paragraphStyles).forEach { range ->
-        if (range.start in 0..buffer.length && range.end in 0..buffer.length) {
+    substituteTrailingSeparatorWithNewline(buffer, annotated.paragraphStyles)
+    annotated.paragraphStyles.forEach { range ->
+        if (range.start != range.end && range.start in 0..buffer.length && range.end in 0..buffer.length) {
             buffer.addStyle(range.item, range.start, range.end)
         }
     }

@@ -174,6 +174,12 @@ internal fun RichTextState.reconcileBufferWithModel(buffer: TextFieldBuffer) {
  *
  * The substitution is output-only (the model text keeps its space) and same-length, so every style
  * offset stays valid and the caret at the end of the text lands on the new line.
+ *
+ * Known limitation: the trailing empty paragraph still has no range of its own, so its own
+ * ParagraphStyle is not attributed until it holds a character; the substituted newline lives inside
+ * the previous paragraph's range and inherits that paragraph's style. Centering an empty trailing
+ * line therefore shows as a one-keystroke alignment jump: the line renders with the previous
+ * paragraph's alignment until the first character turns the range non-degenerate.
  */
 internal fun substituteTrailingSeparatorWithNewline(
     buffer: TextFieldBuffer,
@@ -189,18 +195,23 @@ internal fun substituteTrailingSeparatorWithNewline(
 
 /**
  * Projects annotatedString's style ranges into the BTF2 output buffer. Collapsed paragraph ranges
- * are skipped, since BTF2 drops them anyway; the line they stand for is rendered by
- * [substituteTrailingSeparatorWithNewline]. Inter-paragraph spacing is handled solely by
- * LineHeightStyle.Trim.Both on the editor's text style.
+ * are skipped, since BTF2 drops them anyway; the trailing one stands for a line that
+ * [substituteTrailingSeparatorWithNewline] renders instead. A collapsed range anywhere else (a
+ * shape only singleParagraphMode or a transient desync can produce) is deliberately unhandled and
+ * simply dropped here. Inter-paragraph spacing is handled solely by LineHeightStyle.Trim.Both on
+ * the editor's text style.
+ *
+ * The substitution runs before any addStyle call: TextFieldBuffer only tracks styles added after
+ * the last edit, so styles emitted first would be discarded by the replace.
  */
 internal fun RichTextState.applyRichTextStyles(buffer: TextFieldBuffer) {
     val annotated = annotatedString
+    substituteTrailingSeparatorWithNewline(buffer, annotated.paragraphStyles)
     annotated.spanStyles.forEach { range ->
         if (range.start in 0..buffer.length && range.end in 0..buffer.length) {
             buffer.addStyle(range.item, range.start, range.end)
         }
     }
-    substituteTrailingSeparatorWithNewline(buffer, annotated.paragraphStyles)
     annotated.paragraphStyles.forEach { range ->
         if (range.start != range.end && range.start in 0..buffer.length && range.end in 0..buffer.length) {
             buffer.addStyle(range.item, range.start, range.end)

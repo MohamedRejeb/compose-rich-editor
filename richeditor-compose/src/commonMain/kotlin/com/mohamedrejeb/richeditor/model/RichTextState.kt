@@ -4580,13 +4580,16 @@ public class RichTextState internal constructor(
 
         newRichParagraph.children.add(newRichSpan)
 
+        // Walked backwards so removeAt stays valid, and inserted at the front for the same
+        // reason: appending would hand the tail span its children in reverse, which reorders
+        // the text of every paragraph split inside a run that has styled runs nested under it.
         for (i in richSpan.children.lastIndex downTo 0) {
             val childRichSpan = richSpan.children[i]
             richSpan.children.removeAt(i)
             childRichSpan.parent = newRichSpan
             childRichSpan.paragraph = newRichParagraph
             childRichSpan.updateChildrenParagraph(newRichParagraph)
-            newRichSpan.children.add(childRichSpan)
+            newRichSpan.children.add(0, childRichSpan)
         }
 
         while (true) {

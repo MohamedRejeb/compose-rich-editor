@@ -68,6 +68,33 @@ class EditPipelineTrailingParagraphTest {
     }
 
     @Test
+    fun `a collapsed range before the last one is never mistaken for the trailing one`() {
+        val buffer = bufferOf("ab cd")
+
+        assertFalse(
+            substituteTrailingSeparatorWithNewline(
+                buffer,
+                listOf(range(0, 2), range(2, 2), range(2, 5)),
+            )
+        )
+        assertEquals("ab cd", buffer.asCharSequence().toString())
+        assertEquals(0, buffer.changes.changeCount)
+    }
+
+    @Test
+    fun `a collapsed range before the last one leaves the trailing substitution alone`() {
+        val buffer = bufferOf("ab ")
+
+        assertTrue(
+            substituteTrailingSeparatorWithNewline(
+                buffer,
+                listOf(range(0, 2), range(2, 2), range(2, 3), range(3, 3)),
+            )
+        )
+        assertEquals("ab\n", buffer.asCharSequence().toString())
+    }
+
+    @Test
     fun `a preceding character that is not a separator is never consumed`() {
         val buffer = bufferOf("ab")
 

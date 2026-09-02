@@ -2571,16 +2571,22 @@ public class RichTextState internal constructor(
      * suppressing nested history captures so the remove+insert is a single undo group
      * attributable to the top-level [CommitTrigger.Paste]. Shared by the
      * [onTextFieldValueChange] bridge and the ChangeList replay in EditPipeline.kt.
+     *
+     * The replayed range is read once from the pending-aware [textFieldValue], not from the
+     * public [selection] getter: the ChangeList replay runs under [skipTextFieldStateSync], so
+     * the range it announced only reached [pendingSelectionDuringSync] and the buffer still
+     * holds the pre-edit selection. Both the removal and the insert offset use that one read,
+     * so a paste that replaces a composition wider than the caret cannot land astray.
      */
     internal fun handleRecognizedPaste(pendingHtml: String) {
         pendingClipboardHtml = null
         pendingClipboardPlainText = null
-        val position = selection.min
+        val pasteSelection = textFieldValue.selection
         val wasSuppressed = suppressHistoryRecording
         suppressHistoryRecording = true
         try {
-            removeSelectedText()
-            insertHtml(html = pendingHtml, position = position)
+            removeTextRange(pasteSelection)
+            insertHtml(html = pendingHtml, position = pasteSelection.min)
         } finally {
             suppressHistoryRecording = wasSuppressed
         }

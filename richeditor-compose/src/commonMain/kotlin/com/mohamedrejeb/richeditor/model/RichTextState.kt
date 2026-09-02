@@ -4729,6 +4729,11 @@ public class RichTextState internal constructor(
      * Updates the [currentAppliedSpanStyle] to the [SpanStyle] that should be applied to the current selection.
      */
     private fun updateCurrentSpanStyle() {
+        // Not the public `selection` getter: during an InputTransformation replay the BTF2
+        // buffer has not committed yet, so textFieldState.selection is still the pre-edit
+        // value. The computed view prefers pendingSelectionDuringSync, which is correct both
+        // mid-replay and at rest.
+        val selection = textFieldValue.selection
         if (selection.collapsed) {
             val richSpan = getRichSpanByTextIndex(textIndex = selection.min - 1)
 
@@ -4815,6 +4820,8 @@ public class RichTextState internal constructor(
      * Updates the [currentAppliedParagraphStyle] to the [ParagraphStyle] that should be applied to the current selection.
      */
     private fun updateCurrentParagraphStyle() {
+        // See [updateCurrentSpanStyle]: the pending-aware view, not the public getter.
+        val selection = textFieldValue.selection
         if (selection.collapsed) {
             val richParagraph = getRichParagraphByTextIndex(selection.min - 1)
 

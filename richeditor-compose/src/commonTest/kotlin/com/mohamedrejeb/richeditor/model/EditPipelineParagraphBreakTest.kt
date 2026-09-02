@@ -75,6 +75,43 @@ class EditPipelineParagraphBreakTest {
         assertEquals(3, state.richParagraphList.size)
     }
 
+    /**
+     * A break at the very end of a multi-paragraph document. The other cases here are all
+     * mid-document, so nothing else covers the trailing offset.
+     *
+     * This is also the closest reachable pin for the past-all-spans fallback in
+     * `checkForParagraphs`, which lost its `breakThreshold == 0` guard when the threshold went
+     * away. It does not actually enter that branch: instrumenting the branch and driving fifteen
+     * trailing-break shapes through both entry paths (the BTF2 buffer replay and the legacy
+     * `onTextFieldValueChange` bridge, including the #640 shapes the branch was written for)
+     * produced zero hits, because `getRichSpanByTextIndex` resolves the trailing newline every
+     * time. The branch looks unreachable today, so removing its guard is inert; these pin the
+     * behaviour the branch was meant to protect instead.
+     */
+    @Test
+    fun `a trailing enter past all spans splits a multi paragraph document`() {
+        val state = RichTextState()
+        state.setHtml("<p>abc</p><p>def</p>")
+        state.selection = TextRange(7)
+
+        state.imeBatch { replace(7, 7, "\n") }
+
+        assertEquals("abc\ndef\n", state.toText())
+        assertEquals(3, state.richParagraphList.size)
+    }
+
+    @Test
+    fun `a trailing enter past all spans splits from a caret behind it`() {
+        val state = RichTextState()
+        state.setHtml("<p>abc</p><p>def</p>")
+        state.selection = TextRange(0)
+
+        state.imeBatch { replace(7, 7, "\n") }
+
+        assertEquals("abc\ndef\n", state.toText())
+        assertEquals(3, state.richParagraphList.size)
+    }
+
     @Test
     fun `an enter behind the caret keeps the buffer and the model text in step`() {
         val state = RichTextState()

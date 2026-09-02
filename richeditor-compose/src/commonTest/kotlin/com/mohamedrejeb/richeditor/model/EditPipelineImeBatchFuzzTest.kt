@@ -51,7 +51,22 @@ import kotlin.test.fail
  * list documents to the shadow session; its divergences there are the oracle's fault, not the
  * model's.
  *
- * Three fixed seeds over 150 steps each per session.
+ * ## Why the corpus has no headings
+ *
+ * Deliberate, and temporary. Enter inside a heading currently produces a plain paragraph whose spans
+ * still carry the heading's weight and size, and `em` font sizes do not survive the html round trip
+ * (`2.0em` comes back as `32.0sp`), so oracle 4 would fire on a defect the corpus is not there to
+ * find. Both are parked findings, not properties of the pipeline under test. When they are fixed,
+ * add a heading document to the corpus and delete this note; if it fires then, it has found
+ * something new.
+ *
+ * ## Runtime
+ *
+ * Three fixed seeds over 150 steps each per session. The budget was measured on the JVM
+ * (`desktopTest`, about 0.1s for the whole class). This suite is in commonTest, so `allTests` also
+ * runs it on the wasmJs browser target and the iOS simulator, where the same 900 steps will cost
+ * more; the step counts are plain constants here, so lower them if a slower target makes them a
+ * problem, rather than reaching for per-platform machinery.
  */
 class EditPipelineImeBatchFuzzTest {
 

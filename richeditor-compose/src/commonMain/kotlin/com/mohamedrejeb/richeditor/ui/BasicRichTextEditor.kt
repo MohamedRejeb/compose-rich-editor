@@ -42,6 +42,7 @@ import com.mohamedrejeb.richeditor.clipboard.ClipboardEventEffect
 import com.mohamedrejeb.richeditor.clipboard.createRichTextClipboardManager
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.applyChangeList
+import com.mohamedrejeb.richeditor.model.reconcileBufferWithModel
 import kotlinx.coroutines.CoroutineScope
 
 /**
@@ -399,24 +400,10 @@ public fun BasicRichTextEditor(
                 }
                 state.applyChangeList(this)
 
-                // The pipeline may auto-inject text (list prefixes, renumbering, token labels)
-                // that has not reached this buffer because setTextFieldStateFromValue was
-                // suppressed during applyChangeList. Reconcile by pushing the canonical text
-                // back into the buffer; this is the BTF2-idiomatic in-transformation injection.
-                val targetText = state.annotatedString.text
-                val currentBufferText = asCharSequence().toString()
-                if (currentBufferText != targetText) {
-                    replace(0, length, targetText)
-                    val targetSelection = state.pendingSelectionDuringSync ?: selection
-                    if (selection != targetSelection &&
-                        targetSelection.min >= 0 &&
-                        targetSelection.max <= length
-                    ) {
-                        selection = targetSelection
-                    }
-                }
-                // Must clear unconditionally: a stale pending selection would override a
-                // later gesture selection through the mirror.
+                state.reconcileBufferWithModel(this)
+                // Stays here rather than inside reconcileBufferWithModel, which returns early
+                // when the buffer already matches: the clear must be unconditional, because a
+                // stale pending selection would override a later gesture selection.
                 state.pendingSelectionDuringSync = null
             },
             textStyle = effectiveTextStyle,

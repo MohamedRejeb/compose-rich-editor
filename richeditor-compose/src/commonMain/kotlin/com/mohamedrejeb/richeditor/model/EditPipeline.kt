@@ -121,6 +121,48 @@ internal fun RichTextState.applyChangeList(buffer: TextFieldBuffer) {
 }
 
 /**
+ * Pushes text the pipeline auto-injected (list prefixes, renumbering, token labels) into the
+ * BTF2 buffer, which did not see it because setTextFieldStateFromValue was suppressed during
+ * the replay.
+ *
+ * Only the region that actually differs is replaced. Rewriting the whole buffer instead reaches
+ * the Android IME as a wholesale text reset, which restarts input and makes the keyboard hide
+ * and show again the moment "- " turns into a list.
+ *
+ * The caller clears [RichTextState.pendingSelectionDuringSync]; this function only reads it.
+ */
+internal fun RichTextState.reconcileBufferWithModel(buffer: TextFieldBuffer) {
+    val targetText = annotatedString.text
+    val currentText = buffer.asCharSequence().toString()
+    if (currentText == targetText) return
+
+    // Capped at the shorter length so prefix and suffix can never overlap.
+    val maxShared = minOf(currentText.length, targetText.length)
+    var prefix = 0
+    while (prefix < maxShared && currentText[prefix] == targetText[prefix]) prefix++
+    var suffix = 0
+    while (
+        suffix < maxShared - prefix &&
+        currentText[currentText.lastIndex - suffix] == targetText[targetText.lastIndex - suffix]
+    ) suffix++
+
+    buffer.replace(
+        prefix,
+        currentText.length - suffix,
+        targetText.substring(prefix, targetText.length - suffix),
+    )
+
+    val targetSelection = pendingSelectionDuringSync ?: buffer.selection
+    if (
+        buffer.selection != targetSelection &&
+        targetSelection.min >= 0 &&
+        targetSelection.max <= buffer.length
+    ) {
+        buffer.selection = targetSelection
+    }
+}
+
+/**
  * Reshapes the paragraph ranges so a trailing empty paragraph still renders a line.
  *
  * The builder appends each paragraph separator inside the *previous* paragraph's range, so a

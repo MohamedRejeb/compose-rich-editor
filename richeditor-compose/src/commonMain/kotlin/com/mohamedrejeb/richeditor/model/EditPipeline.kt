@@ -97,14 +97,20 @@ internal fun RichTextState.applyChangeList(buffer: TextFieldBuffer) {
     skipTextFieldStateSync = true
     recordHistoryForInput(trigger) {
         try {
+            // Shifted by how much the text actually moved, not by the delta's own arithmetic:
+            // a delta landing on a list marker drops the whole "• " prefix along with the
+            // character it replaced, so one in and one out still shortens the text by two.
+            // Clamped as well, since a rewrite can move text the other way; a bounded edit
+            // beats applyChange's bounds check throwing out of the InputTransformation.
             var offset = 0
             deltas.forEach { delta ->
+                val lengthBefore = textFieldValue.text.length
                 val shifted = TextRange(
-                    delta.originalRange.min + offset,
-                    delta.originalRange.max + offset,
+                    (delta.originalRange.min + offset).coerceIn(0, lengthBefore),
+                    (delta.originalRange.max + offset).coerceIn(0, lengthBefore),
                 )
                 applyChange(originalRange = shifted, newText = delta.newText)
-                offset += delta.newText.length - (delta.originalRange.max - delta.originalRange.min)
+                offset += textFieldValue.text.length - lengthBefore
             }
             if (replacedStyles != null) applyReplacedSelectionStyles(replacedStyles)
         } finally {

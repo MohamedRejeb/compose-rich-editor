@@ -47,6 +47,19 @@ class RelativeFontSizeRoundTripTest {
     }
 
     @Test
+    fun `a rem font size decodes as em and is written back as em`() {
+        val state = RichTextState()
+        state.setHtml("""<p><span style="font-size: 1.5rem;">big</span></p>""")
+
+        assertEquals(1.5.em, fontSizeAt(state, 1), "rem is read as em, root relativity and all")
+        assertEquals(
+            """<p><span style="font-size: 1.5em;">big</span></p>""",
+            state.toHtml(),
+            "the rem unit is deliberately not preserved: Compose has nothing to write it back as",
+        )
+    }
+
+    @Test
     fun `a px font size stays absolute`() {
         val state = RichTextState()
         state.setHtml("""<p><span style="font-size: 20px;">big</span></p>""")
@@ -68,6 +81,32 @@ class RelativeFontSizeRoundTripTest {
         fresh.setHtml(html)
         assertEquals(2.em, fontSizeAt(fresh, 1))
         assertEquals(html, fresh.toHtml(), "the second round trip must not change the document")
+    }
+
+    /**
+     * `0.8em` is the size the encoder reserves for `<small>`, so a span authored at that size comes
+     * back as a `<small>` tag on the first save. Accepted markup normalization, not data loss: the
+     * size is identical either way and the document is stable from the second save on. `80%` decodes
+     * to the same size and normalizes the same way.
+     */
+    @Test
+    fun `a span sized like small is written back as a small tag`() {
+        val state = RichTextState()
+        state.setHtml("""<p><span style="font-size: 0.8em;">x</span></p>""")
+
+        assertEquals(0.8f.em, fontSizeAt(state, 1))
+
+        val html = state.toHtml()
+        assertEquals("<p><small>x</small></p>", html)
+
+        val fresh = RichTextState()
+        fresh.setHtml(html)
+        assertEquals(0.8f.em, fontSizeAt(fresh, 1))
+        assertEquals(html, fresh.toHtml(), "stable from the second save on")
+
+        val fromPercent = RichTextState()
+        fromPercent.setHtml("""<p><span style="font-size: 80%;">x</span></p>""")
+        assertEquals(html, fromPercent.toHtml())
     }
 
     @Test

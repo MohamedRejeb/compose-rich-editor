@@ -3907,6 +3907,12 @@ public class RichTextState internal constructor(
             if (splitHeadingStyle != HeadingStyle.Normal) {
                 newParagraph.headingStyle = splitHeadingStyle
 
+                // applyHeadingStyle(Normal) unmerges the level's SpanStyle field by field without
+                // asking where each field came from, so it clears any fontSize and fontWeight the
+                // spans carry, not only the ones the heading contributed. That is safe here only
+                // because the half it is called on is always the empty one: the sole style it can
+                // eat is the caret style on the new blank line. Extending this to a half that holds
+                // text would eat bold the user applied independently of the heading.
                 if (newParagraph.isEmpty())
                     newParagraph.applyHeadingStyle(HeadingStyle.Normal)
                 else if (richSpan.paragraph.isEmpty())

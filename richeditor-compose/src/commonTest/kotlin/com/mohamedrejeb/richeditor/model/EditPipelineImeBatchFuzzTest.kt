@@ -61,11 +61,12 @@ import kotlin.test.fail
  *
  * ## Runtime
  *
- * Four fixed seeds over 150 steps each per session. The budget was measured on the JVM
- * (`desktopTest`, about 0.2s for the whole class). This suite is in commonTest, so `allTests` also
- * runs it on the wasmJs browser target and the iOS simulator, where the same 900 steps will cost
- * more; the step counts are plain constants here, so lower them if a slower target makes them a
- * problem, rather than reaching for per-platform machinery.
+ * Four fixed seeds over 150 steps each per session, so 1200 steps in all. The budget was measured
+ * on the JVM (`desktopTest`, about 0.1s for the whole class inside a full suite run, 0.26s when the
+ * class runs alone and pays for warm up). This suite is in commonTest, so `allTests` also runs those
+ * 1200 steps on the wasmJs browser target and the iOS simulator, where they will cost more; the step
+ * counts are plain constants here, so lower them if a slower target makes them a problem, rather
+ * than reaching for per-platform machinery.
  */
 class EditPipelineImeBatchFuzzTest {
 

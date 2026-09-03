@@ -89,10 +89,35 @@ class HeadingParagraphSplitTest {
         assertEquals(state.toText(), fresh.toText())
         assertEquals(headingLevels(state), headingLevels(fresh))
         assertEquals(state.toHtml(), fresh.toHtml())
+
+        state.selection = TextRange(5)
+        fresh.selection = TextRange(5)
         assertEquals(
-            headingAt(state, 5).let { state.currentSpanStyle },
-            headingAt(fresh, 5).let { fresh.currentSpanStyle },
+            fresh.currentSpanStyle,
+            state.currentSpanStyle,
             "the second half must render the same after a reload",
+        )
+    }
+
+    /**
+     * Two newlines in one batch. The breaks are processed right to left, so this is the same thing
+     * as two sequential Enters and lands on heading, plain, heading: the middle paragraph is empty
+     * and therefore at the end of the heading above it. Deliberate, and what Docs does.
+     */
+    @Test
+    fun `a double enter inside a heading leaves a plain line between two headings`() {
+        val state = RichTextState()
+        state.setHtml("<h1>title</h1>")
+        state.selection = TextRange(3)
+        state.imeBatch {
+            replace(3, 3, "\n\n")
+            selection = TextRange(5)
+        }
+
+        assertEquals("tit\n\nle", state.toText())
+        assertEquals(
+            listOf(HeadingStyle.H1, HeadingStyle.Normal, HeadingStyle.H1),
+            headingLevels(state),
         )
     }
 

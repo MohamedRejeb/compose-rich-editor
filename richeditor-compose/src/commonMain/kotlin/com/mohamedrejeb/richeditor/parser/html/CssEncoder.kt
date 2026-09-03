@@ -243,8 +243,13 @@ internal object CssEncoder {
     /**
      * Parses a CSS size string into a [TextUnit], keeping relative units relative: CSS `em` and
      * [TextUnit.Em] both mean a multiple of the surrounding font size, so `2em` stays `2.em`
-     * rather than being resolved against a base size the document does not carry. `rem` has no
-     * Compose equivalent and is read as `em`.
+     * rather than being resolved against a base size the document does not carry.
+     *
+     * `rem` is read as `em`, with an accepted failure mode: CSS `rem` is relative to the document
+     * root while [TextUnit.Em] is relative to the surrounding font size, so a `rem` nested inside a
+     * sized span no longer escapes the inherited size the way it does in a browser. Resolving it
+     * correctly needs the editor's base [androidx.compose.ui.text.TextStyle], which decode time
+     * does not have. The unit itself is not preserved either: `rem` is written back as `em`.
      */
     internal fun parseCssTextSize(cssTextSize: String): TextUnit {
         if (cssTextSize == "0") return TextUnit.Unspecified

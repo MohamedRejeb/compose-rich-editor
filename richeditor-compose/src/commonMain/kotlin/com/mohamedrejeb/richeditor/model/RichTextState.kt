@@ -3897,6 +3897,22 @@ public class RichTextState internal constructor(
                 }
             }
 
+            // A heading splits the way Docs and Word split one: inside the text both halves stay
+            // headings of the same level, at the end of the heading the new paragraph is plain,
+            // and at the start the emptied paragraph pushed above it is. slice already baked the
+            // level's visuals into the moved spans (it builds them from fullSpanStyle) and copied
+            // the paragraph style, so the level is assigned the way the parsers do and
+            // applyHeadingStyle strips the visuals off whichever half comes out plain.
+            val splitHeadingStyle = richSpan.paragraph.headingStyle
+            if (splitHeadingStyle != HeadingStyle.Normal) {
+                newParagraph.headingStyle = splitHeadingStyle
+
+                if (newParagraph.isEmpty())
+                    newParagraph.applyHeadingStyle(HeadingStyle.Normal)
+                else if (richSpan.paragraph.isEmpty())
+                    richSpan.paragraph.applyHeadingStyle(HeadingStyle.Normal)
+            }
+
             // Get the text before and after the slice index
             val beforeText = tempTextFieldValue.text.substring(0, sliceIndex + 1)
             val afterText = tempTextFieldValue.text.substring(sliceIndex + 1)

@@ -39,7 +39,7 @@ internal object CssEncoder {
     internal fun parseCssStyleMapToSpanStyle(cssStyleMap: Map<String, String>): SpanStyle {
         return SpanStyle(
             color = cssStyleMap["color"]?.let{ parseCssColor(it) } ?: Color.Unspecified,
-            fontSize = cssStyleMap["font-size"]?.let { parseCssSize(it)?.sp } ?: TextUnit.Unspecified,
+            fontSize = cssStyleMap["font-size"]?.let { parseCssTextSize(it) } ?: TextUnit.Unspecified,
             fontWeight = cssStyleMap["font-weight"]?.let { parseCssFontWeight(it) },
             fontStyle = cssStyleMap["font-style"]?.let { parseCssFontStyle(it) },
             letterSpacing = cssStyleMap["letter-spacing"]?.let { parseCssSize(it)?.sp } ?: TextUnit.Unspecified,
@@ -67,7 +67,7 @@ internal object CssEncoder {
             }
         }
         cssStyleMap["font-size"]?.let{ string ->
-            parseCssSize(string)?.sp?.let {
+            parseCssTextSize(string).takeIf { it.isSpecified }?.let {
                 spanStyleSet.add(
                     SpanStyle(fontSize = it)
                 )
@@ -240,6 +240,12 @@ internal object CssEncoder {
         return null
     }
 
+    /**
+     * Parses a CSS size string into a [TextUnit], keeping relative units relative: CSS `em` and
+     * [TextUnit.Em] both mean a multiple of the surrounding font size, so `2em` stays `2.em`
+     * rather than being resolved against a base size the document does not carry. `rem` has no
+     * Compose equivalent and is read as `em`.
+     */
     internal fun parseCssTextSize(cssTextSize: String): TextUnit {
         if (cssTextSize == "0") return TextUnit.Unspecified
         val sizeRegex = Regex("""([-]?\d+(\.\d+)?)\s*(px|pt|em|rem|%)""")

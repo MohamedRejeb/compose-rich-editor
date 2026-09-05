@@ -1305,7 +1305,11 @@ public class RichTextState internal constructor(
             if (paragraphs.isEmpty()) return@recordHistory
 
             paragraphs.forEach { paragraph ->
+                if (paragraph.headingStyle == headingStyle) return@forEach
                 paragraph.applyHeadingStyle(headingStyle)
+                // A continuation has no heading of its own in html. Unlike addParagraphStyle,
+                // which severs unconditionally, a level that did not change severs nothing.
+                clearLineBreakContinuations(paragraph)
             }
 
             updateAnnotatedString(forStyleChange = true)

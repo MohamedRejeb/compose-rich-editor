@@ -1,6 +1,12 @@
 package com.mohamedrejeb.richeditor.model
 
+import androidx.compose.foundation.text.input.TextFieldBuffer
+import androidx.compose.foundation.text.input.toTextFieldBuffer
 import androidx.compose.ui.text.TextRange
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.document.RichTextBlock
+import com.mohamedrejeb.richeditor.document.RichTextBlockType
+import com.mohamedrejeb.richeditor.document.RichTextDocument
 import com.mohamedrejeb.richeditor.paragraph.type.ConfigurableListLevel
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -16,6 +22,7 @@ import kotlin.test.assertEquals
  * model (the continuation flags of all three paragraphs plus the mutated property), the exact
  * `toHtml`, and reload agreement (a fresh `setHtml` of that html reports the same structure).
  */
+@OptIn(ExperimentalRichTextApi::class)
 class ContinuationSeveringMatrixTest {
 
     private data class Structure(
@@ -96,6 +103,83 @@ class ContinuationSeveringMatrixTest {
 
         assertEquals(listOf(false, true, true), structure(state).continuations)
         assertEquals("<p>a<br>b<br>c</p>", state.toHtml())
+        assertReloadAgrees(state)
+    }
+
+    // The "- " auto conversion, typed through the ime pipeline. Typed in front of existing
+    // text it converts nothing on any paragraph (the marker has to be the whole line), so the
+    // reachable continuation shape is an empty middle line.
+
+    private fun RichTextState.imeBatch(edit: TextFieldBuffer.() -> Unit) {
+        val buffer = textFieldState.toTextFieldBuffer()
+        buffer.edit()
+        applyChangeList(buffer)
+        reconcileBufferWithModel(buffer)
+        val text = buffer.asCharSequence().toString()
+        val selection = buffer.selection
+        pendingSelectionDuringSync = null
+        setTextFieldStateFromValue(text, selection)
+        handleSelectionChanged(textFieldState.selection, fromGestureObserver = true)
+    }
+
+    @Test
+    fun `a list marker typed on an empty continuation severs it and its chain`() {
+        val state = continuationDocument("<p>a<br><br>c</p>")
+        state.selection = TextRange(2)
+
+        state.imeBatch {
+            replace(2, 2, "-")
+            selection = TextRange(3)
+        }
+        state.imeBatch {
+            replace(3, 3, " ")
+            selection = TextRange(4)
+        }
+
+        assertEquals(listOf(false, false, false), structure(state).continuations)
+        assertEquals(listOf("DefaultParagraph:0", "UnorderedList:1", "DefaultParagraph:0"), structure(state).types)
+        assertEquals("<p>a</p><ul><li><br></li></ul><p>c</p>", state.toHtml())
+        assertReloadAgrees(state)
+    }
+
+    // List level changes. The html decoder no longer flags a list item, so an item carrying
+    // the flag only comes from a document import (isLineBreak on a list item block).
+
+    private fun flaggedListItems(headIndent: Int, tailIndent: Int): RichTextState {
+        val document = RichTextDocument(
+            blocks = listOf(
+                RichTextBlock(text = "a", type = RichTextBlockType.ListItem(ordered = false, indent = headIndent)),
+                RichTextBlock(
+                    text = "b",
+                    type = RichTextBlockType.ListItem(ordered = false, indent = tailIndent),
+                    isLineBreak = true,
+                ),
+            ),
+        )
+        return RichTextState().setRichTextDocument(document, selection = TextRange(6))
+    }
+
+    @Test
+    fun `a level increase on a flagged list item severs it`() {
+        val state = flaggedListItems(headIndent = 0, tailIndent = 0)
+
+        state.increaseListLevel()
+
+        assertEquals(listOf(false, false), structure(state).continuations)
+        assertEquals(listOf("UnorderedList:1", "UnorderedList:2"), structure(state).types)
+        assertEquals("<ul><li>a<ul><li>b</li></ul></li></ul>", state.toHtml())
+        assertReloadAgrees(state)
+    }
+
+    @Test
+    fun `a level decrease on a flagged list item severs it`() {
+        val state = flaggedListItems(headIndent = 0, tailIndent = 1)
+
+        state.decreaseListLevel()
+
+        assertEquals(listOf(false, false), structure(state).continuations)
+        assertEquals(listOf("UnorderedList:1", "UnorderedList:1"), structure(state).types)
+        assertEquals("<ul><li>a</li><li>b</li></ul>", state.toHtml())
         assertReloadAgrees(state)
     }
 }

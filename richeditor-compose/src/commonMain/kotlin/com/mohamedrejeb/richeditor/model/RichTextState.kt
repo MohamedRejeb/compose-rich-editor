@@ -1837,6 +1837,9 @@ public class RichTextState internal constructor(
         if (minParagraphLevel != Int.MAX_VALUE && minParagraphLevelOrderedListNumber != -1)
             levelNumberMap[minParagraphLevel] = minParagraphLevelOrderedListNumber
 
+        // A nested item cannot ride inside the item it continued.
+        paragraphs.fastForEach { clearLineBreakContinuations(it) }
+
         // Adjust ordered list numbers
         val newTextFieldValue = adjustOrderedListsNumbers(
             startParagraphIndex = startParagraphIndex,
@@ -1941,6 +1944,8 @@ public class RichTextState internal constructor(
 
             processedParagraphCount++
         }
+
+        paragraphs.fastForEach { clearLineBreakContinuations(it) }
 
         // Adjust ordered list numbers
         val newTextFieldValue = adjustOrderedListsNumbers(
@@ -3644,22 +3649,26 @@ public class RichTextState internal constructor(
         if (!richSpan.isFirstInParagraph)
             return
 
-        if (richSpan.text == "- " || richSpan.text == "* ") {
-            richSpan.paragraph.type = UnorderedList(
-                config = config,
-            )
-            richSpan.text = ""
-        } else if (richSpan.text.matches(Regex("^\\d+\\. "))) {
-            val dotIndex = richSpan.text.indexOf('.')
-            if (dotIndex != -1) {
+        val newType =
+            if (richSpan.text == "- " || richSpan.text == "* ") {
+                UnorderedList(
+                    config = config,
+                )
+            } else if (richSpan.text.matches(Regex("^\\d+\\. "))) {
+                val dotIndex = richSpan.text.indexOf('.')
                 val number = richSpan.text.substring(0, dotIndex).toIntOrNull() ?: 1
-                richSpan.paragraph.type = OrderedList(
+                OrderedList(
                     number = number,
                     config = config,
                 )
-                richSpan.text = ""
+            } else {
+                return
             }
-        }
+
+        richSpan.paragraph.type = newType
+        richSpan.text = ""
+        // A list item cannot ride inside the paragraph it continued.
+        clearLineBreakContinuations(richSpan.paragraph)
     }
 
     /**

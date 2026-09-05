@@ -150,20 +150,12 @@ class HeadingParagraphSplitTest {
     fun `enter at the end of a heading serializes as a heading and an empty paragraph`() {
         val state = splitHeading(5)
 
-        // A trailing empty paragraph is written as `<br>`, which reads back as one paragraph too
-        // many (a known round trip defect, unrelated to headings), so the reload is compared on
-        // the two paragraphs the split produced.
         assertEquals("<h1>title</h1><br>", state.toHtml())
 
         val fresh = reloaded(state)
-        assertEquals(
-            listOf(HeadingStyle.H1, HeadingStyle.Normal),
-            headingLevels(fresh).take(2),
-        )
-        assertTrue(
-            fresh.richParagraphList.size > state.richParagraphList.size,
-            "the trailing blank line defect is expected here; drop this waiver once it is fixed",
-        )
+        assertEquals(state.toText(), fresh.toText())
+        assertEquals(headingLevels(state), headingLevels(fresh))
+        assertEquals(state.toHtml(), fresh.toHtml())
     }
 
     @Test

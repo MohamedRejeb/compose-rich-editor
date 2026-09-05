@@ -217,10 +217,13 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                         newRichParagraph.headingStyle = HeadingStyle.fromHtmlTag(name)
                     }
 
-                    // A block element (<p>, <h1>, etc.) opening on a blank paragraph
-                    // from a <br> should not carry the linebreak flag
-                    if (isCurrentRichParagraphBlank && newRichParagraph.isFromLineBreak && name != "li") {
+                    // A block element opening on the blank line a <br> left behind starts
+                    // its own paragraph: it is neither a continuation nor part of the
+                    // heading the <br> came from.
+                    if (isCurrentRichParagraphBlank && newRichParagraph.isFromLineBreak) {
                         newRichParagraph.isFromLineBreak = false
+                        if (name !in HeadingStyle.headingTags)
+                            newRichParagraph.headingStyle = HeadingStyle.Normal
                     }
 
                     if (!isCurrentRichParagraphBlank) {
@@ -264,21 +267,24 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     // name == "br"
                     stringBuilder.append(' ')
 
+                    val endedParagraph = richParagraphList.lastOrNull()
                     val newParagraph =
-                        if (richParagraphList.isEmpty())
+                        if (endedParagraph == null)
                             RichParagraph(isFromLineBreak = true)
                         else
                             RichParagraph(
-                                paragraphStyle = richParagraphList.last().paragraphStyle,
+                                paragraphStyle = endedParagraph.paragraphStyle,
                                 isFromLineBreak = true,
+                                headingStyle = endedParagraph.headingStyle,
                             )
 
+                    // The line a <br> ends is rendered even when it is empty. The line it
+                    // opens is rendered only once something fills it, exactly like the
+                    // empty last line of a block in a browser, so it is not kept here.
+                    if (endedParagraph != null)
+                        lineBreakParagraphIndexSet.add(richParagraphList.lastIndex)
+
                     richParagraphList.add(newParagraph)
-
-                    if (richParagraphList.lastIndex > 0)
-                        lineBreakParagraphIndexSet.add(richParagraphList.lastIndex - 1)
-
-                    lineBreakParagraphIndexSet.add(richParagraphList.lastIndex)
 
                     // Keep the same style when having a line break in the middle of a paragraph,
                     // Ex: <h1>Hello<br>World!</h1>
@@ -474,8 +480,6 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         // nest inside it. 0 when no item is withheld.
         var hostItemLevel = 0
 
-        var isLastParagraphEmpty = false
-
         val paragraphs = richTextState.richParagraphList
 
         fun closeListsDownTo(level: Int) {
@@ -540,7 +544,6 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     }
                     openItemTag = null
                 }
-                isLastParagraphEmpty = isParagraphEmpty
                 return@fastForEachIndexed
             }
 
@@ -592,11 +595,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
             // An empty non-list paragraph is a line break; an empty list paragraph is a
             // real item and is emitted as <li></li>.
             if (isParagraphEmpty && !isParagraphList) {
-                val skipAddingBr =
-                    isLastParagraphEmpty && index == paragraphs.lastIndex
-
-                if (!skipAddingBr)
-                    builder.append("<$BrElement>")
+                builder.append("<$BrElement>")
             } else {
                 // Create paragraph tag name
                 val paragraphTagName =
@@ -652,8 +651,6 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                         builder.append("</$paragraphTagName>")
                 }
             }
-
-            isLastParagraphEmpty = isParagraphEmpty
         }
 
         // Close the remaining list tags (and any withheld host items)

@@ -16,7 +16,6 @@ import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
 
 /**
  * A parity oracle for the state the toolbar reads.
@@ -48,11 +47,6 @@ import kotlin.test.assertNotEquals
  *  - Staged (not yet typed) styles. `toggleSpanStyle` at a collapsed caret stages a style that
  *    exists only in the live state and has no document representation, so parity is asserted after
  *    the staged style has been materialized by a keystroke, never before.
- *  - The HTML leg only, for a document that ends in an empty paragraph. `toHtml` writes a trailing
- *    empty paragraph as `<br>`, which `setHtml` reads back as two blank paragraphs, so the round
- *    trip grows the document by one line and its offsets no longer line up. Call sites that hit
- *    that shape pass `expectHtmlLeg = false` and assert the round trip really is lossy there, so
- *    the exclusion cannot outlive the defect. The document leg still runs, and it is lossless.
  */
 @OptIn(ExperimentalTestApi::class)
 class DerivedStateParityTest {
@@ -60,15 +54,10 @@ class DerivedStateParityTest {
     /**
      * Compares every derived value the toolbar reads against a fresh state decoded from the live
      * document and parked at the same caret.
-     *
-     * @param expectHtmlLeg whether the html round trip is expected to reproduce the document. Pass
-     * false only for a document ending in an empty paragraph, where `toHtml` is known to be lossy;
-     * the call then asserts the loss really is there, so the exemption expires with the defect.
      */
     private fun assertDerivedParity(
         live: RichTextState,
         label: String,
-        expectHtmlLeg: Boolean = true,
     ) {
         val selection = live.selection
 
@@ -83,20 +72,12 @@ class DerivedStateParityTest {
 
         val fromHtml = RichTextState()
         fromHtml.setHtml(live.toHtml())
-        if (expectHtmlLeg) {
-            assertEquals(
-                live.annotatedString.text,
-                fromHtml.annotatedString.text,
-                "$label: the html round trip must reproduce the document",
-            )
-            compareDerived(live, fromHtml, selection, "$label [html]")
-        } else {
-            assertNotEquals(
-                live.annotatedString.text,
-                fromHtml.annotatedString.text,
-                "$label: the html leg was waived but the round trip is faithful; drop the waiver",
-            )
-        }
+        assertEquals(
+            live.annotatedString.text,
+            fromHtml.annotatedString.text,
+            "$label: the html round trip must reproduce the document",
+        )
+        compareDerived(live, fromHtml, selection, "$label [html]")
     }
 
     private fun compareDerived(
@@ -238,7 +219,7 @@ class DerivedStateParityTest {
 
         onNodeWithTag("editor").performTextInput("\n")
         waitForIdle()
-        assertDerivedParity(state, "the list exit", expectHtmlLeg = false)
+        assertDerivedParity(state, "the list exit")
 
         onNodeWithTag("editor").performTextInput("plain")
         waitForIdle()
@@ -286,7 +267,7 @@ class DerivedStateParityTest {
 
         onNodeWithTag("editor").performKeyInput { pressKey(Key.Backspace) }
         waitForIdle()
-        assertDerivedParity(state, "after deleting the char", expectHtmlLeg = false)
+        assertDerivedParity(state, "after deleting the char")
 
         onNodeWithTag("editor").performKeyInput { pressKey(Key.Backspace) }
         waitForIdle()

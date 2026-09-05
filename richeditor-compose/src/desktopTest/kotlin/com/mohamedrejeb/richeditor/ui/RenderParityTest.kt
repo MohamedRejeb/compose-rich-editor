@@ -354,11 +354,9 @@ class RenderParityTest {
     }
 
     /**
-     * A trailing `<p><br></p>` imports as two paragraphs, not one: the `<br>` is a break of its
-     * own and nothing follows to recycle the blank it opens (`Issue779EmptyParagraphHtmlTest`
-     * pins the mid-document form, where the next block does recycle it). The count is the HTML
-     * parser's business; what this asserts is that whatever the parser produced is what the
-     * editor renders.
+     * A trailing `<p><br></p>` imports as one empty paragraph (`LineBreakHtmlSemanticsTest` pins
+     * the count). The count is the HTML parser's business; what this asserts is that whatever the
+     * parser produced is what the editor renders.
      */
     @Test
     fun `setHtml with a trailing br paragraph renders one line per paragraph`() =

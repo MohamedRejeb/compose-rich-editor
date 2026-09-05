@@ -6,6 +6,7 @@ import androidx.compose.ui.text.font.FontFamily
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import kotlin.test.Test
 import kotlin.test.assertFalse
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 /**
@@ -39,21 +40,19 @@ class RichTextStateInvalidateStylesTest {
     }
 
     @Test
-    fun `invalidateStyles preserves an active ime composition`() {
+    fun `invalidateStyles does not rewrite the text buffer`() {
+        // The IME composition lives on textFieldState, which no test can set: an edit of
+        // that buffer is what would drop it. So pin the property that keeps a composition
+        // alive instead, that a pure style refresh leaves the buffer's value untouched.
         val state = RichTextState()
         state.setText("Hello")
-        state.onTextFieldValueChange(
-            androidx.compose.ui.text.input.TextFieldValue(
-                text = "Hello",
-                selection = TextRange(3),
-                composition = TextRange(0, 5),
-            ),
-        )
-        assertTrue(state.textFieldValue.composition == TextRange(0, 5))
+        state.selection = TextRange(3)
+        val before = state.textFieldState.text
 
         state.invalidateStyles()
 
-        assertTrue(state.textFieldValue.composition == TextRange(0, 5))
+        assertSame(before, state.textFieldState.text)
+        assertTrue(state.selection == TextRange(3))
     }
 
     @Test

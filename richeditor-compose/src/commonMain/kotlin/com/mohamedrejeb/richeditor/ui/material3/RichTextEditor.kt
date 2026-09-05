@@ -148,8 +148,7 @@ public fun RichTextEditor(
             decorationBox = @Composable { innerTextField ->
                 // places leading icon, text field with label and placeholder, trailing icon
                 RichTextEditorDefaults.RichTextEditorDecorationBox(
-                    value = state.textFieldValue.text,
-                    visualTransformation = state.visualTransformation,
+                    value = state.annotatedString.text,
                     innerTextField = innerTextField,
                     placeholder = placeholder,
                     label = label,

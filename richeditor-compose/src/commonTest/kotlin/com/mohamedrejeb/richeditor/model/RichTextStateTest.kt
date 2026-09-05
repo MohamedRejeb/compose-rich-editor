@@ -2407,6 +2407,9 @@ class RichTextStateTest {
      * Test to mimic the behavior of the Android suggestion.
      * Can only reproduced on real device.
      *
+     * The recognition lives in the selection observer since the BTF2 port: the
+     * suggestion's inserted text and its caret arrive on separate channels.
+     *
      * [420](https://github.com/MohamedRejeb/compose-rich-editor/issues/420)
      */
     @Test
@@ -2423,17 +2426,25 @@ class RichTextStateTest {
         // Select the text
         richTextState.selection = TextRange(3)
 
-        // Add text after selection
         // What's happening is that the space added after "Kotlin" from the suggestion is being removed.
         // It's been considered as the trailing space for the paragraph.
         // Which will lead to the selection being at the start of the next paragraph.
         // To fix this we need to add a space after the selection.
+        //
+        // BTF2 delivers the two halves separately: the inserted characters as a buffer
+        // change, then the IME's caret, which sits one past them because the IME believes
+        // it also committed the trailing space the separator swallowed.
         richTextState.onTextFieldValueChange(
             TextFieldValue(
                 text = "Hi Kotlin World! ",
-                selection = TextRange(10)
+                selection = TextRange(9)
             )
         )
+        richTextState.setTextFieldStateFromValue(
+            text = richTextState.annotatedString.text,
+            selection = TextRange(10),
+        )
+        richTextState.handleSelectionChanged(TextRange(10), fromGestureObserver = true)
 
         assertEquals(TextRange(10), richTextState.selection)
         assertEquals("Hi Kotlin  World! ", richTextState.annotatedString.text)

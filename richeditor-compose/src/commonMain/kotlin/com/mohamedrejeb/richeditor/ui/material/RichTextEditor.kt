@@ -19,6 +19,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
 import com.mohamedrejeb.richeditor.ui.RichTextChangedListener
@@ -140,8 +141,8 @@ public fun RichTextEditor(
         decorationBox = @Composable { innerTextField ->
             // places leading icon, text field with label and placeholder, trailing icon
             TextFieldDefaults.TextFieldDecorationBox(
-                value = state.textFieldValue.text,
-                visualTransformation = state.visualTransformation,
+                value = state.annotatedString.text,
+                visualTransformation = VisualTransformation.None,
                 innerTextField = innerTextField,
                 placeholder = placeholder,
                 label = label,

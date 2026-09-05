@@ -152,8 +152,7 @@ public fun OutlinedRichTextEditor(
             undoBehavior = undoBehavior,
             decorationBox = { innerTextField ->
                 RichTextEditorDefaults.OutlinedRichTextEditorDecorationBox(
-                    value = state.textFieldValue.text,
-                    visualTransformation = state.visualTransformation,
+                    value = state.annotatedString.text,
                     innerTextField = innerTextField,
                     placeholder = placeholder,
                     label = label,

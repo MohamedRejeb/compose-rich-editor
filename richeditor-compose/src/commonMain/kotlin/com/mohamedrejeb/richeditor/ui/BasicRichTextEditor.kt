@@ -6,10 +6,16 @@ import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.KeyboardActionHandler
+import androidx.compose.foundation.text.input.TextFieldDecorator
+import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
@@ -29,11 +35,14 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import com.mohamedrejeb.richeditor.clipboard.ClipboardEventEffect
 import com.mohamedrejeb.richeditor.clipboard.createRichTextClipboardManager
 import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.model.applyChangeList
+import com.mohamedrejeb.richeditor.model.reconcileBufferWithModel
 import kotlinx.coroutines.CoroutineScope
 
 /**
@@ -217,6 +226,27 @@ public fun BasicRichTextEditor(
 
     ClipboardEventEffect(richTextState = state)
 
+    // rememberRichTextState can restore content before the editor composes, so the buffer
+    // starts out empty while the state already holds text. Seed it once per state.
+    LaunchedEffect(state) {
+        if (state.textFieldState.text.toString() != state.annotatedString.text) {
+            state.setTextFieldStateFromValue(
+                text = state.annotatedString.text,
+                selection = state.selection,
+            )
+        }
+    }
+
+    // textFieldState is canonical for the selection; this keeps the derived state
+    // (span style, paragraph style, trigger query, selection mask) in step with the
+    // selections BTF2 applies on its own for mouse drags and keyboard navigation.
+    LaunchedEffect(state) {
+        snapshotFlow { state.textFieldState.selection }
+            .collect { newSelection ->
+                state.handleSelectionChanged(newSelection, fromGestureObserver = true)
+            }
+    }
+
     LaunchedEffect(singleParagraph) {
         state.singleParagraphMode = singleParagraph
     }
@@ -254,6 +284,15 @@ public fun BasicRichTextEditor(
         }
     }
 
+    // Trim.Both prevents per-paragraph line-height padding (Compose's default Trim.None)
+    // from accumulating between addStyle paragraph boundaries. Load-bearing for spacing.
+    val effectiveTextStyle = remember(textStyle) {
+        val baseLineHeightStyle = textStyle.lineHeightStyle ?: LineHeightStyle.Default
+        textStyle.copy(
+            lineHeightStyle = baseLineHeightStyle.copy(trim = LineHeightStyle.Trim.Both),
+        )
+    }
+
     CompositionLocalProvider(LocalClipboard provides richClipboardManager) {
         // Capture position on the innerTextField (the actual text content composable),
         // not on the outer BasicTextField, so trigger-suggestion popups can anchor
@@ -264,9 +303,19 @@ public fun BasicRichTextEditor(
                 decorationBox {
                     Layout(
                         content = { innerTextField() },
-                        modifier = Modifier.onPlaced { coords ->
-                            state.textFieldWindowPosition = coords.positionInWindow()
-                        }
+                        modifier = Modifier
+                            .onPlaced { coords ->
+                                state.textFieldWindowPosition = coords.positionInWindow()
+                            }
+                            // Only the inner text field is dimmed. The decoration content
+                            // around it already renders in the disabled colors the Material
+                            // wrappers compute, and dimming it again compounds the two.
+                            .then(
+                                if (enabled)
+                                    Modifier
+                                else
+                                    Modifier.alpha(DisabledStateAlpha)
+                            )
                     ) { measurables, constraints ->
                         val placeable = measurables.first().measure(constraints)
                         layout(placeable.width, placeable.height) {
@@ -277,13 +326,7 @@ public fun BasicRichTextEditor(
             }
 
         BasicTextField(
-            value = state.textFieldValue,
-            onValueChange = {
-                if (readOnly) return@BasicTextField
-                if (it.text.length > maxLength) return@BasicTextField
-
-                state.onTextFieldValueChange(it)
-            },
+            state = state.textFieldState,
             modifier = modifier
                 .onFocusChanged { focusState ->
                     state.isFocused = focusState.isFocused
@@ -341,33 +384,79 @@ public fun BasicRichTextEditor(
                 ),
             enabled = enabled,
             readOnly = readOnly,
-            textStyle = textStyle,
-            keyboardOptions = keyboardOptions,
-            keyboardActions = keyboardActions,
-            singleLine = singleLine,
-            maxLines = maxLines,
-            minLines = minLines,
-            visualTransformation = if (enabled) {
-                state.visualTransformation
-            } else {
-                DisabledTextVisualTransformation(
-                    delegate = state.visualTransformation,
-                    disabledAlpha = DisabledStateAlpha,
-                )
+            inputTransformation = InputTransformation {
+                if (state.isApplyingProgrammaticSync) {
+                    // Programmatic write to textFieldState; the state already reflects it.
+                    // Treating it as user input would corrupt richParagraphList.
+                    return@InputTransformation
+                }
+                if (readOnly) {
+                    revertAllChanges()
+                    return@InputTransformation
+                }
+                if (length > maxLength) {
+                    revertAllChanges()
+                    return@InputTransformation
+                }
+                state.applyChangeList(this)
+
+                state.reconcileBufferWithModel(this)
+                // Stays here rather than inside reconcileBufferWithModel, which returns early
+                // when the buffer already matches: the clear must be unconditional, because a
+                // stale pending selection would override a later gesture selection.
+                state.pendingSelectionDuringSync = null
             },
-            onTextLayout = {
-                state.onTextLayout(
-                    textLayoutResult = it,
-                    density = density,
-                )
-                onTextLayout(it)
+            textStyle = effectiveTextStyle,
+            keyboardOptions = keyboardOptions,
+            onKeyboardAction = keyboardActions.toKeyboardActionHandler(keyboardOptions.imeAction),
+            lineLimits = computeLineLimits(singleLine, minLines, maxLines),
+            onTextLayout = textLayoutCallback@{ resultProvider ->
+                val result = resultProvider() ?: return@textLayoutCallback
+                state.onTextLayout(textLayoutResult = result, density = density)
+                onTextLayout(result)
             },
             interactionSource = interactionSource,
             cursorBrush = cursorBrush,
-            decorationBox = positionCapturingDecorationBox,
+            outputTransformation = state.outputTransformation,
+            decorator = TextFieldDecorator { innerTextField ->
+                positionCapturingDecorationBox(innerTextField)
+            },
+            scrollState = state.scrollState,
         )
     }
 }
+
+private fun computeLineLimits(
+    singleLine: Boolean,
+    minLines: Int,
+    maxLines: Int,
+): TextFieldLineLimits =
+    when {
+        singleLine -> TextFieldLineLimits.SingleLine
+        minLines == 1 && maxLines == Int.MAX_VALUE -> TextFieldLineLimits.Default
+        else -> TextFieldLineLimits.MultiLine(minHeightInLines = minLines, maxHeightInLines = maxLines)
+    }
+
+private fun KeyboardActions.toKeyboardActionHandler(
+    imeAction: ImeAction,
+): KeyboardActionHandler =
+    KeyboardActionHandler { performDefaultAction ->
+        val callback = when (imeAction) {
+            ImeAction.Done -> onDone
+            ImeAction.Go -> onGo
+            ImeAction.Next -> onNext
+            ImeAction.Previous -> onPrevious
+            ImeAction.Search -> onSearch
+            ImeAction.Send -> onSend
+            else -> null
+        }
+        val scope = object : KeyboardActionScope {
+            override fun defaultKeyboardAction(imeAction: ImeAction) {
+                performDefaultAction()
+            }
+        }
+        if (callback != null) callback(scope) else performDefaultAction()
+    }
 
 internal expect fun Modifier.adjustTextIndicatorOffset(
     state: RichTextState,

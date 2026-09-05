@@ -79,6 +79,16 @@ HeadingStyle.H3.markdownPrefix   // "### "
 HeadingStyle.H3.htmlTag          // "h3"
 ```
 
+## Pressing Enter in a heading
+
+Splitting a heading follows the same rules as Google Docs, Word and Notion:
+
+- **Inside the heading text**: both halves stay headings of the same level.
+- **At the end of the heading**: the new paragraph is a normal one, so what you
+  type next is normal sized.
+- **At the start of the heading**: an empty normal paragraph is inserted above,
+  and the heading keeps its level and its content.
+
 ## Serialization
 
 ### HTML

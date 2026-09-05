@@ -161,11 +161,7 @@ class RichTextHtmlRoundTripFuzzTest {
                 val state2 = RichTextState()
                 state2.setHtml(html1)
                 val text1 = state2.textFieldValue.text
-                // Known pre-existing ambiguity (not a pinned finding): the number of
-                // trailing empty lines is not bijective through the <br>/implicit
-                // paragraph mapping at document end. Content must match exactly;
-                // trailing paragraph separators are tolerated.
-                if (text1.trimEnd(' ') != text0.trimEnd(' ')) {
+                if (text1 != text0) {
                     finding(
                         "round-trip changed the visible text:\n" +
                             "  before=\"${text0.replace("\n", "\\n")}\"\n" +

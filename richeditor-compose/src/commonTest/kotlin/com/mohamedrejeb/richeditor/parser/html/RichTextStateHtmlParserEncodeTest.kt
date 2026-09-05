@@ -146,9 +146,11 @@ class RichTextStateHtmlParserEncodeTest {
 
         val state = RichTextStateHtmlParser.encode(html)
 
-        // One empty paragraph per bare <br>, as a browser renders it.
+        // One empty paragraph per bare <br>, as a browser renders it; each is
+        // written back as its own block.
         assertEquals(4, state.richParagraphList.size)
-        assertEquals(html, state.toHtml())
+        assertEquals("<p>ABC</p><p><br></p><p><br></p><p><br></p>", state.toHtml())
+        assertEquals(state.toHtml(), RichTextStateHtmlParser.encode(state.toHtml()).toHtml())
     }
 
     @Test
@@ -158,7 +160,11 @@ class RichTextStateHtmlParserEncodeTest {
         val state = RichTextStateHtmlParser.encode(html)
 
         assertEquals(7, state.richParagraphList.size)
-        assertEquals(html, state.toHtml())
+        assertEquals(
+            "<p><br></p><p>ABC</p><p><br></p><p><br></p><p>ABC</p><p><br></p><p><br></p>",
+            state.toHtml(),
+        )
+        assertEquals(state.toHtml(), RichTextStateHtmlParser.encode(state.toHtml()).toHtml())
     }
 
     @Test

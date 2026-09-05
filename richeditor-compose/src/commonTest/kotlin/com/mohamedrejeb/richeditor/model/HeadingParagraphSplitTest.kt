@@ -150,7 +150,7 @@ class HeadingParagraphSplitTest {
     fun `enter at the end of a heading serializes as a heading and an empty paragraph`() {
         val state = splitHeading(5)
 
-        assertEquals("<h1>title</h1><br>", state.toHtml())
+        assertEquals("<h1>title</h1><p><br></p>", state.toHtml())
 
         val fresh = reloaded(state)
         assertEquals(state.toText(), fresh.toText())
@@ -193,7 +193,7 @@ class HeadingParagraphSplitTest {
     fun `enter at the start of a heading serializes with an empty line above`() {
         val state = splitHeading(0)
 
-        assertEquals("<br><h1>title</h1>", state.toHtml())
+        assertEquals("<p><br></p><h1>title</h1>", state.toHtml())
 
         val fresh = reloaded(state)
         assertEquals(state.toText(), fresh.toText())

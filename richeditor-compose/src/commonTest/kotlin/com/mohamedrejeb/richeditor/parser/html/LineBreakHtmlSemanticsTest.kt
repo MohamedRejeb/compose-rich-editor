@@ -1,5 +1,6 @@
 package com.mohamedrejeb.richeditor.parser.html
 
+import androidx.compose.ui.text.TextRange
 import com.mohamedrejeb.richeditor.model.HeadingStyle
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichTextState
@@ -171,5 +172,101 @@ class LineBreakHtmlSemanticsTest {
         val html = "<ul><li>a<br>b</li></ul>"
 
         assertEquals(html, decoded(html).toHtml())
+    }
+
+    // Encode: an empty block keeps its tag with a line break child
+
+    @Test
+    fun `an empty paragraph is written with a line break child`() {
+        assertEquals("<p>a</p><p><br></p>", decoded("<p>a</p><p></p>").toHtml())
+        assertEquals("<p><br></p><p>b</p>", decoded("<p></p><p>b</p>").toHtml())
+        assertEquals("<p>a</p><p><br></p><p>b</p>", decoded("<p>a</p><p></p><p>b</p>").toHtml())
+        assertEquals("<p>a</p><p><br></p><p><br></p>", decoded("<p>a</p><p></p><p></p>").toHtml())
+    }
+
+    @Test
+    fun `an empty heading keeps its level`() {
+        HeadingStyle.entries.filter { it != HeadingStyle.Normal }.forEach { level ->
+            val tag = level.htmlTag
+            assertEquals("<$tag><br></$tag>", decoded("<$tag></$tag>").toHtml())
+            assertEquals("<p>a</p><$tag><br></$tag>", decoded("<p>a</p><$tag></$tag>").toHtml())
+        }
+    }
+
+    @Test
+    fun `an empty list item is written with a line break child`() {
+        assertEquals("<ul><li><br></li></ul>", decoded("<ul><li></li></ul>").toHtml())
+        assertEquals("<ol><li>x</li><li><br></li></ol>", decoded("<ol><li>x</li><li></li></ol>").toHtml())
+    }
+
+    @Test
+    fun `an empty document is still an empty paragraph`() {
+        assertEquals("<p></p>", RichTextState().toHtml())
+        assertEquals("<p></p>", decoded("<p></p>").toHtml())
+    }
+
+    @Test
+    fun `an empty paragraph continued by a line break leaves the break to the continuation`() {
+        assertEquals("<p><br>b</p>", decoded("<p><br>b</p>").toHtml())
+    }
+
+    @Test
+    fun `a heading emptied by deletion keeps its level on save`() {
+        val state = decoded("<h1>title</h1>")
+        state.removeTextRange(TextRange(0, 5))
+
+        assertEquals("", state.toText())
+        assertEquals(listOf(HeadingStyle.H1), headingLevels(state))
+        assertEquals("<h1><br></h1>", state.toHtml())
+        assertEquals(listOf(HeadingStyle.H1), headingLevels(decoded(state.toHtml())))
+    }
+
+    // Round trip fixed points
+
+    private fun assertFixedPoint(html: String) {
+        val state = decoded(html)
+        assertEquals(html, state.toHtml(), "toHtml must reproduce $html")
+
+        val reloaded = decoded(state.toHtml())
+        assertEquals(texts(state), texts(reloaded), "the reload of $html")
+        assertEquals(headingLevels(state), headingLevels(reloaded), "the reload of $html")
+        assertEquals(continuationFlags(state), continuationFlags(reloaded), "the reload of $html")
+    }
+
+    @Test
+    fun `documents with empty paragraphs are fixed points of the html round trip`() {
+        listOf(
+            "<p>a</p>",
+            "<p>a</p><p><br></p>",
+            "<p>a</p><p><br></p><p><br></p>",
+            "<p><br></p><p>a</p>",
+            "<p>a</p><p><br></p><p>b</p>",
+            "<p><br></p><p><br></p>",
+            "<h1><br></h1>",
+            "<h1>title</h1><p><br></p>",
+            "<p><br></p><h1>title</h1>",
+            "<ul><li><br></li></ul>",
+            "<ul><li>x</li><li><br></li></ul><p><br></p>",
+            "<ul><li><br><ul><li>c</li></ul></li></ul>",
+            "<p><br>b</p>",
+            "<p style=\"text-align: center;\"><br></p>",
+        ).forEach(::assertFixedPoint)
+    }
+
+    @Test
+    fun `documents saved in the bare line break format settle after one save`() {
+        listOf(
+            "<p>a</p><br>",
+            "<br><p>First</p><br><br><p>Second</p><br>",
+            "<ul><li>x</li></ul><br>",
+            "<p>ABC</p><br><br><br>",
+        ).forEach { old ->
+            val state = decoded(old)
+            val saved = state.toHtml()
+            val reloaded = decoded(saved)
+
+            assertEquals(texts(state), texts(reloaded), "the reload of $old")
+            assertEquals(saved, reloaded.toHtml(), "the second save of $old")
+        }
     }
 }

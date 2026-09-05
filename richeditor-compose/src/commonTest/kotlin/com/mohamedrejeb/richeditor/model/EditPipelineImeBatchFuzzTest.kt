@@ -36,9 +36,8 @@ import kotlin.test.fail
  * 3. **No exception.** Every step runs inside the reporting wrapper; a throw fails with the op log.
  * 4. **Derived state.** Every tenth step, the parity oracle of `DerivedStateParityTest` restricted
  *    to `currentSpanStyle`: serialize, decode into a fresh state, park the caret at the same offset,
- *    compare. Skipped for a document the html round trip cannot reproduce (a trailing empty
- *    paragraph is written as `<br>` and read back as two blank lines); each seed asserts the check
- *    ran, so the skip can never silence the oracle entirely.
+ *    compare. The html round trip must reproduce the document's text first; each seed asserts the
+ *    check ran at least once.
  *
  * ## Scope of the shadow oracle
  *
@@ -50,14 +49,6 @@ import kotlin.test.fail
  * which keeps oracles 2, 3 and 4 and the separator mapping and drops only the shadow. Do not add
  * list documents to the shadow session; its divergences there are the oracle's fault, not the
  * model's.
- *
- * ## A heading divergence the committed seeds do not reach
- *
- * An empty heading paragraph is serialized without its level (an empty paragraph is written as
- * `<br>`, and dropped entirely when it is the document's only one), so a document edited down to
- * an empty heading reports the level's visuals live and none in the fresh decode. That is the html
- * encoder's gap, not the pipeline's, and it predates the heading documents in this corpus. The
- * committed seeds never reach that state; a new seed that empties a heading can.
  *
  * ## Runtime
  *
@@ -240,7 +231,11 @@ class EditPipelineImeBatchFuzzTest {
     private fun checkDerivedSpanStyle(state: RichTextState): Boolean {
         val fresh = RichTextState()
         fresh.setHtml(state.toHtml())
-        if (fresh.annotatedString.text != state.annotatedString.text) return false
+        assertEquals(
+            state.annotatedString.text,
+            fresh.annotatedString.text,
+            "the html round trip must reproduce the document: ${state.toHtml()}",
+        )
 
         val selection = state.selection
         fresh.selection = TextRange(0)

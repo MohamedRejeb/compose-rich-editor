@@ -52,10 +52,11 @@ import kotlin.test.fail
  *
  * ## Runtime
  *
- * Four fixed seeds over 150 steps each per session, so 1200 steps in all. The budget was measured
- * on the JVM (`desktopTest`, about 0.1s for the whole class inside a full suite run, 0.26s when the
- * class runs alone and pays for warm up). This suite is in commonTest, so `allTests` also runs those
- * 1200 steps on the wasmJs browser target and the iOS simulator, where they will cost more; the step
+ * Five fixed seeds in the shadow session and four in the list session, 150 steps each, so 1350
+ * steps in all. The budget was measured on the JVM (`desktopTest`, about 0.1s for the whole class
+ * inside a full suite run, 0.26s when the class runs alone and pays for warm up). This suite is in
+ * commonTest, so `allTests` also runs those steps on the wasmJs browser target and the iOS
+ * simulator, where they will cost more; the step
  * counts are plain constants here, so lower them if a slower target makes them a problem, rather
  * than reaching for per-platform machinery.
  */
@@ -103,6 +104,8 @@ class EditPipelineImeBatchFuzzTest {
             "<p>Hello <b>bold</b> world</p>",
             "<p>one</p><p><b>two</b> three</p>",
             "<h1>title</h1><p>body <i>text</i></p>",
+            // Short enough for the seeds to empty the heading and edit across its separator.
+            "<h1>ab</h1>",
         )
         startingDocuments.forEachIndexed { seed, html ->
             runSession(seed = seed, startingHtml = html, steps = 150, useShadow = true)

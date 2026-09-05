@@ -97,6 +97,78 @@ class HeadingParagraphMergeTest {
         assertEquals(HeadingStyle.H1, state.currentHeadingStyle)
     }
 
+    // Typing over the paragraph separator: the merge and the insert happen in one edit, and
+    // the style the inserted text inherits must be the heading's, not the plain paragraph's
+    // that the selection started in front of.
+
+    @Test
+    fun `text replacing the separator into a heading takes the heading visuals`() {
+        val state = RichTextState()
+        state.setHtml("<h1>ab</h1><p>cd</p>")
+        state.selection = TextRange(3)
+        state.imeBatch {
+            replace(2, 3, "X")
+            selection = TextRange(3)
+        }
+
+        assertEquals("abXcd", state.toText())
+        assertEquals((0 until 5).toSet(), boldIndices(state))
+        assertEquals("<h1>abXcd</h1>", state.toHtml())
+
+        val fresh = RichTextState()
+        fresh.setHtml(state.toHtml())
+        assertEquals(boldIndices(fresh), boldIndices(state))
+    }
+
+    @Test
+    fun `an emptied heading keeps its visuals through enter and a replace across the separator`() {
+        val state = RichTextState()
+        state.setHtml("<h1>title</h1>")
+        for (index in 4 downTo 0) {
+            state.selection = TextRange(index + 1)
+            state.imeBatch {
+                replace(index, index + 1, "")
+                selection = TextRange(index)
+            }
+        }
+        assertEquals("", state.toText())
+        assertParityWithFreshDecode(state, "the emptied heading")
+
+        state.imeBatch {
+            replace(0, 0, "\n")
+            selection = TextRange(1)
+        }
+        assertParityWithFreshDecode(state, "enter in the empty heading")
+
+        state.imeBatch {
+            replace(0, 1, "xb")
+            selection = TextRange(2)
+        }
+        assertEquals("xb", state.toText())
+        assertEquals(listOf(HeadingStyle.H1), state.richParagraphList.map { it.headingStyle })
+        assertParityWithFreshDecode(state, "the replace across the separator")
+    }
+
+    private fun assertParityWithFreshDecode(state: RichTextState, label: String) {
+        val fresh = RichTextState()
+        fresh.setHtml(state.toHtml())
+        assertEquals(state.toText(), fresh.toText(), "$label: text")
+        assertEquals(
+            state.richParagraphList.map { it.headingStyle },
+            fresh.richParagraphList.map { it.headingStyle },
+            "$label: heading levels",
+        )
+
+        val selection = state.selection
+        fresh.selection = TextRange(0)
+        fresh.selection = selection
+        assertEquals(
+            fresh.currentSpanStyle,
+            state.currentSpanStyle,
+            "$label: currentSpanStyle at $selection",
+        )
+    }
+
     @Test
     fun `merging into a plain paragraph adds no heading visuals`() {
         val state = RichTextState()

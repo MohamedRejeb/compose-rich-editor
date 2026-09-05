@@ -44,6 +44,49 @@ class RichTextReplaceSelectionInheritanceTest {
         )
     }
 
+    // A paragraph separator has no style of its own. A selection that starts on one reads
+    // the style of the paragraph below, which only applies when the typed text lands there.
+
+    private fun isBoldAt(state: RichTextState, index: Int): Boolean =
+        state.toRichTextDocument().blocks.single().spans
+            .any { it is RichTextSpanMark.Bold && index in it.range }
+
+    @Test
+    fun `typing over a separator after text keeps the style of that text`() {
+        val state = RichTextState()
+        state.setHtml("<p><b>ab</b></p><p>cd</p>")
+        state.selection = TextRange(2, 3)
+
+        state.onTextFieldValueChange(TextFieldValue("abXcd", selection = TextRange(3)))
+
+        assertEquals("abXcd", state.toText())
+        assertTrue(isBoldAt(state, 2), "the typed text joins the bold paragraph it lands in")
+    }
+
+    @Test
+    fun `typing over a separator after an empty paragraph inherits the style below it`() {
+        val state = RichTextState()
+        state.setHtml("<p></p><p><b>cd</b></p>")
+        state.selection = TextRange(0, 1)
+
+        state.onTextFieldValueChange(TextFieldValue("Xcd", selection = TextRange(1)))
+
+        assertEquals("Xcd", state.toText())
+        assertTrue(isBoldAt(state, 0), "the typed text lands in the paragraph the style came from")
+    }
+
+    @Test
+    fun `typing over a selection that starts inside a paragraph keeps its style across the separator`() {
+        val state = RichTextState()
+        state.setHtml("<p><b>ab</b></p><p>cd</p>")
+        state.selection = TextRange(0, 3)
+
+        state.onTextFieldValueChange(TextFieldValue("Xcd", selection = TextRange(1)))
+
+        assertEquals("Xcd", state.toText())
+        assertTrue(isBoldAt(state, 0), "the replaced range started in bold text")
+    }
+
     @Test
     fun `typing over a selection does not inherit the style before the caret`() {
         val state = RichTextState()

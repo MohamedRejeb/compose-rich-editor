@@ -2485,6 +2485,13 @@ public class RichTextState internal constructor(
         val insertedRange: TextRange,
         val spanStyle: SpanStyle,
         val richSpanStyle: RichSpanStyle,
+        /**
+         * Set when the range starts on a paragraph separator, which has no style of its own:
+         * the captured style is the next paragraph's and applies only if the inserted text
+         * lands in it. When the separator's removal merges that paragraph into the one
+         * above, the text keeps the style it was given there instead.
+         */
+        val separatorParagraph: RichParagraph? = null,
     )
 
     @OptIn(ExperimentalRichTextApi::class)
@@ -2525,6 +2532,8 @@ public class RichTextState internal constructor(
             insertedRange = TextRange(selMin, selMin + insertedLength),
             spanStyle = selectionStartSpan.fullSpanStyle,
             richSpanStyle = selectionStartSpan.fullStyle,
+            separatorParagraph =
+                selectionStartSpan.paragraph.takeIf { isParagraphSeparatorIndex(selMin) },
         )
     }
 
@@ -2538,6 +2547,8 @@ public class RichTextState internal constructor(
     internal fun applyReplacedSelectionStyles(replaced: ReplacedSelectionStyles) {
         val range = replaced.insertedRange
         val insertedSpan = getRichSpanByTextIndex(range.min, true) ?: return
+        val separatorParagraph = replaced.separatorParagraph
+        if (separatorParagraph != null && insertedSpan.paragraph !== separatorParagraph) return
         val currentSpanStyle = insertedSpan.fullSpanStyle
         val currentRichSpanStyle = insertedSpan.fullStyle
 

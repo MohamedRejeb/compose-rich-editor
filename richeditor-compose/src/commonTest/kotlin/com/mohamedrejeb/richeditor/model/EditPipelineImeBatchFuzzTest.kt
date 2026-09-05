@@ -228,8 +228,8 @@ class EditPipelineImeBatchFuzzTest {
     }
 
     /**
-     * Returns true when the comparison ran, false when the html round trip could not reproduce the
-     * document and there was nothing to compare against.
+     * Returns true when the comparison ran, false when the fresh state clamped the caret and there
+     * was nothing to compare against. The html round trip itself is asserted, never skipped.
      */
     private fun checkDerivedSpanStyle(state: RichTextState): Boolean {
         val fresh = RichTextState()

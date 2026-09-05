@@ -224,6 +224,9 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                         newRichParagraph.isFromLineBreak = false
                         if (name !in HeadingStyle.headingTags)
                             newRichParagraph.headingStyle = HeadingStyle.Normal
+                        // The <br> re-created the open inline styles here for a
+                        // continuation to inherit; a new block starts from none.
+                        newRichParagraph.children.clear()
                     }
 
                     if (!isCurrentRichParagraphBlank) {

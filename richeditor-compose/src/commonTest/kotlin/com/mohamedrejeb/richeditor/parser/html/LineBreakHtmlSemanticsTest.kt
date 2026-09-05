@@ -1,6 +1,7 @@
 package com.mohamedrejeb.richeditor.parser.html
 
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.unit.isUnspecified
 import com.mohamedrejeb.richeditor.model.HeadingStyle
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichTextState
@@ -8,6 +9,7 @@ import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -132,6 +134,16 @@ class LineBreakHtmlSemanticsTest {
 
         assertEquals(listOf("a", "b"), texts(state))
         assertEquals(listOf(HeadingStyle.H1, HeadingStyle.Normal), headingLevels(state))
+    }
+
+    @Test
+    fun `an empty paragraph after an empty heading carries no heading visuals`() {
+        val state = decoded("<h1><br></h1><p><br></p>")
+
+        assertEquals(listOf(HeadingStyle.H1, HeadingStyle.Normal), headingLevels(state))
+        state.selection = TextRange(1)
+        assertNull(state.currentSpanStyle.fontWeight, "the empty plain paragraph must not be bold")
+        assertTrue(state.currentSpanStyle.fontSize.isUnspecified, "nor keep the heading size")
     }
 
     // Decode: line breaks inside list items

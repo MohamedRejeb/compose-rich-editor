@@ -2,7 +2,9 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.foundation.text.input.TextFieldBuffer
 import androidx.compose.foundation.text.input.toTextFieldBuffer
+import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.style.TextAlign
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.document.RichTextBlock
 import com.mohamedrejeb.richeditor.document.RichTextBlockType
@@ -21,6 +23,15 @@ import kotlin.test.assertEquals
  * The document is `<p>a<br>b<br>c</p>` with the caret in `b`. Each row asserts the triple: the
  * model (the continuation flags of all three paragraphs plus the mutated property), the exact
  * `toHtml`, and reload agreement (a fresh `setHtml` of that html reports the same structure).
+ *
+ * Rows: `setHeadingStyle` on the middle, the last and the head paragraph, and as a no-op;
+ * `addParagraphStyle`; `toggleUnorderedList`; the `- ` auto conversion typed on an empty
+ * continuation; `increaseListLevel` and `decreaseListLevel` on a list item carrying the flag.
+ *
+ * Reload agreement is structural (text, flags, heading levels, list types and levels). The
+ * alignment row also compares the alignment at the caret, but not the alignment of the
+ * paragraph after it: the decoder lets a paragraph's alignment carry into the next `<p>`,
+ * which is a parser matter this suite does not own.
  */
 @OptIn(ExperimentalRichTextApi::class)
 class ContinuationSeveringMatrixTest {
@@ -103,6 +114,38 @@ class ContinuationSeveringMatrixTest {
 
         assertEquals(listOf(false, true, true), structure(state).continuations)
         assertEquals("<p>a<br>b<br>c</p>", state.toHtml())
+        assertReloadAgrees(state)
+    }
+
+    // addParagraphStyle and a list toggle, which already severed; pinned so they stay that way.
+
+    @Test
+    fun `a paragraph style on a middle continuation severs it and its chain`() {
+        val state = continuationDocument()
+        state.selection = TextRange(3)
+
+        state.addParagraphStyle(ParagraphStyle(textAlign = TextAlign.Center))
+
+        assertEquals(listOf(false, false, false), structure(state).continuations)
+        assertEquals(TextAlign.Center, state.currentParagraphStyle.textAlign)
+        assertEquals("<p>a</p><p style=\"text-align: center;\">b</p><p>c</p>", state.toHtml())
+        assertReloadAgrees(state)
+
+        val fresh = RichTextState().apply { setHtml(state.toHtml()) }
+        fresh.selection = TextRange(3)
+        assertEquals(TextAlign.Center, fresh.currentParagraphStyle.textAlign)
+    }
+
+    @Test
+    fun `a list toggle on a middle continuation severs it and its chain`() {
+        val state = continuationDocument()
+        state.selection = TextRange(3)
+
+        state.toggleUnorderedList()
+
+        assertEquals(listOf(false, false, false), structure(state).continuations)
+        assertEquals(listOf("DefaultParagraph:0", "UnorderedList:1", "DefaultParagraph:0"), structure(state).types)
+        assertEquals("<p>a</p><ul><li>b</li></ul><p>c</p>", state.toHtml())
         assertReloadAgrees(state)
     }
 

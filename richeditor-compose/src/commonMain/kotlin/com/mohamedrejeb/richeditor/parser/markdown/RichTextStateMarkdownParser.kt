@@ -293,6 +293,8 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                         currentRichSpan?.richSpanStyle = child.richSpanStyle
                         currentRichSpan?.children?.clear()
                         currentRichSpan?.children?.addAll(child.children)
+                        // The grandchildren now belong to the surviving span.
+                        currentRichSpan?.children?.fastForEach { it.parent = currentRichSpan }
                     }
                 }
 

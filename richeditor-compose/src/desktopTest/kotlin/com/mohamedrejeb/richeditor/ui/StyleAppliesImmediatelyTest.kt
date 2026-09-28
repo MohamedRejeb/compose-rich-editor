@@ -23,16 +23,14 @@ import kotlin.test.assertTrue
 /**
  * Regression test for the style-not-rendering-until-selection-moves bug.
  *
- * Root cause: BTF2 only re-runs OutputTransformation (and thus refreshes the visible
- * styled text) when the text field state changes. Style-only operations like
- * [RichTextState.toggleSpanStyle] mutate the paragraph tree but leave the buffer text
- * and selection unchanged, and `setTextFieldStateFromValue` early-returns when text and
- * selection are already in sync, so BTF2's layout cache was never invalidated and the
- * styled output kept displaying the pre-toggle appearance until the next selection change.
+ * Style-only operations like [RichTextState.toggleSpanStyle] mutate the paragraph tree but
+ * leave the buffer text and selection unchanged, so nothing in the text field state tells
+ * BTF2 to re-run the OutputTransformation. What does is the transformation's read of
+ * `annotatedString`: it is snapshot state, and BTF2 computes the output inside a derived
+ * state, so every rebuild of `annotatedString` invalidates the styled output.
  *
- * The fix invalidates the OutputTransformation after every `updateAnnotatedString`
- * rebuild that is a style-only change, forcing BTF2 to re-invoke it and re-render the
- * new styles without waiting for a selection change.
+ * The transformation instance itself must not change to achieve this, see
+ * [OutputTransformationIdentityTest].
  */
 @OptIn(ExperimentalTestApi::class)
 class StyleAppliesImmediatelyTest {

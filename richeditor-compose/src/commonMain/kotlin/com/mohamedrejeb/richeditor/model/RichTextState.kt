@@ -291,23 +291,11 @@ public class RichTextState internal constructor(
         private set
 
     /**
-     * A var backed by snapshot state so invalidateOutputTransformation can replace it with a
-     * new instance: BTF2 only re-runs the transformation when buffer text/selection change OR
-     * the instance changes (reference check). Style-only mutations need the swap.
+     * Must stay the same instance for the lifetime of the state: BTF2 keys its transformed
+     * state on it, and a new instance restarts the input session. Style-only changes reach
+     * BTF2 through the transformation's read of [annotatedString], which is snapshot state.
      */
-    internal var outputTransformation: OutputTransformation by mutableStateOf(createOutputTransformation())
-
-    /**
-     * Forces BTF2 to re-run the transformation after a style-only change, pinned by
-     * `StyleAppliesImmediatelyTest`. CMP 1.12 reads [outputTransformation] inside a snapshot,
-     * which makes the swap redundant today; it is kept deliberately, because the contract the
-     * test pins is the re-run and not the mechanism that triggers it.
-     */
-    private fun invalidateOutputTransformation() {
-        outputTransformation = createOutputTransformation()
-    }
-
-    private fun createOutputTransformation(): OutputTransformation =
+    internal val outputTransformation: OutputTransformation =
         OutputTransformation { this@RichTextState.applyRichTextStyles(this) }
 
     /**
@@ -934,7 +922,7 @@ public class RichTextState internal constructor(
         if (listIndent > -1)
             config.listIndent = listIndent
 
-        updateTextFieldValue(textFieldValue, forStyleChange = true)
+        updateTextFieldValue(textFieldValue)
     }
 
     // Text
@@ -1312,7 +1300,7 @@ public class RichTextState internal constructor(
                 clearLineBreakContinuations(paragraph)
             }
 
-            updateAnnotatedString(forStyleChange = true)
+            updateAnnotatedString()
             updateCurrentSpanStyle()
             updateCurrentParagraphStyle()
         }
@@ -1421,7 +1409,7 @@ public class RichTextState internal constructor(
 
         richSpan.richSpanStyle = linkStyle
 
-        updateTextFieldValue(textFieldValue, forStyleChange = true)
+        updateTextFieldValue(textFieldValue)
     }
 
     /**
@@ -1434,7 +1422,7 @@ public class RichTextState internal constructor(
 
         richSpan.richSpanStyle = RichSpanStyle.Default
 
-        updateTextFieldValue(textFieldValue, forStyleChange = true)
+        updateTextFieldValue(textFieldValue)
     }
 
     @Deprecated(
@@ -1634,7 +1622,7 @@ public class RichTextState internal constructor(
                     }
                 }
                 // We update the annotated string to reflect the changes
-                updateAnnotatedString(forStyleChange = true)
+                updateAnnotatedString()
                 // We update the current paragraph style to reflect the changes
                 updateCurrentParagraphStyle()
             }
@@ -1674,7 +1662,7 @@ public class RichTextState internal constructor(
                     }
                 }
                 // We update the annotated string to reflect the changes
-                updateAnnotatedString(forStyleChange = true)
+                updateAnnotatedString()
                 // We update the current paragraph style to reflect the changes
                 updateCurrentParagraphStyle()
             }
@@ -2740,13 +2728,8 @@ public class RichTextState internal constructor(
      * Handles updating the text field value and all the related states such as the [annotatedString] and [visualTransformation] to reflect the new text field value.
      *
      * @param newTextFieldValue the new text field value.
-     * @param forStyleChange true when the caller is a deliberate style mutation, so a rebuild
-     * that leaves the buffer text and selection untouched still has to reach BTF2.
      */
-    private fun updateTextFieldValue(
-        newTextFieldValue: TextFieldValue = tempTextFieldValue,
-        forStyleChange: Boolean = false,
-    ) {
+    private fun updateTextFieldValue(newTextFieldValue: TextFieldValue = tempTextFieldValue) {
         tempTextFieldValue = newTextFieldValue
 
         if (!singleParagraphMode) {
@@ -2799,7 +2782,7 @@ public class RichTextState internal constructor(
             }
         } else {
             // Update the annotatedString and the textFieldValue with the new values
-            updateAnnotatedString(tempTextFieldValue, forStyleChange = forStyleChange)
+            updateAnnotatedString(tempTextFieldValue)
         }
 
         // Clear un-applied styles
@@ -3019,17 +3002,10 @@ public class RichTextState internal constructor(
      * If no [newTextFieldValue] is passed, the [textFieldValue] will be used instead.
      *
      * @param newTextFieldValue the new text field value.
-     * @param forStyleChange true when the caller is a deliberate style mutation. A style-only
-     * rebuild leaves the buffer text and selection untouched, so BTF2 has no reason to re-run
-     * the [OutputTransformation] and would keep painting the pre-mutation styles; the
-     * transformation is swapped for a fresh instance to force it.
      * @see [textFieldValue]
      * @see [annotatedString]
      */
-    internal fun updateAnnotatedString(
-        newTextFieldValue: TextFieldValue = textFieldValue,
-        forStyleChange: Boolean = false,
-    ) {
+    internal fun updateAnnotatedString(newTextFieldValue: TextFieldValue = textFieldValue) {
         val newText =
             if (singleParagraphMode)
                 newTextFieldValue.text
@@ -3099,14 +3075,7 @@ public class RichTextState internal constructor(
             newTextFieldValue.selection.start.coerceIn(0, newTextLength),
             newTextFieldValue.selection.end.coerceIn(0, newTextLength),
         )
-        val styleOnlyChange =
-            forStyleChange &&
-                    textFieldState.text.toString() == annotatedString.text &&
-                    textFieldState.selection == clampedSelection
         setTextFieldStateFromValue(text = annotatedString.text, selection = clampedSelection)
-        if (styleOnlyChange) {
-            invalidateOutputTransformation()
-        }
         // Snapshot by value: the lambda runs during measure, where a live
         // `annotatedString` read would race the textFieldValue captured at composition.
         val transformed = annotatedString
@@ -4039,7 +4008,7 @@ public class RichTextState internal constructor(
             )
         }
 
-        updateTextFieldValue(textFieldValue, forStyleChange = true)
+        updateTextFieldValue(textFieldValue)
     }
 
     /**
@@ -5008,7 +4977,7 @@ public class RichTextState internal constructor(
         }
 
         if (isParagraphUpdated)
-            updateTextFieldValue(textFieldValue, forStyleChange = true)
+            updateTextFieldValue(textFieldValue)
     }
 
     /**

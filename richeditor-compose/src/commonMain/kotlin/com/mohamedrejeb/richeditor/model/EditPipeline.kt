@@ -41,6 +41,9 @@ private fun classifyInputDeltas(deltas: List<InputDelta>, postEditCaret: Int): C
 @OptIn(ExperimentalFoundationApi::class)
 internal fun RichTextState.applyChangeList(buffer: TextFieldBuffer) {
     pendingCutContent = extractDeletedSelection(buffer)
+    // A collapsing copy (touch toolbar, semantics action) collapses the selection before it
+    // writes the clipboard, ahead of the selection observer: the range is only known here.
+    if (!buffer.originalSelection.collapsed) lastNonCollapsedSelection = buffer.originalSelection
 
     val changes = buffer.changes
     val changeCount = changes.changeCount

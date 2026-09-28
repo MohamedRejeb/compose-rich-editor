@@ -260,9 +260,9 @@ public class RichTextState internal constructor(
     internal var pendingClipboardPlainText: String? = null
 
     /**
-     * The last non-collapsed selection. Updated whenever the selection changes from a
-     * non-collapsed range to a different value. Used by clipboard managers on platforms
-     * (e.g. Android) where the selection collapses before [setClipEntry] is called.
+     * The last non-collapsed selection, for clipboard writes that find the selection already
+     * collapsed. User edits record it before they apply, see [applyChangeList]; the selection
+     * observer records it for the changes that are not user edits.
      */
     internal var lastNonCollapsedSelection: TextRange = TextRange.Zero
 
@@ -415,9 +415,8 @@ public class RichTextState internal constructor(
         }
         val nowCollapsed = adjusted.collapsed
 
-        // Gesture selections no longer pass through updateTextFieldValue, which used to be
-        // the only place this was tracked; clipboard managers on platforms that collapse the
-        // selection before reading it still need the range the user had selected.
+        // Covers the selection changes that are not user edits and so never reach the
+        // pipeline, which records the range for the ones that are.
         if (!wasCollapsed)
             lastNonCollapsedSelection = previousSelection
 

@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.DesktopComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.KeyInjectionScope
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performSemanticsAction
@@ -28,7 +29,6 @@ import java.awt.datatransfer.DataFlavor
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -49,7 +49,7 @@ private class RecordingClipboard : Clipboard {
  * manager runs after the model has dropped the content that was cut.
  */
 @OptIn(ExperimentalTestApi::class)
-class CutClipboardTest {
+class CutAndCopyClipboardTest {
 
     @Test
     fun `rich cut puts the cut content on the clipboard`() = runClipboardTest(
@@ -212,7 +212,76 @@ class CutClipboardTest {
     }
 
     @Test
-    fun `collapsing copy after deleting a selection does not put the deleted content on the clipboard`() =
+    fun `copy that collapses the selection puts the selection on the clipboard`() = runClipboardTest(
+        html = "<p><b>Hello</b> World</p>",
+    ) { state, clipboard ->
+        val range = TextRange(0, 5)
+        val expectedHtml = state.toHtml(range)
+        select(state, range)
+
+        performCollapsingCopy()
+
+        assertEquals(TextRange(5), state.selection)
+        assertEquals("Hello", clipboard.plainText())
+        assertEquals(expectedHtml, clipboard.html())
+    }
+
+    @Test
+    fun `collapsing copy after a second selection puts the second selection on the clipboard`() =
+        runClipboardTest(
+            html = "<p><b>Hello</b> World</p>",
+        ) { state, clipboard ->
+            select(state, TextRange(0, 5))
+            val range = TextRange(6, 11)
+            val expectedHtml = state.toHtml(range)
+            select(state, range)
+
+            performCollapsingCopy()
+
+            assertEquals("World", clipboard.plainText())
+            assertEquals(expectedHtml, clipboard.html())
+        }
+
+    @Test
+    fun `collapsing copy after two keyboard selections puts the second one on the clipboard`() =
+        runClipboardTest(
+            html = "<p><b>Hello</b> World</p>",
+        ) { state, clipboard ->
+            val range = TextRange(6, 11)
+            val expectedHtml = state.toHtml(range)
+            select(state, TextRange(0))
+
+            // Keyboard selections are user edits, unlike the programmatic ones above.
+            onNodeWithTag(EDITOR_TAG).performKeyInput {
+                extendSelectionRight(steps = 5)
+                pressKey(Key.DirectionRight)
+                pressKey(Key.DirectionRight)
+                extendSelectionRight(steps = 5)
+            }
+            waitForIdle()
+            assertEquals(range, state.selection)
+
+            performCollapsingCopy()
+
+            assertEquals("World", clipboard.plainText())
+            assertEquals(expectedHtml, clipboard.html())
+        }
+
+    @Test
+    fun `plain collapsing copy puts the selection on the clipboard`() = runClipboardTest(
+        html = "<p>Hello</p><p>World</p>",
+    ) { state, clipboard ->
+        state.config.richClipboardEnabled = false
+        select(state, TextRange(0, state.annotatedString.text.length))
+
+        performCollapsingCopy()
+
+        assertEquals("Hello\nWorld", clipboard.plainText())
+        assertFalse(clipboard.hasHtml(), "A plain copy must not write html")
+    }
+
+    @Test
+    fun `collapsing copy after deleting a selection puts the copied selection on the clipboard`() =
         runClipboardTest(
             html = "<p>Hello <b>World</b></p>",
         ) { state, clipboard ->
@@ -223,11 +292,15 @@ class CutClipboardTest {
 
             // Collapses to the caret the deletion left behind, on the text it left behind:
             // the state a cut ends in.
-            select(state, TextRange(0, 6))
+            val range = TextRange(0, 6)
+            val expectedHtml = state.toHtml(range)
+            select(state, range)
+
             performCollapsingCopy()
 
             assertEquals(TextRange(6), state.selection)
-            assertNotEquals("World", clipboard.plainText())
+            assertEquals("Hello ", clipboard.plainText())
+            assertEquals(expectedHtml, clipboard.html())
         }
 
     @Test
@@ -317,6 +390,12 @@ class CutClipboardTest {
     private fun DesktopComposeUiTest.performCollapsingCopy() {
         onNodeWithTag(EDITOR_TAG).performSemanticsAction(SemanticsActions.CopyText)
         waitForIdle()
+    }
+
+    private fun KeyInjectionScope.extendSelectionRight(steps: Int) {
+        keyDown(Key.ShiftLeft)
+        repeat(steps) { pressKey(Key.DirectionRight) }
+        keyUp(Key.ShiftLeft)
     }
 
     private fun RecordingClipboard.plainText(): String {

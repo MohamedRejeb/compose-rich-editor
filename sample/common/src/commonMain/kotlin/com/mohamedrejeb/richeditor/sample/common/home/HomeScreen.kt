@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.outlined.FormatListBulleted
 import androidx.compose.material.icons.automirrored.outlined.Notes
 import androidx.compose.material.icons.outlined.AlternateEmail
 import androidx.compose.material.icons.outlined.Apps
+import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Image
@@ -43,6 +44,7 @@ import com.mohamedrejeb.richeditor.sample.common.components.GradientHero
 import com.mohamedrejeb.richeditor.sample.common.components.RealExampleCard
 import com.mohamedrejeb.richeditor.sample.common.components.SampleScaffold
 import com.mohamedrejeb.richeditor.sample.common.components.SectionHeader
+import com.mohamedrejeb.richeditor.sample.common.lab.EDITOR_LAB_ENABLED
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.BrandColors
 import com.mohamedrejeb.richeditor.sample.common.ui.theme.SampleAccents
 
@@ -63,6 +65,7 @@ fun HomeScreen(
     navigateToHeadings: () -> Unit,
     navigateToClaude: () -> Unit,
     navigateToExpandable: () -> Unit,
+    navigateToEditorLab: () -> Unit,
 ) {
     SampleScaffold(
         title = "Compose Rich Editor",
@@ -78,6 +81,18 @@ fun HomeScreen(
             item {
                 Spacer(Modifier.height(8.dp))
                 GradientHero()
+            }
+
+            if (EDITOR_LAB_ENABLED) {
+                item {
+                    FeatureCard(
+                        title = "Editor lab",
+                        description = "Fixed documents, live state readout and an event log for manual device checks.",
+                        icon = Icons.Outlined.BugReport,
+                        accent = SampleAccents.Slate,
+                        onClick = navigateToEditorLab,
+                    )
+                }
             }
 
             item { SectionSpacer() }

@@ -18,6 +18,7 @@ import com.mohamedrejeb.richeditor.sample.common.headings.HeadingsSampleScreen
 import com.mohamedrejeb.richeditor.sample.common.home.HomeScreen
 import com.mohamedrejeb.richeditor.sample.common.htmleditor.HtmlEditorContent
 import com.mohamedrejeb.richeditor.sample.common.images.ImagesSampleScreen
+import com.mohamedrejeb.richeditor.sample.common.lab.EditorLabScreen
 import com.mohamedrejeb.richeditor.sample.common.links.LinksSampleScreen
 import com.mohamedrejeb.richeditor.sample.common.listsconfig.ListsConfigSampleScreen
 import com.mohamedrejeb.richeditor.sample.common.markdowneditor.MarkdownEditorContent
@@ -43,6 +44,7 @@ private const val NOTION_ROUTE = "notion"
 private const val HEADINGS_ROUTE = "headings"
 private const val CLAUDE_ROUTE = "claude"
 private const val EXPANDABLE_ROUTE = "expandable"
+private const val EDITOR_LAB_ROUTE = "editorLab"
 
 @Composable
 fun NavGraph() {
@@ -79,6 +81,7 @@ fun NavGraph() {
                 navigateToHeadings = { navController.navigate(HEADINGS_ROUTE) },
                 navigateToClaude = { navController.navigate(CLAUDE_ROUTE) },
                 navigateToExpandable = { navController.navigate(EXPANDABLE_ROUTE) },
+                navigateToEditorLab = { navController.navigate(EDITOR_LAB_ROUTE) },
             )
         }
 
@@ -172,6 +175,12 @@ fun NavGraph() {
 
         composable(EXPANDABLE_ROUTE) {
             ExpandableTextSampleScreen(
+                navigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(EDITOR_LAB_ROUTE) {
+            EditorLabScreen(
                 navigateBack = { navController.popBackStack() }
             )
         }

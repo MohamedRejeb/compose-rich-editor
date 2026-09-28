@@ -146,7 +146,7 @@ class OutputTransformationIdentityTest {
     }
 
     /**
-     * Writes the selection the way a gesture does, straight into the text field state.
+     * A programmatic write, which leaves the text and the transformation untouched.
      */
     private fun DesktopComposeUiTest.select(state: RichTextState, range: TextRange) {
         state.textFieldState.edit { selection = range }

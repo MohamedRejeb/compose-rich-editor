@@ -25,13 +25,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mohamedrejeb.richeditor.model.RichTextState
 import kotlin.time.TimeMark
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 
 private const val MAX_LOG_ENTRIES = 60
+private const val SCROLL_REST_MILLIS = 150L
 private val LogHeight = 200.dp
 
 internal data class LabLogEntry(
@@ -43,6 +45,7 @@ internal data class LabLogEntry(
  * Records changes of the state the manual checks ask about, newest first. The time is when
  * the change was observed on the main thread, not when it was written: only a gap of more
  * than a frame orders two entries, and values overwritten in between are never seen.
+ * Scroll entries are logged [SCROLL_REST_MILLIS] after the scroll came to rest.
  */
 internal class LabLog(private val start: TimeMark) {
     var entries: List<LabLogEntry> by mutableStateOf(emptyList())
@@ -131,13 +134,15 @@ internal fun RichTextState.isBold(): Boolean =
 
 /**
  * A scroll changes every frame, which would push everything else out of the log: only the
- * value it comes to rest at is recorded.
+ * value it comes to rest at is recorded. Debounced on the value, because a drag handed over
+ * through nested scrolling does not report itself as in progress.
  */
+@OptIn(FlowPreview::class)
 private fun restingValuesOf(name: String, scrollState: ScrollState): Flow<String> =
-    snapshotFlow { scrollState.isScrollInProgress }
+    snapshotFlow { scrollState.value }
         .drop(1)
-        .filter { inProgress -> !inProgress }
-        .map { "$name = ${scrollState.value}" }
+        .debounce(SCROLL_REST_MILLIS)
+        .map { value -> "$name = $value (at rest, logged $SCROLL_REST_MILLIS ms late)" }
 
 private fun changesOf(name: String, read: () -> String): Flow<String> =
     snapshotFlow(read)

@@ -385,6 +385,9 @@ public fun BasicRichTextEditor(
             enabled = enabled,
             readOnly = readOnly,
             inputTransformation = InputTransformation {
+                // Cleared on every user edit, including those the early returns below keep out
+                // of the pipeline, so a clipboard write can only see the edit before it.
+                state.pendingCutContent = null
                 if (state.isApplyingProgrammaticSync) {
                     // Programmatic write to textFieldState; the state already reflects it.
                     // Treating it as user input would corrupt richParagraphList.

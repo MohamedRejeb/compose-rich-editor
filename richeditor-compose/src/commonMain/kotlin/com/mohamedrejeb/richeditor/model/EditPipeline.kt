@@ -40,6 +40,8 @@ private fun classifyInputDeltas(deltas: List<InputDelta>, postEditCaret: Int): C
  */
 @OptIn(ExperimentalFoundationApi::class)
 internal fun RichTextState.applyChangeList(buffer: TextFieldBuffer) {
+    pendingCutContent = extractDeletedSelection(buffer)
+
     val changes = buffer.changes
     val changeCount = changes.changeCount
     if (changeCount == 0) return
@@ -124,6 +126,22 @@ internal fun RichTextState.applyChangeList(buffer: TextFieldBuffer) {
     // Arms the #779 follow-up window: a suggestion pick's trailing-space refresh arrives
     // as a bare caret step right after this edit.
     noteImeEdit(caret = textFieldValue.selection.min)
+}
+
+/**
+ * The selected content, when the edit in [buffer] deletes exactly the selection and nothing
+ * else. Must run before the replay, while the model still holds that content.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+private fun RichTextState.extractDeletedSelection(buffer: TextFieldBuffer): RichTextState? {
+    val changes = buffer.changes
+    if (changes.changeCount != 1 || !changes.getRange(0).collapsed) return null
+
+    val deleted = changes.getOriginalRange(0)
+    val selection = buffer.originalSelection
+    if (deleted.collapsed || deleted.min != selection.min || deleted.max != selection.max) return null
+
+    return extractRangeState(deleted)
 }
 
 /**

@@ -73,15 +73,15 @@ internal class WasmJsRichTextClipboardManager(
 
     override suspend fun setClipEntry(clipEntry: ClipEntry?) {
         if (!richTextState.config.richClipboardEnabled) {
-            val copySelection = richTextState.copySelection
-            if (clipEntry == null || copySelection == null || copySelection.collapsed) {
+            val content = richTextState.takeClipboardContent()
+            if (clipEntry == null || content == null) {
                 clipboard.setClipEntry(clipEntry)
                 return
             }
             // The raw ClipEntry carries the editor's internal rendering (paragraphs joined
             // by spaces, list prefixes included); a plain-text copy must use toText.
             try {
-                val item = createTextClipboardItem(richTextState.toText(copySelection).toJsString())
+                val item = createTextClipboardItem(content.toText().toJsString())
                 clipboard.nativeClipboard.write(item).await<Nothing>()
             } catch (e: Exception) {
                 clipboard.setClipEntry(clipEntry)
@@ -95,15 +95,15 @@ internal class WasmJsRichTextClipboardManager(
         }
 
         try {
-            val copySelection = richTextState.copySelection
+            val content = richTextState.takeClipboardContent()
 
-            if (copySelection == null || copySelection.collapsed) {
+            if (content == null) {
                 clipboard.setClipEntry(null)
                 return
             }
 
-            val html = richTextState.toHtml(copySelection)
-            val text = richTextState.toText(copySelection)
+            val html = content.toHtml()
+            val text = content.toText()
 
             val clipboardItem = createHtmlClipboardItem(html.toJsString(), text.toJsString())
             clipboard.nativeClipboard.write(clipboardItem).await<Nothing>()

@@ -279,6 +279,25 @@ public class RichTextState internal constructor(
         }
 
     /**
+     * What the last user edit removed, when it deleted exactly the selection: BTF2 cuts that
+     * way and writes the clipboard after the model has dropped the content.
+     */
+    internal var pendingCutContent: RichTextState? = null
+
+    /**
+     * The content a clipboard write should carry: what a cut just removed, otherwise the
+     * [copySelection]. Null when there is neither.
+     */
+    internal fun takeClipboardContent(): RichTextState? {
+        val cutContent = pendingCutContent
+        pendingCutContent = null
+        if (cutContent != null && selection.collapsed) return cutContent
+
+        val range = copySelection ?: return null
+        return extractRangeState(range)
+    }
+
+    /**
      * Whether the text field is currently focused.
      * Updated by [BasicRichTextEditor] via [onFocusChanged].
      */
@@ -5955,7 +5974,7 @@ public class RichTextState internal constructor(
      * @param range The [TextRange] to extract.
      * @return A new [RichTextState] with only the content in the range.
      */
-    private fun extractRangeState(
+    internal fun extractRangeState(
         range: TextRange,
         preserveListNumbers: Boolean = false,
     ): RichTextState {

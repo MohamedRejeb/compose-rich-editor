@@ -27,7 +27,7 @@ internal actual fun Modifier.adjustTextIndicatorOffset(
 
         state.onSelectionGestureStart()
         scope.launch {
-            adjustTextIndicatorOffset(
+            registerPressPosition(
                 pressPosition = pressPosition,
                 state = state,
                 topPadding = topPadding,

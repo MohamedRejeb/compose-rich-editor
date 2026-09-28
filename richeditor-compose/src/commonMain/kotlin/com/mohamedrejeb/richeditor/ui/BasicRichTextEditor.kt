@@ -24,10 +24,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.changedToDown
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.node.Ref
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -42,6 +46,7 @@ import com.mohamedrejeb.richeditor.clipboard.ClipboardEventEffect
 import com.mohamedrejeb.richeditor.clipboard.createRichTextClipboardManager
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.applyChangeList
+import com.mohamedrejeb.richeditor.model.correctPressCaret
 import com.mohamedrejeb.richeditor.model.reconcileBufferWithModel
 import kotlinx.coroutines.CoroutineScope
 
@@ -257,8 +262,6 @@ public fun BasicRichTextEditor(
     }
 
     if (!singleParagraph) {
-        // Workaround for Android to fix a bug in BasicTextField where it doesn't select the correct text
-        // when the text contains multiple paragraphs.
         LaunchedEffect(interactionSource) {
             interactionSource.interactions.collect { interaction ->
                 when (interaction) {
@@ -269,7 +272,7 @@ public fun BasicRichTextEditor(
                         val topPadding = with(density) { contentPadding.calculateTopPadding().toPx() }
                         val startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() }
 
-                        adjustTextIndicatorOffset(
+                        registerPressPosition(
                             pressPosition = pressPosition,
                             state = state,
                             topPadding = topPadding,
@@ -293,6 +296,9 @@ public fun BasicRichTextEditor(
         )
     }
 
+    val editorCoordinates = remember { Ref<LayoutCoordinates>() }
+    val innerTextFieldCoordinates = remember { Ref<LayoutCoordinates>() }
+
     CompositionLocalProvider(LocalClipboard provides richClipboardManager) {
         // Capture position on the innerTextField (the actual text content composable),
         // not on the outer BasicTextField, so trigger-suggestion popups can anchor
@@ -305,6 +311,7 @@ public fun BasicRichTextEditor(
                         content = { innerTextField() },
                         modifier = Modifier
                             .onPlaced { coords ->
+                                innerTextFieldCoordinates.value = coords
                                 state.textFieldWindowPosition = coords.positionInWindow()
                             }
                             // Only the inner text field is dimmed. The decoration content
@@ -353,27 +360,33 @@ public fun BasicRichTextEditor(
                         Modifier
                     else
                         Modifier
-                            // Passive pointer observer feeding the geometric selection
-                            // clamp; never consumes events.
-                            .pointerInput(state) {
-                                val topPadding = with(density) { contentPadding.calculateTopPadding().toPx() }
-                                val startPadding =
-                                    with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() }
+                            .onPlaced { coords -> editorCoordinates.value = coords }
+                            // Passive pointer observer feeding the selection corrections,
+                            // in the coordinates of the text layout; never consumes events.
+                            .pointerInput(state, singleLine) {
                                 awaitPointerEventScope {
                                     while (true) {
                                         val event = awaitPointerEvent(PointerEventPass.Initial)
-                                        val change = event.changes.firstOrNull { it.pressed } ?: continue
-                                        state.onSelectionGesturePointerMove(
-                                            Offset(
-                                                change.position.x - startPadding,
-                                                change.position.y - topPadding,
-                                            )
-                                        )
+                                        val change = event.changes
+                                            .firstOrNull { it.pressed || it.changedToUpIgnoreConsumed() }
+                                            ?: continue
+                                        textLayoutPositionOf(
+                                            position = change.position,
+                                            editor = editorCoordinates.value,
+                                            innerTextField = innerTextFieldCoordinates.value,
+                                            verticalScroll = if (singleLine) 0 else state.scrollState.value,
+                                        )?.let(state::onSelectionGesturePointerMove)
+
+                                        if (change.changedToDown()) state.onSelectionGesturePointerDown()
+                                        if (event.changes.none { it.pressed }) {
+                                            // Every caret placement the press causes is made by
+                                            // the time its release has been dispatched.
+                                            awaitPointerEvent(PointerEventPass.Final)
+                                            state.onSelectionGesturePointerUp()
+                                        }
                                     }
                                 }
                             }
-                            // Workaround for Desktop to fix a bug in BasicTextField where it doesn't select the correct text
-                            // when the text contains multiple paragraphs.
                             .adjustTextIndicatorOffset(
                                 state = state,
                                 contentPadding = contentPadding,
@@ -408,6 +421,7 @@ public fun BasicRichTextEditor(
                 // when the buffer already matches: the clear must be unconditional, because a
                 // stale pending selection would override a later gesture selection.
                 state.pendingSelectionDuringSync = null
+                state.correctPressCaret(this)
             },
             textStyle = effectiveTextStyle,
             keyboardOptions = keyboardOptions,
@@ -469,13 +483,30 @@ internal expect fun Modifier.adjustTextIndicatorOffset(
     scope: CoroutineScope,
 ): Modifier
 
-internal suspend fun adjustTextIndicatorOffset(
+/**
+ * Maps a pointer [position] on the editor to the text layout: the decoration places the text
+ * somewhere inside the editor, and a scrolled editor shows a lower part of the layout.
+ */
+private fun textLayoutPositionOf(
+    position: Offset,
+    editor: LayoutCoordinates?,
+    innerTextField: LayoutCoordinates?,
+    verticalScroll: Int,
+): Offset? {
+    if (editor == null || innerTextField == null) return null
+    if (!editor.isAttached || !innerTextField.isAttached) return null
+
+    val inTextField = innerTextField.localPositionOf(editor, position)
+    return Offset(x = inTextField.x, y = inTextField.y + verticalScroll)
+}
+
+internal suspend fun registerPressPosition(
     pressPosition: Offset,
     state: RichTextState,
     topPadding: Float,
     startPadding: Float,
 ) {
-    state.adjustSelectionAndRegisterPressPosition(
+    state.registerLastPressPosition(
         pressPosition = Offset(
             x = pressPosition.x - startPadding,
             y = pressPosition.y - topPadding

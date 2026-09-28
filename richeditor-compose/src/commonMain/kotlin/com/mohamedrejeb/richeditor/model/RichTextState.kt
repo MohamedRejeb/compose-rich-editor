@@ -385,6 +385,7 @@ public class RichTextState internal constructor(
             materializeBoundarySpace(boundary = newSelection.min - 1)
             return
         }
+        pressCorrectedCaret = null
         lastObservedComposition = textFieldState.composition
 
         val previousSelection = lastHandledSelection
@@ -751,6 +752,36 @@ public class RichTextState internal constructor(
         selectionGesturePointer = position
         selectionGesturePointerMark = kotlin.time.TimeSource.Monotonic.markNow()
     }
+
+    // True from a press until its release has been dispatched: the span in which the
+    // platform makes the caret placements that [correctPressCaret] may correct.
+    private var pressCaretCorrectionArmed = false
+
+    internal fun onSelectionGesturePointerDown() {
+        pressCaretCorrectionArmed = true
+    }
+
+    internal fun onSelectionGesturePointerUp() {
+        pressCaretCorrectionArmed = false
+    }
+
+    internal fun pressForCaretCorrection(): Offset? {
+        if (!pressCaretCorrectionArmed) return null
+
+        val pointerFresh =
+            selectionGesturePointerMark?.let { it.elapsedNow() < SelectionGesturePointerFreshness } == true
+        return selectionGesturePointer.takeIf { pointerFresh }
+    }
+
+    // The caret [correctPressCaret] committed in the last user edit, if it did. The step onto
+    // it is press driven, however much it looks like the one that ends an IME pick (#779).
+    internal var pressCorrectedCaret: Int? = null
+
+    internal fun isLaterParagraphStart(offset: Int): Boolean =
+        richParagraphList
+            .asSequence()
+            .drop(1)
+            .any { paragraph -> paragraph.type.startRichSpan.textRange.min == offset }
 
     private var currentAppliedSpanStyle: SpanStyle by mutableStateOf(
         getRichSpanByTextIndex(textIndex = selection.min - 1)?.fullSpanStyle
@@ -2123,8 +2154,11 @@ public class RichTextState internal constructor(
      * @return true if the list level was increased or decreased, false otherwise.
      */
     internal fun onPreviewKeyEvent(event: KeyEvent): Boolean {
-        if (event.type == KeyEventType.KeyDown)
+        if (event.type == KeyEventType.KeyDown) {
+            // A caret the keyboard moves while a pointer is held down is not the pointer's.
+            pressCaretCorrectionArmed = false
             notePhysicalKeyEvent()
+        }
 
         // Undo/redo shortcuts - intercepted before BasicTextField's built-in handler
         // so rich-model snapshots rewind instead of plain-text TextFieldValue state.
@@ -2690,6 +2724,7 @@ public class RichTextState internal constructor(
     ): Boolean {
         if (singleParagraphMode) return false
         if (lastPressPosition != null) return false
+        if (pressCorrectedCaret == newSelection.min) return false
         if (!previousSelection.collapsed || !newSelection.collapsed) return false
         val boundary = previousSelection.min
         if (newSelection.min != boundary + 1) return false
@@ -5323,7 +5358,7 @@ public class RichTextState internal constructor(
     }
 
     private var registerLastPressPositionJob: Job? = null
-    private suspend fun registerLastPressPosition(pressPosition: Offset): Unit = coroutineScope {
+    internal suspend fun registerLastPressPosition(pressPosition: Offset): Unit = coroutineScope {
         registerLastPressPositionJob?.cancel()
         registerLastPressPositionJob = launch {
             lastPressPosition = pressPosition

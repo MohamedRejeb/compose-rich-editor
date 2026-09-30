@@ -115,4 +115,73 @@ class RichTextReplaceSelectionInheritanceTest {
                 .any { it is RichTextSpanMark.TextColor && it.range == 6..11 && it.argb == redArgb },
         )
     }
+
+    @Test
+    fun `IME rewrite of a styled word with a collapsed caret inherits the first replaced character`() {
+        val state = stateWithRedWorld()
+        imeRewriteWorld(state, "World")
+
+        assertEquals("Hello World", state.toText())
+        assertTrue((6..10).all { state.isRedAt(it) })
+    }
+
+    @Test
+    fun `IME rewrite does not inherit the style before the replaced word`() {
+        val state = RichTextState()
+        state.setText("Hello world")
+        state.addSpanStyle(SpanStyle(fontWeight = FontWeight.Bold), TextRange(0, 6))
+        imeRewriteWorld(state, "World")
+
+        assertTrue(
+            state.toRichTextDocument().blocks.single().spans
+                .none { it is RichTextSpanMark.Bold && 6 in it.range },
+        )
+    }
+
+    @Test
+    fun `IME rewrite inherits the custom rich span style of the replaced word`() {
+        val state = RichTextState()
+        state.setText("Hello world")
+        state.addRichSpan(FontRunStyle(slug = "amiri"), TextRange(6, 11))
+        imeRewriteWorld(state, "World")
+
+        assertTrue(
+            (6..10).all { index ->
+                state.toRichTextDocument().blocks.single().spans.any {
+                    it is RichTextSpanMark.Custom && index in it.range && it.style == FontRunStyle(slug = "amiri")
+                }
+            },
+        )
+    }
+
+    @Test
+    fun `IME rewrite restyling is a single undo entry`() {
+        val state = stateWithRedWorld()
+        val before = state.toRichTextDocument()
+        imeRewriteWorld(state, "World")
+        val after = state.toRichTextDocument()
+
+        state.history.undo()
+        assertEquals(before, state.toRichTextDocument())
+        state.history.redo()
+        assertEquals(after, state.toRichTextDocument())
+    }
+
+    /**
+     * An autocorrect as Gboard sends it: the caret stays collapsed after "world" while the
+     * IME composes it, then commits [replacement] in its place.
+     */
+    private fun imeRewriteWorld(state: RichTextState, replacement: String) {
+        state.selection = TextRange(11)
+        state.onTextFieldValueChange(
+            TextFieldValue("Hello world", selection = TextRange(11), composition = TextRange(6, 11)),
+        )
+        state.onTextFieldValueChange(
+            TextFieldValue("Hello $replacement", selection = TextRange(6 + replacement.length)),
+        )
+    }
+
+    private fun RichTextState.isRedAt(index: Int): Boolean =
+        toRichTextDocument().blocks.single().spans
+            .any { it is RichTextSpanMark.TextColor && index in it.range && it.argb == redArgb }
 }

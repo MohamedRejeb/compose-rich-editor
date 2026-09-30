@@ -45,12 +45,12 @@ class GestureSelectionClampObserverTest {
     }
 
     /**
-     * The realistic drag: several extensions in a row. Every tick after the first is
-     * non-collapsed on both sides, so the mid-drag gate skips it and the selection comes to rest
-     * uncorrected on the next paragraph's start offset. Ending the gesture must clamp it.
+     * The realistic drag: several extensions in a row. The tick that lands on the next
+     * paragraph's start offset is clamped as it arrives, while the pointer is still down, and
+     * ending the gesture keeps that result.
      */
     @Test
-    fun `a multi step drag has its resting selection clamped when the gesture ends`() {
+    fun `a multi step drag is clamped on the tick that reaches the next paragraph start`() {
         val state = RichTextState()
         // "alpha beta gamma delta": paragraph 2 starts at offset 11
         state.setText("alpha beta\ngamma delta")
@@ -61,9 +61,9 @@ class GestureSelectionClampObserverTest {
         state.dragTick(TextRange(6, 11))
 
         assertEquals(
-            TextRange(6, 11),
+            TextRange(6, 10),
             state.selection,
-            "mid-drag ticks must stay untouched while the pointer is down",
+            "the tick onto the paragraph start must be clamped while the pointer is down",
         )
 
         state.onSelectionGestureEnd()
@@ -99,9 +99,8 @@ class GestureSelectionClampObserverTest {
     }
 
     /**
-     * A single-step drag, so the one extension is a collapsed to non-collapsed tick and the
-     * clamp lands on it. This covers the first-extension correction; the resting-selection
-     * correction that a realistic multi-step drag needs is covered by the multi-step test above.
+     * A single-step drag through the real editor and its snapshotFlow observer. The multi-step
+     * shape is covered by the model-level test above.
      */
     @Test
     fun `mouse drag onto the next paragraph start is pulled back onto the dragged line`() =

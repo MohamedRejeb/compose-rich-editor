@@ -19,10 +19,12 @@ import kotlin.test.assertSame
  *
  * Invariant: when [RichTextState.handleSelectionChanged] is called with
  * fromGestureObserver = true and both the old and new selections are
- * non-collapsed (i.e. mid-drag), [RichTextState.annotatedString] must NOT be
- * reassigned. A reassignment triggers Compose recomposition, which interrupts
- * BTF2's internal pointer tracking and freezes selection after the first drag
- * tick.
+ * non-collapsed (a mid-drag tick), [RichTextState.annotatedString] must NOT be
+ * reassigned. The #635 mask in it depends on the selection, so a rebuild per
+ * tick would recreate the rendered output on every pointer move; the mask is
+ * rebuilt once the gesture ends instead. The other side effects (the derived
+ * styles the toolbar reads) do run on every tick, see
+ * SelectionSideEffectFreshnessTest.
  *
  * Detection mechanism: [RichTextState.updateAnnotatedString] always reassigns
  * [RichTextState.annotatedString] to the result of a fresh buildAnnotatedString
@@ -76,6 +78,9 @@ class HandleSelectionChangedDragInvariantTest {
         state.setSelectionAndHandle(TextRange(5, 12), fromGestureObserver = true)
         val annotatedAfterMidDragTick = state.annotatedString
 
+        // state.selection reads from textFieldState, which was updated above.
+        assertEquals(TextRange(5, 12), state.selection)
+
         // Invariant: mid-drag ticks must NOT rebuild annotatedString.
         // updateAnnotatedString reassigns the field to a new buildAnnotatedString result,
         // so reference equality proves no rebuild happened.
@@ -128,36 +133,12 @@ class HandleSelectionChangedDragInvariantTest {
     }
 
     @Test
-    fun `gesture observer skips all side effects during mid-drag tick`() {
-        val state = stateWithBackgroundSpan("hello world this is a longer line for dragging")
-
-        // Establish drag start: collapsed to non-collapsed (fires all side effects).
-        state.setSelectionAndHandle(TextRange(5, 7), fromGestureObserver = true)
-        val annotatedAfterDragStart = state.annotatedString
-
-        // Mid-drag tick: non-collapsed to non-collapsed.
-        state.setSelectionAndHandle(TextRange(5, 12), fromGestureObserver = true)
-
-        // state.selection reads from textFieldState, which was updated above.
-        assertEquals(TextRange(5, 12), state.selection)
-
-        // annotatedString must NOT be rebuilt (no per-tick recomposition trigger).
-        // updateAnnotatedString always produces a new buildAnnotatedString object, so reference
-        // equality proves no rebuild happened. This covers the most expensive side effect.
-        assertSame(
-            annotatedAfterDragStart,
-            state.annotatedString,
-            "annotatedString must not be rebuilt during mid-drag",
-        )
-    }
-
-    @Test
-    fun `gesture observer fires all side effects on drag-release tick`() {
+    fun `gesture observer rebuilds the mask and keeps the selection on the drag-release tick`() {
         val state = stateWithBackgroundSpan("hello world this is text")
 
         // Drag start.
         state.setSelectionAndHandle(TextRange(5, 7), fromGestureObserver = true)
-        // Mid-drag tick (no side effects).
+        // Mid-drag tick (no mask rebuild).
         state.setSelectionAndHandle(TextRange(5, 12), fromGestureObserver = true)
         val annotatedMidDrag = state.annotatedString
 

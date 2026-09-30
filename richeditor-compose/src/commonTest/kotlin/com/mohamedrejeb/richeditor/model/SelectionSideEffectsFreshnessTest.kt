@@ -10,7 +10,7 @@ import kotlin.test.assertTrue
 /**
  * Derived state and the buffer must agree with the selection the user actually has, on the two
  * paths where the selection reaches [RichTextState] without a full [updateTextFieldValue] pass:
- * gated mid-drag observer ticks, and a document load.
+ * mid-drag observer ticks, and a document load.
  */
 class SelectionSideEffectsFreshnessTest {
 
@@ -27,13 +27,12 @@ class SelectionSideEffectsFreshnessTest {
     }
 
     /**
-     * Every tick after the first is gated by the mid-drag rule. The legacy mirror still feeds
-     * the style mutators, so it has to keep up even on the gated ticks: otherwise the toggle
-     * writes the stale range back into the buffer and the user watches their selection snap
-     * back to where the drag was two ticks ago.
+     * The legacy mirror still feeds the style mutators, so it has to keep up with every drag
+     * tick: otherwise the toggle writes a stale range back into the buffer and the user watches
+     * their selection snap back to where the drag was two ticks ago.
      */
     @Test
-    fun `a style toggle after gated drag ticks keeps the full selection`() {
+    fun `a style toggle after drag ticks keeps the full selection`() {
         val state = RichTextState()
         state.setText("hello world this is text")
 

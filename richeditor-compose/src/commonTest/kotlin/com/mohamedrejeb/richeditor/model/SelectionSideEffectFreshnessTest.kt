@@ -10,21 +10,16 @@ import kotlin.test.assertNull
 
 /**
  * Pins the freshness of the derived selection state (currentSpanStyle, the toolbar
- * indicators built on it, the staged style bags and the #635 mask) against the two shapes
- * that the mid-drag gate in [RichTextState.handleSelectionChanged] used to leave stale:
+ * indicators built on it, the staged style bags and the #635 mask) on every path that
+ * delivers a selection through the observer:
  *
- * 1. A pointer drag whose ticks are all gated and which comes to rest inside a paragraph,
- *    so the clamp in [RichTextState.onSelectionGestureEnd] is a no-op and the gesture end
- *    used to return without running any catch-up.
- * 2. A keyboard extension (shift+arrow on desktop). The selection observer reports those
- *    with `fromGestureObserver = true` exactly like a drag, but no pointer gesture is live,
- *    so nothing ever arrives to catch the derived state up.
+ * 1. A pointer drag, tick by tick while the pointer is down, and at the gesture end.
+ * 2. A selection handle drag on a touch platform. The handles live in popups, so the
+ *    editor never sees a press or a release; the observer ticks are all it gets.
+ * 3. A keyboard extension (shift+arrow on desktop), with or without a recent click.
  *
- * Boundary, deliberately pinned by `a keyboard extension inside the gesture grace window
- * is still gated` below: liveness is a one second grace window after the last gesture
- * activity, so keyboard extensions issued within a second of a click are still treated as
- * gesture ticks. The staleness there is bounded (the first tick past the grace runs the
- * full pass), unlike the unbounded staleness these tests pin.
+ * Every tick must run the full pass. A skipped tick leaves the toolbar describing an older
+ * range, and a style toggle then acts on the wrong text.
  */
 class SelectionSideEffectFreshnessTest {
 
@@ -60,24 +55,27 @@ class SelectionSideEffectFreshnessTest {
     }
 
     @Test
-    fun `a drag resting inside a paragraph refreshes the derived styles when the gesture ends`() {
+    fun `a pointer drag refreshes the derived styles on every tick while the pointer is down`() {
         val state = mixedStyleState()
         state.selection = TextRange(0)
 
         state.onSelectionGestureStart()
 
-        // First extension: collapsed to non-collapsed runs the full pass.
         state.observerTick(TextRange(0, 4))
         assertEquals(
             FontWeight.Bold,
             state.currentSpanStyle.fontWeight,
-            "the drag's first extension must run the full pass",
+            "the drag's first extension must report bold",
         )
 
-        // Every later tick is non-collapsed on both sides and is gated while the pointer
-        // is down, so the derived state stays on the first extension's range.
         state.observerTick(TextRange(0, 7))
+        assertNull(
+            state.currentSpanStyle.fontWeight,
+            "a tick that extends past the bold region must drop bold while the pointer is down",
+        )
+
         state.observerTick(TextRange(0, 10))
+        assertNull(state.currentSpanStyle.fontStyle)
 
         state.onSelectionGestureEnd()
 
@@ -86,14 +84,34 @@ class SelectionSideEffectFreshnessTest {
             state.selection,
             "the resting selection is inside the paragraph so the clamp is a no-op",
         )
+        assertNull(state.currentSpanStyle.fontWeight)
+        assertNull(state.currentSpanStyle.fontStyle)
+    }
+
+    /**
+     * The shape of a selection handle drag on Android and iOS: every tick is treated as a
+     * gesture, both sides are non-collapsed, and no gesture end ever arrives.
+     */
+    @Test
+    fun `a handle drag on a touch platform refreshes the derived styles on every tick`() {
+        val state = mixedStyleState()
+        state.treatSelectionChangesAsGesture = true
+        state.selection = TextRange(0)
+
+        state.observerTick(TextRange(0, 4))
+        assertEquals(FontWeight.Bold, state.currentSpanStyle.fontWeight)
+
+        state.observerTick(TextRange(0, 10))
         assertNull(
             state.currentSpanStyle.fontWeight,
-            "the gesture end must run the deferred side effects against the resting range " +
-                "even when the clamp changes nothing",
+            "extending the handle past the bold region must drop bold without a gesture end",
         )
-        assertNull(
-            state.currentSpanStyle.fontStyle,
-            "the resting range spans both styled regions so neither attribute is common",
+
+        state.observerTick(TextRange(0, 4))
+        assertEquals(
+            FontWeight.Bold,
+            state.currentSpanStyle.fontWeight,
+            "dragging the handle back onto the bold region must report bold again",
         )
     }
 
@@ -127,12 +145,11 @@ class SelectionSideEffectFreshnessTest {
     }
 
     /**
-     * The accepted boundary of the liveness window. A click ends its gesture, which arms a
-     * one second grace, so a keyboard extension issued inside that window still looks like a
-     * gesture tick and is gated. The staleness lasts only until the grace lapses.
+     * A click ends its gesture, which arms a one second grace, so a keyboard extension issued
+     * inside that window is treated as a gesture tick. It must be as fresh as any other tick.
      */
     @Test
-    fun `a keyboard extension inside the gesture grace window is still gated`() {
+    fun `a keyboard extension inside the gesture grace window refreshes the derived styles`() {
         val state = mixedStyleState()
         state.selection = TextRange(0)
 
@@ -142,10 +159,9 @@ class SelectionSideEffectFreshnessTest {
         state.observerTick(TextRange(0, 4))
         state.observerTick(TextRange(0, 10))
 
-        assertEquals(
-            FontWeight.Bold,
+        assertNull(
             state.currentSpanStyle.fontWeight,
-            "inside the grace window the extension is treated as a drag tick and gated",
+            "a tick inside the grace window must refresh the derived styles like any other",
         )
     }
 }

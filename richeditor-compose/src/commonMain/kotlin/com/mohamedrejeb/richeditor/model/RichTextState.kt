@@ -351,17 +351,12 @@ public class RichTextState internal constructor(
     private var selectionBeforeLastHandled: TextRange = TextRange.Zero
 
     /**
-     * Unified handler for selection changes from any source. When [fromGestureObserver] is
-     * true, a pointer gesture is live and both old and new selections are non-collapsed (a
-     * mid-drag tick), ALL side effects are skipped, [adjustGestureSelection] included: any
-     * Compose state mutation here recomposes and interrupts BTF2's pointer tracking, freezing
-     * the drag. Every tick that changes collapsedness runs the full pass, so a drag is
-     * corrected as it starts and any line-edge overshoot while the pointer is down is
-     * transient; [onSelectionGestureEnd] runs the deferred catch-up once the pointer is up.
-     *
-     * The liveness check matters because the observer reports keyboard extensions
-     * (shift+arrow on desktop) with [fromGestureObserver] set as well, and no gesture end
-     * ever follows those: gating them would leave the derived state stale indefinitely.
+     * Unified handler for selection changes from any source. Every tick runs the full pass,
+     * mid-drag ticks included: the toolbar state has to follow a drag as it moves, and on the
+     * touch platforms a selection handle drag never delivers a gesture end that could catch it
+     * up later. The #635 mask is the one thing a non-collapsed to non-collapsed gesture tick
+     * leaves alone (see [runSelectionSideEffects]); [onSelectionGestureEnd] rebuilds it once
+     * the pointer is up.
      *
      * This deliberately does not seal the pending undo group. The observer fires after every
      * keystroke (typing moves the selection), so a seal here would break typing coalescing;
@@ -371,8 +366,7 @@ public class RichTextState internal constructor(
         if (lastHandledSelection == newSelection) return
         if (newSelection.min < 0 || newSelection.max > textFieldState.text.length) return
 
-        // The IME half of #779. Reads state but mutates nothing until it fires, so it is
-        // safe above the mid-drag gate; a drag never matches its collapsed one-step shape.
+        // The IME half of #779. A drag never matches its collapsed one-step shape.
         if (
             fromGestureObserver &&
             isImeBoundarySpaceRefreshBtf2(
@@ -393,18 +387,7 @@ public class RichTextState internal constructor(
         selectionBeforeLastHandled = previousSelection
         lastHandledSelection = newSelection
 
-        if (
-            fromGestureObserver &&
-            !wasCollapsed &&
-            !newSelection.collapsed &&
-            isSelectionGestureLive()
-        ) {
-            return
-        }
-
         // The paragraph-edge and pointer-line corrections for gesture selections (#730, #731).
-        // Applied only here, past the mid-drag gate, so a correction never writes state while
-        // BTF2 is tracking the pointer.
         val adjusted =
             if (fromGestureObserver)
                 adjustGestureSelection(newSelection, previousSelection)
@@ -432,10 +415,10 @@ public class RichTextState internal constructor(
 
     /**
      * The derived-state tail of [handleSelectionChanged]: the #635 background mask, the staged
-     * style bags, and the state the toolbar reads. Extracted so [onSelectionGestureEnd] can run
-     * the catch-up its gated mid-drag ticks skipped; routing that through the handler would not
-     * work, since it dedupes on [lastHandledSelection] and the resting selection is already
-     * recorded there.
+     * style bags, and the state the toolbar reads. Extracted so [onSelectionGestureEnd] can
+     * rebuild the mask for the resting range; routing that through the handler would not work,
+     * since it dedupes on [lastHandledSelection] and the resting selection is already recorded
+     * there.
      *
      * @param selectionMaskChanged whether the transition can change the rendered mask.
      */
@@ -724,10 +707,9 @@ public class RichTextState internal constructor(
         selectionGesturePressed = false
         selectionGestureLastActivity = kotlin.time.TimeSource.Monotonic.markNow()
 
-        // The drag's own ticks are all non-collapsed once it is under way, so the mid-drag gate
-        // in [handleSelectionChanged] skips them and only the first extension gets corrected.
-        // The pointer is up now, so mutating state is safe: clamp where the selection came to
-        // rest and let the side effects catch up against that range.
+        // The observer that clamps each tick runs asynchronously, so the last tick of the drag
+        // may not have been handled when the release arrives. Clamp where the selection came to
+        // rest and let the side effects run against that range; the observer's echo is deduped.
         val resting = textFieldState.selection
         val adjusted = adjustGestureSelection(resting, selectionBeforeLastHandled)
         if (adjusted != resting) {
@@ -736,8 +718,8 @@ public class RichTextState internal constructor(
             return
         }
 
-        // The clamp was a no-op, so the handler would dedupe the resting selection away and the
-        // ticks it gated would never catch up. Run their tail here instead.
+        // The clamp was a no-op, so the handler would dedupe the resting selection away. The
+        // mid-drag ticks skipped the mask rebuild, so run the tail here for the resting range.
         if (!resting.collapsed)
             runSelectionSideEffects(selectionMaskChanged = true)
     }

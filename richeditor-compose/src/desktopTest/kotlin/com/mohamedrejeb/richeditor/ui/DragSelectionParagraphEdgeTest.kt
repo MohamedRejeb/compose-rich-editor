@@ -218,9 +218,11 @@ class DragSelectionParagraphEdgeTest {
                 (layout.getLineTop(0) + layout.getLineBottom(0)) / 2,
             )
             state.onSelectionGesturePointerMove(pointer)
-            state.platformSelection(TextRange(0, 2))
-            // Handle drags never cross the editor node, so their selection changes
-            // arrive with an old pointer position; those must pass through
+            // Handle drags never cross the editor node, so their selection changes arrive
+            // with an old pointer position; the pointer line must not be used for those. The
+            // handle starts inside "ab" rather than on the paragraph end, so the offset rule
+            // for handles (HandleDragParagraphEdgeTest) does not hold it either.
+            state.platformSelection(TextRange(0, 1))
             Thread.sleep(600)
 
             state.platformSelection(TextRange(0, 7))

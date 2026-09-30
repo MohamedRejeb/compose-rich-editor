@@ -5245,8 +5245,9 @@ public class RichTextState internal constructor(
 
     /**
      * Corrects the moving edge of a drag selection: it may not extend below the
-     * pointer's line, and may not land exactly on a paragraph's start offset (which
-     * would select the virtual separator and highlight the next line). Select-all,
+     * pointer's line, a selection handle resting on a paragraph's end may not run onto the
+     * next paragraph's first word, and it may not land exactly on a paragraph's start offset
+     * (which would select the virtual separator and highlight the next line). Select-all,
      * collapsed carets, and selections without a live gesture pass through untouched.
      */
     private fun adjustGestureSelection(
@@ -5307,21 +5308,58 @@ public class RichTextState internal constructor(
             }
         }
 
-        val isParagraphStart = richParagraphList
-            .asSequence()
-            .drop(1)
-            .any { paragraph ->
-                val firstChild = paragraph.getFirstNonEmptyChild() ?: paragraph.type.startRichSpan
-                firstChild.textRange.min - paragraph.type.startText.length == max
-            }
+        // Selection handles exist on the touch platforms only, and their drags never deliver a
+        // pointer, so the rule for them works from offsets alone (see
+        // [firstWordEndAfterParagraphEnd]). The press check keeps a desktop keyboard extension
+        // inside the gesture grace out of it.
+        val handleDragPossible = treatSelectionChangesAsGesture || selectionGesturePressed
+        if (handleDragPossible && (pointer == null || !pointerFresh)) {
+            val firstWordEnd = firstWordEndAfterParagraphEnd(oldSelection.max)
+            if (firstWordEnd != null && max > oldSelection.max + 1 && max <= firstWordEnd)
+                return selection.withMax(oldSelection.max)
+        }
+
+        val isParagraphStart = laterParagraphStarts().any { it == max }
         if (!isParagraphStart)
             return selection
 
-        val newMax = max - 1
-        return if (selection.start > selection.end)
-            TextRange(newMax, selection.end)
-        else
-            TextRange(selection.start, newMax)
+        return selection.withMax(max - 1)
+    }
+
+    private fun TextRange.withMax(newMax: Int): TextRange =
+        if (start > end) TextRange(newMax, end) else TextRange(start, newMax)
+
+    /** The start offset of every paragraph but the first, list prefix included. */
+    private fun laterParagraphStarts(): Sequence<Int> =
+        richParagraphList
+            .asSequence()
+            .drop(1)
+            .map { paragraph ->
+                val firstChild = paragraph.getFirstNonEmptyChild() ?: paragraph.type.startRichSpan
+                firstChild.textRange.min - paragraph.type.startText.length
+            }
+
+    /**
+     * When [offset] is the end of a paragraph (the position of its separator), the end of the
+     * first word of the paragraph after it, prefix excluded; null otherwise.
+     *
+     * An end handle dragged into the empty space right of a paragraph's last line hits the
+     * next paragraph's start, and the platform's word acceleration then runs the selection
+     * over that paragraph's first word. From offsets alone that is indistinguishable from a
+     * handle placed on the first word itself, so the clamp is narrow: it only holds a handle
+     * that was resting exactly on the paragraph end, and only up to the end of the first word.
+     */
+    private fun firstWordEndAfterParagraphEnd(offset: Int): Int? {
+        val text = textFieldValue.text
+        richParagraphList.asSequence().drop(1).forEach { paragraph ->
+            val firstChild = paragraph.getFirstNonEmptyChild() ?: paragraph.type.startRichSpan
+            val textStart = firstChild.textRange.min
+            if (textStart - paragraph.type.startText.length - 1 != offset) return@forEach
+            var end = textStart
+            while (end < text.length && !text[end].isWhitespace()) end++
+            return end
+        }
+        return null
     }
 
     /**

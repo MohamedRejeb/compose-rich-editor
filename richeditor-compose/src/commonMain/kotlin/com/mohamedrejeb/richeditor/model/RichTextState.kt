@@ -2131,9 +2131,9 @@ public class RichTextState internal constructor(
         replace("\r\n", "\n").replace('\r', '\n')
 
     /**
-     * The styles at the start of a non-collapsed selection an edit is about to replace,
-     * captured before the tree mutates so the inserted text can inherit them (the platform
-     * typing-attributes convention) instead of the style before the caret.
+     * The styles of the first character an edit is about to replace, captured before the tree
+     * mutates so the inserted text can inherit them (the platform typing-attributes convention)
+     * instead of the style before the caret.
      */
     private class ReplacedSelectionStyles(
         val insertedRange: TextRange,
@@ -2141,12 +2141,31 @@ public class RichTextState internal constructor(
         val richSpanStyle: RichSpanStyle,
     )
 
+    /**
+     * The replaced range is the old selection when it describes the edit (typing or pasting
+     * over it), else the changed region of the text: an IME autocorrect or suggestion pick
+     * rewrites a word while the caret stays collapsed.
+     */
     @OptIn(ExperimentalRichTextApi::class)
     private fun captureReplacedSelectionStyles(
         old: TextFieldValue,
         new: TextFieldValue,
     ): ReplacedSelectionStyles? {
         if (new.text == old.text) return null
+        val insertedRange = selectionReplacement(old, new)
+            ?: diffReplacement(old.text, new.text)
+            ?: return null
+
+        val firstReplacedSpan = getRichSpanByTextIndex(insertedRange.min, true) ?: return null
+        return ReplacedSelectionStyles(
+            insertedRange = insertedRange,
+            spanStyle = firstReplacedSpan.fullSpanStyle,
+            richSpanStyle = firstReplacedSpan.fullStyle,
+        )
+    }
+
+    /** Range of [new]'s text that took the place of [old]'s non-collapsed selection, or null. */
+    private fun selectionReplacement(old: TextFieldValue, new: TextFieldValue): TextRange? {
         val selMin = old.selection.min
         val selMax = old.selection.max
         if (selMin == selMax) return null
@@ -2154,13 +2173,25 @@ public class RichTextState internal constructor(
         if (insertedLength <= 0 || selMin + insertedLength > new.text.length) return null
         if (!new.text.regionMatches(0, old.text, 0, selMin)) return null
         if (!new.text.regionMatches(selMin + insertedLength, old.text, selMax, old.text.length - selMax)) return null
+        return TextRange(selMin, selMin + insertedLength)
+    }
 
-        val selectionStartSpan = getRichSpanByTextIndex(selMin, true) ?: return null
-        return ReplacedSelectionStyles(
-            insertedRange = TextRange(selMin, selMin + insertedLength),
-            spanStyle = selectionStartSpan.fullSpanStyle,
-            richSpanStyle = selectionStartSpan.fullStyle,
-        )
+    /**
+     * Range of [newText] that took the place of removed characters, from the common prefix and
+     * suffix, or null for a pure insertion or removal.
+     */
+    private fun diffReplacement(oldText: String, newText: String): TextRange? {
+        val maxCommon = minOf(oldText.length, newText.length)
+        var prefix = 0
+        while (prefix < maxCommon && oldText[prefix] == newText[prefix]) prefix++
+        var suffix = 0
+        while (
+            suffix < maxCommon - prefix &&
+            oldText[oldText.lastIndex - suffix] == newText[newText.lastIndex - suffix]
+        ) suffix++
+        val removedLength = oldText.length - prefix - suffix
+        val insertedLength = newText.length - prefix - suffix
+        return if (removedLength > 0 && insertedLength > 0) TextRange(prefix, prefix + insertedLength) else null
     }
 
     /**

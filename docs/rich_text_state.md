@@ -83,7 +83,7 @@ richTextState.selection = TextRange(richTextState.annotatedString.text.length)
 
 ### Replacing a selection
 
-Typing, an IME commit, or a plain-text paste over a non-collapsed selection styles the inserted text from the replaced range's start (the platform typing-attributes convention), not from the character before the caret. The restyle is part of the same edit, so undo treats the replacement as a single entry. Rich span styles are inherited only when they accept edge text and are not atomic, so replacing a whole link or image never linkifies or atomizes the typed text.
+Typing, an IME commit, or a plain-text paste over a non-collapsed selection styles the inserted text from the replaced range's start (the platform typing-attributes convention), not from the character before the caret. The same goes for an IME autocorrect or suggestion pick that rewrites a word while the caret is collapsed: the new text takes the style of the first character it replaces. The restyle is part of the same edit, so undo treats the replacement as a single entry. Rich span styles are inherited only when they accept edge text and are not atomic, so replacing a whole link or image never linkifies or atomizes the typed text.
 
 ### Text Modification
 

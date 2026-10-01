@@ -511,4 +511,10 @@ private fun textLayoutPositionOf(
     return Offset(x = inTextField.x, y = inTextField.y + verticalScroll)
 }
 
+/**
+ * Alpha of the inner text field when the editor is disabled. Matches the `ContentAlpha.disabled`
+ * convention of the Material and Material3 disabled text colors.
+ */
+internal const val DisabledStateAlpha: Float = 0.38f
+
 public typealias RichTextChangedListener = (RichTextState) -> Unit

@@ -165,7 +165,7 @@ class HandleSelectionChangedDragInvariantTest {
         state.setText("hello world")
 
         // No background span, so the mask cannot change the rendered output. Rebuilding here is
-        // exactly the mid-gesture visualTransformation churn that #730 and #731 pinned.
+        // exactly the mid-gesture output re-styling that #730 and #731 pinned.
         val annotatedBefore = state.annotatedString
         state.setSelectionAndHandle(TextRange(0, 5), fromGestureObserver = true)
 

@@ -62,12 +62,7 @@ public fun BasicRichText(
     }
     val maxImageWidthProvider = remember { RichTextMaxImageWidthProvider() }
 
-    val text = remember(
-        state.visualTransformation,
-        state.annotatedString,
-    ) {
-        state.visualTransformation.filter(state.annotatedString).text
-    }
+    val text = state.annotatedString
 
     CompositionLocalProvider(
         LocalImageLoader provides imageLoader,

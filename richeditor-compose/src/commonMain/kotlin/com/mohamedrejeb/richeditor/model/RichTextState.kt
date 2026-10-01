@@ -22,10 +22,7 @@ import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.*
-import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.input.TransformedText
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.TextUnit
@@ -141,7 +138,6 @@ public class RichTextState internal constructor(
     internal var suppressUndoShortcuts: Boolean = false
 
     internal val richParagraphList = mutableStateListOf<RichParagraph>()
-    internal var visualTransformation: VisualTransformation by mutableStateOf(VisualTransformation.None)
 
     /**
      * Computed view over [textFieldState] and [annotatedString], not a separate stored
@@ -427,8 +423,9 @@ public class RichTextState internal constructor(
         // The annotatedString carries a selection-dependent mask that drops background colors
         // underneath the live selection, so a transition in or out of a non-collapsed selection
         // leaves the cached string stale (#635). The mask only changes the output when a span
-        // has a background color; rebuilding otherwise recreates the visualTransformation
-        // mid-gesture and breaks selection on Android (#730, #731).
+        // has a background color; the OutputTransformation reads the annotatedString, so
+        // rebuilding otherwise re-styles the output mid-gesture for an unchanged rendering
+        // (#730, #731).
         if (selectionMaskChanged && treeHasBackgroundSpans())
             updateAnnotatedString(textFieldValue)
 
@@ -2847,7 +2844,7 @@ public class RichTextState internal constructor(
     }
 
     /**
-     * Handles updating the text field value and all the related states such as the [annotatedString] and [visualTransformation] to reflect the new text field value.
+     * Handles updating the text field value and all the related states such as the [annotatedString] to reflect the new text field value.
      *
      * @param newTextFieldValue the new text field value.
      */
@@ -2892,8 +2889,8 @@ public class RichTextState internal constructor(
             // previous or the new selection is non-collapsed, the mask set differs and
             // the cached annotatedString is stale - so force a rebuild. See #635.
             // The mask only changes the output when a span has a background color;
-            // rebuilding otherwise recreates the visualTransformation mid-gesture and
-            // breaks selection on Android (#730, #731).
+            // the OutputTransformation reads the annotatedString, so rebuilding otherwise
+            // re-styles the output mid-gesture for an unchanged rendering (#730, #731).
             val maskAffected =
                 (!textFieldValue.selection.collapsed || !tempTextFieldValue.selection.collapsed) &&
                         treeHasBackgroundSpans()
@@ -3198,15 +3195,6 @@ public class RichTextState internal constructor(
             newTextFieldValue.selection.end.coerceIn(0, newTextLength),
         )
         setTextFieldStateFromValue(text = annotatedString.text, selection = clampedSelection)
-        // Snapshot by value: the lambda runs during measure, where a live
-        // `annotatedString` read would race the textFieldValue captured at composition.
-        val transformed = annotatedString
-        visualTransformation = VisualTransformation { _ ->
-            TransformedText(
-                text = transformed,
-                offsetMapping = OffsetMapping.Identity
-            )
-        }
         styledRichSpanList.addAll(newStyledRichSpanList)
     }
 
@@ -5853,14 +5841,6 @@ public class RichTextState internal constructor(
 
         styledRichSpanList.clear()
         setTextFieldStateFromValue(text = annotatedString.text, selection = selection)
-        // Snapshot by value: see the matching note in `updateAnnotatedString`.
-        val transformed = annotatedString
-        visualTransformation = VisualTransformation { _ ->
-            TransformedText(
-                text = transformed,
-                offsetMapping = OffsetMapping.Identity
-            )
-        }
         styledRichSpanList.addAll(newStyledRichSpanList)
 
         // Clear un-applied styles

@@ -68,7 +68,9 @@ import kotlinx.coroutines.CoroutineScope
  * field will be neither editable nor focusable, the input of the text field will not be selectable
  * @param readOnly controls the editable state of the [BasicRichTextEditor]. When `true`, the text
  * field can not be modified, however, a user can focus it and copy text from it. Read-only text
- * fields are usually used to display pre-filled forms that user can not edit
+ * fields are usually used to display pre-filled forms that user can not edit. Only user input is
+ * blocked: calls on the [RichTextState] (styles, undo, redo, content) still apply, so an app
+ * disables its own toolbar for a read-only editor
  * @param textStyle Style configuration that applies at character level such as color, font etc.
  * @param keyboardOptions software keyboard options that contains configuration such as
  * [KeyboardType] and [ImeAction].
@@ -162,7 +164,9 @@ public fun BasicRichTextEditor(
  * field will be neither editable nor focusable, the input of the text field will not be selectable
  * @param readOnly controls the editable state of the [BasicRichTextEditor]. When `true`, the text
  * field can not be modified, however, a user can focus it and copy text from it. Read-only text
- * fields are usually used to display pre-filled forms that user can not edit
+ * fields are usually used to display pre-filled forms that user can not edit. Only user input is
+ * blocked: calls on the [RichTextState] (styles, undo, redo, content) still apply, so an app
+ * disables its own toolbar for a read-only editor
  * @param textStyle Style configuration that applies at character level such as color, font etc.
  * @param keyboardOptions software keyboard options that contains configuration such as
  * [KeyboardType] and [ImeAction].

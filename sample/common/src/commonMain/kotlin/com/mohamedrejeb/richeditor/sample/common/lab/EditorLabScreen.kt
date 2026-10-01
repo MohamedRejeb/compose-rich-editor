@@ -142,21 +142,29 @@ private fun LabToolbar(
             onClick = { state.toggleSpanStyle(SpanStyle(fontWeight = FontWeight.Bold)) },
             isSelected = state.isBold(),
             icon = Icons.Outlined.FormatBold,
+            // readOnly only blocks user input; buttons that call the state are the app's to disable.
+            enabled = !readOnly,
         )
         RichTextStyleButton(
             onClick = { state.toggleSpanStyle(SpanStyle(fontStyle = FontStyle.Italic)) },
             isSelected = state.currentSpanStyle.fontStyle == FontStyle.Italic,
             icon = Icons.Outlined.FormatItalic,
+            // readOnly only blocks user input; buttons that call the state are the app's to disable.
+            enabled = !readOnly,
         )
         RichTextStyleButton(
             onClick = { state.toggleUnorderedList() },
             isSelected = state.isUnorderedList,
             icon = Icons.AutoMirrored.Outlined.FormatListBulleted,
+            // readOnly only blocks user input; buttons that call the state are the app's to disable.
+            enabled = !readOnly,
         )
         RichTextStyleButton(
             onClick = { state.toggleOrderedList() },
             isSelected = state.isOrderedList,
             icon = Icons.Outlined.FormatListNumbered,
+            // readOnly only blocks user input; buttons that call the state are the app's to disable.
+            enabled = !readOnly,
         )
         FilterChip(
             selected = readOnly,

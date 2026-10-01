@@ -212,6 +212,22 @@ class CutAndCopyClipboardTest {
     }
 
     @Test
+    fun `copy shortcut in a read-only editor puts the selection on the clipboard`() = runClipboardTest(
+        html = "<p><b>Hello</b> World</p>",
+        readOnly = true,
+    ) { state, clipboard ->
+        val range = TextRange(0, 5)
+        val expectedHtml = state.toHtml(range)
+        select(state, range)
+
+        pressShortcut(Key.C)
+
+        assertEquals("Hello", clipboard.plainText())
+        assertEquals(expectedHtml, clipboard.html())
+        assertEquals("Hello World", state.annotatedString.text)
+    }
+
+    @Test
     fun `copy that collapses the selection puts the selection on the clipboard`() = runClipboardTest(
         html = "<p><b>Hello</b> World</p>",
     ) { state, clipboard ->
@@ -340,6 +356,7 @@ class CutAndCopyClipboardTest {
 
     private fun runClipboardTest(
         html: String,
+        readOnly: Boolean = false,
         block: DesktopComposeUiTest.(state: RichTextState, clipboard: RecordingClipboard) -> Unit,
     ) = runDesktopComposeUiTest {
         val state = RichTextState()
@@ -352,6 +369,7 @@ class CutAndCopyClipboardTest {
                 Box {
                     BasicRichTextEditor(
                         state = state,
+                        readOnly = readOnly,
                         modifier = Modifier
                             .focusRequester(focusRequester)
                             .testTag(EDITOR_TAG),

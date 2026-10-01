@@ -4,15 +4,21 @@ package com.mohamedrejeb.richeditor.clipboard
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import com.mohamedrejeb.richeditor.model.RichTextState
 import kotlinx.browser.document
 import org.w3c.dom.events.Event
 
 @Composable
-internal actual fun ClipboardEventEffect(richTextState: RichTextState) {
+internal actual fun ClipboardEventEffect(
+    richTextState: RichTextState,
+    readOnly: Boolean,
+) {
+    val isReadOnly by rememberUpdatedState(readOnly)
     DisposableEffect(richTextState) {
         val pasteHandler: (Event) -> Unit = handler@{ event ->
-            if (!richTextState.isFocused) return@handler
+            if (!richTextState.isFocused || isReadOnly) return@handler
 
             val html =
                 if (richTextState.config.richClipboardEnabled) getClipboardDataHtml(event)?.toString()
@@ -49,7 +55,7 @@ internal actual fun ClipboardEventEffect(richTextState: RichTextState) {
         }
 
         val cutHandler: (Event) -> Unit = handler@{ event ->
-            if (!richTextState.isFocused) return@handler
+            if (!richTextState.isFocused || isReadOnly) return@handler
 
             val selection = richTextState.copySelection ?: return@handler
             event.preventDefault()

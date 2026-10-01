@@ -1,5 +1,6 @@
 package com.mohamedrejeb.richeditor.ui
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -16,7 +17,6 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -229,7 +229,7 @@ public fun BasicRichTextEditor(
         )
     }
 
-    ClipboardEventEffect(richTextState = state)
+    ClipboardEventEffect(richTextState = state, readOnly = readOnly)
 
     // rememberRichTextState can restore content before the editor composes, so the buffer
     // starts out empty while the state already holds text. Seed it once per state.
@@ -350,12 +350,6 @@ public fun BasicRichTextEditor(
                     startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() },
                 )
                 .then(
-                    if (!readOnly)
-                        Modifier
-                    else
-                        Modifier.focusProperties { canFocus = false }
-                )
-                .then(
                     if (singleParagraph)
                         Modifier
                     else
@@ -406,7 +400,11 @@ public fun BasicRichTextEditor(
                     // Treating it as user input would corrupt richParagraphList.
                     return@InputTransformation
                 }
-                if (readOnly) {
+                // Selection changes pass: a read-only editor can be focused and selected like
+                // a read-only BasicTextField, only its text is frozen.
+                @OptIn(ExperimentalFoundationApi::class)
+                val textChanged = changes.changeCount > 0
+                if (readOnly && textChanged) {
                     revertAllChanges()
                     return@InputTransformation
                 }

@@ -55,10 +55,6 @@ import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startT
 import com.mohamedrejeb.richeditor.parser.html.RichTextStateHtmlParser
 import com.mohamedrejeb.richeditor.parser.markdown.RichTextStateMarkdownParser
 import com.mohamedrejeb.richeditor.utils.*
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import kotlin.math.max
 import kotlin.reflect.KClass
@@ -75,6 +71,10 @@ private const val PhysicalKeyNavigationWindowMs = 300L
 // Window after an IME edit during which a caret step over a paragraph separator
 // is treated as the follow-up of a split suggestion-pick batch (#779).
 private const val ImeEditFollowUpWindowMs = 300L
+
+// Window after a pointer press during which a caret step over a paragraph separator is
+// treated as the press's own caret placement rather than an IME batch edit (#779).
+private const val PressCaretWindowMs = 300L
 
 /**
  * Keeps a selection gesture live across Android's press Cancel at long-press start
@@ -649,8 +649,6 @@ public class RichTextState internal constructor(
     internal var textLayoutResult: TextLayoutResult? by mutableStateOf(null)
         private set
 
-    private var lastPressPosition: Offset? by mutableStateOf(null)
-
     // Monotonic timestamp of the last physical key press; distinguishes hardware
     // caret navigation from IME batch edits in [isImeBoundarySpaceRefreshBtf2] (#779)
     // and from selection gestures in [adjustGestureSelection].
@@ -663,6 +661,15 @@ public class RichTextState internal constructor(
     private fun isWithinPhysicalKeyWindow(): Boolean {
         val lastKeyMs = lastPhysicalKeyEventMs ?: return false
         return currentMonotonicMs() - lastKeyMs <= PhysicalKeyNavigationWindowMs
+    }
+
+    // Monotonic timestamp of the last pointer press; a caret step shortly after one is the
+    // tap's placement, not an IME batch edit, in [isImeBoundarySpaceRefreshBtf2] (#779).
+    private var lastPressMs: Long? = null
+
+    private fun isWithinPressWindow(): Boolean {
+        val pressMs = lastPressMs ?: return false
+        return currentMonotonicMs() - pressMs <= PressCaretWindowMs
     }
 
     // Caret position and timestamp right after the last IME text edit. Lets
@@ -790,6 +797,7 @@ public class RichTextState internal constructor(
         shiftPressed: Boolean,
     ) {
         pressCaretCorrectionArmed = true
+        lastPressMs = currentMonotonicMs()
 
         val previousPosition = pressSeriesPosition
         val continuesSeries =
@@ -2544,16 +2552,10 @@ public class RichTextState internal constructor(
      * observer applies.
      */
     private fun applyShimSelectionChange(newSelection: TextRange) {
-        val adjusted = adjustGestureSelection(
+        selection = adjustGestureSelection(
             selection = newSelection,
             previousSelection = textFieldValue.selection,
         )
-        val pressPosition = lastPressPosition
-        if (pressPosition != null) {
-            adjustSelection(pressPosition, adjusted)
-            return
-        }
-        selection = adjusted
     }
 
     /**
@@ -2785,7 +2787,7 @@ public class RichTextState internal constructor(
         newSelection: TextRange,
     ): Boolean {
         if (singleParagraphMode) return false
-        if (lastPressPosition != null) return false
+        if (isWithinPressWindow()) return false
         if (pressCorrectedCaret == newSelection.min) return false
         if (!previousSelection.collapsed || !newSelection.collapsed) return false
         val boundary = previousSelection.min
@@ -5184,145 +5186,6 @@ public class RichTextState internal constructor(
         return null
     }
 
-    /**
-     * Adjusts the [selection] to the [pressPosition].
-     * This is a workaround for the [TextField] that the [selection] is not always correct when you have multiple lines.
-     *
-     * @param pressPosition The press position.
-     */
-    internal suspend fun adjustSelectionAndRegisterPressPosition(
-        pressPosition: Offset,
-    ) {
-        adjustSelection(pressPosition)
-        registerLastPressPosition(pressPosition)
-    }
-
-    /**
-     * Adjusts the [selection] to the [pressPosition].
-     * This is a workaround for the [TextField] that the [selection] is not always correct when you have multiple lines.
-     *
-     * @param pressPosition The press position.
-     * @param newSelection The new selection.
-     */
-    private fun adjustSelection(
-        pressPosition: Offset,
-        newSelection: TextRange? = null,
-    ) {
-        val selection = newSelection ?: this.selection
-        var pressX = pressPosition.x
-        var pressY = pressPosition.y
-        val textLayoutResult = this.textLayoutResult ?: run {
-            // No layout yet: the caret workaround can't run, but the platform's
-            // selection must still be applied (#730).
-            if (newSelection != null) {
-                applyAdjustedSelection(newSelection)
-            }
-            return
-        }
-        var index = 0
-        var lastIndex = 0
-
-        // Get the length of the text
-        val textLength = textLayoutResult.layoutInput.text.length
-
-        // Ensure pressY is within valid bounds
-        pressY = pressY.coerceIn(0f, textLayoutResult.size.height.toFloat())
-
-        for (i in 0 until textLayoutResult.lineCount) {
-            val start = textLayoutResult.getLineStart(i)
-            val top = textLayoutResult.getLineTop(i)
-
-            if (i == 0) {
-                if (start > 0f) {
-                    pressX += start
-                }
-
-                if (top > 0f) {
-                    pressY += top
-                }
-            }
-
-            // Make sure pressY is within the current line's top position
-            if (i == 0 && top > pressY) {
-                break
-            }
-
-            if (top > pressY) {
-                index = lastIndex
-                break
-            }
-
-            lastIndex = index
-
-            if (textLayoutResult.layoutInput.text.text.lastIndex == -1)
-                break
-
-            richParagraphList.getOrNull(index)?.let { paragraph ->
-                val textRange = paragraph.getTextRange().coerceIn(
-                    0, textLayoutResult.layoutInput.text.text.lastIndex
-                )
-
-                val pStartTop = textLayoutResult.getBoundingBox(textRange.min).top
-                val pEndTop = textLayoutResult.getBoundingBox(textRange.max).top
-
-                val pStartEndTopDiff = (pStartTop - pEndTop).absoluteValue
-                val pEndTopLTopDiff = (pEndTop - top).absoluteValue
-
-                if (pStartEndTopDiff < 2f || pEndTopLTopDiff < 2f || pEndTop < top) {
-                    index++
-                }
-            }
-        }
-
-        if (index > richParagraphList.lastIndex)
-            index = richParagraphList.lastIndex
-
-        val selectedParagraph = richParagraphList.getOrNull(index) ?: run {
-            if (newSelection != null) {
-                applyAdjustedSelection(newSelection)
-            }
-            return
-        }
-        val nextParagraph = richParagraphList.getOrNull(index + 1)
-        val nextParagraphStart =
-            if (nextParagraph == null)
-                null
-            else
-                (nextParagraph.getFirstNonEmptyChild() ?: nextParagraph.type.startRichSpan)
-                    .textRange.min.minus(nextParagraph.type.startText.length)
-
-        // Handle selection adjustments
-        if (
-            selection.collapsed &&
-            selection.min == nextParagraphStart
-        ) {
-            updateTextFieldValue(
-                textFieldValue.copy(
-                    selection = TextRange(
-                        (selection.min - 1).coerceAtLeast(0),
-                        (selection.min - 1).coerceAtLeast(0)
-                    )
-                )
-            )
-        } else if (
-            selection.collapsed &&
-            index == richParagraphList.lastIndex &&
-            selectedParagraph.isEmpty() &&
-            selection.min == selectedParagraph.getFirstNonEmptyChild()?.textRange?.min?.minus(1)
-        ) {
-            updateTextFieldValue(
-                textFieldValue.copy(
-                    selection = TextRange(
-                        (selection.min + 1).coerceAtMost(textLength - 1),
-                        (selection.min + 1).coerceAtMost(textLength - 1)
-                    )
-                )
-            )
-        } else if (newSelection != null) {
-            applyAdjustedSelection(newSelection)
-        }
-    }
-
     private fun isSelectionGestureLive(): Boolean =
         treatSelectionChangesAsGesture ||
                 selectionGesturePressed ||
@@ -5452,31 +5315,6 @@ public class RichTextState internal constructor(
             return end
         }
         return null
-    }
-
-    /**
-     * Applies a platform selection clamped to the current text bounds.
-     */
-    private fun applyAdjustedSelection(newSelection: TextRange) {
-        val textLength = textFieldValue.text.length
-        updateTextFieldValue(
-            textFieldValue.copy(
-                selection = TextRange(
-                    newSelection.start.coerceIn(0, textLength),
-                    newSelection.end.coerceIn(0, textLength),
-                )
-            )
-        )
-    }
-
-    private var registerLastPressPositionJob: Job? = null
-    internal suspend fun registerLastPressPosition(pressPosition: Offset): Unit = coroutineScope {
-        registerLastPressPositionJob?.cancel()
-        registerLastPressPositionJob = launch {
-            lastPressPosition = pressPosition
-            delay(300)
-            lastPressPosition = null
-        }
     }
 
     /**

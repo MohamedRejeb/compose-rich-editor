@@ -2,6 +2,7 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.foundation.text.input.TextFieldBuffer
 import androidx.compose.foundation.text.input.toTextFieldBuffer
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import kotlin.test.Test
@@ -173,6 +174,40 @@ class Issue779ParagraphSeparatorImeTest {
     }
 
     @Test
+    fun caretStepAfterPointerPressIsPlainNavigation() {
+        // A tap on the first character of the next paragraph right after an IME edit at the
+        // paragraph end steps the caret across the separator, the shape of a pick's space
+        // refresh; the press the editor saw just before marks it as the user's.
+        val state = RichTextState()
+        state.setHtml("<p>Thi</p><p><br></p><p>Signature</p>")
+        state.selection = TextRange(3)
+        state.imeEdit { replace(3, 3, "s") }
+        state.pointerDown()
+
+        state.platformCaretStep(5)
+
+        assertEquals("This\n\nSignature", state.toText())
+        assertEquals(TextRange(5), state.selection)
+    }
+
+    @Test
+    fun caretStepLongAfterPointerPressIsStillASpaceRefresh() {
+        // The press memory is short: a pick that follows a press by more than the window
+        // is recognized as before.
+        val state = RichTextState()
+        state.setHtml("<p>Thi</p><p><br></p><p>Signature</p>")
+        state.selection = TextRange(3)
+        state.pointerDown()
+        Thread.sleep(WINDOW_LAPSE_MS)
+        state.imeEdit { replace(3, 3, "s") }
+
+        state.platformCaretStep(5)
+
+        assertEquals("This \n\nSignature", state.toText())
+        assertEquals(TextRange(5), state.selection)
+    }
+
+    @Test
     fun caretStepInsideParagraphIsPlainNavigation() {
         // An IME edit that does not end at a paragraph boundary must not turn the
         // following step into a space commit (the step is not over a separator).
@@ -272,6 +307,17 @@ class Issue779ParagraphSeparatorImeTest {
         assertEquals("Testing \n\nSignature", state.toText())
         assertEquals(TextRange(8), state.selection)
         assertEquals(3, state.richParagraphList.size)
+    }
+
+    /** A pointer press as the editor's passive pointer observer reports it. */
+    private fun RichTextState.pointerDown() {
+        onSelectionGesturePointerDown(
+            position = Offset.Zero,
+            uptimeMillis = 0L,
+            doubleTapTimeoutMillis = 300L,
+            slop = 8f,
+            shiftPressed = false,
+        )
     }
 
     private companion object {

@@ -8,10 +8,6 @@ import androidx.compose.ui.test.runDesktopComposeUiTest
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.mohamedrejeb.richeditor.model.RichTextState
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -296,22 +292,5 @@ class DragSelectionParagraphEdgeTest {
         state.platformSelection(TextRange(11, 6))
 
         assertEquals(TextRange(11, 6), state.selection)
-    }
-
-    @Test
-    fun `pull back applies inside the press window too`() = runBlocking {
-        val state = twoParagraphState()
-
-        val pressJob = launch(Dispatchers.Default) {
-            state.adjustSelectionAndRegisterPressPosition(Offset(8f, 8f))
-        }
-        delay(80)
-        state.onSelectionGestureStart()
-
-        state.platformSelection(TextRange(6, 10))
-        state.platformSelection(TextRange(6, 11))
-        pressJob.cancel()
-
-        assertEquals(TextRange(6, 10), state.selection)
     }
 }

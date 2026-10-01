@@ -52,7 +52,6 @@ import com.mohamedrejeb.richeditor.model.applyChangeList
 import com.mohamedrejeb.richeditor.model.correctPressCaret
 import com.mohamedrejeb.richeditor.model.correctTripleClickSelection
 import com.mohamedrejeb.richeditor.model.reconcileBufferWithModel
-import kotlinx.coroutines.CoroutineScope
 
 /**
  * Basic composable that enables users to edit rich text via hardware or software keyboard, but provides no decorations like hint or placeholder.
@@ -280,20 +279,7 @@ public fun BasicRichTextEditor(
         LaunchedEffect(interactionSource) {
             interactionSource.interactions.collect { interaction ->
                 when (interaction) {
-                    is PressInteraction.Press -> {
-                        state.onSelectionGestureStart()
-
-                        val pressPosition = interaction.pressPosition
-                        val topPadding = with(density) { contentPadding.calculateTopPadding().toPx() }
-                        val startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() }
-
-                        registerPressPosition(
-                            pressPosition = pressPosition,
-                            state = state,
-                            topPadding = topPadding,
-                            startPadding = startPadding,
-                        )
-                    }
+                    is PressInteraction.Press -> state.onSelectionGestureStart()
 
                     is PressInteraction.Release,
                     is PressInteraction.Cancel -> state.onSelectionGestureEnd()
@@ -414,7 +400,6 @@ public fun BasicRichTextEditor(
                                 contentPadding = contentPadding,
                                 density = density,
                                 layoutDirection = layoutDirection,
-                                scope = rememberCoroutineScope()
                             )
                 ),
             enabled = enabled,
@@ -507,7 +492,6 @@ internal expect fun Modifier.adjustTextIndicatorOffset(
     contentPadding: PaddingValues,
     density: Density,
     layoutDirection: LayoutDirection,
-    scope: CoroutineScope,
 ): Modifier
 
 /**
@@ -525,20 +509,6 @@ private fun textLayoutPositionOf(
 
     val inTextField = innerTextField.localPositionOf(editor, position)
     return Offset(x = inTextField.x, y = inTextField.y + verticalScroll)
-}
-
-internal suspend fun registerPressPosition(
-    pressPosition: Offset,
-    state: RichTextState,
-    topPadding: Float,
-    startPadding: Float,
-) {
-    state.registerLastPressPosition(
-        pressPosition = Offset(
-            x = pressPosition.x - startPadding,
-            y = pressPosition.y - topPadding
-        ),
-    )
 }
 
 public typealias RichTextChangedListener = (RichTextState) -> Unit

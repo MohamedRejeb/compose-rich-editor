@@ -22,7 +22,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.isShiftPressed
 import androidx.compose.ui.input.pointer.changedToDown
@@ -352,8 +354,13 @@ public fun BasicRichTextEditor(
                     state.isFocused = focusState.isFocused
                 }
                 .onPreviewKeyEvent { event ->
-                    if (readOnly)
+                    if (readOnly) {
+                        // The selection keys still work in a read-only editor, and the state
+                        // tells their changes from gestures by the key press.
+                        if (event.type == KeyEventType.KeyDown)
+                            state.notePhysicalKeyEvent()
                         return@onPreviewKeyEvent false
+                    }
 
                     state.onPreviewKeyEvent(event)
                 }

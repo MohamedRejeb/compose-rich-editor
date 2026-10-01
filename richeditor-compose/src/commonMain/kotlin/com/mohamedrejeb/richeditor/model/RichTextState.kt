@@ -68,7 +68,8 @@ import kotlin.time.Duration.Companion.seconds
 private val RichTextStateHistoryClockStart = kotlin.time.TimeSource.Monotonic.markNow()
 
 // Window after a physical key press during which a caret step is treated as
-// keyboard navigation rather than an IME batch edit (#779).
+// keyboard navigation rather than an IME batch edit (#779), and a selection change
+// as the keyboard's rather than a gesture's.
 private const val PhysicalKeyNavigationWindowMs = 300L
 
 // Window after an IME edit during which a caret step over a paragraph separator
@@ -651,11 +652,17 @@ public class RichTextState internal constructor(
     private var lastPressPosition: Offset? by mutableStateOf(null)
 
     // Monotonic timestamp of the last physical key press; distinguishes hardware
-    // caret navigation from IME batch edits in [isImeBoundarySpaceRefreshBtf2] (#779).
+    // caret navigation from IME batch edits in [isImeBoundarySpaceRefreshBtf2] (#779)
+    // and from selection gestures in [adjustGestureSelection].
     private var lastPhysicalKeyEventMs: Long? = null
 
     internal fun notePhysicalKeyEvent() {
         lastPhysicalKeyEventMs = currentMonotonicMs()
+    }
+
+    private fun isWithinPhysicalKeyWindow(): Boolean {
+        val lastKeyMs = lastPhysicalKeyEventMs ?: return false
+        return currentMonotonicMs() - lastKeyMs <= PhysicalKeyNavigationWindowMs
     }
 
     // Caret position and timestamp right after the last IME text edit. Lets
@@ -2799,8 +2806,7 @@ public class RichTextState internal constructor(
                     now - lastEditMs <= ImeEditFollowUpWindowMs
         if (!commitsCompositionAtBoundary && !followsImeEditAtBoundary) return false
 
-        val lastKeyMs = lastPhysicalKeyEventMs
-        if (lastKeyMs != null && now - lastKeyMs <= PhysicalKeyNavigationWindowMs)
+        if (isWithinPhysicalKeyWindow())
             return false
         return isParagraphSeparatorIndex(boundary)
     }
@@ -5327,13 +5333,20 @@ public class RichTextState internal constructor(
      * pointer's line, a selection handle resting on a paragraph's end may not run onto the
      * next paragraph's first word, and it may not land exactly on a paragraph's start offset
      * (which would select the virtual separator and highlight the next line). Select-all,
-     * collapsed carets, and selections without a live gesture pass through untouched.
+     * collapsed carets, selections without a live gesture, and selections right after a
+     * physical key press with no pointer pressed (a hardware keyboard on a touch platform,
+     * where every change counts as a gesture) pass through untouched.
      */
     private fun adjustGestureSelection(
         selection: TextRange,
         previousSelection: TextRange,
     ): TextRange {
         if (selection.collapsed || !isSelectionGestureLive())
+            return selection
+
+        // A held Shift auto-repeats its key down on some desktops, so the key window alone
+        // would exempt a shift+drag with the mouse; a pressed pointer owns the change.
+        if (!selectionGesturePressed && isWithinPhysicalKeyWindow())
             return selection
 
         selectionGestureLastActivity = kotlin.time.TimeSource.Monotonic.markNow()

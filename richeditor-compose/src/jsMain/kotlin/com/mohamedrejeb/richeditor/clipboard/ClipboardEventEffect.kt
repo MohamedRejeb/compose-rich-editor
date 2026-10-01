@@ -45,7 +45,7 @@ internal actual fun ClipboardEventEffect(
         val copyHandler: (Event) -> Unit = handler@{ event ->
             if (!richTextState.isFocused) return@handler
 
-            val selection = richTextState.copySelection ?: return@handler
+            val selection = richTextState.domClipboardSelection() ?: return@handler
             event.preventDefault()
             event.stopPropagation()
             if (richTextState.config.richClipboardEnabled) {
@@ -57,7 +57,7 @@ internal actual fun ClipboardEventEffect(
         val cutHandler: (Event) -> Unit = handler@{ event ->
             if (!richTextState.isFocused || isReadOnly) return@handler
 
-            val selection = richTextState.copySelection ?: return@handler
+            val selection = richTextState.domClipboardSelection() ?: return@handler
             event.preventDefault()
             event.stopPropagation()
             if (richTextState.config.richClipboardEnabled) {

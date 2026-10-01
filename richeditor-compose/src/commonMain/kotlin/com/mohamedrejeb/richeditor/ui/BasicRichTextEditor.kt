@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.isShiftPressed
 import androidx.compose.ui.input.pointer.changedToDown
 import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
@@ -47,6 +48,7 @@ import com.mohamedrejeb.richeditor.clipboard.createRichTextClipboardManager
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.applyChangeList
 import com.mohamedrejeb.richeditor.model.correctPressCaret
+import com.mohamedrejeb.richeditor.model.correctTripleClickSelection
 import com.mohamedrejeb.richeditor.model.reconcileBufferWithModel
 import kotlinx.coroutines.CoroutineScope
 
@@ -382,7 +384,15 @@ public fun BasicRichTextEditor(
                                             verticalScroll = if (singleLine) 0 else state.scrollState.value,
                                         )?.let(state::onSelectionGesturePointerMove)
 
-                                        if (change.changedToDown()) state.onSelectionGesturePointerDown()
+                                        if (change.changedToDown()) {
+                                            state.onSelectionGesturePointerDown(
+                                                position = change.position,
+                                                uptimeMillis = change.uptimeMillis,
+                                                doubleTapTimeoutMillis = viewConfiguration.doubleTapTimeoutMillis,
+                                                slop = viewConfiguration.touchSlop,
+                                                shiftPressed = event.keyboardModifiers.isShiftPressed,
+                                            )
+                                        }
                                         if (event.changes.none { it.pressed }) {
                                             // Every caret placement the press causes is made by
                                             // the time its release has been dispatched.
@@ -431,6 +441,7 @@ public fun BasicRichTextEditor(
                 // stale pending selection would override a later gesture selection.
                 state.pendingSelectionDuringSync = null
                 state.correctPressCaret(this)
+                state.correctTripleClickSelection(this)
             },
             textStyle = effectiveTextStyle,
             keyboardOptions = keyboardOptions,

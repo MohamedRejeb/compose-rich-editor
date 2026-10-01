@@ -760,15 +760,44 @@ public class RichTextState internal constructor(
     }
 
     // True from a press until its release has been dispatched: the span in which the
-    // platform makes the caret placements that [correctPressCaret] may correct.
+    // platform makes the selections that [correctPressCaret] and
+    // [correctTripleClickSelection] may correct.
     private var pressCaretCorrectionArmed = false
 
-    internal fun onSelectionGesturePointerDown() {
+    // Press counting for the triple-click correction, with the framework's rules: a press
+    // continues the series when it is within the double tap timeout and the slop of the one
+    // before. Shift extends a selection instead of starting a series.
+    private var pressSeriesCount = 0
+    private var pressSeriesUptimeMs = 0L
+    private var pressSeriesPosition: Offset? = null
+
+    // True from a third press until its selection has been seen by
+    // [correctTripleClickSelection] or the pointer is up.
+    internal var tripleClickArmed = false
+
+    internal fun onSelectionGesturePointerDown(
+        position: Offset,
+        uptimeMillis: Long,
+        doubleTapTimeoutMillis: Long,
+        slop: Float,
+        shiftPressed: Boolean,
+    ) {
         pressCaretCorrectionArmed = true
+
+        val previousPosition = pressSeriesPosition
+        val continuesSeries =
+            previousPosition != null &&
+                    uptimeMillis - pressSeriesUptimeMs < doubleTapTimeoutMillis &&
+                    (position - previousPosition).getDistance() < slop
+        pressSeriesCount = if (continuesSeries) pressSeriesCount + 1 else 1
+        pressSeriesUptimeMs = uptimeMillis
+        pressSeriesPosition = position
+        tripleClickArmed = pressSeriesCount >= 3 && !shiftPressed
     }
 
     internal fun onSelectionGesturePointerUp() {
         pressCaretCorrectionArmed = false
+        tripleClickArmed = false
     }
 
     internal fun pressForCaretCorrection(): Offset? {
@@ -2154,10 +2183,8 @@ public class RichTextState internal constructor(
     }
 
     /**
-     * Increases and decreases the list level of the current selected lists when the Tab key is pressed.
-     *
-     * @param event the key event.
-     * @return true if the list level was increased or decreased, false otherwise.
+     * Key events the editor answers before the framework: undo and redo, the trigger popup's
+     * navigation, the paragraph keys, and Tab for list levels. Returns true when consumed.
      */
     internal fun onPreviewKeyEvent(event: KeyEvent): Boolean {
         if (event.type == KeyEventType.KeyDown) {
@@ -2182,6 +2209,18 @@ public class RichTextState internal constructor(
                         return true
                     }
                 }
+            }
+        }
+
+        // The paragraph keys (Ctrl or Alt with Up or Down, Shift to extend): the framework
+        // answers them from the newlines of the visible text, which has none outside
+        // single-paragraph mode.
+        if (event.type == KeyEventType.KeyDown && !singleParagraphMode && isParagraphNavigationKey(event)) {
+            val up = event.key == Key.DirectionUp || event.key == Key.NumPadDirectionUp
+            val target = paragraphNavigationTarget(selection, up = up)
+            if (target != null) {
+                selection = if (event.isShiftPressed) TextRange(selection.start, target) else TextRange(target)
+                return true
             }
         }
 
@@ -2215,6 +2254,14 @@ public class RichTextState internal constructor(
             return false
 
         return true
+    }
+
+    private fun isParagraphNavigationKey(event: KeyEvent): Boolean {
+        if (event.isMetaPressed || event.isCtrlPressed == event.isAltPressed) return false
+        return when (event.key) {
+            Key.DirectionUp, Key.NumPadDirectionUp, Key.DirectionDown, Key.NumPadDirectionDown -> true
+            else -> false
+        }
     }
 
     /**

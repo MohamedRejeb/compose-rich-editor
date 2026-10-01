@@ -1,6 +1,9 @@
 package com.mohamedrejeb.richeditor.ui
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.key.Key
@@ -11,6 +14,7 @@ import androidx.compose.ui.test.click
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performMouseInput
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.runDesktopComposeUiTest
 import androidx.compose.ui.text.TextRange
@@ -83,6 +87,55 @@ class ReadOnlyEditorTest {
         assertEquals(TEXT, state.annotatedString.text)
     }
 
+    @Test
+    fun `undo and redo shortcuts change nothing in a read-only editor`() =
+        runDesktopComposeUiTest(width = 480, height = 360) {
+            val state = RichTextState()
+            state.setText(TEXT)
+            var readOnly by mutableStateOf(false)
+            setContent {
+                BasicRichTextEditor(
+                    state = state,
+                    readOnly = readOnly,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(EDITOR_TAG),
+                )
+            }
+            waitForIdle()
+
+            // An edit while editable, so there is an entry to undo.
+            onNodeWithTag(EDITOR_TAG).performMouseInput { click(caretAt(state, TEXT.length)) }
+            waitForIdle()
+            onNodeWithTag(EDITOR_TAG).performTextInput("!")
+            waitForIdle()
+            assertEquals("$TEXT!", state.annotatedString.text)
+
+            readOnly = true
+            waitForIdle()
+            pressShortcut(Key.Z, shift = false)
+            assertEquals("$TEXT!", state.annotatedString.text, "undo must not run in a read-only editor")
+            pressShortcut(Key.Z, shift = true)
+            assertEquals("$TEXT!", state.annotatedString.text, "redo must not run in a read-only editor")
+
+            // Back to editable: the entry was there all along.
+            readOnly = false
+            waitForIdle()
+            pressShortcut(Key.Z, shift = false)
+            assertEquals(TEXT, state.annotatedString.text, "the same shortcut undoes once editable again")
+        }
+
+    private fun DesktopComposeUiTest.pressShortcut(key: Key, shift: Boolean) {
+        onNodeWithTag(EDITOR_TAG).performKeyInput {
+            keyDown(SHORTCUT_MODIFIER)
+            if (shift) keyDown(Key.ShiftLeft)
+            pressKey(key)
+            if (shift) keyUp(Key.ShiftLeft)
+            keyUp(SHORTCUT_MODIFIER)
+        }
+        waitForIdle()
+    }
+
     private fun runReadOnlyEditor(block: DesktopComposeUiTest.(state: RichTextState) -> Unit) =
         runDesktopComposeUiTest(width = 480, height = 360) {
             val state = RichTextState()
@@ -108,5 +161,7 @@ class ReadOnlyEditorTest {
     private companion object {
         const val EDITOR_TAG = "editor"
         const val TEXT = "Hello World"
+        val SHORTCUT_MODIFIER: Key =
+            if (System.getProperty("os.name") == "Mac OS X") Key.MetaLeft else Key.CtrlLeft
     }
 }

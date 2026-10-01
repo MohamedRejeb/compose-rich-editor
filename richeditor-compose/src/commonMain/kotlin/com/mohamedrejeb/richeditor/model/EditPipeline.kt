@@ -152,9 +152,9 @@ private fun RichTextState.extractDeletedSelection(buffer: TextFieldBuffer): Rich
  * BTF2 buffer, which did not see it because setTextFieldStateFromValue was suppressed during
  * the replay.
  *
- * Only the region that actually differs is replaced. Rewriting the whole buffer instead reaches
- * the Android IME as a wholesale text reset, which restarts input and makes the keyboard hide
- * and show again the moment "- " turns into a list.
+ * Only the region that actually differs is replaced, so the buffer records one local change
+ * instead of a whole-text rewrite. The selection is then set from
+ * [RichTextState.pendingSelectionDuringSync] when it fits the new text.
  *
  * The caller clears [RichTextState.pendingSelectionDuringSync]; this function only reads it.
  */

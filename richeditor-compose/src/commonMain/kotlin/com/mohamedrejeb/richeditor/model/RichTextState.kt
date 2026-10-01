@@ -3170,8 +3170,12 @@ public class RichTextState internal constructor(
                         )
 
                         if (!singleParagraphMode) {
-                            // Add empty space in the end of each paragraph to fix an issue with Compose TextField
-                            // that makes that last char non-selectable when having multiple paragraphs
+                            // One-character separator between paragraphs: MultiParagraph attributes
+                            // a boundary offset to the later paragraph, so without it the caret could
+                            // never sit after the last character of a non-last paragraph. A space and
+                            // not a newline, because a newline between paragraphs inside a
+                            // ParagraphStyle range renders an extra blank line (only the trailing empty
+                            // paragraph swaps one in, see substituteTrailingSeparatorWithNewline).
                             if (i != richParagraphList.lastIndex && index < newText.length) {
                                 append(' ')
                                 index++

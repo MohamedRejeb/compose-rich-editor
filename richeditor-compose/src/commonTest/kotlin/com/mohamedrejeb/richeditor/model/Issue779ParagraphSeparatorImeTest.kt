@@ -79,6 +79,73 @@ class Issue779ParagraphSeparatorImeTest {
         assertEquals(3, state.richParagraphList.size)
     }
 
+    /**
+     * The composition branch of the check. A composition can end without any text or caret
+     * change, which runs neither the InputTransformation nor the selection observer, so the
+     * editor reports composition changes through [RichTextState.handleCompositionChanged].
+     */
+    private fun RichTextState.composing(range: TextRange?) {
+        handleCompositionChanged(range)
+    }
+
+    @Test
+    fun caretStepLongAfterTheCompositionEndedIsPlainNavigation() {
+        // Type "s" at the paragraph end with the word composing, pause, let the keyboard
+        // commit the word on its own, pause again, then step the caret with the keyboard's
+        // cursor control. That step is navigation, not a suggestion pick's space refresh.
+        val state = RichTextState()
+        state.setHtml("<p>Thi</p><p><br></p><p>Signature</p>")
+        state.selection = TextRange(3)
+        state.imeEdit { replace(3, 3, "s") }
+        state.composing(TextRange(0, 4))
+        Thread.sleep(WINDOW_LAPSE_MS)
+        state.composing(null)
+        Thread.sleep(WINDOW_LAPSE_MS)
+
+        state.platformCaretStep(5)
+
+        assertEquals("This\n\nSignature", state.toText())
+        assertEquals(TextRange(5), state.selection)
+        assertEquals(3, state.richParagraphList.size)
+    }
+
+    @Test
+    fun separatorStepRightAfterTheCompositionEndedStaysInParagraph() {
+        // The same pick delivered as two IME calls instead of one batch: the commit is
+        // observed on its own, the caret step follows within the frame.
+        val state = RichTextState()
+        state.setHtml("<p>Thi</p><p><br></p><p>Signature</p>")
+        state.selection = TextRange(3)
+        state.imeEdit { replace(3, 3, "s") }
+        state.composing(TextRange(0, 4))
+        Thread.sleep(WINDOW_LAPSE_MS)
+        state.composing(null)
+
+        state.platformCaretStep(5)
+
+        assertEquals("This \n\nSignature", state.toText())
+        assertEquals(TextRange(5), state.selection)
+        assertEquals(3, state.richParagraphList.size)
+    }
+
+    @Test
+    fun separatorStepThatEndsTheCompositionInTheSameBatchStaysInParagraph() {
+        // The single-batch pick: the composition is still the last thing observed when the
+        // step arrives, and the buffer's composition is already gone.
+        val state = RichTextState()
+        state.setHtml("<p>Thi</p><p><br></p><p>Signature</p>")
+        state.selection = TextRange(3)
+        state.imeEdit { replace(3, 3, "s") }
+        state.composing(TextRange(0, 4))
+        Thread.sleep(WINDOW_LAPSE_MS)
+
+        state.platformCaretStep(5)
+
+        assertEquals("This \n\nSignature", state.toText())
+        assertEquals(TextRange(5), state.selection)
+        assertEquals(3, state.richParagraphList.size)
+    }
+
     @Test
     fun caretStepWithoutARecentImeEditIsPlainNavigation() {
         val state = threeParagraphDoc()
@@ -205,5 +272,10 @@ class Issue779ParagraphSeparatorImeTest {
         assertEquals("Testing \n\nSignature", state.toText())
         assertEquals(TextRange(8), state.selection)
         assertEquals(3, state.richParagraphList.size)
+    }
+
+    private companion object {
+        /** Longer than the 300 ms follow-up window the check keeps after an IME edit. */
+        const val WINDOW_LAPSE_MS = 400L
     }
 }

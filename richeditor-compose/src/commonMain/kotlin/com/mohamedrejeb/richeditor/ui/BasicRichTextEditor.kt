@@ -256,6 +256,13 @@ public fun BasicRichTextEditor(
             }
     }
 
+    // A composition can end with no text or caret change, which neither the
+    // InputTransformation nor the selection observer sees (#779).
+    LaunchedEffect(state) {
+        snapshotFlow { state.textFieldState.composition }
+            .collect { composition -> state.handleCompositionChanged(composition) }
+    }
+
     LaunchedEffect(singleParagraph) {
         state.singleParagraphMode = singleParagraph
     }

@@ -687,6 +687,30 @@ public class RichTextState internal constructor(
      */
     private var lastObservedComposition: TextRange? = null
 
+    /**
+     * The composition that ended most recently without a text or caret change in the same
+     * pass, and when. A keyboard that commits the word and steps the caret as two calls
+     * instead of one batch is recognized through this, within [ImeEditFollowUpWindowMs].
+     */
+    private var lastEndedComposition: TextRange? = null
+    private var lastCompositionEndMs: Long? = null
+
+    /**
+     * Reports a change of [TextFieldState.composition] from the editor's composition
+     * observer. A composition can end without any text or caret change, which runs neither
+     * the InputTransformation nor the selection observer; without this report the
+     * composition would still look live to [isImeBoundarySpaceRefreshBtf2] at the next
+     * caret step, however much later it comes.
+     */
+    internal fun handleCompositionChanged(composition: TextRange?) {
+        val previous = lastObservedComposition
+        if (composition == null && previous != null) {
+            lastEndedComposition = previous
+            lastCompositionEndMs = currentMonotonicMs()
+        }
+        lastObservedComposition = composition
+    }
+
     // lastActivity keeps the gesture alive through Android's press Cancel at
     // long-press start; each routed non-collapsed selection change refreshes it.
     private var selectionGesturePressed = false
@@ -2695,10 +2719,12 @@ public class RichTextState internal constructor(
      * True when a selection change matches the IME "trailing space refresh" a suggestion
      * pick performs at a paragraph end (#779): the caret steps across the paragraph
      * separator while either the picked word's composition, ending exactly at the
-     * boundary, was just committed (single-batch pick), or an IME edit that ended exactly
-     * at the boundary happened moments before (split pick: the word commit arrives as a
-     * buffer change and the space refresh as a bare caret move). Plain caret navigation
-     * matches neither signal; press and hardware-key driven moves are excluded explicitly.
+     * boundary, was just committed (single-batch pick, or a commit observed on its own
+     * moments before the step), or an IME edit that ended exactly at the boundary happened
+     * moments before (split pick: the word commit arrives as a buffer change and the space
+     * refresh as a bare caret move). Plain caret navigation matches neither signal, a
+     * composition that ended longer ago than the follow-up window counts as committed by
+     * the user; press and hardware-key driven moves are excluded explicitly.
      */
     private fun isImeBoundarySpaceRefreshBtf2(
         previousSelection: TextRange,
@@ -2712,16 +2738,22 @@ public class RichTextState internal constructor(
         if (newSelection.min != boundary + 1) return false
         if (textFieldState.composition != null) return false
 
-        val commitsCompositionAtBoundary = lastObservedComposition?.max == boundary
+        val now = currentMonotonicMs()
+        val endMs = lastCompositionEndMs
+        val commitsCompositionAtBoundary =
+            lastObservedComposition?.max == boundary ||
+                    (lastEndedComposition?.max == boundary &&
+                            endMs != null &&
+                            now - endMs <= ImeEditFollowUpWindowMs)
         val lastEditMs = lastImeEditMs
         val followsImeEditAtBoundary =
             lastImeEditCaret == boundary &&
                     lastEditMs != null &&
-                    currentMonotonicMs() - lastEditMs <= ImeEditFollowUpWindowMs
+                    now - lastEditMs <= ImeEditFollowUpWindowMs
         if (!commitsCompositionAtBoundary && !followsImeEditAtBoundary) return false
 
         val lastKeyMs = lastPhysicalKeyEventMs
-        if (lastKeyMs != null && currentMonotonicMs() - lastKeyMs <= PhysicalKeyNavigationWindowMs)
+        if (lastKeyMs != null && now - lastKeyMs <= PhysicalKeyNavigationWindowMs)
             return false
         return isParagraphSeparatorIndex(boundary)
     }

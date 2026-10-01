@@ -35,6 +35,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.input.pointer.pointerInput
@@ -62,6 +63,7 @@ fun EditorLabScreen(navigateBack: () -> Unit) {
     var scenarioName by rememberSaveable { mutableStateOf(LabScenario.Paragraphs.name) }
     // Saved with the state, so a restored document is not replaced by its scenario again.
     var loadedScenarioName by rememberSaveable { mutableStateOf<String?>(null) }
+    var readOnly by rememberSaveable { mutableStateOf(false) }
     val scenario = LabScenario.valueOf(scenarioName)
 
     LaunchedEffect(state, scenario) {
@@ -94,9 +96,13 @@ fun EditorLabScreen(navigateBack: () -> Unit) {
                 selected = scenario,
                 onSelect = { scenarioName = it.name },
             )
-            LabToolbar(state = state)
-            LabEditor(state = state, scenario = scenario)
-            StateReadout(state = state, pageScroll = pageScroll)
+            LabToolbar(
+                state = state,
+                readOnly = readOnly,
+                onReadOnlyChange = { readOnly = it },
+            )
+            LabEditor(state = state, scenario = scenario, readOnly = readOnly)
+            StateReadout(state = state, pageScroll = pageScroll, readOnly = readOnly)
             LabLogPanel(log = log)
             PasteTarget()
             Spacer(Modifier.height(24.dp))
@@ -123,8 +129,15 @@ private fun ScenarioPicker(
 }
 
 @Composable
-private fun LabToolbar(state: RichTextState) {
-    Row {
+private fun LabToolbar(
+    state: RichTextState,
+    readOnly: Boolean,
+    onReadOnlyChange: (Boolean) -> Unit,
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         RichTextStyleButton(
             onClick = { state.toggleSpanStyle(SpanStyle(fontWeight = FontWeight.Bold)) },
             isSelected = state.isBold(),
@@ -145,6 +158,12 @@ private fun LabToolbar(state: RichTextState) {
             isSelected = state.isOrderedList,
             icon = Icons.Outlined.FormatListNumbered,
         )
+        FilterChip(
+            selected = readOnly,
+            onClick = { onReadOnlyChange(!readOnly) },
+            label = { Text("Read only") },
+            modifier = Modifier.focusProperties { canFocus = false },
+        )
     }
 }
 
@@ -153,9 +172,11 @@ private fun LabToolbar(state: RichTextState) {
 private fun LabEditor(
     state: RichTextState,
     scenario: LabScenario,
+    readOnly: Boolean,
 ) {
     OutlinedRichTextEditor(
         state = state,
+        readOnly = readOnly,
         modifier = Modifier
             .fillMaxWidth()
             .then(
@@ -170,8 +191,10 @@ private fun LabEditor(
 private fun StateReadout(
     state: RichTextState,
     pageScroll: ScrollState,
+    readOnly: Boolean,
 ) {
     val lines = listOf(
+        "read only      $readOnly",
         "selection      ${state.selection.describe()}",
         "composition    ${state.composition?.describe() ?: "none"}",
         "bold           ${state.isBold()}",

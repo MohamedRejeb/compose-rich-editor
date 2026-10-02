@@ -225,8 +225,8 @@ internal fun substituteTrailingSeparatorWithNewline(
  * are skipped, since BTF2 drops them anyway; the trailing one stands for a line that
  * [substituteTrailingSeparatorWithNewline] renders instead. A collapsed range anywhere else (a
  * shape only singleParagraphMode or a transient desync can produce) is deliberately unhandled and
- * simply dropped here. Inter-paragraph spacing is handled solely by LineHeightStyle.Trim.Both on
- * the editor's text style.
+ * simply dropped here. Inter-paragraph spacing comes from the caller's text style alone: each
+ * paragraph range is laid out with the caller's `lineHeight` and `lineHeightStyle` as given.
  *
  * The substitution runs before any addStyle call: TextFieldBuffer only tracks styles added after
  * the last edit, so styles emitted first would be discarded by the replace.

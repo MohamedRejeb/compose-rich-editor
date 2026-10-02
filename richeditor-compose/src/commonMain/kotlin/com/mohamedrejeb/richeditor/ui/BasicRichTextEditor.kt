@@ -42,7 +42,6 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import com.mohamedrejeb.richeditor.clipboard.ClipboardEventEffect
@@ -288,15 +287,6 @@ public fun BasicRichTextEditor(
         }
     }
 
-    // Trim.Both prevents per-paragraph line-height padding (Compose's default Trim.None)
-    // from accumulating between addStyle paragraph boundaries. Load-bearing for spacing.
-    val effectiveTextStyle = remember(textStyle) {
-        val baseLineHeightStyle = textStyle.lineHeightStyle ?: LineHeightStyle.Default
-        textStyle.copy(
-            lineHeightStyle = baseLineHeightStyle.copy(trim = LineHeightStyle.Trim.Both),
-        )
-    }
-
     val editorCoordinates = remember { Ref<LayoutCoordinates>() }
     val innerTextFieldCoordinates = remember { Ref<LayoutCoordinates>() }
 
@@ -435,7 +425,7 @@ public fun BasicRichTextEditor(
                 state.correctPressCaret(this)
                 state.correctTripleClickSelection(this)
             },
-            textStyle = effectiveTextStyle,
+            textStyle = textStyle,
             keyboardOptions = keyboardOptions,
             onKeyboardAction = keyboardActions.toKeyboardActionHandler(keyboardOptions.imeAction),
             lineLimits = computeLineLimits(singleLine, minLines, maxLines),

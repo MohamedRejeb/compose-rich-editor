@@ -99,9 +99,9 @@ class Issue779ParagraphSeparatorImeTest {
         state.selection = TextRange(3)
         state.imeEdit { replace(3, 3, "s") }
         state.composing(TextRange(0, 4))
-        Thread.sleep(WINDOW_LAPSE_MS)
+        sleepMillis(WINDOW_LAPSE_MS)
         state.composing(null)
-        Thread.sleep(WINDOW_LAPSE_MS)
+        sleepMillis(WINDOW_LAPSE_MS)
 
         state.platformCaretStep(5)
 
@@ -119,7 +119,7 @@ class Issue779ParagraphSeparatorImeTest {
         state.selection = TextRange(3)
         state.imeEdit { replace(3, 3, "s") }
         state.composing(TextRange(0, 4))
-        Thread.sleep(WINDOW_LAPSE_MS)
+        sleepMillis(WINDOW_LAPSE_MS)
         state.composing(null)
 
         state.platformCaretStep(5)
@@ -138,7 +138,7 @@ class Issue779ParagraphSeparatorImeTest {
         state.selection = TextRange(3)
         state.imeEdit { replace(3, 3, "s") }
         state.composing(TextRange(0, 4))
-        Thread.sleep(WINDOW_LAPSE_MS)
+        sleepMillis(WINDOW_LAPSE_MS)
 
         state.platformCaretStep(5)
 
@@ -198,7 +198,7 @@ class Issue779ParagraphSeparatorImeTest {
         state.setHtml("<p>Thi</p><p><br></p><p>Signature</p>")
         state.selection = TextRange(3)
         state.pointerDown()
-        Thread.sleep(WINDOW_LAPSE_MS)
+        sleepMillis(WINDOW_LAPSE_MS)
         state.imeEdit { replace(3, 3, "s") }
 
         state.platformCaretStep(5)

@@ -128,7 +128,7 @@ class Issue779SeparatorReplacedBySpaceTest {
     fun `a lone deletion of the separator long after typing still joins the paragraphs`() {
         val state = doc()
         state.imeEdit { replace(2, 2, "s"); selection = TextRange(3) }
-        Thread.sleep(WINDOW_LAPSE_MS)
+        sleepMillis(WINDOW_LAPSE_MS)
 
         state.imeEdit { replace(3, 4, ""); selection = TextRange(3) }
 
@@ -180,7 +180,7 @@ class Issue779SeparatorReplacedBySpaceTest {
         state.imeEdit { replace(2, 2, "h"); selection = TextRange(3) }
         state.imeEdit { replace(3, 3, "o"); selection = TextRange(4) }
         state.handleCompositionChanged(TextRange(0, 4))
-        Thread.sleep(COALESCE_LAPSE_MS)
+        sleepMillis(COALESCE_LAPSE_MS)
         state.imeEdit {
             replace(0, 4, "Hi how")
             replace(6, 7, " ")

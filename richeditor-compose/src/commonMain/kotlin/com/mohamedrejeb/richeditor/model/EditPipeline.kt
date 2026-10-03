@@ -56,7 +56,14 @@ internal fun RichTextState.applyChangeList(buffer: TextFieldBuffer) {
             originalRange = originalRange,
             newText = buffer.asCharSequence().substring(newRange.min, newRange.max),
         )
-    }.sortedBy { it.originalRange.min }
+    }.sortedBy { it.originalRange.min }.mapNotNull { keepSeparatorUnderTrailingSpace(it) }
+    if (deltas.isEmpty()) {
+        // The whole batch was a kept separator deletion: the reconciliation puts the separator
+        // back and must leave the caret in front of it, or the caret would land in the next
+        // paragraph and read as the caret-step form of the refresh.
+        pendingSelectionDuringSync = buffer.selection
+        return
+    }
 
     // Paste recognition on the delta shape: one delta whose inserted text matches the
     // clipboard's stashed plain text is the paste the clipboard manager announced.
@@ -97,9 +104,12 @@ internal fun RichTextState.applyChangeList(buffer: TextFieldBuffer) {
 
     val postEditCaret = buffer.selection.min
     val trigger = classifyInputDeltas(deltas, postEditCaret)
+    val caretWasAtParagraphEnd =
+        buffer.originalSelection.collapsed && isParagraphSeparatorIndex(buffer.originalSelection.min)
 
     val previous = skipTextFieldStateSync
     skipTextFieldStateSync = true
+    var refreshed = false
     recordHistoryForInput(trigger) {
         try {
             // Shifted by how much the text actually moved, not by the delta's own arithmetic:
@@ -118,6 +128,7 @@ internal fun RichTextState.applyChangeList(buffer: TextFieldBuffer) {
                 offset += textFieldValue.text.length - lengthBefore
             }
             if (replacedStyles != null) applyReplacedSelectionStyles(replacedStyles)
+            refreshed = materializeSpaceUnderImeCaret(buffer, deltas, caretWasAtParagraphEnd)
         } finally {
             skipTextFieldStateSync = previous
             // pendingTextDuringSync must not leak past the batch; pendingSelectionDuringSync
@@ -127,8 +138,59 @@ internal fun RichTextState.applyChangeList(buffer: TextFieldBuffer) {
     }
 
     // Arms the #779 follow-up window: a suggestion pick's trailing-space refresh arrives
-    // as a bare caret step right after this edit.
-    noteImeEdit(caret = textFieldValue.selection.min)
+    // as a bare caret step right after this edit. A refresh folded into this batch has
+    // already happened, so the window is disarmed instead: a step out of the paragraph now
+    // is navigation.
+    if (refreshed) clearImeEditWindow() else noteImeEdit(caret = textFieldValue.selection.min)
+}
+
+/**
+ * An IME puts a space after a word by replacing the character that follows it when that
+ * character is already a space: Gboard selects it and commits " ", Samsung deletes it and
+ * commits " ". At a paragraph end that character is the paragraph separator, which the IME
+ * cannot tell from a space, and replaying the delta verbatim would merge the paragraphs
+ * (#779). The space the IME meant goes inside the paragraph and the separator stays.
+ *
+ * When the delete and the commit arrive as two passes, the first is a bare one-character
+ * deletion of the separator. It is kept only while the IME is mid-commit at that boundary
+ * (the same signals as the caret-step form), so a Delete key at a paragraph end still joins
+ * the paragraphs.
+ */
+private fun RichTextState.keepSeparatorUnderTrailingSpace(delta: InputDelta): InputDelta? {
+    val range = delta.originalRange
+    if (range.collapsed) return delta
+    if (delta.newText.endsWith(' ') && isParagraphSeparatorIndex(range.max - 1) && !isWithinPhysicalKeyWindow())
+        return InputDelta(TextRange(range.min, range.max - 1), delta.newText)
+    val deletesOnlyTheSeparator =
+        delta.newText.isEmpty() && range.max - range.min == 1 && isParagraphSeparatorIndex(range.min)
+    if (deletesOnlyTheSeparator && imeJustEditedAt(range.min) && !isWithinPhysicalKeyWindow())
+        return null
+    return delta
+}
+
+/**
+ * A commit at a paragraph end after which the IME's caret sits one past the paragraph's new
+ * end: it stepped over the separator, which it takes for the space after its word (#779).
+ * The commit may shrink the paragraph (a token rewritten by a shorter suggestion arrives as
+ * a minimal diff with the caret number untouched), so the caret is compared with the
+ * paragraph end after the replay, not with the model's own caret. When the step is folded
+ * into the same batch as the commit, no selection change is ever observed and the selection
+ * observer's form of the refresh never runs. The space the IME believes in is materialized
+ * inside the paragraph and the caret stays where the IME put it. Returns whether it did.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+private fun RichTextState.materializeSpaceUnderImeCaret(
+    buffer: TextFieldBuffer,
+    deltas: List<InputDelta>,
+    caretWasAtParagraphEnd: Boolean,
+): Boolean {
+    if (!caretWasAtParagraphEnd || !buffer.selection.collapsed) return false
+    if (deltas.last().newText.isEmpty() || deltas.any { '\n' in it.newText }) return false
+    val boundary = buffer.selection.min - 1
+    if (boundary < 0 || boundary < textFieldValue.selection.min) return false
+    if (!isParagraphSeparatorIndex(boundary) || isWithinPhysicalKeyWindow()) return false
+    applyChange(originalRange = TextRange(boundary), newText = " ")
+    return true
 }
 
 /**

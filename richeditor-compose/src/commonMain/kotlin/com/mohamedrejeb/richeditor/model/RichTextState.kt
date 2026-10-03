@@ -663,7 +663,7 @@ public class RichTextState internal constructor(
         lastPhysicalKeyEventMs = currentMonotonicMs()
     }
 
-    private fun isWithinPhysicalKeyWindow(): Boolean {
+    internal fun isWithinPhysicalKeyWindow(): Boolean {
         val lastKeyMs = lastPhysicalKeyEventMs ?: return false
         return currentMonotonicMs() - lastKeyMs <= PhysicalKeyNavigationWindowMs
     }
@@ -697,6 +697,18 @@ public class RichTextState internal constructor(
         // before the in-flight batch, which is exactly the composition a pick that also
         // changes text has just ended.
         lastObservedComposition = textFieldState.composition
+    }
+
+    /**
+     * Disarms every signal of the follow-up window after a refresh that already happened
+     * inside the batch, so the next caret step out of the paragraph is navigation.
+     */
+    internal fun clearImeEditWindow() {
+        lastImeEditCaret = -1
+        lastImeEditMs = null
+        lastObservedComposition = null
+        lastEndedComposition = null
+        lastCompositionEndMs = null
     }
 
     /**
@@ -2881,6 +2893,20 @@ public class RichTextState internal constructor(
         if (newSelection.min != boundary + 1) return false
         if (textFieldState.composition != null) return false
 
+        if (!imeJustEditedAt(boundary)) return false
+
+        if (isWithinPhysicalKeyWindow())
+            return false
+        return isParagraphSeparatorIndex(boundary)
+    }
+
+    /**
+     * True when the IME is in the middle of a word commit ending at [boundary]: the word's
+     * composition is the last one observed or ended within the follow-up window, or an IME
+     * edit ended there within the window. Shared by the caret-step and the buffer-change
+     * forms of the #779 space refresh.
+     */
+    internal fun imeJustEditedAt(boundary: Int): Boolean {
         val now = currentMonotonicMs()
         val endMs = lastCompositionEndMs
         val commitsCompositionAtBoundary =
@@ -2893,11 +2919,7 @@ public class RichTextState internal constructor(
             lastImeEditCaret == boundary &&
                     lastEditMs != null &&
                     now - lastEditMs <= ImeEditFollowUpWindowMs
-        if (!commitsCompositionAtBoundary && !followsImeEditAtBoundary) return false
-
-        if (isWithinPhysicalKeyWindow())
-            return false
-        return isParagraphSeparatorIndex(boundary)
+        return commitsCompositionAtBoundary || followsImeEditAtBoundary
     }
 
     /**
@@ -2915,7 +2937,7 @@ public class RichTextState internal constructor(
      * True when [index] is the position of the separator space that follows a
      * non-last paragraph in the raw text.
      */
-    private fun isParagraphSeparatorIndex(index: Int): Boolean {
+    internal fun isParagraphSeparatorIndex(index: Int): Boolean {
         var position = 0
         for (i in 0 until richParagraphList.lastIndex) {
             position += paragraphLength(richParagraphList[i])

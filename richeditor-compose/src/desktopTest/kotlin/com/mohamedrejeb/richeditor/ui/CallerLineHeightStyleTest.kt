@@ -65,7 +65,7 @@ class CallerLineHeightStyleTest {
     }
 
     private fun uniformBoxes(lineCount: Int, lineHeightPx: Float): List<Pair<Float, Float>> =
-        List(lineCount) { (it * lineHeightPx) to ((it + 1) * lineHeightPx) }
+        List(lineCount) { it * lineHeightPx to (it + 1) * lineHeightPx }
 
     @Test
     fun `single line paragraphs keep the caller's line height`() =

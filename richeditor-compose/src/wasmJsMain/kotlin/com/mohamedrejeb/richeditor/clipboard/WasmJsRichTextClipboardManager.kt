@@ -7,6 +7,7 @@ import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.ClipboardItem
 import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.model.richPasteEnabled
 import kotlinx.coroutines.await
 import kotlin.js.Promise
 
@@ -40,7 +41,7 @@ internal class WasmJsRichTextClipboardManager(
 ) : RichTextClipboardManager, Clipboard by clipboard {
 
     override suspend fun getClipEntry(): ClipEntry? {
-        if (!richTextState.config.richClipboardEnabled)
+        if (!richTextState.config.richPasteEnabled)
             return clipboard.getClipEntry()
 
         try {

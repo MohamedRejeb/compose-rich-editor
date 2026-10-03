@@ -44,6 +44,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.sample.common.components.RichTextStyleButton
@@ -55,6 +56,7 @@ import kotlin.time.TimeSource
  * A workbench for manual device checks: fixed documents, a live readout of the state the
  * checks ask about, a timestamped log of its changes, and a plain field to paste into.
  */
+@OptIn(ExperimentalRichTextApi::class)
 @Composable
 fun EditorLabScreen(navigateBack: () -> Unit) {
     val state = rememberRichTextState()
@@ -64,7 +66,13 @@ fun EditorLabScreen(navigateBack: () -> Unit) {
     // Saved with the state, so a restored document is not replaced by its scenario again.
     var loadedScenarioName by rememberSaveable { mutableStateOf<String?>(null) }
     var readOnly by rememberSaveable { mutableStateOf(false) }
+    var featuresName by rememberSaveable { mutableStateOf(LabFeatures.All.name) }
     val scenario = LabScenario.valueOf(scenarioName)
+    val features = LabFeatures.valueOf(featuresName)
+
+    LaunchedEffect(state, features) {
+        state.config.features = features.features
+    }
 
     LaunchedEffect(state, scenario) {
         if (loadedScenarioName != scenario.name) {
@@ -101,8 +109,12 @@ fun EditorLabScreen(navigateBack: () -> Unit) {
                 readOnly = readOnly,
                 onReadOnlyChange = { readOnly = it },
             )
+            FeaturesPicker(
+                selected = features,
+                onSelect = { featuresName = it.name },
+            )
             LabEditor(state = state, scenario = scenario, readOnly = readOnly)
-            StateReadout(state = state, pageScroll = pageScroll, readOnly = readOnly)
+            StateReadout(state = state, pageScroll = pageScroll, readOnly = readOnly, features = features)
             LabLogPanel(log = log)
             PasteTarget()
             Spacer(Modifier.height(24.dp))
@@ -122,6 +134,24 @@ private fun ScenarioPicker(
                 selected = scenario == selected,
                 onClick = { onSelect(scenario) },
                 label = { Text(scenario.label) },
+                modifier = Modifier.focusProperties { canFocus = false },
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun FeaturesPicker(
+    selected: LabFeatures,
+    onSelect: (LabFeatures) -> Unit,
+) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        LabFeatures.entries.forEach { entry ->
+            FilterChip(
+                selected = entry == selected,
+                onClick = { onSelect(entry) },
+                label = { Text(entry.label) },
                 modifier = Modifier.focusProperties { canFocus = false },
             )
         }
@@ -200,9 +230,11 @@ private fun StateReadout(
     state: RichTextState,
     pageScroll: ScrollState,
     readOnly: Boolean,
+    features: LabFeatures,
 ) {
     val lines = listOf(
         "read only      $readOnly",
+        "features       ${features.name}",
         "selection      ${state.selection.describe()}",
         "composition    ${state.composition?.describe() ?: "none"}",
         "bold           ${state.isBold()}",

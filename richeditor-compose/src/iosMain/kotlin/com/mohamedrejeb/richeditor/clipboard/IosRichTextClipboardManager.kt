@@ -6,6 +6,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.Clipboard
 import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.model.richPasteEnabled
 import kotlinx.cinterop.BetaInteropApi
 import platform.Foundation.NSString
 import platform.Foundation.NSUTF8StringEncoding
@@ -39,7 +40,7 @@ internal class IosRichTextClipboardManager(
 ) : RichTextClipboardManager, Clipboard by clipboard {
 
     override suspend fun getClipEntry(): ClipEntry? {
-        if (!richTextState.config.richClipboardEnabled)
+        if (!richTextState.config.richPasteEnabled)
             return clipboard.getClipEntry()
 
         try {

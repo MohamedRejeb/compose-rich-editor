@@ -7,6 +7,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.model.richPasteEnabled
 import kotlinx.browser.document
 import org.w3c.dom.events.Event
 
@@ -21,7 +22,7 @@ internal actual fun ClipboardEventEffect(
             if (!richTextState.isFocused || isReadOnly) return@handler
 
             val html =
-                if (richTextState.config.richClipboardEnabled) getClipboardDataHtml(event)
+                if (richTextState.config.richPasteEnabled) getClipboardDataHtml(event)
                 else null
             if (!html.isNullOrBlank()) {
                 event.preventDefault()

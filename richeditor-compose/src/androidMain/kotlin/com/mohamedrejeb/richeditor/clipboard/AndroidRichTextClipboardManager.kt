@@ -8,6 +8,7 @@ import androidx.compose.ui.platform.AndroidClipboard
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.Clipboard
 import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.model.richPasteEnabled
 
 internal actual fun createRichTextClipboardManager(
     richTextState: RichTextState,
@@ -46,7 +47,7 @@ internal class AndroidRichTextClipboardManager(
             ?: error("AndroidRichTextClipboardManager requires the platform AndroidClipboard")
 
     override suspend fun getClipEntry(): ClipEntry? {
-        if (!richTextState.config.richClipboardEnabled)
+        if (!richTextState.config.richPasteEnabled)
             return clipboard.getClipEntry()
 
         try {

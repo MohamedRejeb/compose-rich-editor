@@ -36,6 +36,40 @@ final enum class com.mohamedrejeb.richeditor.model/HeadingStyle : kotlin/Enum<co
     }
 }
 
+final enum class com.mohamedrejeb.richeditor.model/RichTextFeature : kotlin/Enum<com.mohamedrejeb.richeditor.model/RichTextFeature> { // com.mohamedrejeb.richeditor.model/RichTextFeature|null[0]
+    enum entry BaselineShift // com.mohamedrejeb.richeditor.model/RichTextFeature.BaselineShift|null[0]
+    enum entry Bold // com.mohamedrejeb.richeditor.model/RichTextFeature.Bold|null[0]
+    enum entry CodeSpan // com.mohamedrejeb.richeditor.model/RichTextFeature.CodeSpan|null[0]
+    enum entry CustomSpanStyle // com.mohamedrejeb.richeditor.model/RichTextFeature.CustomSpanStyle|null[0]
+    enum entry FontSize // com.mohamedrejeb.richeditor.model/RichTextFeature.FontSize|null[0]
+    enum entry FontWeight // com.mohamedrejeb.richeditor.model/RichTextFeature.FontWeight|null[0]
+    enum entry Heading // com.mohamedrejeb.richeditor.model/RichTextFeature.Heading|null[0]
+    enum entry Highlight // com.mohamedrejeb.richeditor.model/RichTextFeature.Highlight|null[0]
+    enum entry Image // com.mohamedrejeb.richeditor.model/RichTextFeature.Image|null[0]
+    enum entry Italic // com.mohamedrejeb.richeditor.model/RichTextFeature.Italic|null[0]
+    enum entry LetterSpacing // com.mohamedrejeb.richeditor.model/RichTextFeature.LetterSpacing|null[0]
+    enum entry Link // com.mohamedrejeb.richeditor.model/RichTextFeature.Link|null[0]
+    enum entry OrderedList // com.mohamedrejeb.richeditor.model/RichTextFeature.OrderedList|null[0]
+    enum entry ParagraphStyle // com.mohamedrejeb.richeditor.model/RichTextFeature.ParagraphStyle|null[0]
+    enum entry Shadow // com.mohamedrejeb.richeditor.model/RichTextFeature.Shadow|null[0]
+    enum entry Strikethrough // com.mohamedrejeb.richeditor.model/RichTextFeature.Strikethrough|null[0]
+    enum entry TextColor // com.mohamedrejeb.richeditor.model/RichTextFeature.TextColor|null[0]
+    enum entry Token // com.mohamedrejeb.richeditor.model/RichTextFeature.Token|null[0]
+    enum entry Underline // com.mohamedrejeb.richeditor.model/RichTextFeature.Underline|null[0]
+    enum entry UnorderedList // com.mohamedrejeb.richeditor.model/RichTextFeature.UnorderedList|null[0]
+
+    final val entries // com.mohamedrejeb.richeditor.model/RichTextFeature.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.mohamedrejeb.richeditor.model/RichTextFeature> // com.mohamedrejeb.richeditor.model/RichTextFeature.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.mohamedrejeb.richeditor.model/RichTextFeature // com.mohamedrejeb.richeditor.model/RichTextFeature.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.mohamedrejeb.richeditor.model/RichTextFeature> // com.mohamedrejeb.richeditor.model/RichTextFeature.values|values#static(){}[0]
+
+    final object Companion { // com.mohamedrejeb.richeditor.model/RichTextFeature.Companion|null[0]
+        final val All // com.mohamedrejeb.richeditor.model/RichTextFeature.Companion.All|{}All[0]
+            final fun <get-All>(): kotlin.collections/Set<com.mohamedrejeb.richeditor.model/RichTextFeature> // com.mohamedrejeb.richeditor.model/RichTextFeature.Companion.All.<get-All>|<get-All>(){}[0]
+    }
+}
+
 final enum class com.mohamedrejeb.richeditor.model/RichTextFormat : kotlin/Enum<com.mohamedrejeb.richeditor.model/RichTextFormat> { // com.mohamedrejeb.richeditor.model/RichTextFormat|null[0]
     enum entry Html // com.mohamedrejeb.richeditor.model/RichTextFormat.Html|null[0]
     enum entry Json // com.mohamedrejeb.richeditor.model/RichTextFormat.Json|null[0]

@@ -528,6 +528,37 @@ public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public final fun setUnorderedListStyleType (Lcom/mohamedrejeb/richeditor/paragraph/type/UnorderedListStyleType;)V
 }
 
+public final class com/mohamedrejeb/richeditor/model/RichTextFeature : java/lang/Enum {
+	public static final field BaselineShift Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+	public static final field Bold Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+	public static final field CodeSpan Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+	public static final field Companion Lcom/mohamedrejeb/richeditor/model/RichTextFeature$Companion;
+	public static final field CustomSpanStyle Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+	public static final field FontSize Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+	public static final field FontWeight Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+	public static final field Heading Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+	public static final field Highlight Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+	public static final field Image Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+	public static final field Italic Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+	public static final field LetterSpacing Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+	public static final field Link Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+	public static final field OrderedList Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+	public static final field ParagraphStyle Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+	public static final field Shadow Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+	public static final field Strikethrough Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+	public static final field TextColor Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+	public static final field Token Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+	public static final field Underline Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+	public static final field UnorderedList Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+	public static fun values ()[Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+}
+
+public final class com/mohamedrejeb/richeditor/model/RichTextFeature$Companion {
+	public final fun getAll ()Ljava/util/Set;
+}
+
 public final class com/mohamedrejeb/richeditor/model/RichTextFormat : java/lang/Enum {
 	public static final field Html Lcom/mohamedrejeb/richeditor/model/RichTextFormat;
 	public static final field Json Lcom/mohamedrejeb/richeditor/model/RichTextFormat;

@@ -2473,7 +2473,7 @@ public class RichTextState internal constructor(
      * through the normal insertion path, inheriting styles at the caret like typed text.
      */
     internal fun onTextFieldValueChange(newTextFieldValue: TextFieldValue) {
-        val pendingHtml = pendingClipboardHtml.takeIf { config.richClipboardEnabled }
+        val pendingHtml = pendingClipboardHtml.takeIf { config.richPasteEnabled }
         if (
             pendingHtml != null &&
             isPasteTextChange(textFieldValue, newTextFieldValue, pendingClipboardPlainText)
@@ -5521,6 +5521,7 @@ public class RichTextState internal constructor(
         richTextState.config.orderedListStyleType = config.orderedListStyleType
         richTextState.config.preserveStyleOnEmptyLine = config.preserveStyleOnEmptyLine
         richTextState.config.exitListOnEmptyItem = config.exitListOnEmptyItem
+        richTextState.config.features = config.features
 
         return richTextState
     }
@@ -5566,7 +5567,7 @@ public class RichTextState internal constructor(
      */
     public fun setHtml(html: String): RichTextState {
         history.onProgrammaticReplace()
-        val richParagraphList = RichTextStateHtmlParser.encode(html, spanStyleRegistry).richParagraphList
+        val richParagraphList = admit(RichTextStateHtmlParser.encode(html, spanStyleRegistry).richParagraphList)
         updateRichParagraphList(richParagraphList)
         return this
     }
@@ -5577,7 +5578,7 @@ public class RichTextState internal constructor(
      * @param html The html content to insert.
      */
     public fun insertHtmlAfterSelection(html: String) {
-        val newParagraphs = RichTextStateHtmlParser.encode(html, spanStyleRegistry).richParagraphList
+        val newParagraphs = admit(RichTextStateHtmlParser.encode(html, spanStyleRegistry).richParagraphList)
         val position = selection.max
 
         selection = TextRange(selection.max)
@@ -5609,7 +5610,7 @@ public class RichTextState internal constructor(
      * @param position The position at which to insert the html content.
      */
     public fun insertHtml(html: String, position: Int) {
-        val newParagraphs = RichTextStateHtmlParser.encode(html, spanStyleRegistry).richParagraphList
+        val newParagraphs = admit(RichTextStateHtmlParser.encode(html, spanStyleRegistry).richParagraphList)
 
         insertParagraphs(
             newParagraphs = newParagraphs,
@@ -5624,7 +5625,7 @@ public class RichTextState internal constructor(
      */
     public fun setMarkdown(markdown: String): RichTextState {
         history.onProgrammaticReplace()
-        val richParagraphList = RichTextStateMarkdownParser.encode(markdown, spanStyleRegistry).richParagraphList
+        val richParagraphList = admit(RichTextStateMarkdownParser.encode(markdown, spanStyleRegistry).richParagraphList)
         updateRichParagraphList(richParagraphList)
         return this
     }
@@ -5635,7 +5636,7 @@ public class RichTextState internal constructor(
      * @param markdown The markdown content to insert.
      */
     public fun insertMarkdownAfterSelection(markdown: String) {
-        val newParagraphs = RichTextStateMarkdownParser.encode(markdown, spanStyleRegistry).richParagraphList
+        val newParagraphs = admit(RichTextStateMarkdownParser.encode(markdown, spanStyleRegistry).richParagraphList)
         val position = selection.max
 
         selection = TextRange(selection.max)
@@ -5667,7 +5668,7 @@ public class RichTextState internal constructor(
      * @param position The position at which to insert the markdown content.
      */
     public fun insertMarkdown(markdown: String, position: Int) {
-        val newParagraphs = RichTextStateMarkdownParser.encode(markdown, spanStyleRegistry).richParagraphList
+        val newParagraphs = admit(RichTextStateMarkdownParser.encode(markdown, spanStyleRegistry).richParagraphList)
 
         insertParagraphs(
             newParagraphs = newParagraphs,
@@ -6186,7 +6187,7 @@ public class RichTextState internal constructor(
         // The rebuild coerces the selection into the new text bounds, so MAX_VALUE lands
         // the caret at the end of the loaded content.
         updateRichParagraphList(
-            RichTextDocumentDecoder.decode(document),
+            RichTextDocumentDecoder.decode(document.restrictedTo(config.features)),
             newSelection = selection ?: TextRange(Int.MAX_VALUE),
         )
         return this

@@ -199,7 +199,25 @@ public class RichTextConfig internal constructor(
      */
     @ExperimentalRichTextApi
     public var richClipboardEnabled: Boolean = true
+
+    /**
+     * The kinds of formatting this editor supports. Defaults to [RichTextFeature.All].
+     *
+     * Content entering the editor through [RichTextState.setHtml], [RichTextState.setMarkdown],
+     * [RichTextState.setRichTextDocument], the HTML and Markdown inserts, or a clipboard paste
+     * keeps only these features: a disallowed mark is removed and its text kept, a disallowed
+     * list item or heading becomes a plain paragraph, and a disallowed image is removed. An
+     * empty set makes every paste a plain text paste. Changing the set affects content that
+     * enters afterwards; existing content is not re-filtered.
+     */
+    @ExperimentalRichTextApi
+    public var features: Set<RichTextFeature> = RichTextFeature.All
 }
+
+/** Whether a paste may carry formatting: rich clipboard on and at least one feature allowed. */
+@OptIn(ExperimentalRichTextApi::class)
+internal val RichTextConfig.richPasteEnabled: Boolean
+    get() = richClipboardEnabled && features.isNotEmpty()
 
 internal const val DefaultListIndent = 38
 

@@ -17,54 +17,18 @@ internal actual fun ClipboardEventEffect(
 ) {
     val isReadOnly by rememberUpdatedState(readOnly)
     DisposableEffect(richTextState) {
-        val pasteHandler: (Event) -> Unit = handler@{ event ->
-            if (!richTextState.isFocused || isReadOnly) return@handler
-
-            val html =
-                if (richTextState.config.richClipboardEnabled) getClipboardDataHtml(event)
-                else null
-            if (!html.isNullOrBlank()) {
-                event.preventDefault()
-                event.stopPropagation()
-                val position = richTextState.selection.min
-                richTextState.removeSelectedText()
-                richTextState.insertHtml(html = html, position = position)
-                return@handler
-            }
-
-            val text = getClipboardDataText(event)
-            if (!text.isNullOrBlank()) {
-                event.preventDefault()
-                event.stopPropagation()
-                val position = richTextState.selection.min
-                richTextState.removeSelectedText()
-                richTextState.addTextAtIndex(index = position, text = text)
-            }
+        val pasteHandler: (Event) -> Unit = { event ->
+            if (richTextState.isFocused && !isReadOnly) richTextState.pasteFrom(event)
         }
 
-        val copyHandler: (Event) -> Unit = handler@{ event ->
-            if (!richTextState.isFocused) return@handler
-
-            val selection = richTextState.domClipboardSelection() ?: return@handler
-            event.preventDefault()
-            event.stopPropagation()
-            if (richTextState.config.richClipboardEnabled) {
-                setClipboardData(event, "text/html", richTextState.toHtml(selection))
-            }
-            setClipboardData(event, "text/plain", richTextState.toText(selection))
+        val copyHandler: (Event) -> Unit = { event ->
+            if (richTextState.isFocused) richTextState.copySelectionTo(event)
         }
 
-        val cutHandler: (Event) -> Unit = handler@{ event ->
-            if (!richTextState.isFocused || isReadOnly) return@handler
-
-            val selection = richTextState.domClipboardSelection() ?: return@handler
-            event.preventDefault()
-            event.stopPropagation()
-            if (richTextState.config.richClipboardEnabled) {
-                setClipboardData(event, "text/html", richTextState.toHtml(selection))
+        val cutHandler: (Event) -> Unit = { event ->
+            if (richTextState.isFocused && !isReadOnly && richTextState.copySelectionTo(event)) {
+                richTextState.removeSelectedText()
             }
-            setClipboardData(event, "text/plain", richTextState.toText(selection))
-            richTextState.removeSelectedText()
         }
 
         // Use capture phase (true) to intercept before the browser's default handler
@@ -78,6 +42,33 @@ internal actual fun ClipboardEventEffect(
             document.removeEventListener("cut", cutHandler, true)
         }
     }
+}
+
+private fun RichTextState.pasteFrom(event: Event) {
+    val html =
+        if (config.richClipboardEnabled) getClipboardDataHtml(event)
+        else null
+    val text = if (html.isNullOrBlank()) getClipboardDataText(event) else null
+    if (html.isNullOrBlank() && text.isNullOrBlank()) return
+
+    event.preventDefault()
+    event.stopPropagation()
+    val position = selection.min
+    removeSelectedText()
+    if (!html.isNullOrBlank()) insertHtml(html = html, position = position)
+    else if (text != null) addTextAtIndex(index = position, text = text)
+}
+
+/** Returns false, leaving the event to the browser, when there is nothing to copy. */
+private fun RichTextState.copySelectionTo(event: Event): Boolean {
+    val selection = domClipboardSelection() ?: return false
+    event.preventDefault()
+    event.stopPropagation()
+    if (config.richClipboardEnabled) {
+        setClipboardData(event, "text/html", toHtml(selection))
+    }
+    setClipboardData(event, "text/plain", toText(selection))
+    return true
 }
 
 @Suppress("UNUSED_PARAMETER")

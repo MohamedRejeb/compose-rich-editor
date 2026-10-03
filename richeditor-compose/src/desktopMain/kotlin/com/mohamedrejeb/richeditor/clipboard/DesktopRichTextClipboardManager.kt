@@ -7,6 +7,7 @@ import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.awtClipboard
 import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.model.richPasteEnabled
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
 import java.awt.datatransfer.Transferable
@@ -40,7 +41,7 @@ internal class DesktopRichTextClipboardManager(
 ) : RichTextClipboardManager, Clipboard by clipboard {
 
     override suspend fun getClipEntry(): ClipEntry? {
-        if (!richTextState.config.richClipboardEnabled)
+        if (!richTextState.config.richPasteEnabled)
             return clipboard.getClipEntry()
 
         try {

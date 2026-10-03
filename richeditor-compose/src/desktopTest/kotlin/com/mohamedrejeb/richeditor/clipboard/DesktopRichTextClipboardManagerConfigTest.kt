@@ -4,14 +4,27 @@ import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.NativeClipboard
 import androidx.compose.ui.text.TextRange
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichTextState
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
+import java.awt.datatransfer.Transferable
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
+
+private fun htmlTransferable(html: String, text: String): Transferable = object : StringSelection(text) {
+    override fun getTransferDataFlavors(): Array<DataFlavor> =
+        arrayOf(DataFlavor.fragmentHtmlFlavor, DataFlavor.stringFlavor)
+
+    override fun isDataFlavorSupported(flavor: DataFlavor?): Boolean = flavor in getTransferDataFlavors()
+
+    override fun getTransferData(flavor: DataFlavor?): Any =
+        if (flavor == DataFlavor.fragmentHtmlFlavor) html else text
+}
 
 private class FakeClipboard : Clipboard {
     val awt = java.awt.datatransfer.Clipboard("test")
@@ -28,7 +41,7 @@ private class FakeClipboard : Clipboard {
     }
 }
 
-@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
+@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class, ExperimentalRichTextApi::class)
 class DesktopRichTextClipboardManagerConfigTest {
 
     private fun stateWithSelection(): RichTextState {
@@ -84,5 +97,32 @@ class DesktopRichTextClipboardManagerConfigTest {
 
         assertEquals(1, clipboard.delegateCalls)
         assertSame(entry, clipboard.delegatedEntry)
+    }
+
+    @Test
+    fun `reading the clipboard stashes html for a rich paste`() = runBlocking {
+        val state = RichTextState()
+        val clipboard = FakeClipboard()
+        clipboard.awt.setContents(htmlTransferable("<b>Hi</b>", "Hi"), null)
+        val manager = createRichTextClipboardManager(state, clipboard)
+
+        manager.getClipEntry()
+
+        assertEquals("<b>Hi</b>", state.pendingClipboardHtml)
+        assertEquals("Hi", state.pendingClipboardPlainText)
+    }
+
+    @Test
+    fun `reading the clipboard stashes nothing when no feature is allowed`() = runBlocking {
+        val state = RichTextState()
+        state.config.features = emptySet()
+        val clipboard = FakeClipboard()
+        clipboard.awt.setContents(htmlTransferable("<b>Hi</b>", "Hi"), null)
+        val manager = createRichTextClipboardManager(state, clipboard)
+
+        manager.getClipEntry()
+
+        assertNull(state.pendingClipboardHtml)
+        assertNull(state.pendingClipboardPlainText)
     }
 }

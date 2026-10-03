@@ -146,9 +146,10 @@ class RichTextFeaturesStateTest {
 
     @Test
     fun `an empty feature set pastes plain text that inherits the caret style`() {
-        val state = RichTextState().apply { config.features = emptySet() }
+        val state = RichTextState()
         state.setText("Hello")
         state.addSpanStyle(SpanStyle(fontWeight = FontWeight.Bold), TextRange(0, 5))
+        state.config.features = emptySet()
         state.selection = TextRange(5)
         state.pendingClipboardHtml = "<i>x</i>"
         state.pendingClipboardPlainText = "x"

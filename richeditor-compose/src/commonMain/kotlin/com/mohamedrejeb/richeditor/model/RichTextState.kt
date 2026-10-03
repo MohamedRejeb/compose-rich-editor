@@ -544,9 +544,16 @@ public class RichTextState internal constructor(
      * @param label Display text of the token. Must start with the trigger's character.
      * @throws IllegalStateException if no matching query is active.
      * @throws IllegalArgumentException if [label] does not start with the trigger character.
+     *
+     * When [RichTextFeature.Token] is not in [RichTextConfig.features], the query is cancelled
+     * and nothing is inserted.
      */
     @ExperimentalRichTextApi
-    public fun insertToken(triggerId: String, id: String, label: String): Unit =
+    public fun insertToken(triggerId: String, id: String, label: String) {
+        if (RichTextFeature.Token !in config.features) {
+            cancelActiveTrigger()
+            return
+        }
         recordHistory(CommitTrigger.Structural) {
             val query = _activeTriggerQuery
             checkNotNull(query) { "No active trigger query to commit" }
@@ -560,6 +567,7 @@ public class RichTextState internal constructor(
             }
             performInsertToken(query = query, triggerId = triggerId, id = id, label = label)
         }
+    }
 
     /**
      * Dismiss the active trigger query without inserting a token. Leaves the typed text in place
@@ -1224,17 +1232,21 @@ public class RichTextState internal constructor(
      * @see [addSpanStyle]
      * @see [removeSpanStyle]
      */
-    public fun toggleSpanStyle(spanStyle: SpanStyle): Unit = recordHistory(
-        trigger = CommitTrigger.Formatting,
-        // Only record if the mutation actually applies to existing text; with a
-        // collapsed caret it only updates the staged-style bag for future typing,
-        // which undoes naturally via re-toggling.
-        enabled = !selection.collapsed,
-    ) {
-        if (currentSpanStyle.isSpecifiedFieldsEquals(spanStyle))
-            removeSpanStyle(spanStyle)
-        else
-            addSpanStyle(spanStyle)
+    public fun toggleSpanStyle(spanStyle: SpanStyle) {
+        val allowed = spanStyle.restrictedTo(config.features)
+        if (allowed == SpanStyle()) return
+        recordHistory(
+            trigger = CommitTrigger.Formatting,
+            // Only record if the mutation actually applies to existing text; with a
+            // collapsed caret it only updates the staged-style bag for future typing,
+            // which undoes naturally via re-toggling.
+            enabled = !selection.collapsed,
+        ) {
+            if (currentSpanStyle.isSpecifiedFieldsEquals(allowed))
+                removeSpanStyle(allowed)
+            else
+                addSpanStyle(allowed)
+        }
     }
 
     /**
@@ -1251,17 +1263,21 @@ public class RichTextState internal constructor(
      * @see [removeSpanStyle]
      * @see [toggleSpanStyle]
      */
-    public fun addSpanStyle(spanStyle: SpanStyle): Unit = recordHistory(
-        trigger = CommitTrigger.Formatting,
-        enabled = !selection.collapsed,
-    ) {
-        if (!currentSpanStyle.isSpecifiedFieldsEquals(spanStyle)) {
-            toAddSpanStyle = toAddSpanStyle.customMerge(spanStyle)
-            toRemoveSpanStyle = toRemoveSpanStyle.unmerge(spanStyle)
-        }
+    public fun addSpanStyle(spanStyle: SpanStyle) {
+        val allowed = spanStyle.restrictedTo(config.features)
+        if (allowed == SpanStyle()) return
+        recordHistory(
+            trigger = CommitTrigger.Formatting,
+            enabled = !selection.collapsed,
+        ) {
+            if (!currentSpanStyle.isSpecifiedFieldsEquals(allowed)) {
+                toAddSpanStyle = toAddSpanStyle.customMerge(allowed)
+                toRemoveSpanStyle = toRemoveSpanStyle.unmerge(allowed)
+            }
 
-        if (!selection.collapsed)
-            applyRichSpanStyleToSelectedText()
+            if (!selection.collapsed)
+                applyRichSpanStyleToSelectedText()
+        }
     }
 
     /**
@@ -1276,20 +1292,24 @@ public class RichTextState internal constructor(
      * @param spanStyle the span style that is going to be added to the rich span.
      * @param textRange the text range where the span style is going to be applied.
      */
-    public fun addSpanStyle(spanStyle: SpanStyle, textRange: TextRange): Unit = recordHistory(
-        trigger = CommitTrigger.Formatting,
-        enabled = !textRange.collapsed,
-    ) {
-        val oldToRemoveSpanStyle = toRemoveSpanStyle
-        val oldToAddSpanStyle = toAddSpanStyle
+    public fun addSpanStyle(spanStyle: SpanStyle, textRange: TextRange) {
+        val allowed = spanStyle.restrictedTo(config.features)
+        if (allowed == SpanStyle()) return
+        recordHistory(
+            trigger = CommitTrigger.Formatting,
+            enabled = !textRange.collapsed,
+        ) {
+            val oldToRemoveSpanStyle = toRemoveSpanStyle
+            val oldToAddSpanStyle = toAddSpanStyle
 
-        toAddSpanStyle = spanStyle
-        toRemoveSpanStyle = SpanStyle()
+            toAddSpanStyle = allowed
+            toRemoveSpanStyle = SpanStyle()
 
-        applyRichSpanStyleToTextRange(textRange)
+            applyRichSpanStyleToTextRange(textRange)
 
-        toRemoveSpanStyle = oldToRemoveSpanStyle
-        toAddSpanStyle = oldToAddSpanStyle
+            toRemoveSpanStyle = oldToRemoveSpanStyle
+            toAddSpanStyle = oldToAddSpanStyle
+        }
     }
 
     /**
@@ -1383,7 +1403,8 @@ public class RichTextState internal constructor(
      * otherwise the specified heading style replaces any previous one. Wrapped in
      * [recordHistory] so undo/redo restores heading changes alongside other formatting.
      */
-    public fun setHeadingStyle(headingStyle: HeadingStyle): Unit =
+    public fun setHeadingStyle(headingStyle: HeadingStyle) {
+        if (headingStyle != HeadingStyle.Normal && RichTextFeature.Heading !in config.features) return
         recordHistory(CommitTrigger.Formatting) {
             val paragraphs = getRichParagraphListByTextRange(selection)
             if (paragraphs.isEmpty()) return@recordHistory
@@ -1400,6 +1421,7 @@ public class RichTextState internal constructor(
             updateCurrentSpanStyle()
             updateCurrentParagraphStyle()
         }
+    }
 
     /**
      * Add a link to the text field.
@@ -1411,10 +1433,20 @@ public class RichTextState internal constructor(
     public fun addLink(
         text: String,
         url: String,
-    ): Unit = recordHistory(CommitTrigger.Formatting) {
-        if (text.isEmpty()) return@recordHistory
+    ) {
+        if (RichTextFeature.Link !in config.features) {
+            addTextAtIndex(index = selection.min, text = text)
+            return
+        }
+        recordHistory(CommitTrigger.Formatting) {
+            addLinkRecorded(text = text, url = url)
+        }
+    }
 
-        val paragraph = richParagraphList.firstOrNull() ?: return@recordHistory
+    private fun addLinkRecorded(text: String, url: String) {
+        if (text.isEmpty()) return
+
+        val paragraph = richParagraphList.firstOrNull() ?: return
         val linkStyle = RichSpanStyle.Link(
             url = url,
         )
@@ -1448,7 +1480,7 @@ public class RichTextState internal constructor(
     public fun addLinkToSelection(
         url: String,
     ): Unit = recordHistory(CommitTrigger.Formatting) {
-        if (selection.collapsed) return@recordHistory
+        if (selection.collapsed || RichTextFeature.Link !in config.features) return@recordHistory
 
         val linkStyle = RichSpanStyle.Link(
             url = url,
@@ -1472,7 +1504,7 @@ public class RichTextState internal constructor(
         url: String,
         textRange: TextRange,
     ): Unit = recordHistory(CommitTrigger.Formatting) {
-        if (textRange.collapsed) return@recordHistory
+        if (textRange.collapsed || RichTextFeature.Link !in config.features) return@recordHistory
 
         val linkStyle = RichSpanStyle.Link(
             url = url,
@@ -1548,14 +1580,18 @@ public class RichTextState internal constructor(
 
     public fun removeCodeSpan(): Unit = removeRichSpan(RichSpanStyle.Code())
 
-    public fun toggleRichSpan(spanStyle: RichSpanStyle): Unit = recordHistory(
-        trigger = CommitTrigger.Formatting,
-        enabled = !selection.collapsed,
-    ) {
-        if (isRichSpan(spanStyle::class))
-            removeRichSpan(spanStyle)
-        else
-            addRichSpan(spanStyle)
+    public fun toggleRichSpan(spanStyle: RichSpanStyle) {
+        val remove = isRichSpan(spanStyle::class)
+        if (!remove && !spanStyle.isAllowedBy(config.features)) return
+        recordHistory(
+            trigger = CommitTrigger.Formatting,
+            enabled = !selection.collapsed,
+        ) {
+            if (remove)
+                removeRichSpan(spanStyle)
+            else
+                addRichSpan(spanStyle)
+        }
     }
 
     /**
@@ -1564,7 +1600,12 @@ public class RichTextState internal constructor(
      *
      * @param spanStyle the rich span style that is going to be added.
      */
-    public fun addRichSpan(spanStyle: RichSpanStyle): Unit = recordHistory(
+    public fun addRichSpan(spanStyle: RichSpanStyle) {
+        if (!spanStyle.isAllowedBy(config.features)) return
+        addAllowedRichSpan(spanStyle)
+    }
+
+    private fun addAllowedRichSpan(spanStyle: RichSpanStyle): Unit = recordHistory(
         trigger = CommitTrigger.Formatting,
         enabled = !selection.collapsed,
     ) {
@@ -1583,6 +1624,14 @@ public class RichTextState internal constructor(
      * @param textRange the text range where the rich span style is going to be applied.
      */
     public fun addRichSpan(
+        spanStyle: RichSpanStyle,
+        textRange: TextRange,
+    ) {
+        if (!spanStyle.isAllowedBy(config.features)) return
+        addAllowedRichSpan(spanStyle, textRange)
+    }
+
+    private fun addAllowedRichSpan(
         spanStyle: RichSpanStyle,
         textRange: TextRange,
     ): Unit = recordHistory(
@@ -1698,7 +1747,8 @@ public class RichTextState internal constructor(
      * @see [removeParagraphStyle]
      * @see [toggleParagraphStyle]
      */
-    public fun addParagraphStyle(paragraphStyle: ParagraphStyle): Unit =
+    public fun addParagraphStyle(paragraphStyle: ParagraphStyle) {
+        if (RichTextFeature.ParagraphStyle !in config.features) return
         recordHistory(CommitTrigger.Formatting) {
             if (!currentParagraphStyle.isSpecifiedFieldsEquals(paragraphStyle)) {
                 // If the selection is collapsed, we add the paragraph style to the paragraph containing the selection
@@ -1723,6 +1773,7 @@ public class RichTextState internal constructor(
                 updateCurrentParagraphStyle()
             }
         }
+    }
 
     /**
      * Remove an existing [ParagraphStyle] from the [currentParagraphStyle]
@@ -1769,6 +1820,8 @@ public class RichTextState internal constructor(
         if (paragraphs.isEmpty())
             return@recordHistory
         val isFirstParagraphUnorderedList = paragraphs.first().type is UnorderedList
+        if (!isFirstParagraphUnorderedList && RichTextFeature.UnorderedList !in config.features)
+            return@recordHistory
         paragraphs.fastForEach { paragraph ->
             if (isFirstParagraphUnorderedList)
                 removeUnorderedList(paragraph)
@@ -1778,6 +1831,7 @@ public class RichTextState internal constructor(
     }
 
     public fun addUnorderedList(): Unit = recordHistory(CommitTrigger.Structural) {
+        if (RichTextFeature.UnorderedList !in config.features) return@recordHistory
         val paragraphs = getRichParagraphListByTextRange(selection)
 
         paragraphs.fastForEach { paragraph ->
@@ -1798,6 +1852,8 @@ public class RichTextState internal constructor(
         if (paragraphs.isEmpty())
             return@recordHistory
         val isFirstParagraphOrderedList = paragraphs.first().type is OrderedList
+        if (!isFirstParagraphOrderedList && RichTextFeature.OrderedList !in config.features)
+            return@recordHistory
         paragraphs.fastForEach { paragraph ->
             if (isFirstParagraphOrderedList) {
                 removeOrderedList(paragraph)
@@ -1808,6 +1864,7 @@ public class RichTextState internal constructor(
     }
 
     public fun addOrderedList(): Unit = recordHistory(CommitTrigger.Structural) {
+        if (RichTextFeature.OrderedList !in config.features) return@recordHistory
         val paragraphs = getRichParagraphListByTextRange(selection)
 
         paragraphs.fastForEach { paragraph ->
@@ -3765,12 +3822,13 @@ public class RichTextState internal constructor(
         if (!richSpan.isFirstInParagraph)
             return
 
+        val features = config.features
         val newType =
-            if (richSpan.text == "- " || richSpan.text == "* ") {
+            if ((richSpan.text == "- " || richSpan.text == "* ") && RichTextFeature.UnorderedList in features) {
                 UnorderedList(
                     config = config,
                 )
-            } else if (richSpan.text.matches(Regex("^\\d+\\. "))) {
+            } else if (richSpan.text.matches(Regex("^\\d+\\. ")) && RichTextFeature.OrderedList in features) {
                 val dotIndex = richSpan.text.indexOf('.')
                 val number = richSpan.text.substring(0, dotIndex).toIntOrNull() ?: 1
                 OrderedList(

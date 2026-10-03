@@ -2585,9 +2585,9 @@ public class RichTextState internal constructor(
         replace("\r\n", "\n").replace('\r', '\n')
 
     /**
-     * The styles at the start of a non-collapsed selection an edit is about to replace,
-     * captured before the tree mutates so the inserted text can inherit them (the platform
-     * typing-attributes convention) instead of the style before the caret.
+     * The styles of the first character an edit is about to replace, captured before the tree
+     * mutates so the inserted text can inherit them (the platform typing-attributes convention)
+     * instead of the style before the caret.
      */
     internal class ReplacedSelectionStyles(
         val insertedRange: TextRange,
@@ -2602,12 +2602,30 @@ public class RichTextState internal constructor(
         val separatorParagraph: RichParagraph? = null,
     )
 
-    @OptIn(ExperimentalRichTextApi::class)
+    /**
+     * The replaced range is the old selection when it describes the edit (typing or pasting
+     * over it), else the changed region of the text: an IME autocorrect or suggestion pick
+     * rewrites a word while the caret stays collapsed.
+     */
     private fun captureReplacedSelectionStyles(
         old: TextFieldValue,
         new: TextFieldValue,
     ): ReplacedSelectionStyles? {
         if (new.text == old.text) return null
+        val replacement = selectionReplacement(old, new)
+            ?: diffReplacement(old.text, new.text)
+            ?: return null
+        return captureReplacedSelectionStyles(
+            replacedRange = replacement.replacedRange,
+            insertedLength = replacement.insertedLength,
+        )
+    }
+
+    /** The characters an edit replaced and the length of the text that took their place. */
+    private class Replacement(val replacedRange: TextRange, val insertedLength: Int)
+
+    /** [old]'s non-collapsed selection when [new]'s text took its place, or null. */
+    private fun selectionReplacement(old: TextFieldValue, new: TextFieldValue): Replacement? {
         val selMin = old.selection.min
         val selMax = old.selection.max
         if (selMin == selMax) return null
@@ -2615,17 +2633,32 @@ public class RichTextState internal constructor(
         if (insertedLength <= 0 || selMin + insertedLength > new.text.length) return null
         if (!new.text.regionMatches(0, old.text, 0, selMin)) return null
         if (!new.text.regionMatches(selMin + insertedLength, old.text, selMax, old.text.length - selMax)) return null
+        return Replacement(TextRange(selMin, selMax), insertedLength)
+    }
 
-        return captureReplacedSelectionStyles(
-            replacedRange = TextRange(selMin, selMax),
-            insertedLength = insertedLength,
-        )
+    /**
+     * The characters of [oldText] that [newText] replaced, from the common prefix and suffix,
+     * or null for a pure insertion or removal.
+     */
+    private fun diffReplacement(oldText: String, newText: String): Replacement? {
+        val maxCommon = minOf(oldText.length, newText.length)
+        var prefix = 0
+        while (prefix < maxCommon && oldText[prefix] == newText[prefix]) prefix++
+        var suffix = 0
+        while (
+            suffix < maxCommon - prefix &&
+            oldText[oldText.lastIndex - suffix] == newText[newText.lastIndex - suffix]
+        ) suffix++
+        val removedLength = oldText.length - prefix - suffix
+        val insertedLength = newText.length - prefix - suffix
+        if (removedLength <= 0 || insertedLength <= 0) return null
+        return Replacement(TextRange(prefix, prefix + removedLength), insertedLength)
     }
 
     /**
      * Core of [captureReplacedSelectionStyles]: captures the styles at the start of
      * [replacedRange] so text of [insertedLength] replacing it can inherit them. Shared by the
-     * shim overload above (which derives [replacedRange]/[insertedLength] by prefix/suffix
+     * shim overload above (which derives the range from the old selection or by prefix/suffix
      * diffing two [TextFieldValue]s) and the ChangeList replay in EditPipeline.kt (which
      * already has the range as a buffer delta).
      */

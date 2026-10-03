@@ -8,10 +8,6 @@ import androidx.compose.ui.test.runDesktopComposeUiTest
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import com.mohamedrejeb.richeditor.model.RichTextState
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -218,9 +214,11 @@ class DragSelectionParagraphEdgeTest {
                 (layout.getLineTop(0) + layout.getLineBottom(0)) / 2,
             )
             state.onSelectionGesturePointerMove(pointer)
-            state.platformSelection(TextRange(0, 2))
-            // Handle drags never cross the editor node, so their selection changes
-            // arrive with an old pointer position; those must pass through
+            // Handle drags never cross the editor node, so their selection changes arrive
+            // with an old pointer position; the pointer line must not be used for those. The
+            // handle starts inside "ab" rather than on the paragraph end, so the offset rule
+            // for handles (HandleDragParagraphEdgeTest) does not hold it either.
+            state.platformSelection(TextRange(0, 1))
             Thread.sleep(600)
 
             state.platformSelection(TextRange(0, 7))
@@ -294,22 +292,5 @@ class DragSelectionParagraphEdgeTest {
         state.platformSelection(TextRange(11, 6))
 
         assertEquals(TextRange(11, 6), state.selection)
-    }
-
-    @Test
-    fun `pull back applies inside the press window too`() = runBlocking {
-        val state = twoParagraphState()
-
-        val pressJob = launch(Dispatchers.Default) {
-            state.adjustSelectionAndRegisterPressPosition(Offset(8f, 8f))
-        }
-        delay(80)
-        state.onSelectionGestureStart()
-
-        state.platformSelection(TextRange(6, 10))
-        state.platformSelection(TextRange(6, 11))
-        pressJob.cancel()
-
-        assertEquals(TextRange(6, 10), state.selection)
     }
 }

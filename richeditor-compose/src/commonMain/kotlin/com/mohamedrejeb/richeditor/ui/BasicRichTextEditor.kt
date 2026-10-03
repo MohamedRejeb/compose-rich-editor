@@ -1,27 +1,40 @@
 package com.mohamedrejeb.richeditor.ui
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.KeyboardActionHandler
+import androidx.compose.foundation.text.input.TextFieldDecorator
+import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.isShiftPressed
+import androidx.compose.ui.input.pointer.changedToDown
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.node.Ref
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -34,7 +47,10 @@ import androidx.compose.ui.unit.LayoutDirection
 import com.mohamedrejeb.richeditor.clipboard.ClipboardEventEffect
 import com.mohamedrejeb.richeditor.clipboard.createRichTextClipboardManager
 import com.mohamedrejeb.richeditor.model.RichTextState
-import kotlinx.coroutines.CoroutineScope
+import com.mohamedrejeb.richeditor.model.applyChangeList
+import com.mohamedrejeb.richeditor.model.correctPressCaret
+import com.mohamedrejeb.richeditor.model.correctTripleClickSelection
+import com.mohamedrejeb.richeditor.model.reconcileBufferWithModel
 
 /**
  * Basic composable that enables users to edit rich text via hardware or software keyboard, but provides no decorations like hint or placeholder.
@@ -54,7 +70,9 @@ import kotlinx.coroutines.CoroutineScope
  * field will be neither editable nor focusable, the input of the text field will not be selectable
  * @param readOnly controls the editable state of the [BasicRichTextEditor]. When `true`, the text
  * field can not be modified, however, a user can focus it and copy text from it. Read-only text
- * fields are usually used to display pre-filled forms that user can not edit
+ * fields are usually used to display pre-filled forms that user can not edit. Only user input is
+ * blocked: calls on the [RichTextState] (styles, undo, redo, content) still apply, so an app
+ * disables its own toolbar for a read-only editor
  * @param textStyle Style configuration that applies at character level such as color, font etc.
  * @param keyboardOptions software keyboard options that contains configuration such as
  * [KeyboardType] and [ImeAction].
@@ -148,7 +166,9 @@ public fun BasicRichTextEditor(
  * field will be neither editable nor focusable, the input of the text field will not be selectable
  * @param readOnly controls the editable state of the [BasicRichTextEditor]. When `true`, the text
  * field can not be modified, however, a user can focus it and copy text from it. Read-only text
- * fields are usually used to display pre-filled forms that user can not edit
+ * fields are usually used to display pre-filled forms that user can not edit. Only user input is
+ * blocked: calls on the [RichTextState] (styles, undo, redo, content) still apply, so an app
+ * disables its own toolbar for a read-only editor
  * @param textStyle Style configuration that applies at character level such as color, font etc.
  * @param keyboardOptions software keyboard options that contains configuration such as
  * [KeyboardType] and [ImeAction].
@@ -215,7 +235,35 @@ public fun BasicRichTextEditor(
         )
     }
 
-    ClipboardEventEffect(richTextState = state)
+    ClipboardEventEffect(richTextState = state, readOnly = readOnly)
+
+    // rememberRichTextState can restore content before the editor composes, so the buffer
+    // starts out empty while the state already holds text. Seed it once per state.
+    LaunchedEffect(state) {
+        if (state.textFieldState.text.toString() != state.annotatedString.text) {
+            state.setTextFieldStateFromValue(
+                text = state.annotatedString.text,
+                selection = state.selection,
+            )
+        }
+    }
+
+    // textFieldState is canonical for the selection; this keeps the derived state
+    // (span style, paragraph style, trigger query, selection mask) in step with the
+    // selections BTF2 applies on its own for mouse drags and keyboard navigation.
+    LaunchedEffect(state) {
+        snapshotFlow { state.textFieldState.selection }
+            .collect { newSelection ->
+                state.handleSelectionChanged(newSelection, fromGestureObserver = true)
+            }
+    }
+
+    // A composition can end with no text or caret change, which neither the
+    // InputTransformation nor the selection observer sees (#779).
+    LaunchedEffect(state) {
+        snapshotFlow { state.textFieldState.composition }
+            .collect { composition -> state.handleCompositionChanged(composition) }
+    }
 
     LaunchedEffect(singleParagraph) {
         state.singleParagraphMode = singleParagraph
@@ -227,25 +275,10 @@ public fun BasicRichTextEditor(
     }
 
     if (!singleParagraph) {
-        // Workaround for Android to fix a bug in BasicTextField where it doesn't select the correct text
-        // when the text contains multiple paragraphs.
         LaunchedEffect(interactionSource) {
             interactionSource.interactions.collect { interaction ->
                 when (interaction) {
-                    is PressInteraction.Press -> {
-                        state.onSelectionGestureStart()
-
-                        val pressPosition = interaction.pressPosition
-                        val topPadding = with(density) { contentPadding.calculateTopPadding().toPx() }
-                        val startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() }
-
-                        adjustTextIndicatorOffset(
-                            pressPosition = pressPosition,
-                            state = state,
-                            topPadding = topPadding,
-                            startPadding = startPadding,
-                        )
-                    }
+                    is PressInteraction.Press -> state.onSelectionGestureStart()
 
                     is PressInteraction.Release,
                     is PressInteraction.Cancel -> state.onSelectionGestureEnd()
@@ -253,6 +286,9 @@ public fun BasicRichTextEditor(
             }
         }
     }
+
+    val editorCoordinates = remember { Ref<LayoutCoordinates>() }
+    val innerTextFieldCoordinates = remember { Ref<LayoutCoordinates>() }
 
     CompositionLocalProvider(LocalClipboard provides richClipboardManager) {
         // Capture position on the innerTextField (the actual text content composable),
@@ -264,9 +300,20 @@ public fun BasicRichTextEditor(
                 decorationBox {
                     Layout(
                         content = { innerTextField() },
-                        modifier = Modifier.onPlaced { coords ->
-                            state.textFieldWindowPosition = coords.positionInWindow()
-                        }
+                        modifier = Modifier
+                            .onPlaced { coords ->
+                                innerTextFieldCoordinates.value = coords
+                                state.textFieldWindowPosition = coords.positionInWindow()
+                            }
+                            // Only the inner text field is dimmed. The decoration content
+                            // around it already renders in the disabled colors the Material
+                            // wrappers compute, and dimming it again compounds the two.
+                            .then(
+                                if (enabled)
+                                    Modifier
+                                else
+                                    Modifier.alpha(DisabledStateAlpha)
+                            )
                     ) { measurables, constraints ->
                         val placeable = measurables.first().measure(constraints)
                         layout(placeable.width, placeable.height) {
@@ -277,20 +324,19 @@ public fun BasicRichTextEditor(
             }
 
         BasicTextField(
-            value = state.textFieldValue,
-            onValueChange = {
-                if (readOnly) return@BasicTextField
-                if (it.text.length > maxLength) return@BasicTextField
-
-                state.onTextFieldValueChange(it)
-            },
+            state = state.textFieldState,
             modifier = modifier
                 .onFocusChanged { focusState ->
                     state.isFocused = focusState.isFocused
                 }
                 .onPreviewKeyEvent { event ->
-                    if (readOnly)
+                    if (readOnly) {
+                        // The selection keys still work in a read-only editor, and the state
+                        // tells their changes from gestures by the key press.
+                        if (event.type == KeyEventType.KeyDown)
+                            state.notePhysicalKeyEvent()
                         return@onPreviewKeyEvent false
+                    }
 
                     state.onPreviewKeyEvent(event)
                 }
@@ -300,95 +346,165 @@ public fun BasicRichTextEditor(
                     startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() },
                 )
                 .then(
-                    if (!readOnly)
-                        Modifier
-                    else
-                        Modifier.focusProperties { canFocus = false }
-                )
-                .then(
                     if (singleParagraph)
                         Modifier
                     else
                         Modifier
-                            // Passive pointer observer feeding the geometric selection
-                            // clamp; never consumes events.
-                            .pointerInput(state) {
-                                val topPadding = with(density) { contentPadding.calculateTopPadding().toPx() }
-                                val startPadding =
-                                    with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() }
+                            .onPlaced { coords -> editorCoordinates.value = coords }
+                            // Passive pointer observer feeding the selection corrections,
+                            // in the coordinates of the text layout; never consumes events.
+                            .pointerInput(state, singleLine) {
                                 awaitPointerEventScope {
                                     while (true) {
                                         val event = awaitPointerEvent(PointerEventPass.Initial)
-                                        val change = event.changes.firstOrNull { it.pressed } ?: continue
-                                        state.onSelectionGesturePointerMove(
-                                            Offset(
-                                                change.position.x - startPadding,
-                                                change.position.y - topPadding,
+                                        val change = event.changes
+                                            .firstOrNull { it.pressed || it.changedToUpIgnoreConsumed() }
+                                            ?: continue
+                                        textLayoutPositionOf(
+                                            position = change.position,
+                                            editor = editorCoordinates.value,
+                                            innerTextField = innerTextFieldCoordinates.value,
+                                            verticalScroll = if (singleLine) 0 else state.scrollState.value,
+                                        )?.let(state::onSelectionGesturePointerMove)
+
+                                        if (change.changedToDown()) {
+                                            state.onSelectionGesturePointerDown(
+                                                position = change.position,
+                                                uptimeMillis = change.uptimeMillis,
+                                                doubleTapTimeoutMillis = viewConfiguration.doubleTapTimeoutMillis,
+                                                slop = viewConfiguration.touchSlop,
+                                                shiftPressed = event.keyboardModifiers.isShiftPressed,
                                             )
-                                        )
+                                        }
+                                        if (event.changes.none { it.pressed }) {
+                                            // Every caret placement the press causes is made by
+                                            // the time its release has been dispatched.
+                                            awaitPointerEvent(PointerEventPass.Final)
+                                            state.onSelectionGesturePointerUp()
+                                        }
                                     }
                                 }
                             }
-                            // Workaround for Desktop to fix a bug in BasicTextField where it doesn't select the correct text
-                            // when the text contains multiple paragraphs.
                             .adjustTextIndicatorOffset(
                                 state = state,
                                 contentPadding = contentPadding,
                                 density = density,
                                 layoutDirection = layoutDirection,
-                                scope = rememberCoroutineScope()
                             )
                 ),
             enabled = enabled,
             readOnly = readOnly,
+            inputTransformation = InputTransformation {
+                // Cleared on every user edit, including those the early returns below keep out
+                // of the pipeline, so a clipboard write can only see the edit before it.
+                state.pendingCutContent = null
+                if (state.isApplyingProgrammaticSync) {
+                    // Programmatic write to textFieldState; the state already reflects it.
+                    // Treating it as user input would corrupt richParagraphList.
+                    return@InputTransformation
+                }
+                // Selection changes pass: a read-only editor can be focused and selected like
+                // a read-only BasicTextField, only its text is frozen.
+                @OptIn(ExperimentalFoundationApi::class)
+                val textChanged = changes.changeCount > 0
+                if (readOnly && textChanged) {
+                    revertAllChanges()
+                    return@InputTransformation
+                }
+                if (length > maxLength) {
+                    revertAllChanges()
+                    return@InputTransformation
+                }
+                state.applyChangeList(this)
+
+                state.reconcileBufferWithModel(this)
+                // Stays here rather than inside reconcileBufferWithModel, which returns early
+                // when the buffer already matches: the clear must be unconditional, because a
+                // stale pending selection would override a later gesture selection.
+                state.pendingSelectionDuringSync = null
+                state.correctPressCaret(this)
+                state.correctTripleClickSelection(this)
+            },
             textStyle = textStyle,
             keyboardOptions = keyboardOptions,
-            keyboardActions = keyboardActions,
-            singleLine = singleLine,
-            maxLines = maxLines,
-            minLines = minLines,
-            visualTransformation = if (enabled) {
-                state.visualTransformation
-            } else {
-                DisabledTextVisualTransformation(
-                    delegate = state.visualTransformation,
-                    disabledAlpha = DisabledStateAlpha,
-                )
-            },
-            onTextLayout = {
-                state.onTextLayout(
-                    textLayoutResult = it,
-                    density = density,
-                )
-                onTextLayout(it)
+            onKeyboardAction = keyboardActions.toKeyboardActionHandler(keyboardOptions.imeAction),
+            lineLimits = computeLineLimits(singleLine, minLines, maxLines),
+            onTextLayout = textLayoutCallback@{ resultProvider ->
+                val result = resultProvider() ?: return@textLayoutCallback
+                state.onTextLayout(textLayoutResult = result, density = density)
+                onTextLayout(result)
             },
             interactionSource = interactionSource,
             cursorBrush = cursorBrush,
-            decorationBox = positionCapturingDecorationBox,
+            outputTransformation = state.outputTransformation,
+            decorator = TextFieldDecorator { innerTextField ->
+                positionCapturingDecorationBox(innerTextField)
+            },
+            scrollState = state.scrollState,
         )
     }
 }
+
+private fun computeLineLimits(
+    singleLine: Boolean,
+    minLines: Int,
+    maxLines: Int,
+): TextFieldLineLimits =
+    when {
+        singleLine -> TextFieldLineLimits.SingleLine
+        minLines == 1 && maxLines == Int.MAX_VALUE -> TextFieldLineLimits.Default
+        else -> TextFieldLineLimits.MultiLine(minHeightInLines = minLines, maxHeightInLines = maxLines)
+    }
+
+private fun KeyboardActions.toKeyboardActionHandler(
+    imeAction: ImeAction,
+): KeyboardActionHandler =
+    KeyboardActionHandler { performDefaultAction ->
+        val callback = when (imeAction) {
+            ImeAction.Done -> onDone
+            ImeAction.Go -> onGo
+            ImeAction.Next -> onNext
+            ImeAction.Previous -> onPrevious
+            ImeAction.Search -> onSearch
+            ImeAction.Send -> onSend
+            else -> null
+        }
+        val scope = object : KeyboardActionScope {
+            override fun defaultKeyboardAction(imeAction: ImeAction) {
+                performDefaultAction()
+            }
+        }
+        if (callback != null) callback(scope) else performDefaultAction()
+    }
 
 internal expect fun Modifier.adjustTextIndicatorOffset(
     state: RichTextState,
     contentPadding: PaddingValues,
     density: Density,
     layoutDirection: LayoutDirection,
-    scope: CoroutineScope,
 ): Modifier
 
-internal suspend fun adjustTextIndicatorOffset(
-    pressPosition: Offset,
-    state: RichTextState,
-    topPadding: Float,
-    startPadding: Float,
-) {
-    state.adjustSelectionAndRegisterPressPosition(
-        pressPosition = Offset(
-            x = pressPosition.x - startPadding,
-            y = pressPosition.y - topPadding
-        ),
-    )
+/**
+ * Maps a pointer [position] on the editor to the text layout: the decoration places the text
+ * somewhere inside the editor, and a scrolled editor shows a lower part of the layout.
+ */
+private fun textLayoutPositionOf(
+    position: Offset,
+    editor: LayoutCoordinates?,
+    innerTextField: LayoutCoordinates?,
+    verticalScroll: Int,
+): Offset? {
+    if (editor == null || innerTextField == null) return null
+    if (!editor.isAttached || !innerTextField.isAttached) return null
+
+    val inTextField = innerTextField.localPositionOf(editor, position)
+    return Offset(x = inTextField.x, y = inTextField.y + verticalScroll)
 }
+
+/**
+ * Alpha of the inner text field when the editor is disabled. Matches the `ContentAlpha.disabled`
+ * convention of the Material and Material3 disabled text colors.
+ */
+internal const val DisabledStateAlpha: Float = 0.38f
 
 public typealias RichTextChangedListener = (RichTextState) -> Unit

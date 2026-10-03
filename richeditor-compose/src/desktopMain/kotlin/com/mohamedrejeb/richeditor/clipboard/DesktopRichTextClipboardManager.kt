@@ -67,14 +67,14 @@ internal class DesktopRichTextClipboardManager(
 
     override suspend fun setClipEntry(clipEntry: ClipEntry?) {
         if (!richTextState.config.richClipboardEnabled) {
-            val copySelection = richTextState.copySelection
-            if (clipEntry == null || copySelection == null || copySelection.collapsed) {
+            val content = richTextState.takeClipboardContent()
+            if (clipEntry == null || content == null) {
                 clipboard.setClipEntry(clipEntry)
                 return
             }
             // The raw ClipEntry carries the editor's internal rendering (paragraphs joined
             // by spaces, list prefixes included); a plain-text copy must use toText.
-            awtClipboard?.setContents(StringSelection(richTextState.toText(copySelection)), null)
+            awtClipboard?.setContents(StringSelection(content.toText()), null)
             return
         }
 
@@ -83,15 +83,15 @@ internal class DesktopRichTextClipboardManager(
             return
         }
 
-        val copySelection = richTextState.copySelection
+        val content = richTextState.takeClipboardContent()
 
-        if (copySelection == null || copySelection.collapsed) {
+        if (content == null) {
             clipboard.setClipEntry(null)
             return
         }
 
-        val html = richTextState.toHtml(copySelection)
-        val text = richTextState.toText(copySelection)
+        val html = content.toHtml()
+        val text = content.toText()
 
         val htmlSelection = object : StringSelection(html), Transferable {
             override fun getTransferDataFlavors(): Array<DataFlavor> =

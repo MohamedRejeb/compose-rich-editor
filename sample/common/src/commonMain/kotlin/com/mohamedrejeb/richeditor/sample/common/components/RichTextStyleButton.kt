@@ -15,6 +15,7 @@ fun RichTextStyleButton(
     icon: ImageVector,
     tint: Color? = null,
     isSelected: Boolean = false,
+    enabled: Boolean = true,
 ) {
     IconButton(
         modifier = Modifier
@@ -23,6 +24,7 @@ fun RichTextStyleButton(
             // (Happens only on Desktop)
             .focusProperties { canFocus = false },
         onClick = onClick,
+        enabled = enabled,
         colors = IconButtonDefaults.iconButtonColors(
             contentColor = if (isSelected) {
                 MaterialTheme.colorScheme.onPrimary

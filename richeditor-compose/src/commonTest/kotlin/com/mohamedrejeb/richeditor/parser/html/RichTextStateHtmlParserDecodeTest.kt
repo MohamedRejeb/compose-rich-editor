@@ -32,12 +32,12 @@ class RichTextStateHtmlParserDecodeTest {
         val parsedHtml = RichTextStateHtmlParser.decode(richTextState)
 
         // "&excl;" decodes to "!", which needs no entity on re-encode.
-        assertEquals("<br><p>Hello World!</p>", parsedHtml)
+        assertEquals("<p><br></p><p>Hello World!</p>", parsedHtml)
     }
 
     @Test
     fun testDecodeSingleLineBreak() {
-        val expectedHtml = "<p>First</p><br><p>Second</p>"
+        val expectedHtml = "<p>First</p><p><br></p><p>Second</p>"
 
         val richTextState = RichTextState(
             listOf(
@@ -79,7 +79,8 @@ class RichTextStateHtmlParserDecodeTest {
 
     @Test
     fun testDecodeMultipleLineBreaks() {
-        val expectedHtml = "<br><p>First</p><br><br><p>Second</p><br>"
+        val expectedHtml =
+            "<p><br></p><p>First</p><p><br></p><p><br></p><p>Second</p><p><br></p>"
 
         val richTextState = RichTextState(
             listOf(

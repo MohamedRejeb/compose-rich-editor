@@ -8,10 +8,15 @@ import com.mohamedrejeb.richeditor.model.RichTextState
  *
  * On web platforms (JS/WasmJS), the browser handles Ctrl+C/V/X at the DOM level,
  * bypassing Compose's [Clipboard] interface. This effect intercepts those DOM clipboard
- * events to handle rich text copy/paste with HTML formatting.
+ * events to handle rich text copy/paste with HTML formatting. The handlers write through the
+ * public mutators, outside the InputTransformation, so [readOnly] has to be honored here:
+ * a read-only editor can be copied from, never pasted into or cut from.
  *
  * On native platforms (Android/iOS/Desktop), this is a no-op since the OS routes clipboard
  * operations through the Compose framework.
  */
 @Composable
-internal expect fun ClipboardEventEffect(richTextState: RichTextState)
+internal expect fun ClipboardEventEffect(
+    richTextState: RichTextState,
+    readOnly: Boolean,
+)

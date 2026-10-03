@@ -64,6 +64,8 @@ richTextState.config.richClipboardEnabled = false
 
 When disabled, paste inserts plain text styled by the editor's normal insertion logic (it inherits the style at the caret, exactly like typed text), and copy writes plain text only. The web clipboard event handlers (Ctrl+C/V/X on JS and Wasm) follow the same rule.
 
+To keep rich copy but restrict what a paste (or any load) may bring in, declare the editor's supported formatting with `config.features`. See [Editor features](features.md).
+
 ## Text Operations
 
 ### Selection Management

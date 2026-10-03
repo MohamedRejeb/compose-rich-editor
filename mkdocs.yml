@@ -55,6 +55,7 @@ nav:
   - 'Core':
     - 'RichTextState': rich_text_state.md
     - 'Document model': rich_text_document.md
+    - 'Editor features': features.md
   - 'Styling':
     - 'Span Style': span_style.md
     - 'Custom span styles': custom_span_styles.md

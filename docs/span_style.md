@@ -148,6 +148,7 @@ __Underlined text__
 
 ## Related Documentation
 
+- To restrict which styles an editor accepts, see [Editor features](features.md)
 - For paragraph styling, see [Paragraph Style](paragraph_style.md)
 - For HTML conversion, see [HTML Import and Export](html_import_export.md)
 - For Markdown conversion, see [Markdown Import and Export](markdown_import_export.md)

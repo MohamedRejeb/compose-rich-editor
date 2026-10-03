@@ -217,10 +217,16 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                         newRichParagraph.headingStyle = HeadingStyle.fromHtmlTag(name)
                     }
 
-                    // A block element (<p>, <h1>, etc.) opening on a blank paragraph
-                    // from a <br> should not carry the linebreak flag
-                    if (isCurrentRichParagraphBlank && newRichParagraph.isFromLineBreak && name != "li") {
+                    // A block element opening on the blank line a <br> left behind starts
+                    // its own paragraph: it is neither a continuation nor part of the
+                    // heading the <br> came from.
+                    if (isCurrentRichParagraphBlank && newRichParagraph.isFromLineBreak) {
                         newRichParagraph.isFromLineBreak = false
+                        if (name !in HeadingStyle.headingTags)
+                            newRichParagraph.headingStyle = HeadingStyle.Normal
+                        // The <br> re-created the open inline styles here for a
+                        // continuation to inherit; a new block starts from none.
+                        newRichParagraph.children.clear()
                     }
 
                     if (!isCurrentRichParagraphBlank) {
@@ -264,21 +270,24 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     // name == "br"
                     stringBuilder.append(' ')
 
+                    val endedParagraph = richParagraphList.lastOrNull()
                     val newParagraph =
-                        if (richParagraphList.isEmpty())
+                        if (endedParagraph == null)
                             RichParagraph(isFromLineBreak = true)
                         else
                             RichParagraph(
-                                paragraphStyle = richParagraphList.last().paragraphStyle,
+                                paragraphStyle = endedParagraph.paragraphStyle,
                                 isFromLineBreak = true,
+                                headingStyle = endedParagraph.headingStyle,
                             )
 
+                    // The line a <br> ends is rendered even when it is empty. The line it
+                    // opens is rendered only once something fills it, exactly like the
+                    // empty last line of a block in a browser, so it is not kept here.
+                    if (endedParagraph != null)
+                        lineBreakParagraphIndexSet.add(richParagraphList.lastIndex)
+
                     richParagraphList.add(newParagraph)
-
-                    if (richParagraphList.lastIndex > 0)
-                        lineBreakParagraphIndexSet.add(richParagraphList.lastIndex - 1)
-
-                    lineBreakParagraphIndexSet.add(richParagraphList.lastIndex)
 
                     // Keep the same style when having a line break in the middle of a paragraph,
                     // Ex: <h1>Hello<br>World!</h1>
@@ -453,9 +462,15 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         if (richTextState.richParagraphList.isEmpty())
             return "<p></p>"
 
+        // An empty document is a bare <p></p>. An empty heading, list item or styled
+        // paragraph has something to express and keeps its tag below.
+        val onlyParagraph = richTextState.richParagraphList.singleOrNull()
         if (
-            richTextState.richParagraphList.size == 1 &&
-            richTextState.richParagraphList.first().isEmpty()
+            onlyParagraph != null &&
+            onlyParagraph.isEmpty() &&
+            onlyParagraph.headingStyle == HeadingStyle.Normal &&
+            onlyParagraph.type is DefaultParagraph &&
+            onlyParagraph.paragraphStyle == RichParagraph.DefaultParagraphStyle
         )
             return "<p></p>"
 
@@ -473,8 +488,6 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         // Level of the list item whose </li> is withheld so the next, deeper list can
         // nest inside it. 0 when no item is withheld.
         var hostItemLevel = 0
-
-        var isLastParagraphEmpty = false
 
         val paragraphs = richTextState.richParagraphList
 
@@ -540,7 +553,6 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     }
                     openItemTag = null
                 }
-                isLastParagraphEmpty = isParagraphEmpty
                 return@fastForEachIndexed
             }
 
@@ -589,71 +601,65 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 hostItemLevel = 0
             }
 
-            // An empty non-list paragraph is a line break; an empty list paragraph is a
-            // real item and is emitted as <li></li>.
-            if (isParagraphEmpty && !isParagraphList) {
-                val skipAddingBr =
-                    isLastParagraphEmpty && index == paragraphs.lastIndex
+            // Create paragraph tag name
+            val paragraphTagName =
+                if (isParagraphList) "li"
+                else paragraphGroupTagName
 
-                if (!skipAddingBr)
-                    builder.append("<$BrElement>")
-            } else {
-                // Create paragraph tag name
-                val paragraphTagName =
-                    if (isParagraphList) "li"
-                    else paragraphGroupTagName
+            // Create paragraph css. If the paragraph is a heading, strip the heading's
+            // base ParagraphStyle so the tag carries the visual weight on its own.
+            val effectiveParagraphStyle =
+                if (headingStyle == HeadingStyle.Normal)
+                    richParagraph.paragraphStyle
+                else
+                    richParagraph.paragraphStyle.diff(headingStyle.defaultParagraphStyle)
 
-                // Create paragraph css. If the paragraph is a heading, strip the heading's
-                // base ParagraphStyle so the tag carries the visual weight on its own.
-                val effectiveParagraphStyle =
-                    if (headingStyle == HeadingStyle.Normal)
-                        richParagraph.paragraphStyle
-                    else
-                        richParagraph.paragraphStyle.diff(headingStyle.defaultParagraphStyle)
+            val paragraphCssMap = CssDecoder.decodeParagraphStyleToCssStyleMap(effectiveParagraphStyle)
+            val paragraphCss = CssDecoder.decodeCssStyleMap(paragraphCssMap)
 
-                val paragraphCssMap = CssDecoder.decodeParagraphStyleToCssStyleMap(effectiveParagraphStyle)
-                val paragraphCss = CssDecoder.decodeCssStyleMap(paragraphCssMap)
+            // Append paragraph opening tag
+            builder.append("<$paragraphTagName")
+            if (paragraphCss.isNotBlank()) builder.append(" style=\"$paragraphCss\"")
+            builder.append(">")
 
-                // Append paragraph opening tag
-                builder.append("<$paragraphTagName")
-                if (paragraphCss.isNotBlank()) builder.append(" style=\"$paragraphCss\"")
-                builder.append(">")
-
-                // Append paragraph children
-                val textContext = HtmlTextEmitContext(afterCollapsibleSpace = true)
-                richParagraph.children.fastForEach { richSpan ->
-                    builder.append(
-                        decodeRichSpanToHtml(
-                            richSpan = richSpan,
-                            headingStyle = headingStyle,
-                            textContext = textContext,
-                            registry = registry,
-                        )
+            // Append paragraph children
+            val textContext = HtmlTextEmitContext(afterCollapsibleSpace = true)
+            richParagraph.children.fastForEach { richSpan ->
+                builder.append(
+                    decodeRichSpanToHtml(
+                        richSpan = richSpan,
+                        headingStyle = headingStyle,
+                        textContext = textContext,
+                        registry = registry,
                     )
-                }
-
-                val nextParagraphTag = nextParagraph?.let { decodeHtmlElementFromRichParagraph(it) }
-                val nextLevel = (nextParagraph?.type as? ConfigurableListLevel)?.level ?: 0
-                val nextIsDeeperListItem = isParagraphList &&
-                    (nextParagraphTag == "ol" || nextParagraphTag == "ul") &&
-                    nextLevel > paragraphLevel
-
-                when {
-                    // The next paragraph continues this one after a <br>
-                    nextIsLineBreakContinuation ->
-                        openItemTag = paragraphTagName
-
-                    // The next paragraph is a deeper list item: withhold </li> so the
-                    // nested list becomes a child of this item
-                    nextIsDeeperListItem ->
-                        hostItemLevel = paragraphLevel
-
-                    else ->
-                        builder.append("</$paragraphTagName>")
-                }
+                )
             }
 
-            isLastParagraphEmpty = isParagraphEmpty
+            // An empty block keeps its tag and holds a <br> so it renders as one empty
+            // line, the way a browser lays out <p><br></p>. A continuation supplies that
+            // <br> itself, so the block is left open for it instead.
+            if (isParagraphEmpty && !nextIsLineBreakContinuation)
+                builder.append("<$BrElement>")
+
+            val nextParagraphTag = nextParagraph?.let { decodeHtmlElementFromRichParagraph(it) }
+            val nextLevel = (nextParagraph?.type as? ConfigurableListLevel)?.level ?: 0
+            val nextIsDeeperListItem = isParagraphList &&
+                (nextParagraphTag == "ol" || nextParagraphTag == "ul") &&
+                nextLevel > paragraphLevel
+
+            when {
+                // The next paragraph continues this one after a <br>
+                nextIsLineBreakContinuation ->
+                    openItemTag = paragraphTagName
+
+                // The next paragraph is a deeper list item: withhold </li> so the
+                // nested list becomes a child of this item
+                nextIsDeeperListItem ->
+                    hostItemLevel = paragraphLevel
+
+                else ->
+                    builder.append("</$paragraphTagName>")
+            }
         }
 
         // Close the remaining list tags (and any withheld host items)

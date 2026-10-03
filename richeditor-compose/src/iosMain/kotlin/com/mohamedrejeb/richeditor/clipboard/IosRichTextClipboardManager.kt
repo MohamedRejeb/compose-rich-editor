@@ -62,14 +62,14 @@ internal class IosRichTextClipboardManager(
 
     override suspend fun setClipEntry(clipEntry: ClipEntry?) {
         if (!richTextState.config.richClipboardEnabled) {
-            val copySelection = richTextState.copySelection
-            if (clipEntry == null || copySelection == null || copySelection.collapsed) {
+            val content = richTextState.takeClipboardContent()
+            if (clipEntry == null || content == null) {
                 clipboard.setClipEntry(clipEntry)
                 return
             }
             // The raw ClipEntry carries the editor's internal rendering (paragraphs joined
             // by spaces, list prefixes included); a plain-text copy must use toText.
-            clipboard.nativeClipboard.string = richTextState.toText(copySelection)
+            clipboard.nativeClipboard.string = content.toText()
             return
         }
 
@@ -79,15 +79,15 @@ internal class IosRichTextClipboardManager(
         }
 
         try {
-            val copySelection = richTextState.copySelection
+            val content = richTextState.takeClipboardContent()
 
-            if (copySelection == null || copySelection.collapsed) {
+            if (content == null) {
                 clipboard.setClipEntry(null)
                 return
             }
 
-            val html = richTextState.toHtml(copySelection)
-            val text = richTextState.toText(copySelection)
+            val html = content.toHtml()
+            val text = content.toText()
             val pasteboard = clipboard.nativeClipboard
 
             val htmlData = NSString.create(string = html)

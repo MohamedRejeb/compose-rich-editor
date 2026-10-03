@@ -37,7 +37,7 @@ internal class RichParagraph(
      * Heading level applied to this paragraph (Normal | H1..H6).
      *
      * Heading is paragraph-level, so we store it directly on the paragraph rather than detecting
-     * it back from span fingerprints. Public assignment goes through [setHeadingStyle] which
+     * it back from span fingerprints. Public assignment goes through [applyHeadingStyle] which
      * keeps children's [SpanStyle] and the paragraph's [ParagraphStyle] in sync with the chosen
      * level. Direct field mutation (parsers seeding state from HTML/Markdown) bypasses the
      * side effects and is intentional for code paths that already apply the visual styles

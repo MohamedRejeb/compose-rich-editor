@@ -49,7 +49,9 @@ import kotlin.math.roundToInt
  * services.
  * @param readOnly controls the editable state of the text field. When `true`, the text field cannot
  * be modified. However, a user can focus it and copy text from it. Read-only text fields are
- * usually used to display pre-filled forms that a user cannot edit.
+ * usually used to display pre-filled forms that a user cannot edit. Only user input is blocked:
+ * calls on the [RichTextState] (styles, undo, redo, content) still apply, so an app disables its
+ * own toolbar for a read-only editor.
  * @param textStyle the style to be applied to the input text. Defaults to [LocalTextStyle].
  * @param label the optional label to be displayed inside the text field container. The default
  * text style for internal [Text] is [Typography.bodySmall] when the text field is in focus and
@@ -152,8 +154,7 @@ public fun OutlinedRichTextEditor(
             undoBehavior = undoBehavior,
             decorationBox = { innerTextField ->
                 RichTextEditorDefaults.OutlinedRichTextEditorDecorationBox(
-                    value = state.textFieldValue.text,
-                    visualTransformation = state.visualTransformation,
+                    value = state.annotatedString.text,
                     innerTextField = innerTextField,
                     placeholder = placeholder,
                     label = label,

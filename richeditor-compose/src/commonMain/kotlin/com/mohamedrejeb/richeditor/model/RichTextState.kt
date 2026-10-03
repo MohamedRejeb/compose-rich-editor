@@ -1,6 +1,10 @@
 package com.mohamedrejeb.richeditor.model
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.input.OutputTransformation
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
@@ -18,10 +22,7 @@ import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.*
-import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.input.TransformedText
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.TextUnit
@@ -51,10 +52,6 @@ import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startT
 import com.mohamedrejeb.richeditor.parser.html.RichTextStateHtmlParser
 import com.mohamedrejeb.richeditor.parser.markdown.RichTextStateMarkdownParser
 import com.mohamedrejeb.richeditor.utils.*
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import kotlin.math.max
 import kotlin.reflect.KClass
@@ -64,12 +61,17 @@ import kotlin.time.Duration.Companion.seconds
 private val RichTextStateHistoryClockStart = kotlin.time.TimeSource.Monotonic.markNow()
 
 // Window after a physical key press during which a caret step is treated as
-// keyboard navigation rather than an IME batch edit (#779).
+// keyboard navigation rather than an IME batch edit (#779), and a selection change
+// as the keyboard's rather than a gesture's.
 private const val PhysicalKeyNavigationWindowMs = 300L
 
 // Window after an IME edit during which a caret step over a paragraph separator
 // is treated as the follow-up of a split suggestion-pick batch (#779).
 private const val ImeEditFollowUpWindowMs = 300L
+
+// Window after a pointer press during which a caret step over a paragraph separator is
+// treated as the press's own caret placement rather than an IME batch edit (#779).
+private const val PressCaretWindowMs = 300L
 
 /**
  * Keeps a selection gesture live across Android's press Cancel at long-press start
@@ -136,9 +138,97 @@ public class RichTextState internal constructor(
     internal var suppressUndoShortcuts: Boolean = false
 
     internal val richParagraphList = mutableStateListOf<RichParagraph>()
-    internal var visualTransformation: VisualTransformation by mutableStateOf(VisualTransformation.None)
-    internal var textFieldValue by mutableStateOf(TextFieldValue())
-        private set
+
+    /**
+     * Computed view over [textFieldState] and [annotatedString], not a separate stored
+     * value. [pendingTextDuringSync] / [pendingSelectionDuringSync] take precedence so a
+     * read taken mid-[setTextFieldStateFromValue] replay (while [skipTextFieldStateSync]
+     * defers the real write) still sees the intended result. The text fallback reads
+     * [annotatedString] rather than [textFieldState] directly: every text-changing
+     * [setTextFieldStateFromValue] call is preceded by a tree rebuild that keeps it
+     * unconditionally current, so it always stays in bounds for whatever selection
+     * [pendingSelectionDuringSync] may still be holding once [pendingTextDuringSync]
+     * itself has been cleared. Selection-only writes (no text change) don't rebuild the
+     * tree, but don't need to: [annotatedString] is already current for them too.
+     */
+    internal val textFieldValue: TextFieldValue
+        get() {
+            val text = pendingTextDuringSync ?: annotatedString.text
+            val selection = pendingSelectionDuringSync ?: textFieldState.selection
+            return TextFieldValue(
+                text = text,
+                selection = selection,
+                composition = textFieldState.composition,
+            )
+        }
+
+    internal val textFieldState: TextFieldState =
+        TextFieldState(initialText = "", initialSelection = TextRange.Zero)
+
+    /**
+     * Scroll position of the editor's internal text area. Hoisted so span overlays and
+     * app code can observe and control the editor's own scrolling.
+     */
+    public val scrollState: ScrollState = ScrollState(initial = 0)
+
+    /**
+     * When true, [setTextFieldStateFromValue] skips the textFieldState.edit call. Set by the
+     * editor's InputTransformation while it replays a user edit: the BTF2 buffer is already
+     * canonical there and a nested edit would re-enter the transformation.
+     * While suppressed, [pendingTextDuringSync] and [pendingSelectionDuringSync] record the
+     * intended values so consecutive primitives inside one applyChange see each other's
+     * results and the InputTransformation tail can reconcile the buffer.
+     */
+    internal var skipTextFieldStateSync: Boolean = false
+
+    internal var pendingTextDuringSync: String? = null
+
+    internal var pendingSelectionDuringSync: TextRange? = null
+
+    /**
+     * When true, the editor's InputTransformation returns early without calling
+     * applyChangeList. Set around every programmatic textFieldState.edit so the write is not
+     * re-interpreted as user input, which would corrupt richParagraphList by routing a
+     * wholesale text swap through the primitives.
+     */
+    internal var isApplyingProgrammaticSync: Boolean = false
+
+    internal fun setTextFieldStateFromValue(text: String, selection: TextRange) {
+        if (skipTextFieldStateSync) {
+            pendingTextDuringSync = text
+            pendingSelectionDuringSync = selection
+            return
+        }
+        pendingTextDuringSync = null
+        pendingSelectionDuringSync = null
+        val currentText = textFieldState.text.toString()
+        val currentSelection = textFieldState.selection
+        if (currentText == text && currentSelection == selection) return
+        val previous = isApplyingProgrammaticSync
+        isApplyingProgrammaticSync = true
+        try {
+            textFieldState.edit {
+                if (asCharSequence().toString() != text) {
+                    replace(0, length, text)
+                }
+                if (this.selection != selection) {
+                    this.selection = selection
+                }
+            }
+        } finally {
+            isApplyingProgrammaticSync = previous
+        }
+        // The library's RichTextHistory is the only undo authority; BTF2's internal stack
+        // must never accumulate entries it could replay outside our model. Gated on
+        // suppressUndoShortcuts: when UndoBehavior.Disabled, the native stack is the
+        // documented fallback for Ctrl/Cmd+Z and must survive programmatic writes like a
+        // selection move; when Enabled, onPreviewKeyEvent already makes it unreachable, so
+        // clearing here is defense in depth only.
+        if (!suppressUndoShortcuts) {
+            @OptIn(ExperimentalFoundationApi::class)
+            textFieldState.undoState.clearHistory()
+        }
+    }
 
     internal val inlineContentMap = mutableStateMapOf<String, InlineTextContent>()
     internal val usedInlineContentMapKeys = mutableSetOf<String>()
@@ -167,9 +257,9 @@ public class RichTextState internal constructor(
     internal var pendingClipboardPlainText: String? = null
 
     /**
-     * The last non-collapsed selection. Updated whenever the selection changes from a
-     * non-collapsed range to a different value. Used by clipboard managers on platforms
-     * (e.g. Android) where the selection collapses before [setClipEntry] is called.
+     * The last non-collapsed selection, for clipboard writes that find the selection already
+     * collapsed. User edits record it before they apply, see [applyChangeList]; the selection
+     * observer records it for the changes that are not user edits.
      */
     internal var lastNonCollapsedSelection: TextRange = TextRange.Zero
 
@@ -186,6 +276,25 @@ public class RichTextState internal constructor(
         }
 
     /**
+     * What the last user edit removed, when it deleted exactly the selection: BTF2 cuts that
+     * way and writes the clipboard after the model has dropped the content.
+     */
+    internal var pendingCutContent: RichTextState? = null
+
+    /**
+     * The content a clipboard write should carry: what a cut just removed, otherwise the
+     * [copySelection]. Null when there is neither.
+     */
+    internal fun takeClipboardContent(): RichTextState? {
+        val cutContent = pendingCutContent
+        pendingCutContent = null
+        if (cutContent != null && selection.collapsed) return cutContent
+
+        val range = copySelection ?: return null
+        return extractRangeState(range)
+    }
+
+    /**
      * Whether the text field is currently focused.
      * Updated by [BasicRichTextEditor] via [onFocusChanged].
      */
@@ -198,18 +307,140 @@ public class RichTextState internal constructor(
         private set
 
     /**
+     * Must stay the same instance for the lifetime of the state: BTF2 keys its transformed
+     * state on it, and a new instance restarts the input session. Style-only changes reach
+     * BTF2 through the transformation's read of [annotatedString], which is snapshot state.
+     */
+    internal val outputTransformation: OutputTransformation =
+        OutputTransformation { this@RichTextState.applyRichTextStyles(this) }
+
+    /**
      * The selection of the rich text.
      */
     public var selection: TextRange
-        get() = textFieldValue.selection
+        get() = textFieldState.selection
         set(value) {
-            if (value.min >= 0 && value.max <= textFieldValue.text.length) {
-                val newTextFieldValue = textFieldValue.copy(selection = value)
-                updateTextFieldValue(newTextFieldValue)
-            }
+            if (value.min < 0 || value.max > textFieldState.text.length) return
+            if (textFieldState.selection == value) return
+            // Routes through setTextFieldStateFromValue so skipTextFieldStateSync is honored:
+            // a selection write during an InputTransformation replay (e.g. the paste branch)
+            // must not nest a textFieldState.edit inside the in-flight edit.
+            setTextFieldStateFromValue(text = textFieldState.text.toString(), selection = value)
+            handleSelectionChanged(value)
         }
 
-    public val composition: TextRange? get() = textFieldValue.composition
+    public val composition: TextRange? get() = textFieldState.composition
+
+    /**
+     * The selection last processed by [handleSelectionChanged], or by a pass that already ran
+     * the side effects itself: [updateTextFieldValue], [updateRichParagraphList] and
+     * [restoreSnapshot] all write it so the observer's echo of their write is deduped away.
+     * Needed because [textFieldState] is already updated before the handler runs, so the
+     * previous value cannot be read from the state.
+     */
+    private var lastHandledSelection: TextRange = TextRange.Zero
+
+    /**
+     * The selection one observer tick before [lastHandledSelection]. [adjustGestureSelection]
+     * needs the drag's previous range to tell the moving edge from the anchor, and the legacy
+     * mirror can no longer serve as that memory now that it is refreshed on every tick.
+     */
+    private var selectionBeforeLastHandled: TextRange = TextRange.Zero
+
+    /**
+     * Unified handler for selection changes from any source. Every tick runs the full pass,
+     * mid-drag ticks included: the toolbar state has to follow a drag as it moves, and on the
+     * touch platforms a selection handle drag never delivers a gesture end that could catch it
+     * up later. The #635 mask is the one thing a non-collapsed to non-collapsed gesture tick
+     * leaves alone (see [runSelectionSideEffects]); [onSelectionGestureEnd] rebuilds it once
+     * the pointer is up.
+     *
+     * This deliberately does not seal the pending undo group. The observer fires after every
+     * keystroke (typing moves the selection), so a seal here would break typing coalescing;
+     * the coalescer's caret-continuity rule already starts a new entry after a selection jump.
+     */
+    internal fun handleSelectionChanged(newSelection: TextRange, fromGestureObserver: Boolean = false) {
+        if (lastHandledSelection == newSelection) return
+        if (newSelection.min < 0 || newSelection.max > textFieldState.text.length) return
+
+        // The IME half of #779. A drag never matches its collapsed one-step shape.
+        if (
+            fromGestureObserver &&
+            isImeBoundarySpaceRefreshBtf2(
+                previousSelection = lastHandledSelection,
+                newSelection = newSelection,
+            )
+        ) {
+            lastHandledSelection = newSelection
+            lastObservedComposition = textFieldState.composition
+            materializeBoundarySpace(boundary = newSelection.min - 1)
+            return
+        }
+        pressCorrectedCaret = null
+        lastObservedComposition = textFieldState.composition
+
+        val previousSelection = lastHandledSelection
+        val wasCollapsed = previousSelection.collapsed
+        selectionBeforeLastHandled = previousSelection
+        lastHandledSelection = newSelection
+
+        // The paragraph-edge and pointer-line corrections for gesture selections (#730, #731).
+        val adjusted =
+            if (fromGestureObserver)
+                adjustGestureSelection(newSelection, previousSelection)
+            else
+                newSelection
+        if (adjusted != newSelection) {
+            lastHandledSelection = adjusted
+            setTextFieldStateFromValue(text = textFieldState.text.toString(), selection = adjusted)
+        }
+        val nowCollapsed = adjusted.collapsed
+
+        // Covers the selection changes that are not user edits and so never reach the
+        // pipeline, which records the range for the ones that are.
+        if (!wasCollapsed)
+            lastNonCollapsedSelection = previousSelection
+
+        runSelectionSideEffects(
+            selectionMaskChanged =
+                if (fromGestureObserver)
+                    wasCollapsed != nowCollapsed
+                else
+                    !wasCollapsed || !nowCollapsed
+        )
+    }
+
+    /**
+     * The derived-state tail of [handleSelectionChanged]: the #635 background mask, the staged
+     * style bags, and the state the toolbar reads. Extracted so [onSelectionGestureEnd] can
+     * rebuild the mask for the resting range; routing that through the handler would not work,
+     * since it dedupes on [lastHandledSelection] and the resting selection is already recorded
+     * there.
+     *
+     * @param selectionMaskChanged whether the transition can change the rendered mask.
+     */
+    private fun runSelectionSideEffects(selectionMaskChanged: Boolean) {
+        // The annotatedString carries a selection-dependent mask that drops background colors
+        // underneath the live selection, so a transition in or out of a non-collapsed selection
+        // leaves the cached string stale (#635). The mask only changes the output when a span
+        // has a background color; the OutputTransformation reads the annotatedString, so
+        // rebuilding otherwise re-styles the output mid-gesture for an unchanged rendering
+        // (#730, #731).
+        if (selectionMaskChanged && treeHasBackgroundSpans())
+            updateAnnotatedString(textFieldValue)
+
+        // BTF1 parity: updateTextFieldValue cleared the staged bags on every pass, its
+        // selection-only path included, so moving the caret discards styles staged for
+        // text that was never typed.
+        toAddSpanStyle = SpanStyle()
+        toRemoveSpanStyle = SpanStyle()
+        toAddRichSpanStyle = RichSpanStyle.Default
+        toRemoveRichSpanStyleKClass = RichSpanStyle.Default::class
+
+        updateCurrentSpanStyle()
+        updateCurrentParagraphStyle()
+        refreshActiveTriggerQuery()
+    }
 
     // --- Triggers (mentions, hashtags, commands, ...) ---
     //
@@ -415,22 +646,93 @@ public class RichTextState internal constructor(
     internal var textLayoutResult: TextLayoutResult? by mutableStateOf(null)
         private set
 
-    private var lastPressPosition: Offset? by mutableStateOf(null)
-
     // Monotonic timestamp of the last physical key press; distinguishes hardware
-    // caret navigation from IME batch edits in [isImeBoundarySpaceRefresh] (#779).
+    // caret navigation from IME batch edits in [isImeBoundarySpaceRefreshBtf2] (#779)
+    // and from selection gestures in [adjustGestureSelection].
     private var lastPhysicalKeyEventMs: Long? = null
 
     internal fun notePhysicalKeyEvent() {
         lastPhysicalKeyEventMs = currentMonotonicMs()
     }
 
-    // Caret position and timestamp right after the last IME text edit or
-    // composition commit. Lets [isImeBoundarySpaceRefresh] recognize the split
-    // form of a suggestion pick, where the word commit and the trailing-space
-    // refresh arrive as separate value updates (#779).
+    internal fun isWithinPhysicalKeyWindow(): Boolean {
+        val lastKeyMs = lastPhysicalKeyEventMs ?: return false
+        return currentMonotonicMs() - lastKeyMs <= PhysicalKeyNavigationWindowMs
+    }
+
+    // Monotonic timestamp of the last pointer press; a caret step shortly after one is the
+    // tap's placement, not an IME batch edit, in [isImeBoundarySpaceRefreshBtf2] (#779).
+    private var lastPressMs: Long? = null
+
+    private fun isWithinPressWindow(): Boolean {
+        val pressMs = lastPressMs ?: return false
+        return currentMonotonicMs() - pressMs <= PressCaretWindowMs
+    }
+
+    // Caret position and timestamp right after the last IME text edit. Lets
+    // [isImeBoundarySpaceRefreshBtf2] recognize the split form of a suggestion pick,
+    // where the word commit and the trailing-space refresh arrive as separate
+    // signals: a buffer change and then a selection change (#779).
     private var lastImeEditCaret: Int = -1
     private var lastImeEditMs: Long? = null
+
+    /**
+     * Records where an edit left the caret in the rich model, arming the follow-up window
+     * [isImeBoundarySpaceRefreshBtf2] reads. Deliberately the model's caret and not the
+     * buffer's: an IME that reports a caret past the text it inserted is exactly the
+     * suggestion pick the check has to recognize.
+     */
+    internal fun noteImeEdit(caret: Int) {
+        lastImeEditCaret = caret
+        lastImeEditMs = currentMonotonicMs()
+        // Read from inside an InputTransformation this is the composition as it stood
+        // before the in-flight batch, which is exactly the composition a pick that also
+        // changes text has just ended.
+        lastObservedComposition = textFieldState.composition
+    }
+
+    /**
+     * Disarms every signal of the follow-up window after a refresh that already happened
+     * inside the batch, so the next caret step out of the paragraph is navigation.
+     */
+    internal fun clearImeEditWindow() {
+        lastImeEditCaret = -1
+        lastImeEditMs = null
+        lastObservedComposition = null
+        lastEndedComposition = null
+        lastCompositionEndMs = null
+    }
+
+    /**
+     * The composition observed at the end of the previous edit or selection pass. BTF2
+     * clears [TextFieldState.composition] as part of the same batch that commits it, so the
+     * composition a suggestion pick just ended can only be read from this memory.
+     */
+    private var lastObservedComposition: TextRange? = null
+
+    /**
+     * The composition that ended most recently without a text or caret change in the same
+     * pass, and when. A keyboard that commits the word and steps the caret as two calls
+     * instead of one batch is recognized through this, within [ImeEditFollowUpWindowMs].
+     */
+    private var lastEndedComposition: TextRange? = null
+    private var lastCompositionEndMs: Long? = null
+
+    /**
+     * Reports a change of [TextFieldState.composition] from the editor's composition
+     * observer. A composition can end without any text or caret change, which runs neither
+     * the InputTransformation nor the selection observer; without this report the
+     * composition would still look live to [isImeBoundarySpaceRefreshBtf2] at the next
+     * caret step, however much later it comes.
+     */
+    internal fun handleCompositionChanged(composition: TextRange?) {
+        val previous = lastObservedComposition
+        if (composition == null && previous != null) {
+            lastEndedComposition = previous
+            lastCompositionEndMs = currentMonotonicMs()
+        }
+        lastObservedComposition = composition
+    }
 
     // lastActivity keeps the gesture alive through Android's press Cancel at
     // long-press start; each routed non-collapsed selection change refreshes it.
@@ -451,6 +753,22 @@ public class RichTextState internal constructor(
     internal fun onSelectionGestureEnd() {
         selectionGesturePressed = false
         selectionGestureLastActivity = kotlin.time.TimeSource.Monotonic.markNow()
+
+        // The observer that clamps each tick runs asynchronously, so the last tick of the drag
+        // may not have been handled when the release arrives. Clamp where the selection came to
+        // rest and let the side effects run against that range; the observer's echo is deduped.
+        val resting = textFieldState.selection
+        val adjusted = adjustGestureSelection(resting, selectionBeforeLastHandled)
+        if (adjusted != resting) {
+            setTextFieldStateFromValue(text = textFieldState.text.toString(), selection = adjusted)
+            handleSelectionChanged(adjusted)
+            return
+        }
+
+        // The clamp was a no-op, so the handler would dedupe the resting selection away. The
+        // mid-drag ticks skipped the mask rebuild, so run the tail here for the resting range.
+        if (!resting.collapsed)
+            runSelectionSideEffects(selectionMaskChanged = true)
     }
 
     // Latest pressed pointer position over the editor, feeding the geometric clamp
@@ -463,6 +781,66 @@ public class RichTextState internal constructor(
         selectionGesturePointer = position
         selectionGesturePointerMark = kotlin.time.TimeSource.Monotonic.markNow()
     }
+
+    // True from a press until its release has been dispatched: the span in which the
+    // platform makes the selections that [correctPressCaret] and
+    // [correctTripleClickSelection] may correct.
+    private var pressCaretCorrectionArmed = false
+
+    // Press counting for the triple-click correction, with the framework's rules: a press
+    // continues the series when it is within the double tap timeout and the slop of the one
+    // before. Shift extends a selection instead of starting a series.
+    private var pressSeriesCount = 0
+    private var pressSeriesUptimeMs = 0L
+    private var pressSeriesPosition: Offset? = null
+
+    // True from a third press until its selection has been seen by
+    // [correctTripleClickSelection] or the pointer is up.
+    internal var tripleClickArmed = false
+
+    internal fun onSelectionGesturePointerDown(
+        position: Offset,
+        uptimeMillis: Long,
+        doubleTapTimeoutMillis: Long,
+        slop: Float,
+        shiftPressed: Boolean,
+    ) {
+        pressCaretCorrectionArmed = true
+        lastPressMs = currentMonotonicMs()
+
+        val previousPosition = pressSeriesPosition
+        val continuesSeries =
+            previousPosition != null &&
+                    uptimeMillis - pressSeriesUptimeMs < doubleTapTimeoutMillis &&
+                    (position - previousPosition).getDistance() < slop
+        pressSeriesCount = if (continuesSeries) pressSeriesCount + 1 else 1
+        pressSeriesUptimeMs = uptimeMillis
+        pressSeriesPosition = position
+        tripleClickArmed = pressSeriesCount >= 3 && !shiftPressed
+    }
+
+    internal fun onSelectionGesturePointerUp() {
+        pressCaretCorrectionArmed = false
+        tripleClickArmed = false
+    }
+
+    internal fun pressForCaretCorrection(): Offset? {
+        if (!pressCaretCorrectionArmed) return null
+
+        val pointerFresh =
+            selectionGesturePointerMark?.let { it.elapsedNow() < SelectionGesturePointerFreshness } == true
+        return selectionGesturePointer.takeIf { pointerFresh }
+    }
+
+    // The caret [correctPressCaret] committed in the last user edit, if it did. The step onto
+    // it is press driven, however much it looks like the one that ends an IME pick (#779).
+    internal var pressCorrectedCaret: Int? = null
+
+    internal fun isLaterParagraphStart(offset: Int): Boolean =
+        richParagraphList
+            .asSequence()
+            .drop(1)
+            .any { paragraph -> paragraph.type.startRichSpan.textRange.min == offset }
 
     private var currentAppliedSpanStyle: SpanStyle by mutableStateOf(
         getRichSpanByTextIndex(textIndex = selection.min - 1)?.fullSpanStyle
@@ -1023,7 +1401,11 @@ public class RichTextState internal constructor(
             if (paragraphs.isEmpty()) return@recordHistory
 
             paragraphs.forEach { paragraph ->
+                if (paragraph.headingStyle == headingStyle) return@forEach
                 paragraph.applyHeadingStyle(headingStyle)
+                // A continuation has no heading of its own in html. Unlike addParagraphStyle,
+                // which severs unconditionally, a level that did not change severs nothing.
+                clearLineBreakContinuations(paragraph)
             }
 
             updateAnnotatedString()
@@ -1551,6 +1933,9 @@ public class RichTextState internal constructor(
         if (minParagraphLevel != Int.MAX_VALUE && minParagraphLevelOrderedListNumber != -1)
             levelNumberMap[minParagraphLevel] = minParagraphLevelOrderedListNumber
 
+        // A nested item cannot ride inside the item it continued.
+        paragraphs.fastForEach { clearLineBreakContinuations(it) }
+
         // Adjust ordered list numbers
         val newTextFieldValue = adjustOrderedListsNumbers(
             startParagraphIndex = startParagraphIndex,
@@ -1655,6 +2040,8 @@ public class RichTextState internal constructor(
 
             processedParagraphCount++
         }
+
+        paragraphs.fastForEach { clearLineBreakContinuations(it) }
 
         // Adjust ordered list numbers
         val newTextFieldValue = adjustOrderedListsNumbers(
@@ -1820,14 +2207,15 @@ public class RichTextState internal constructor(
     }
 
     /**
-     * Increases and decreases the list level of the current selected lists when the Tab key is pressed.
-     *
-     * @param event the key event.
-     * @return true if the list level was increased or decreased, false otherwise.
+     * Key events the editor answers before the framework: undo and redo, the trigger popup's
+     * navigation, the paragraph keys, and Tab for list levels. Returns true when consumed.
      */
     internal fun onPreviewKeyEvent(event: KeyEvent): Boolean {
-        if (event.type == KeyEventType.KeyDown)
+        if (event.type == KeyEventType.KeyDown) {
+            // A caret the keyboard moves while a pointer is held down is not the pointer's.
+            pressCaretCorrectionArmed = false
             notePhysicalKeyEvent()
+        }
 
         // Undo/redo shortcuts - intercepted before BasicTextField's built-in handler
         // so rich-model snapshots rewind instead of plain-text TextFieldValue state.
@@ -1845,6 +2233,18 @@ public class RichTextState internal constructor(
                         return true
                     }
                 }
+            }
+        }
+
+        // The paragraph keys (Ctrl or Alt with Up or Down, Shift to extend): the framework
+        // answers them from the newlines of the visible text, which has none outside
+        // single-paragraph mode.
+        if (event.type == KeyEventType.KeyDown && !singleParagraphMode && isParagraphNavigationKey(event)) {
+            val up = event.key == Key.DirectionUp || event.key == Key.NumPadDirectionUp
+            val target = paragraphNavigationTarget(selection, up = up)
+            if (target != null) {
+                selection = if (event.isShiftPressed) TextRange(selection.start, target) else TextRange(target)
+                return true
             }
         }
 
@@ -1878,6 +2278,14 @@ public class RichTextState internal constructor(
             return false
 
         return true
+    }
+
+    private fun isParagraphNavigationKey(event: KeyEvent): Boolean {
+        if (event.isMetaPressed || event.isCtrlPressed == event.isAltPressed) return false
+        return when (event.key) {
+            Key.DirectionUp, Key.NumPadDirectionUp, Key.DirectionDown, Key.NumPadDirectionDown -> true
+            else -> false
+        }
     }
 
     /**
@@ -2066,39 +2474,97 @@ public class RichTextState internal constructor(
         }
     }
 
+    /**
+     * Legacy bridge for whole-[TextFieldValue] updates: the public text-mutation API, the
+     * platform clipboard managers, and the test suites that predate BTF2. User input no
+     * longer arrives here; the editor's `InputTransformation` reports it per change through
+     * `applyChangeList`. The value is diffed into one contiguous edit and replayed through
+     * the same primitives, so both entry points share one implementation.
+     *
+     * With rich clipboard disabled, stashed HTML is ignored and the pasted text flows
+     * through the normal insertion path, inheriting styles at the caret like typed text.
+     */
     internal fun onTextFieldValueChange(newTextFieldValue: TextFieldValue) {
-        // Classify the change for history before any mutation happens.
-        // With rich clipboard disabled, stashed HTML is ignored and the pasted text flows
-        // through the normal insertion path, inheriting styles at the caret like typed text.
         val pendingHtml = pendingClipboardHtml.takeIf { config.richClipboardEnabled }
-        val isPaste = pendingHtml != null &&
-                isPasteTextChange(textFieldValue, newTextFieldValue, pendingClipboardPlainText)
-        val replacedStyles =
-            if (isPaste) null
-            else captureReplacedSelectionStyles(textFieldValue, newTextFieldValue)
-        val trigger: CommitTrigger? = when {
-            isPaste -> CommitTrigger.Paste
-            else -> classifyTextChange(newTextFieldValue)
+        if (
+            pendingHtml != null &&
+            isPasteTextChange(textFieldValue, newTextFieldValue, pendingClipboardPlainText)
+        ) {
+            recordHistoryForInput(CommitTrigger.Paste) {
+                handleRecognizedPaste(pendingHtml)
+            }
+            return
         }
-        val before = if (trigger != null) beginHistoryRecord() else null
-        val previousText = textFieldValue.text
-        val previousComposition = textFieldValue.composition
+        // The change wasn't the announced paste (or none was pending): a stale stash must
+        // not survive to misclassify a later, unrelated change as a paste.
+        pendingClipboardHtml = null
+        pendingClipboardPlainText = null
 
-        try {
-            onTextFieldValueChangeInner(newTextFieldValue, isPaste, pendingHtml)
-            if (replacedStyles != null) {
-                applyReplacedSelectionStyles(replacedStyles)
-            }
-        } finally {
-            if (trigger != null) finishHistoryRecord(trigger, before)
-            if (
-                newTextFieldValue.text != previousText ||
-                (previousComposition != null && newTextFieldValue.composition == null)
-            ) {
-                lastImeEditCaret = textFieldValue.selection.min
-                lastImeEditMs = currentMonotonicMs()
+        // Everything derived from the old value has to be read before the tree mutates.
+        val replacedStyles = captureReplacedSelectionStyles(textFieldValue, newTextFieldValue)
+        val trigger = classifyTextChange(newTextFieldValue)
+        val delta = diffTextFieldValues(textFieldValue, newTextFieldValue)
+        val changesText = !delta.originalRange.collapsed || delta.newText.isNotEmpty()
+
+        recordHistoryForInput(trigger) {
+            if (changesText) {
+                applyChange(originalRange = delta.originalRange, newText = delta.newText)
+                if (replacedStyles != null) applyReplacedSelectionStyles(replacedStyles)
+                // An edit whose caller placed the caret away from the edit's own end (an
+                // IME reporting a caret past the text it inserted, a programmatic replace
+                // selecting its result) keeps the caller's caret.
+                if (
+                    textFieldValue.text == newTextFieldValue.text &&
+                    textFieldValue.selection != newTextFieldValue.selection
+                ) {
+                    selection = newTextFieldValue.selection
+                }
+            } else {
+                applyShimSelectionChange(newTextFieldValue.selection)
             }
         }
+
+        if (changesText) noteImeEdit(caret = textFieldValue.selection.min)
+    }
+
+    /**
+     * Longest common prefix/suffix diff of two [TextFieldValue]s into one contiguous edit.
+     * IME batch edits can change text away from the selection, so the selection alone
+     * cannot locate the change (#716).
+     */
+    private fun diffTextFieldValues(old: TextFieldValue, new: TextFieldValue): InputDelta {
+        val oldText = old.text
+        val newText = new.text
+        var prefix = 0
+        val maxPrefix = minOf(oldText.length, newText.length)
+        while (prefix < maxPrefix && oldText[prefix] == newText[prefix]) prefix++
+        var oldSuffix = oldText.length
+        var newSuffix = newText.length
+        while (
+            oldSuffix > prefix &&
+            newSuffix > prefix &&
+            oldText[oldSuffix - 1] == newText[newSuffix - 1]
+        ) {
+            oldSuffix--
+            newSuffix--
+        }
+        return InputDelta(
+            originalRange = TextRange(prefix, oldSuffix),
+            newText = newText.substring(prefix, newSuffix),
+        )
+    }
+
+    /**
+     * A selection-only value update from the legacy bridge. Platform gesture selections
+     * reach BTF2 through the editor's selection observer instead, but the bridge is still
+     * the path the pre-BTF2 selection suites drive, so it keeps the same corrections the
+     * observer applies.
+     */
+    private fun applyShimSelectionChange(newSelection: TextRange) {
+        selection = adjustGestureSelection(
+            selection = newSelection,
+            previousSelection = textFieldValue.selection,
+        )
     }
 
     /**
@@ -2124,10 +2590,10 @@ public class RichTextState internal constructor(
         if (!new.text.regionMatches(selMin + insertedLength, old.text, selMax, old.text.length - selMax)) return false
 
         val inserted = new.text.substring(selMin, selMin + insertedLength)
-        return inserted.normalizeNewlines() == expectedPlainText.normalizeNewlines()
+        return inserted.normalizeNewlinesForPaste() == expectedPlainText.normalizeNewlinesForPaste()
     }
 
-    private fun String.normalizeNewlines(): String =
+    internal fun String.normalizeNewlinesForPaste(): String =
         replace("\r\n", "\n").replace('\r', '\n')
 
     /**
@@ -2135,10 +2601,17 @@ public class RichTextState internal constructor(
      * mutates so the inserted text can inherit them (the platform typing-attributes convention)
      * instead of the style before the caret.
      */
-    private class ReplacedSelectionStyles(
+    internal class ReplacedSelectionStyles(
         val insertedRange: TextRange,
         val spanStyle: SpanStyle,
         val richSpanStyle: RichSpanStyle,
+        /**
+         * Set when the range starts on a paragraph separator, which has no style of its own:
+         * the captured style is the next paragraph's and applies only if the inserted text
+         * lands in it. When the separator's removal merges that paragraph into the one
+         * above, the text keeps the style it was given there instead.
+         */
+        val separatorParagraph: RichParagraph? = null,
     )
 
     /**
@@ -2146,26 +2619,25 @@ public class RichTextState internal constructor(
      * over it), else the changed region of the text: an IME autocorrect or suggestion pick
      * rewrites a word while the caret stays collapsed.
      */
-    @OptIn(ExperimentalRichTextApi::class)
     private fun captureReplacedSelectionStyles(
         old: TextFieldValue,
         new: TextFieldValue,
     ): ReplacedSelectionStyles? {
         if (new.text == old.text) return null
-        val insertedRange = selectionReplacement(old, new)
+        val replacement = selectionReplacement(old, new)
             ?: diffReplacement(old.text, new.text)
             ?: return null
-
-        val firstReplacedSpan = getRichSpanByTextIndex(insertedRange.min, true) ?: return null
-        return ReplacedSelectionStyles(
-            insertedRange = insertedRange,
-            spanStyle = firstReplacedSpan.fullSpanStyle,
-            richSpanStyle = firstReplacedSpan.fullStyle,
+        return captureReplacedSelectionStyles(
+            replacedRange = replacement.replacedRange,
+            insertedLength = replacement.insertedLength,
         )
     }
 
-    /** Range of [new]'s text that took the place of [old]'s non-collapsed selection, or null. */
-    private fun selectionReplacement(old: TextFieldValue, new: TextFieldValue): TextRange? {
+    /** The characters an edit replaced and the length of the text that took their place. */
+    private class Replacement(val replacedRange: TextRange, val insertedLength: Int)
+
+    /** [old]'s non-collapsed selection when [new]'s text took its place, or null. */
+    private fun selectionReplacement(old: TextFieldValue, new: TextFieldValue): Replacement? {
         val selMin = old.selection.min
         val selMax = old.selection.max
         if (selMin == selMax) return null
@@ -2173,14 +2645,14 @@ public class RichTextState internal constructor(
         if (insertedLength <= 0 || selMin + insertedLength > new.text.length) return null
         if (!new.text.regionMatches(0, old.text, 0, selMin)) return null
         if (!new.text.regionMatches(selMin + insertedLength, old.text, selMax, old.text.length - selMax)) return null
-        return TextRange(selMin, selMin + insertedLength)
+        return Replacement(TextRange(selMin, selMax), insertedLength)
     }
 
     /**
-     * Range of [newText] that took the place of removed characters, from the common prefix and
-     * suffix, or null for a pure insertion or removal.
+     * The characters of [oldText] that [newText] replaced, from the common prefix and suffix,
+     * or null for a pure insertion or removal.
      */
-    private fun diffReplacement(oldText: String, newText: String): TextRange? {
+    private fun diffReplacement(oldText: String, newText: String): Replacement? {
         val maxCommon = minOf(oldText.length, newText.length)
         var prefix = 0
         while (prefix < maxCommon && oldText[prefix] == newText[prefix]) prefix++
@@ -2191,7 +2663,31 @@ public class RichTextState internal constructor(
         ) suffix++
         val removedLength = oldText.length - prefix - suffix
         val insertedLength = newText.length - prefix - suffix
-        return if (removedLength > 0 && insertedLength > 0) TextRange(prefix, prefix + insertedLength) else null
+        if (removedLength <= 0 || insertedLength <= 0) return null
+        return Replacement(TextRange(prefix, prefix + removedLength), insertedLength)
+    }
+
+    /**
+     * Core of [captureReplacedSelectionStyles]: captures the styles at the start of
+     * [replacedRange] so text of [insertedLength] replacing it can inherit them. Shared by the
+     * shim overload above (which derives the range from the old selection or by prefix/suffix
+     * diffing two [TextFieldValue]s) and the ChangeList replay in EditPipeline.kt (which
+     * already has the range as a buffer delta).
+     */
+    @OptIn(ExperimentalRichTextApi::class)
+    internal fun captureReplacedSelectionStyles(
+        replacedRange: TextRange,
+        insertedLength: Int,
+    ): ReplacedSelectionStyles? {
+        val selMin = replacedRange.min
+        val selectionStartSpan = getRichSpanByTextIndex(selMin, true) ?: return null
+        return ReplacedSelectionStyles(
+            insertedRange = TextRange(selMin, selMin + insertedLength),
+            spanStyle = selectionStartSpan.fullSpanStyle,
+            richSpanStyle = selectionStartSpan.fullStyle,
+            separatorParagraph =
+                selectionStartSpan.paragraph.takeIf { isParagraphSeparatorIndex(selMin) },
+        )
     }
 
     /**
@@ -2201,9 +2697,11 @@ public class RichTextState internal constructor(
      * so replacing a whole link or image never linkifies or atomizes the typed text.
      */
     @OptIn(ExperimentalRichTextApi::class)
-    private fun applyReplacedSelectionStyles(replaced: ReplacedSelectionStyles) {
+    internal fun applyReplacedSelectionStyles(replaced: ReplacedSelectionStyles) {
         val range = replaced.insertedRange
         val insertedSpan = getRichSpanByTextIndex(range.min, true) ?: return
+        val separatorParagraph = replaced.separatorParagraph
+        if (separatorParagraph != null && insertedSpan.paragraph !== separatorParagraph) return
         val currentSpanStyle = insertedSpan.fullSpanStyle
         val currentRichSpanStyle = insertedSpan.fullStyle
 
@@ -2232,249 +2730,157 @@ public class RichTextState internal constructor(
         }
     }
 
-    private fun onTextFieldValueChangeInner(
-        newTextFieldValue: TextFieldValue,
-        isPaste: Boolean,
-        pendingHtml: String?,
-    ) {
-        if (isPaste) {
-            pendingClipboardHtml = null
-            pendingClipboardPlainText = null
-            val position = selection.min
-            // Suppress nested history captures during the remove+insert so the entire
-            // paste is a single undo group attributable to the top-level trigger.
-            val wasSuppressed = suppressHistoryRecording
-            suppressHistoryRecording = true
-            try {
-                removeSelectedText()
-                insertHtml(html = pendingHtml!!, position = position)
-            } finally {
-                suppressHistoryRecording = wasSuppressed
-            }
-            return
-        }
+    /**
+     * Applies a recognized paste: replaces the current selection with [pendingHtml],
+     * suppressing nested history captures so the remove+insert is a single undo group
+     * attributable to the top-level [CommitTrigger.Paste]. Shared by the
+     * [onTextFieldValueChange] bridge and the ChangeList replay in EditPipeline.kt.
+     *
+     * The replayed range is read once from the pending-aware [textFieldValue], not from the
+     * public [selection] getter: the ChangeList replay runs under [skipTextFieldStateSync], so
+     * the range it announced only reached [pendingSelectionDuringSync] and the buffer still
+     * holds the pre-edit selection. Both the removal and the insert offset use that one read,
+     * so a paste that replaces a composition wider than the caret cannot land astray.
+     */
+    internal fun handleRecognizedPaste(pendingHtml: String) {
         pendingClipboardHtml = null
         pendingClipboardPlainText = null
-
-        tempTextFieldValue = newTextFieldValue
-
-        val oldTextFieldValue = textFieldValue
-        val oldText = oldTextFieldValue.text
-        val newText = tempTextFieldValue.text
-
-        if (newText != oldText) {
-            // Diff the real changed region (longest common prefix/suffix): IME batch
-            // edits can change text away from the selection, so the selection alone
-            // cannot be trusted (#716).
-            var commonPrefix = 0
-            val maxCommon = minOf(oldText.length, newText.length)
-            while (
-                commonPrefix < maxCommon &&
-                oldText[commonPrefix] == newText[commonPrefix]
-            ) commonPrefix++
-            var commonSuffix = 0
-            val maxSuffix = maxCommon - commonPrefix
-            while (
-                commonSuffix < maxSuffix &&
-                oldText[oldText.lastIndex - commonSuffix] == newText[newText.lastIndex - commonSuffix]
-            ) commonSuffix++
-
-            val removedLength = oldText.length - commonPrefix - commonSuffix
-            val insertedLength = newText.length - commonPrefix - commonSuffix
-
-            when {
-                removedLength == 0 && insertedLength > 0 -> {
-                    justInsertedListParagraph = false
-                    // Pure insertion. The diff position is ambiguous inside runs of
-                    // repeated characters; prefer the selection-derived position when
-                    // it describes the same change.
-                    val legacyStart = oldTextFieldValue.selection.min
-                    val legacyDescribesChange =
-                        legacyStart in 0..oldText.length &&
-                                newText.substring(0, legacyStart) == oldText.substring(
-                            0,
-                            legacyStart
-                        ) &&
-                                newText.substring(legacyStart + insertedLength) == oldText.substring(
-                            legacyStart
-                        )
-                    handleAddingCharacters(
-                        startTypeIndex = if (legacyDescribesChange) legacyStart else commonPrefix,
-                        typedCharsCount = insertedLength,
-                        positionFromSelection = legacyDescribesChange,
-                    )
-                }
-
-                insertedLength == 0 && removedLength > 0 -> {
-                    // Pure removal, same ambiguity rule using the new selection.
-                    val legacyMin = tempTextFieldValue.selection.min
-                    val legacyDescribesChange =
-                        legacyMin in 0..newText.length &&
-                                legacyMin + removedLength <= oldText.length &&
-                                oldText.substring(0, legacyMin) == newText.substring(
-                            0,
-                            legacyMin
-                        ) &&
-                                oldText.substring(legacyMin + removedLength) == newText.substring(
-                            legacyMin
-                        )
-                    handleRemovingCharacters(
-                        minRemoveIndex = if (legacyDescribesChange) legacyMin else commonPrefix,
-                        removedCharsCount = removedLength,
-                    )
-                }
-
-                removedLength > 0 && insertedLength > 0 -> {
-                    justInsertedListParagraph = false
-                    // Replacement: removal followed by insertion. Prefer the old
-                    // selection bounds when they describe the change, else the diff bounds.
-                    val selMin = oldTextFieldValue.selection.min
-                    val selMax = oldTextFieldValue.selection.max
-                    val selReplacementLength = newText.length - selMin - (oldText.length - selMax)
-                    val selectionDescribesChange = !oldTextFieldValue.selection.collapsed &&
-                            selReplacementLength >= 0 &&
-                            selMin + selReplacementLength <= newText.length &&
-                            newText.substring(0, selMin) == oldText.substring(0, selMin) &&
-                            newText.substring(selMin + selReplacementLength) == oldText.substring(
-                        selMax
-                    )
-
-                    val removeStart: Int
-                    val removeEnd: Int
-                    if (selectionDescribesChange) {
-                        removeStart = selMin
-                        removeEnd = selMax
-                    } else {
-                        removeStart = commonPrefix
-                        removeEnd = oldText.length - commonSuffix
-                    }
-                    val replacement = newText.substring(
-                        removeStart,
-                        newText.length - (oldText.length - removeEnd),
-                    )
-
-                    // Step 1: apply the removal as a pure deletion
-                    val actualNewTextFieldValue = tempTextFieldValue
-                    tempTextFieldValue = oldTextFieldValue.copy(
-                        text = oldText.substring(0, removeStart) + oldText.substring(removeEnd),
-                        selection = TextRange(removeStart),
-                    )
-                    handleRemovingCharacters(
-                        minRemoveIndex = removeStart,
-                        removedCharsCount = removeEnd - removeStart,
-                    )
-
-                    // Step 2: insert the replacement on top of the CURRENT text; the
-                    // removal may have rewritten it (prefix removal, renumbering), so
-                    // the IME's view is stale.
-                    if (replacement.isNotEmpty()) {
-                        updateTextFieldValue()
-                        val insertPosition = textFieldValue.selection.min
-                            .coerceIn(0, textFieldValue.text.length)
-                        val stepTwoText = textFieldValue.text.substring(0, insertPosition) +
-                                replacement +
-                                textFieldValue.text.substring(insertPosition)
-                        // If the removal didn't rewrite surrounding text, the IME's
-                        // reported caret is still valid; keep it.
-                        tempTextFieldValue = actualNewTextFieldValue.copy(
-                            text = stepTwoText,
-                            selection = if (stepTwoText == actualNewTextFieldValue.text)
-                                actualNewTextFieldValue.selection
-                            else
-                                TextRange(insertPosition + replacement.length),
-                        )
-                        // positionFromSelection = false: the insert position is
-                        // reconstructed, so the Android-suggestion heuristic could
-                        // misread the preserved IME caret and inject a phantom space.
-                        handleAddingCharacters(
-                            startTypeIndex = insertPosition,
-                            typedCharsCount = replacement.length,
-                            positionFromSelection = false,
-                        )
-                    }
-                }
-            }
-        } else if (tempTextFieldValue.selection != textFieldValue.selection) {
-            if (isImeBoundarySpaceRefresh(oldTextFieldValue, tempTextFieldValue)) {
-                // Same-word suggestion pick at a paragraph end (#779): the IME batch
-                // (Gboard setSelection + commitText, Samsung deleteSurroundingText +
-                // commitText) nets to unchanged text with the caret stepped over the
-                // paragraph separator. Materialize the space the IME believes it
-                // committed so the caret stays at the end of the current paragraph.
-                val boundary = oldTextFieldValue.selection.min
-                val text = tempTextFieldValue.text
-                tempTextFieldValue = tempTextFieldValue.copy(
-                    text = text.substring(0, boundary) + " " + text.substring(boundary),
-                    selection = TextRange(boundary + 1),
-                )
-                justInsertedListParagraph = false
-                handleAddingCharacters(
-                    startTypeIndex = boundary,
-                    typedCharsCount = 1,
-                    positionFromSelection = false,
-                )
-                updateTextFieldValue()
-                return
-            }
-
-            val gestureAdjusted = adjustGestureSelection(tempTextFieldValue.selection)
-            if (gestureAdjusted != tempTextFieldValue.selection)
-                tempTextFieldValue = tempTextFieldValue.copy(selection = gestureAdjusted)
-
-            val lastPressPosition = this.lastPressPosition
-            if (lastPressPosition != null) {
-                adjustSelection(lastPressPosition, tempTextFieldValue.selection)
-                return
-            }
+        val pasteSelection = textFieldValue.selection
+        val wasSuppressed = suppressHistoryRecording
+        suppressHistoryRecording = true
+        try {
+            removeTextRange(pasteSelection)
+            insertHtml(html = pendingHtml, position = pasteSelection.min)
+        } finally {
+            suppressHistoryRecording = wasSuppressed
         }
+    }
 
-        // Update text field value
+    internal fun insertText(at: Int, text: String) {
+        val current = textFieldValue
+        tempTextFieldValue = current.copy(
+            text = current.text.substring(0, at) + text + current.text.substring(at),
+            selection = TextRange(at + text.length),
+        )
+        handleAddingCharacters(
+            startTypeIndex = at,
+            typedCharsCount = text.length,
+        )
+        updateTextFieldValue()
+    }
+
+    internal fun deleteRange(range: TextRange) {
+        val current = textFieldValue
+        tempTextFieldValue = current.copy(
+            text = current.text.removeRange(range.min, range.max),
+            selection = TextRange(range.min),
+        )
+        handleRemovingCharacters(
+            minRemoveIndex = range.min,
+            removedCharsCount = range.max - range.min,
+        )
         updateTextFieldValue()
     }
 
     /**
-     * True when a selection-only change matches the IME "trailing space refresh"
-     * a suggestion pick performs at a paragraph end (#779): the caret steps
-     * across the paragraph separator while either the picked word's composition,
-     * ending exactly at the boundary, is committed in the same value update
-     * (single-batch pick), or an IME edit that ended exactly at the boundary
-     * happened moments before (split pick: word commit and space refresh arrive
-     * as separate value updates). Plain caret navigation matches neither signal;
-     * press and hardware-key driven moves are excluded explicitly.
+     * Applies a single edit delta: replaces [originalRange] in the current text with [newText].
+     * Shared entry point for the BTF2 InputTransformation (via applyChangeList) and the
+     * [onTextFieldValueChange] bridge. Composes deleteRange and insertText; reversed ranges
+     * are normalised.
      */
-    private fun isImeBoundarySpaceRefresh(
-        oldValue: TextFieldValue,
-        newValue: TextFieldValue,
+    internal fun applyChange(originalRange: TextRange, newText: String) {
+        val textLength = textFieldValue.text.length
+        require(originalRange.min in 0..textLength && originalRange.max in 0..textLength) {
+            "applyChange: range $originalRange out of bounds for text of length $textLength"
+        }
+        val normalizedRange = TextRange(originalRange.min, originalRange.max)
+        // The IME startText echo is only absorbed until the user actually types; an edit
+        // that inserts something disarms it, before the removal half can read it.
+        if (newText.isNotEmpty()) justInsertedListParagraph = false
+        if (!normalizedRange.collapsed) {
+            deleteRange(normalizedRange)
+        }
+        if (newText.isNotEmpty()) {
+            // The removal may have rewritten the text around it (a list prefix dropped, a
+            // list renumbered), so the delta's own index can be stale by then; the caret
+            // the removal left is where the replacement belongs.
+            val insertAt =
+                if (normalizedRange.collapsed)
+                    normalizedRange.min
+                else
+                    textFieldValue.selection.min.coerceIn(0, textFieldValue.text.length)
+            insertText(at = insertAt, text = newText)
+        }
+    }
+
+    /**
+     * True when a selection change matches the IME "trailing space refresh" a suggestion
+     * pick performs at a paragraph end (#779): the caret steps across the paragraph
+     * separator while either the picked word's composition, ending exactly at the
+     * boundary, was just committed (single-batch pick, or a commit observed on its own
+     * moments before the step), or an IME edit that ended exactly at the boundary happened
+     * moments before (split pick: the word commit arrives as a buffer change and the space
+     * refresh as a bare caret move). Plain caret navigation matches neither signal, a
+     * composition that ended longer ago than the follow-up window counts as committed by
+     * the user; press and hardware-key driven moves are excluded explicitly.
+     */
+    private fun isImeBoundarySpaceRefreshBtf2(
+        previousSelection: TextRange,
+        newSelection: TextRange,
     ): Boolean {
         if (singleParagraphMode) return false
-        if (lastPressPosition != null) return false
-        if (!oldValue.selection.collapsed || !newValue.selection.collapsed) return false
-        val boundary = oldValue.selection.min
-        if (newValue.selection.min != boundary + 1) return false
-        if (newValue.composition != null) return false
+        if (isWithinPressWindow()) return false
+        if (pressCorrectedCaret == newSelection.min) return false
+        if (!previousSelection.collapsed || !newSelection.collapsed) return false
+        val boundary = previousSelection.min
+        if (newSelection.min != boundary + 1) return false
+        if (textFieldState.composition != null) return false
 
-        val composition = oldValue.composition
-        val commitsCompositionAtBoundary =
-            composition != null && composition.max == boundary
-        val lastEditMs = lastImeEditMs
-        val followsImeEditAtBoundary =
-            composition == null &&
-                    lastImeEditCaret == boundary &&
-                    lastEditMs != null &&
-                    currentMonotonicMs() - lastEditMs <= ImeEditFollowUpWindowMs
-        if (!commitsCompositionAtBoundary && !followsImeEditAtBoundary) return false
+        if (!imeJustEditedAt(boundary)) return false
 
-        val lastKeyMs = lastPhysicalKeyEventMs
-        if (lastKeyMs != null && currentMonotonicMs() - lastKeyMs <= PhysicalKeyNavigationWindowMs)
+        if (isWithinPhysicalKeyWindow())
             return false
         return isParagraphSeparatorIndex(boundary)
+    }
+
+    /**
+     * True when the IME is in the middle of a word commit ending at [boundary]: the word's
+     * composition is the last one observed or ended within the follow-up window, or an IME
+     * edit ended there within the window. Shared by the caret-step and the buffer-change
+     * forms of the #779 space refresh.
+     */
+    internal fun imeJustEditedAt(boundary: Int): Boolean {
+        val now = currentMonotonicMs()
+        val endMs = lastCompositionEndMs
+        val commitsCompositionAtBoundary =
+            lastObservedComposition?.max == boundary ||
+                    (lastEndedComposition?.max == boundary &&
+                            endMs != null &&
+                            now - endMs <= ImeEditFollowUpWindowMs)
+        val lastEditMs = lastImeEditMs
+        val followsImeEditAtBoundary =
+            lastImeEditCaret == boundary &&
+                    lastEditMs != null &&
+                    now - lastEditMs <= ImeEditFollowUpWindowMs
+        return commitsCompositionAtBoundary || followsImeEditAtBoundary
+    }
+
+    /**
+     * Materializes the space the IME believes it committed at [boundary], so the caret
+     * stays at the end of the current paragraph instead of stepping into the next one.
+     */
+    private fun materializeBoundarySpace(boundary: Int) {
+        recordHistoryForInput(CommitTrigger.Typing(addedText = " ", caret = boundary + 1)) {
+            applyChange(originalRange = TextRange(boundary), newText = " ")
+        }
+        selection = TextRange(boundary + 1)
     }
 
     /**
      * True when [index] is the position of the separator space that follows a
      * non-last paragraph in the raw text.
      */
-    private fun isParagraphSeparatorIndex(index: Int): Boolean {
+    internal fun isParagraphSeparatorIndex(index: Int): Boolean {
         var position = 0
         for (i in 0 until richParagraphList.lastIndex) {
             position += paragraphLength(richParagraphList[i])
@@ -2493,7 +2899,7 @@ public class RichTextState internal constructor(
     }
 
     /**
-     * Handles updating the text field value and all the related states such as the [annotatedString] and [visualTransformation] to reflect the new text field value.
+     * Handles updating the text field value and all the related states such as the [annotatedString] to reflect the new text field value.
      *
      * @param newTextFieldValue the new text field value.
      */
@@ -2538,15 +2944,15 @@ public class RichTextState internal constructor(
             // previous or the new selection is non-collapsed, the mask set differs and
             // the cached annotatedString is stale - so force a rebuild. See #635.
             // The mask only changes the output when a span has a background color;
-            // rebuilding otherwise recreates the visualTransformation mid-gesture and
-            // breaks selection on Android (#730, #731).
+            // the OutputTransformation reads the annotatedString, so rebuilding otherwise
+            // re-styles the output mid-gesture for an unchanged rendering (#730, #731).
             val maskAffected =
                 (!textFieldValue.selection.collapsed || !tempTextFieldValue.selection.collapsed) &&
                         treeHasBackgroundSpans()
             if (maskAffected) {
                 updateAnnotatedString(tempTextFieldValue)
             } else {
-                textFieldValue = tempTextFieldValue
+                setTextFieldStateFromValue(text = tempTextFieldValue.text, selection = tempTextFieldValue.selection)
             }
         } else {
             // Update the annotatedString and the textFieldValue with the new values
@@ -2567,6 +2973,10 @@ public class RichTextState internal constructor(
 
         // Re-detect active trigger query after every edit / selection change
         refreshActiveTriggerQuery()
+
+        // This pass already ran every side effect for the resulting selection, so the
+        // observer's echo of the write must be a no-op instead of running them again.
+        lastHandledSelection = textFieldValue.selection
 
         // Clear [tempTextFieldValue]
         tempTextFieldValue = TextFieldValue()
@@ -2631,7 +3041,7 @@ public class RichTextState internal constructor(
                 snapshot.selection.start.coerceIn(0, textLen),
                 snapshot.selection.end.coerceIn(0, textLen),
             )
-            textFieldValue = textFieldValue.copy(selection = clampedSelection)
+            setTextFieldStateFromValue(text = textFieldValue.text, selection = clampedSelection)
             tempTextFieldValue = textFieldValue
 
             // Re-apply staged styles from the snapshot. updateRichParagraphList clears
@@ -2642,6 +3052,8 @@ public class RichTextState internal constructor(
             updateCurrentSpanStyle()
             updateCurrentParagraphStyle()
             refreshActiveTriggerQuery()
+
+            lastHandledSelection = textFieldValue.selection
 
             tempTextFieldValue = TextFieldValue()
         } finally {
@@ -2669,6 +3081,21 @@ public class RichTextState internal constructor(
         historyRecordingDepth--
         history.onCommit(trigger, before)
         history.onAfterCommit(trigger)
+    }
+
+    /**
+     * Records [block] as one history commit attributed to [trigger], or runs it unrecorded
+     * when [trigger] is `null` (e.g. a change classified as no-op). Keeps [beginHistoryRecord]
+     * and [finishHistoryRecord] private while letting the EditPipeline.kt extension functions
+     * record history for the ChangeList replay.
+     */
+    internal inline fun <T> recordHistoryForInput(trigger: CommitTrigger?, block: () -> T): T {
+        val before = if (trigger != null) beginHistoryRecord() else null
+        return try {
+            block()
+        } finally {
+            if (trigger != null) finishHistoryRecord(trigger, before)
+        }
     }
 
     private inline fun <T> recordHistory(
@@ -2798,8 +3225,12 @@ public class RichTextState internal constructor(
                         )
 
                         if (!singleParagraphMode) {
-                            // Add empty space in the end of each paragraph to fix an issue with Compose TextField
-                            // that makes that last char non-selectable when having multiple paragraphs
+                            // One-character separator between paragraphs: MultiParagraph attributes
+                            // a boundary offset to the later paragraph, so without it the caret could
+                            // never sit after the last character of a non-last paragraph. A space and
+                            // not a newline, because a newline between paragraphs inside a
+                            // ParagraphStyle range renders an extra blank line (only the trailing empty
+                            // paragraph swaps one in, see substituteTrailingSeparatorWithNewline).
                             if (i != richParagraphList.lastIndex && index < newText.length) {
                                 append(' ')
                                 index++
@@ -2818,22 +3249,11 @@ public class RichTextState internal constructor(
 
         styledRichSpanList.clear()
         val newTextLength = annotatedString.text.length
-        textFieldValue = newTextFieldValue.copy(
-            text = annotatedString.text,
-            selection = TextRange(
-                newTextFieldValue.selection.start.coerceIn(0, newTextLength),
-                newTextFieldValue.selection.end.coerceIn(0, newTextLength),
-            ),
+        val clampedSelection = TextRange(
+            newTextFieldValue.selection.start.coerceIn(0, newTextLength),
+            newTextFieldValue.selection.end.coerceIn(0, newTextLength),
         )
-        // Snapshot by value: the lambda runs during measure, where a live
-        // `annotatedString` read would race the textFieldValue captured at composition.
-        val transformed = annotatedString
-        visualTransformation = VisualTransformation { _ ->
-            TransformedText(
-                text = transformed,
-                offsetMapping = OffsetMapping.Identity
-            )
-        }
+        setTextFieldStateFromValue(text = annotatedString.text, selection = clampedSelection)
         styledRichSpanList.addAll(newStyledRichSpanList)
     }
 
@@ -2844,14 +3264,10 @@ public class RichTextState internal constructor(
      *
      * @param startTypeIndex the index in [tempTextFieldValue]'s text where the insertion begins.
      * @param typedCharsCount the number of inserted characters.
-     * @param positionFromSelection true when [startTypeIndex] came from the selection;
-     * the Android-suggestion heuristic assumes a caret-derived position and must not
-     * fire for diff-derived positions.
      */
     private fun handleAddingCharacters(
         startTypeIndex: Int,
         typedCharsCount: Int,
-        positionFromSelection: Boolean,
     ) {
         @Suppress("NAME_SHADOWING")
         var startTypeIndex = startTypeIndex
@@ -2872,30 +3288,6 @@ public class RichTextState internal constructor(
                 candidateRichSpan
 
         if (activeRichSpan != null) {
-            val isAndroidSuggestion =
-                positionFromSelection &&
-                        activeRichSpan.isLastInParagraph &&
-                        activeRichSpan.textRange.max == startTypeIndex &&
-                        tempTextFieldValue.selection.max == startTypeIndex + typedCharsCount + 1
-
-            val typedText =
-                if (isAndroidSuggestion)
-                    "$typedText "
-                else
-                    typedText
-
-            if (isAndroidSuggestion) {
-                val beforeText =
-                    tempTextFieldValue.text.substring(0, startTypeIndex + typedCharsCount)
-
-                val afterText =
-                    tempTextFieldValue.text.substring(startTypeIndex + typedCharsCount)
-
-                tempTextFieldValue = tempTextFieldValue.copy(
-                    text = "$beforeText $afterText",
-                )
-            }
-
             if (startTypeIndex < activeRichSpan.textRange.min) {
                 val indexDiff = activeRichSpan.textRange.min - startTypeIndex
                 val beforeTypedText = tempTextFieldValue.text.substring(
@@ -3395,22 +3787,26 @@ public class RichTextState internal constructor(
         if (!richSpan.isFirstInParagraph)
             return
 
-        if (richSpan.text == "- " || richSpan.text == "* ") {
-            richSpan.paragraph.type = UnorderedList(
-                config = config,
-            )
-            richSpan.text = ""
-        } else if (richSpan.text.matches(Regex("^\\d+\\. "))) {
-            val dotIndex = richSpan.text.indexOf('.')
-            if (dotIndex != -1) {
+        val newType =
+            if (richSpan.text == "- " || richSpan.text == "* ") {
+                UnorderedList(
+                    config = config,
+                )
+            } else if (richSpan.text.matches(Regex("^\\d+\\. "))) {
+                val dotIndex = richSpan.text.indexOf('.')
                 val number = richSpan.text.substring(0, dotIndex).toIntOrNull() ?: 1
-                richSpan.paragraph.type = OrderedList(
+                OrderedList(
                     number = number,
                     config = config,
                 )
-                richSpan.text = ""
+            } else {
+                return
             }
-        }
+
+        richSpan.paragraph.type = newType
+        richSpan.text = ""
+        // A list item cannot ride inside the paragraph it continued.
+        clearLineBreakContinuations(richSpan.paragraph)
     }
 
     /**
@@ -3572,33 +3968,28 @@ public class RichTextState internal constructor(
     private fun checkForParagraphs() {
         var index = tempTextFieldValue.text.lastIndex
 
-        // Count newlines vs paragraph breaks to detect unprocessed newlines.
-        // This handles the case where IME sends a text update that removes our
-        // paragraph prefix (e.g. "2. ") but keeps the newline, the newline
-        // position ends up before the old selection, so the normal threshold
-        // would skip it. See #640.
-        // Lower the threshold to scan all newlines when there's a single paragraph but
-        // the text has newlines: autocorrect shortened text + added newline in one
-        // onValueChange call (the newline is before the old cursor, so the normal
-        // threshold would skip it). See #640.
-        val actualNewlines = tempTextFieldValue.text.count { it == '\n' }
-        val breakThreshold =
-            if (actualNewlines > 0 && richParagraphList.size == 1) 0
-            else textFieldValue.selection.min
-
+        // Every newline still in the text is an unprocessed paragraph break: the model's own
+        // text separates paragraphs with a space (updateAnnotatedString builds it with
+        // replace('\n', ' ')), so a '\n' here can only be one the platform just inserted.
+        // Scanning only from the pre-edit caret instead used to drop any break that landed
+        // behind it, which the BTF2 ChangeList replay produces whenever a delta lands before
+        // the caret: the newline then survived into the text and rendered as a literal space.
+        // The #640 cases (IME dropping a list prefix but keeping the newline, autocorrect
+        // shortening the text and adding a newline in one call) are the same shape and were
+        // covered by a single-paragraph escape hatch before.
         while (true) {
             // Search for the next paragraph
             index = tempTextFieldValue.text.lastIndexOf('\n', index)
 
             // If there are no more paragraphs, break
-            if (index < breakThreshold) break
+            if (index < 0) break
 
             // Get the rich span style at the index to split it between two paragraphs
             var richSpan = getRichSpanByTextIndex(index)
 
             // If the newline is at the end of the text (past all spans) during an IME revert
             // rebuild, use the last span of the last paragraph. See #640.
-            if (richSpan == null && index == tempTextFieldValue.text.lastIndex && breakThreshold == 0) {
+            if (richSpan == null && index == tempTextFieldValue.text.lastIndex) {
                 richSpan = richParagraphList.lastOrNull()?.getLastNonEmptyChild()
             }
 
@@ -3666,6 +4057,28 @@ public class RichTextState internal constructor(
                     newParagraphFirstRichSpan.spanStyle = currentSpanStyle
                     newParagraphFirstRichSpan.richSpanStyle = currentRichSpanStyle
                 }
+            }
+
+            // A heading splits the way Docs and Word split one: inside the text both halves stay
+            // headings of the same level, at the end of the heading the new paragraph is plain,
+            // and at the start the emptied paragraph pushed above it is. slice already baked the
+            // level's visuals into the moved spans (it builds them from fullSpanStyle) and copied
+            // the paragraph style, so the level is assigned the way the parsers do and
+            // applyHeadingStyle strips the visuals off whichever half comes out plain.
+            val splitHeadingStyle = richSpan.paragraph.headingStyle
+            if (splitHeadingStyle != HeadingStyle.Normal) {
+                newParagraph.headingStyle = splitHeadingStyle
+
+                // applyHeadingStyle(Normal) unmerges the level's SpanStyle field by field without
+                // asking where each field came from, so it clears any fontSize and fontWeight the
+                // spans carry, not only the ones the heading contributed. That is safe here only
+                // because the half it is called on is always the empty one: the sole style it can
+                // eat is the caret style on the new blank line. Extending this to a half that holds
+                // text would eat bold the user applied independently of the heading.
+                if (newParagraph.isEmpty())
+                    newParagraph.applyHeadingStyle(HeadingStyle.Normal)
+                else if (richSpan.paragraph.isEmpty())
+                    richSpan.paragraph.applyHeadingStyle(HeadingStyle.Normal)
             }
 
             // Get the text before and after the slice index
@@ -4351,13 +4764,16 @@ public class RichTextState internal constructor(
 
         newRichParagraph.children.add(newRichSpan)
 
+        // Walked backwards so removeAt stays valid, and inserted at the front for the same
+        // reason: appending would hand the tail span its children in reverse, which reorders
+        // the text of every paragraph split inside a run that has styled runs nested under it.
         for (i in richSpan.children.lastIndex downTo 0) {
             val childRichSpan = richSpan.children[i]
             richSpan.children.removeAt(i)
             childRichSpan.parent = newRichSpan
             childRichSpan.paragraph = newRichParagraph
             childRichSpan.updateChildrenParagraph(newRichParagraph)
-            newRichSpan.children.add(childRichSpan)
+            newRichSpan.children.add(0, childRichSpan)
         }
 
         while (true) {
@@ -4490,6 +4906,17 @@ public class RichTextState internal constructor(
         // Update the children paragraph of the second paragraph to the first paragraph.
         secondParagraph.updateChildrenParagraph(firstParagraph)
 
+        // A heading keeps its visuals on its spans, so spans joining one have to take them too.
+        // Without this, backspacing a paragraph into a heading left the heading half styled, and
+        // reloading the document (toHtml writes the whole paragraph as a heading) rendered it
+        // differently from what the user was looking at.
+        val headingStyle = firstParagraph.headingStyle
+        if (headingStyle != HeadingStyle.Normal) {
+            secondParagraph.children.fastForEach { richSpan ->
+                richSpan.spanStyle = richSpan.spanStyle.customMerge(headingStyle.defaultSpanStyle)
+            }
+        }
+
         // Add the children of the second paragraph to the first paragraph.
         firstParagraph.children.addAll(secondParagraph.children)
 
@@ -4501,6 +4928,11 @@ public class RichTextState internal constructor(
      * Updates the [currentAppliedSpanStyle] to the [SpanStyle] that should be applied to the current selection.
      */
     private fun updateCurrentSpanStyle() {
+        // Not the public `selection` getter: during an InputTransformation replay the BTF2
+        // buffer has not committed yet, so textFieldState.selection is still the pre-edit
+        // value. The computed view prefers pendingSelectionDuringSync, which is correct both
+        // mid-replay and at rest.
+        val selection = textFieldValue.selection
         if (selection.collapsed) {
             val richSpan = getRichSpanByTextIndex(textIndex = selection.min - 1)
 
@@ -4587,6 +5019,8 @@ public class RichTextState internal constructor(
      * Updates the [currentAppliedParagraphStyle] to the [ParagraphStyle] that should be applied to the current selection.
      */
     private fun updateCurrentParagraphStyle() {
+        // See [updateCurrentSpanStyle]: the pending-aware view, not the public getter.
+        val selection = textFieldValue.selection
         if (selection.collapsed) {
             val richParagraph = getRichParagraphByTextIndex(selection.min - 1)
 
@@ -4799,145 +5233,6 @@ public class RichTextState internal constructor(
         return null
     }
 
-    /**
-     * Adjusts the [selection] to the [pressPosition].
-     * This is a workaround for the [TextField] that the [selection] is not always correct when you have multiple lines.
-     *
-     * @param pressPosition The press position.
-     */
-    internal suspend fun adjustSelectionAndRegisterPressPosition(
-        pressPosition: Offset,
-    ) {
-        adjustSelection(pressPosition)
-        registerLastPressPosition(pressPosition)
-    }
-
-    /**
-     * Adjusts the [selection] to the [pressPosition].
-     * This is a workaround for the [TextField] that the [selection] is not always correct when you have multiple lines.
-     *
-     * @param pressPosition The press position.
-     * @param newSelection The new selection.
-     */
-    private fun adjustSelection(
-        pressPosition: Offset,
-        newSelection: TextRange? = null,
-    ) {
-        val selection = newSelection ?: this.selection
-        var pressX = pressPosition.x
-        var pressY = pressPosition.y
-        val textLayoutResult = this.textLayoutResult ?: run {
-            // No layout yet: the caret workaround can't run, but the platform's
-            // selection must still be applied (#730).
-            if (newSelection != null) {
-                applyAdjustedSelection(newSelection)
-            }
-            return
-        }
-        var index = 0
-        var lastIndex = 0
-
-        // Get the length of the text
-        val textLength = textLayoutResult.layoutInput.text.length
-
-        // Ensure pressY is within valid bounds
-        pressY = pressY.coerceIn(0f, textLayoutResult.size.height.toFloat())
-
-        for (i in 0 until textLayoutResult.lineCount) {
-            val start = textLayoutResult.getLineStart(i)
-            val top = textLayoutResult.getLineTop(i)
-
-            if (i == 0) {
-                if (start > 0f) {
-                    pressX += start
-                }
-
-                if (top > 0f) {
-                    pressY += top
-                }
-            }
-
-            // Make sure pressY is within the current line's top position
-            if (i == 0 && top > pressY) {
-                break
-            }
-
-            if (top > pressY) {
-                index = lastIndex
-                break
-            }
-
-            lastIndex = index
-
-            if (textLayoutResult.layoutInput.text.text.lastIndex == -1)
-                break
-
-            richParagraphList.getOrNull(index)?.let { paragraph ->
-                val textRange = paragraph.getTextRange().coerceIn(
-                    0, textLayoutResult.layoutInput.text.text.lastIndex
-                )
-
-                val pStartTop = textLayoutResult.getBoundingBox(textRange.min).top
-                val pEndTop = textLayoutResult.getBoundingBox(textRange.max).top
-
-                val pStartEndTopDiff = (pStartTop - pEndTop).absoluteValue
-                val pEndTopLTopDiff = (pEndTop - top).absoluteValue
-
-                if (pStartEndTopDiff < 2f || pEndTopLTopDiff < 2f || pEndTop < top) {
-                    index++
-                }
-            }
-        }
-
-        if (index > richParagraphList.lastIndex)
-            index = richParagraphList.lastIndex
-
-        val selectedParagraph = richParagraphList.getOrNull(index) ?: run {
-            if (newSelection != null) {
-                applyAdjustedSelection(newSelection)
-            }
-            return
-        }
-        val nextParagraph = richParagraphList.getOrNull(index + 1)
-        val nextParagraphStart =
-            if (nextParagraph == null)
-                null
-            else
-                (nextParagraph.getFirstNonEmptyChild() ?: nextParagraph.type.startRichSpan)
-                    .textRange.min.minus(nextParagraph.type.startText.length)
-
-        // Handle selection adjustments
-        if (
-            selection.collapsed &&
-            selection.min == nextParagraphStart
-        ) {
-            updateTextFieldValue(
-                textFieldValue.copy(
-                    selection = TextRange(
-                        (selection.min - 1).coerceAtLeast(0),
-                        (selection.min - 1).coerceAtLeast(0)
-                    )
-                )
-            )
-        } else if (
-            selection.collapsed &&
-            index == richParagraphList.lastIndex &&
-            selectedParagraph.isEmpty() &&
-            selection.min == selectedParagraph.getFirstNonEmptyChild()?.textRange?.min?.minus(1)
-        ) {
-            updateTextFieldValue(
-                textFieldValue.copy(
-                    selection = TextRange(
-                        (selection.min + 1).coerceAtMost(textLength - 1),
-                        (selection.min + 1).coerceAtMost(textLength - 1)
-                    )
-                )
-            )
-        } else if (newSelection != null) {
-            applyAdjustedSelection(newSelection)
-        }
-    }
-
     private fun isSelectionGestureLive(): Boolean =
         treatSelectionChangesAsGesture ||
                 selectionGesturePressed ||
@@ -4945,12 +5240,23 @@ public class RichTextState internal constructor(
 
     /**
      * Corrects the moving edge of a drag selection: it may not extend below the
-     * pointer's line, and may not land exactly on a paragraph's start offset (which
-     * would select the virtual separator and highlight the next line). Select-all,
-     * collapsed carets, and selections without a live gesture pass through untouched.
+     * pointer's line, a selection handle resting on a paragraph's end may not run onto the
+     * next paragraph's first word, and it may not land exactly on a paragraph's start offset
+     * (which would select the virtual separator and highlight the next line). Select-all,
+     * collapsed carets, selections without a live gesture, and selections right after a
+     * physical key press with no pointer pressed (a hardware keyboard on a touch platform,
+     * where every change counts as a gesture) pass through untouched.
      */
-    private fun adjustGestureSelection(selection: TextRange): TextRange {
+    private fun adjustGestureSelection(
+        selection: TextRange,
+        previousSelection: TextRange,
+    ): TextRange {
         if (selection.collapsed || !isSelectionGestureLive())
+            return selection
+
+        // A held Shift auto-repeats its key down on some desktops, so the key window alone
+        // would exempt a shift+drag with the mouse; a pressed pointer owns the change.
+        if (!selectionGesturePressed && isWithinPhysicalKeyWindow())
             return selection
 
         selectionGestureLastActivity = kotlin.time.TimeSource.Monotonic.markNow()
@@ -4959,7 +5265,7 @@ public class RichTextState internal constructor(
         // a backward drag the anchor is the max, legitimately below the pointer's
         // line. When both edges changed (first event of a gesture) the moving edge is
         // unknown and nothing is corrected.
-        val oldSelection = textFieldValue.selection
+        val oldSelection = previousSelection
         val movingEdgeIsMax = when {
             selection.start == oldSelection.start && selection.end != oldSelection.end ->
                 selection.end > selection.start
@@ -5004,46 +5310,58 @@ public class RichTextState internal constructor(
             }
         }
 
-        val isParagraphStart = richParagraphList
-            .asSequence()
-            .drop(1)
-            .any { paragraph ->
-                val firstChild = paragraph.getFirstNonEmptyChild() ?: paragraph.type.startRichSpan
-                firstChild.textRange.min - paragraph.type.startText.length == max
-            }
+        // Selection handles exist on the touch platforms only, and their drags never deliver a
+        // pointer, so the rule for them works from offsets alone (see
+        // [firstWordEndAfterParagraphEnd]). The press check keeps a desktop keyboard extension
+        // inside the gesture grace out of it.
+        val handleDragPossible = treatSelectionChangesAsGesture || selectionGesturePressed
+        if (handleDragPossible && (pointer == null || !pointerFresh)) {
+            val firstWordEnd = firstWordEndAfterParagraphEnd(oldSelection.max)
+            if (firstWordEnd != null && max > oldSelection.max + 1 && max <= firstWordEnd)
+                return selection.withMax(oldSelection.max)
+        }
+
+        val isParagraphStart = laterParagraphStarts().any { it == max }
         if (!isParagraphStart)
             return selection
 
-        val newMax = max - 1
-        return if (selection.start > selection.end)
-            TextRange(newMax, selection.end)
-        else
-            TextRange(selection.start, newMax)
+        return selection.withMax(max - 1)
     }
+
+    private fun TextRange.withMax(newMax: Int): TextRange =
+        if (start > end) TextRange(newMax, end) else TextRange(start, newMax)
+
+    /** The start offset of every paragraph but the first, list prefix included. */
+    private fun laterParagraphStarts(): Sequence<Int> =
+        richParagraphList
+            .asSequence()
+            .drop(1)
+            .map { paragraph ->
+                val firstChild = paragraph.getFirstNonEmptyChild() ?: paragraph.type.startRichSpan
+                firstChild.textRange.min - paragraph.type.startText.length
+            }
 
     /**
-     * Applies a platform selection clamped to the current text bounds.
+     * When [offset] is the end of a paragraph (the position of its separator), the end of the
+     * first word of the paragraph after it, prefix excluded; null otherwise.
+     *
+     * An end handle dragged into the empty space right of a paragraph's last line hits the
+     * next paragraph's start, and the platform's word acceleration then runs the selection
+     * over that paragraph's first word. From offsets alone that is indistinguishable from a
+     * handle placed on the first word itself, so the clamp is narrow: it only holds a handle
+     * that was resting exactly on the paragraph end, and only up to the end of the first word.
      */
-    private fun applyAdjustedSelection(newSelection: TextRange) {
-        val textLength = textFieldValue.text.length
-        updateTextFieldValue(
-            textFieldValue.copy(
-                selection = TextRange(
-                    newSelection.start.coerceIn(0, textLength),
-                    newSelection.end.coerceIn(0, textLength),
-                )
-            )
-        )
-    }
-
-    private var registerLastPressPositionJob: Job? = null
-    private suspend fun registerLastPressPosition(pressPosition: Offset): Unit = coroutineScope {
-        registerLastPressPositionJob?.cancel()
-        registerLastPressPositionJob = launch {
-            lastPressPosition = pressPosition
-            delay(300)
-            lastPressPosition = null
+    private fun firstWordEndAfterParagraphEnd(offset: Int): Int? {
+        val text = textFieldValue.text
+        richParagraphList.asSequence().drop(1).forEach { paragraph ->
+            val firstChild = paragraph.getFirstNonEmptyChild() ?: paragraph.type.startRichSpan
+            val textStart = firstChild.textRange.min
+            if (textStart - paragraph.type.startText.length - 1 != offset) return@forEach
+            var end = textStart
+            while (end < text.length && !text[end].isWhitespace()) end++
+            return end
         }
+        return null
     }
 
     /**
@@ -5499,7 +5817,8 @@ public class RichTextState internal constructor(
      *
      * @param newSelection Selection to apply, coerced into the new text bounds; null keeps
      * the previous selection adjusted by the length delta.
-     * @param newComposition Composition to keep (dropped when out of bounds); null clears it.
+     * @param newComposition Currently inert: [textFieldState]'s own composition is never
+     * written from here, so this value is computed and discarded. Left for a later cleanup.
      */
     internal fun updateRichParagraphList(
         newSelection: TextRange? = null,
@@ -5509,6 +5828,12 @@ public class RichTextState internal constructor(
             richParagraphList.add(RichParagraph())
 
         val beforeTextLength = annotatedString.text.length
+        // Read before the rebuild below replaces `annotatedString`: after it, the computed
+        // `textFieldValue` would pair the NEW text with the OLD (not yet synced)
+        // `textFieldState.selection`, and TextFieldValue's constructor silently clamps that
+        // stale selection into the new (possibly shorter) text's bounds, corrupting the read
+        // this delta computation depends on.
+        val beforeSelectionMin = textFieldValue.selection.min
 
         val newStyledRichSpanList = mutableListOf<RichSpan>()
 
@@ -5569,24 +5894,12 @@ public class RichTextState internal constructor(
                 )
             else
                 TextRange(
-                    (textFieldValue.selection.min + (textLength - beforeTextLength))
+                    (beforeSelectionMin + (textLength - beforeTextLength))
                         .coerceIn(0, textLength)
                 )
 
         styledRichSpanList.clear()
-        textFieldValue = TextFieldValue(
-            text = annotatedString.text,
-            selection = selection,
-            composition = newComposition?.takeIf { it.min >= 0 && it.max <= textLength },
-        )
-        // Snapshot by value: see the matching note in `updateAnnotatedString`.
-        val transformed = annotatedString
-        visualTransformation = VisualTransformation { _ ->
-            TransformedText(
-                text = transformed,
-                offsetMapping = OffsetMapping.Identity
-            )
-        }
+        setTextFieldStateFromValue(text = annotatedString.text, selection = selection)
         styledRichSpanList.addAll(newStyledRichSpanList)
 
         // Clear un-applied styles
@@ -5600,6 +5913,11 @@ public class RichTextState internal constructor(
 
         // Update current paragraph style
         updateCurrentParagraphStyle()
+
+        // This load already ran the side effects for the selection it just wrote into the
+        // buffer, so the selection handler must not dedupe a later caret move against a marker
+        // that still holds its initial value.
+        lastHandledSelection = textFieldValue.selection
 
         // Check paragraphs type
         checkParagraphsType()
@@ -5679,7 +5997,7 @@ public class RichTextState internal constructor(
      * @param range The [TextRange] to extract.
      * @return A new [RichTextState] with only the content in the range.
      */
-    private fun extractRangeState(
+    internal fun extractRangeState(
         range: TextRange,
         preserveListNumbers: Boolean = false,
     ): RichTextState {

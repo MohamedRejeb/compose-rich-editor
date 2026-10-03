@@ -451,6 +451,63 @@ public object RichTextEditorDefaults {
         )
 
     /**
+     * Kept for source compatibility. `visualTransformation` is no longer applied; see the
+     * overload without it for the documented parameters.
+     */
+    @Composable
+    @ExperimentalMaterial3Api
+    @Deprecated(
+        message = "visualTransformation is no longer applied; the editor renders styled output via OutputTransformation. Use the overload without this parameter.",
+        replaceWith = ReplaceWith(
+            "RichTextEditorDecorationBox(value, innerTextField, enabled, singleLine, interactionSource, isError, label, placeholder, leadingIcon, trailingIcon, supportingText, shape, colors, contentPadding, container)"
+        ),
+        level = DeprecationLevel.WARNING,
+    )
+    public fun RichTextEditorDecorationBox(
+        value: String,
+        innerTextField: @Composable () -> Unit,
+        enabled: Boolean,
+        singleLine: Boolean,
+        @Suppress("UNUSED_PARAMETER") visualTransformation: VisualTransformation,
+        interactionSource: InteractionSource,
+        isError: Boolean = false,
+        label: @Composable (() -> Unit)? = null,
+        placeholder: @Composable (() -> Unit)? = null,
+        leadingIcon: @Composable (() -> Unit)? = null,
+        trailingIcon: @Composable (() -> Unit)? = null,
+        supportingText: @Composable (() -> Unit)? = null,
+        shape: Shape = filledShape,
+        colors: RichTextEditorColors = richTextEditorColors(),
+        contentPadding: PaddingValues =
+            if (label == null) {
+                richTextEditorWithoutLabelPadding()
+            } else {
+                richTextEditorWithLabelPadding()
+            },
+        container: @Composable () -> Unit = {
+            FilledContainerBox(enabled, isError, interactionSource, colors, shape)
+        }
+    ) {
+        RichTextEditorDecorationBox(
+            value = value,
+            innerTextField = innerTextField,
+            enabled = enabled,
+            singleLine = singleLine,
+            interactionSource = interactionSource,
+            isError = isError,
+            label = label,
+            placeholder = placeholder,
+            leadingIcon = leadingIcon,
+            trailingIcon = trailingIcon,
+            supportingText = supportingText,
+            shape = shape,
+            colors = colors,
+            contentPadding = contentPadding,
+            container = container
+        )
+    }
+
+    /**
      * A decoration box which helps creating custom text fields based on
      * <a href="https://material.io/components/text-fields#filled-text-field" class="external" target="_blank">Material Design filled text field</a>.
      *
@@ -474,8 +531,6 @@ public object RichTextEditorDefaults {
      * adjust the behavior accordingly.
      * @param singleLine indicates if this is a single line or multi line text field. You must pass
      * the same value as to [BasicTextField].
-     * @param visualTransformation transforms the visual representation of the input [value]. You
-     * must pass the same value as to [BasicTextField].
      * @param interactionSource the read-only [InteractionSource] representing the stream of
      * [Interaction]s for this text field. You must first create and pass in your own `remember`ed
      * [MutableInteractionSource] instance to the [BasicTextField] for it to dispatch events. And
@@ -515,7 +570,6 @@ public object RichTextEditorDefaults {
         innerTextField: @Composable () -> Unit,
         enabled: Boolean,
         singleLine: Boolean,
-        visualTransformation: VisualTransformation,
         interactionSource: InteractionSource,
         isError: Boolean = false,
         label: @Composable (() -> Unit)? = null,
@@ -539,7 +593,7 @@ public object RichTextEditorDefaults {
             type = TextFieldType.Filled,
             value = value,
             innerTextField = innerTextField,
-            visualTransformation = visualTransformation,
+            visualTransformation = VisualTransformation.None,
             placeholder = placeholder,
             label = label,
             leadingIcon = leadingIcon,
@@ -549,6 +603,56 @@ public object RichTextEditorDefaults {
             enabled = enabled,
             isError = isError,
             interactionSource = interactionSource,
+            colors = colors,
+            contentPadding = contentPadding,
+            container = container
+        )
+    }
+
+    /**
+     * Kept for source compatibility. `visualTransformation` is no longer applied; see the
+     * overload without it for the documented parameters.
+     */
+    @Composable
+    @ExperimentalMaterial3Api
+    @Deprecated(
+        message = "visualTransformation is no longer applied; the editor renders styled output via OutputTransformation. Use the overload without this parameter.",
+        replaceWith = ReplaceWith(
+            "OutlinedRichTextEditorDecorationBox(value, innerTextField, enabled, singleLine, interactionSource, isError, label, placeholder, leadingIcon, trailingIcon, supportingText, colors, contentPadding, container)"
+        ),
+        level = DeprecationLevel.WARNING,
+    )
+    public fun OutlinedRichTextEditorDecorationBox(
+        value: String,
+        innerTextField: @Composable () -> Unit,
+        enabled: Boolean,
+        singleLine: Boolean,
+        @Suppress("UNUSED_PARAMETER") visualTransformation: VisualTransformation,
+        interactionSource: InteractionSource,
+        isError: Boolean = false,
+        label: @Composable (() -> Unit)? = null,
+        placeholder: @Composable (() -> Unit)? = null,
+        leadingIcon: @Composable (() -> Unit)? = null,
+        trailingIcon: @Composable (() -> Unit)? = null,
+        supportingText: @Composable (() -> Unit)? = null,
+        colors: RichTextEditorColors = outlinedRichTextEditorColors(),
+        contentPadding: PaddingValues = outlinedRichTextEditorPadding(),
+        container: @Composable () -> Unit = {
+            OutlinedBorderContainerBox(enabled, isError, interactionSource, colors)
+        }
+    ) {
+        OutlinedRichTextEditorDecorationBox(
+            value = value,
+            innerTextField = innerTextField,
+            enabled = enabled,
+            singleLine = singleLine,
+            interactionSource = interactionSource,
+            isError = isError,
+            label = label,
+            placeholder = placeholder,
+            leadingIcon = leadingIcon,
+            trailingIcon = trailingIcon,
+            supportingText = supportingText,
             colors = colors,
             contentPadding = contentPadding,
             container = container
@@ -579,8 +683,6 @@ public object RichTextEditorDefaults {
      * adjust the behavior accordingly.
      * @param singleLine indicates if this is a single line or multi line text field. You must pass
      * the same value as to [BasicTextField].
-     * @param visualTransformation transforms the visual representation of the input [value]. You
-     * must pass the same value as to [BasicTextField].
      * @param interactionSource the read-only [InteractionSource] representing the stream of
      * [Interaction]s for this text field. You must first create and pass in your own `remember`ed
      * [MutableInteractionSource] instance to the [BasicTextField] for it to dispatch events. And
@@ -617,7 +719,6 @@ public object RichTextEditorDefaults {
         innerTextField: @Composable () -> Unit,
         enabled: Boolean,
         singleLine: Boolean,
-        visualTransformation: VisualTransformation,
         interactionSource: InteractionSource,
         isError: Boolean = false,
         label: @Composable (() -> Unit)? = null,
@@ -634,7 +735,7 @@ public object RichTextEditorDefaults {
         CommonDecorationBox(
             type = TextFieldType.Outlined,
             value = value,
-            visualTransformation = visualTransformation,
+            visualTransformation = VisualTransformation.None,
             innerTextField = innerTextField,
             placeholder = placeholder,
             label = label,

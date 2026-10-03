@@ -19,6 +19,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.ui.BasicRichTextEditor
 import com.mohamedrejeb.richeditor.ui.RichTextChangedListener
@@ -40,7 +41,9 @@ import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
  * visually text field will appear in the disabled UI state
  * @param readOnly controls the editable state of the [RichTextEditor]. When `true`, the text
  * field can not be modified, however, a user can focus it and copy text from it. Read-only text
- * fields are usually used to display pre-filled forms that user can not edit
+ * fields are usually used to display pre-filled forms that user can not edit. Only user input is
+ * blocked: calls on the [RichTextState] (styles, undo, redo, content) still apply, so an app
+ * disables its own toolbar for a read-only editor
  * @param textStyle the style to be applied to the input text. The default [textStyle] uses the
  * [LocalTextStyle] defined by the theme
  * @param label the optional label to be displayed inside the text field container. The default
@@ -140,8 +143,8 @@ public fun RichTextEditor(
         decorationBox = @Composable { innerTextField ->
             // places leading icon, text field with label and placeholder, trailing icon
             TextFieldDefaults.TextFieldDecorationBox(
-                value = state.textFieldValue.text,
-                visualTransformation = state.visualTransformation,
+                value = state.annotatedString.text,
+                visualTransformation = VisualTransformation.None,
                 innerTextField = innerTextField,
                 placeholder = placeholder,
                 label = label,

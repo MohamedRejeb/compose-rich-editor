@@ -96,11 +96,11 @@ public fun ExpandableBasicRichText(
         LinkInteractionListener { expandedListenerState.value(false) }
     }
 
-    val visualString = remember(state.visualTransformation, state.annotatedString) {
+    val visualString = remember(state.annotatedString) {
         // Strip paragraph styles so concatenating the See more / See less suffix doesn't push it
         // into a separate paragraph (which would render on a new line). Span styles and link
         // annotations on the content are preserved.
-        state.visualTransformation.filter(state.annotatedString).text.flattenToInlineParagraph()
+        state.annotatedString.flattenToInlineParagraph()
     }
 
     val seeMoreSuffix = remember(seeMoreLabel, seeMoreStyle, seeMoreListener) {

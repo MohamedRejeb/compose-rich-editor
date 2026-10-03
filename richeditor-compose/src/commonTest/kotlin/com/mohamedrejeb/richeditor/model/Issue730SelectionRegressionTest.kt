@@ -6,31 +6,30 @@ import kotlin.test.Test
 import kotlin.test.assertSame
 
 /**
- * Regression pin for #730/#731: a pure selection change on background-free content must
- * not invalidate the visual transformation. The #635 selection mask only changes the
- * output when a span carries a background color; rebuilding otherwise recreates the
- * visualTransformation mid-gesture, and Android's legacy BasicTextField re-filters on
- * every change, fighting the selection manager.
+ * Regression pin for #730/#731 on the legacy value bridge: a pure selection change on
+ * background-free content must not rebuild [RichTextState.annotatedString]. The #635
+ * selection mask only changes the output when a span carries a background color; the
+ * editor's OutputTransformation reads the annotated string, so a rebuild per selection
+ * change would re-style the output on every gesture tick for an unchanged rendering.
  */
 class Issue730SelectionRegressionTest {
 
     @Test
-    fun `pure selection change without background spans must not rebuild the visual transformation`() {
+    fun `pure selection change without background spans must not rebuild the annotated string`() {
         val state = RichTextState()
         state.setText("alpha beta gamma\ndelta epsilon zeta")
         val text = state.textFieldValue.text
 
-        val before = state.visualTransformation
+        val before = state.annotatedString
 
         // Mimic the platform's long-press word selection: same text, new selection
         state.onTextFieldValueChange(TextFieldValue(text, TextRange(6, 10)))
 
         assertSame(
             before,
-            state.visualTransformation,
+            state.annotatedString,
             "A pure selection change on content without background spans rebuilt the " +
-                "visual transformation. On Android this re-filter mid-gesture breaks " +
-                "long-press word selection, select-all and handle dragging (#730, #731).",
+                "annotated string, re-styling the output mid-gesture (#730, #731).",
         )
     }
 }

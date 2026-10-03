@@ -4,6 +4,9 @@ import androidx.compose.runtime.Composable
 import com.mohamedrejeb.richeditor.model.RichTextState
 
 @Composable
-internal actual fun ClipboardEventEffect(richTextState: RichTextState) {
+internal actual fun ClipboardEventEffect(
+    richTextState: RichTextState,
+    readOnly: Boolean,
+) {
     // No-op: Android routes clipboard operations through the Compose framework
 }

@@ -15,48 +15,56 @@ public class RichTextConfig internal constructor(
 ) {
     public var linkColor: Color = Color.Blue
         set(value) {
+            if (field == value) return
             field = value
             updateText()
         }
 
     public var linkTextDecoration: TextDecoration = TextDecoration.Underline
         set(value) {
+            if (field == value) return
             field = value
             updateText()
         }
 
     public var codeSpanColor: Color = Color.Unspecified
         set(value) {
+            if (field == value) return
             field = value
             updateText()
         }
 
     public var codeSpanBackgroundColor: Color = Color.Transparent
         set(value) {
+            if (field == value) return
             field = value
             updateText()
         }
 
     public var codeSpanStrokeColor: Color = Color.LightGray
         set(value) {
+            if (field == value) return
             field = value
             updateText()
         }
 
     public var codeSpanCornerRadius: TextUnit = 8.sp
         set(value) {
+            if (field == value) return
             field = value
             updateText()
         }
 
     public var codeSpanStrokeWidth: TextUnit = 1.sp
         set(value) {
+            if (field == value) return
             field = value
             updateText()
         }
 
     public var codeSpanPadding: TextPaddingValues = TextPaddingValues(horizontal = 2.sp, vertical = 2.sp)
         set(value) {
+            if (field == value) return
             field = value
             updateText()
         }
@@ -66,6 +74,7 @@ public class RichTextConfig internal constructor(
      */
     public var orderedListIndent: Int = DefaultListIndent
         set(value) {
+            if (field == value) return
             field = value
             updateText()
         }
@@ -75,6 +84,7 @@ public class RichTextConfig internal constructor(
      */
     public var unorderedListIndent: Int = DefaultListIndent
         set(value) {
+            if (field == value) return
             field = value
             updateText()
         }
@@ -83,14 +93,12 @@ public class RichTextConfig internal constructor(
      * The indent for both ordered and unordered lists.
      *
      * This property is a shortcut for setting both [orderedListIndent] and [unorderedListIndent].
+     * Reading it returns the shared indent while the two agree, else the last value assigned here.
      */
     public var listIndent: Int = DefaultListIndent
-        get() {
-            if (orderedListIndent == unorderedListIndent)
-                field = orderedListIndent
-
-            return field
-        }
+        get() =
+            if (orderedListIndent == unorderedListIndent) orderedListIndent
+            else field
         set(value) {
             field = value
             orderedListIndent = value
@@ -111,12 +119,14 @@ public class RichTextConfig internal constructor(
      */
     public var unorderedListStyleType: UnorderedListStyleType = DefaultUnorderedListStyleType
         set(value) {
+            if (field == value) return
             field = value
             updateText()
         }
 
     public var orderedListStyleType: OrderedListStyleType = DefaultOrderedListStyleType
         set(value) {
+            if (field == value) return
             field = value
             updateText()
         }
@@ -136,6 +146,7 @@ public class RichTextConfig internal constructor(
     @ExperimentalRichTextApi
     public var listMarkerStyleBehavior: ListMarkerStyleBehavior = ListMarkerStyleBehavior.InheritFromText
         set(value) {
+            if (field == value) return
             field = value
             updateText()
         }
@@ -154,6 +165,7 @@ public class RichTextConfig internal constructor(
     @ExperimentalRichTextApi
     public var listPrefixAlignment: ListPrefixAlignment = ListPrefixAlignment.End
         set(value) {
+            if (field == value) return
             field = value
             updateText()
         }

@@ -15,6 +15,7 @@ import kotlin.test.assertNull
  * or without the fix), and the match was then handed to `toFloat()` or `toInt()`, which throw
  * on those digits, on values too large for an Int and on malformed decimals. Fix: the regexes
  * match ASCII digits only and a number that still fails to parse is ignored instead of thrown.
+ * Reading those digits as numbers is covered by [CssNonAsciiDigitsTest].
  */
 class Issue809CssNumberParsingTest {
 
@@ -25,13 +26,12 @@ class Issue809CssNumberParsingTest {
     }
 
     @Test
-    fun `html with a non ASCII font size loads without the size`() {
+    fun `html with a non ASCII font size loads`() {
         val state = RichTextState()
 
         state.setHtml("""<p><span style="font-size: ١٥px; letter-spacing: ٢px">text</span></p>""")
 
         assertEquals("text", state.toText())
-        assertEquals(TextUnit.Unspecified, state.richParagraphList.first().children.first().spanStyle.fontSize)
     }
 
     @Test

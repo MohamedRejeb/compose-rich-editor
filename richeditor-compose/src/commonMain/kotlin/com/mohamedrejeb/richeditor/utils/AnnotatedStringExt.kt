@@ -102,6 +102,9 @@ internal fun AnnotatedString.Builder.appendRichSpan(
         parent.textRange = firstChild.textRange
         parent.children.clear()
         parent.children.addAll(firstChild.children)
+        // The collapsed child is detached; its descendants now belong to parent.
+        // Paragraph splitting walks these back-pointers when moving siblings.
+        parent.children.fastForEach { it.parent = parent }
     }
 
     return index

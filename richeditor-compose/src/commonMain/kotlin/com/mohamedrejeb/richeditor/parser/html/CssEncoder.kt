@@ -166,26 +166,27 @@ internal object CssEncoder {
         alpha == 0f || (red == 1f && green == 1f && blue == 1f)
 
     internal fun parseCssColor(cssColor: String): Color? {
-        val rgbRegex = Regex("""rgb\((\d+), (\d+), (\d+)\)""")
-        val rgbaRegex = Regex("""rgba\((\d+), (\d+), (\d+), ([\d.]+)\)""")
+        val rgbRegex = Regex("""rgb\(([0-9]+), ([0-9]+), ([0-9]+)\)""")
+        val rgbaRegex = Regex("""rgba\(([0-9]+), ([0-9]+), ([0-9]+), ([0-9.]+)\)""")
         val hexRegex = Regex("""#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})""")
 
         // Check for rgb() format
         val rgbMatchResult = rgbRegex.find(cssColor)
         if (rgbMatchResult != null && rgbMatchResult.groupValues.size == 4) {
-            val r = rgbMatchResult.groupValues[1].toInt()
-            val g = rgbMatchResult.groupValues[2].toInt()
-            val b = rgbMatchResult.groupValues[3].toInt()
+            val r = rgbMatchResult.groupValues[1].toIntOrNull() ?: return null
+            val g = rgbMatchResult.groupValues[2].toIntOrNull() ?: return null
+            val b = rgbMatchResult.groupValues[3].toIntOrNull() ?: return null
             return Color(r, g, b)
         }
 
         // Check for rgba() format
         val rgbaMatchResult = rgbaRegex.find(cssColor)
         if (rgbaMatchResult != null && rgbaMatchResult.groupValues.size == 5) {
-            val r = rgbaMatchResult.groupValues[1].toInt()
-            val g = rgbaMatchResult.groupValues[2].toInt()
-            val b = rgbaMatchResult.groupValues[3].toInt()
-            val a = (rgbaMatchResult.groupValues[4].toFloat() * 255).toInt()
+            val r = rgbaMatchResult.groupValues[1].toIntOrNull() ?: return null
+            val g = rgbaMatchResult.groupValues[2].toIntOrNull() ?: return null
+            val b = rgbaMatchResult.groupValues[3].toIntOrNull() ?: return null
+            val alpha = rgbaMatchResult.groupValues[4].toFloatOrNull() ?: return null
+            val a = (alpha * 255).toInt()
             return Color(r, g, b, a)
         }
 
@@ -222,11 +223,11 @@ internal object CssEncoder {
      */
     internal fun parseCssSize(cssSize: String): Float? {
         if (cssSize == "0") return 0f
-        val sizeRegex = Regex("""([-]?\d+(\.\d+)?)\s*(px|pt|em|rem|%)""")
+        val sizeRegex = Regex("""([-]?[0-9]+(\.[0-9]+)?)\s*(px|pt|em|rem|%)""")
         val sizeMatchResult = sizeRegex.find(cssSize)
 
         if (sizeMatchResult != null && sizeMatchResult.groupValues.size == 4) {
-            val value = sizeMatchResult.groupValues[1].toFloat()
+            val value = sizeMatchResult.groupValues[1].toFloatOrNull() ?: return null
             val unit = sizeMatchResult.groupValues[3]
             return when (unit) {
                 "px" -> value
@@ -253,11 +254,11 @@ internal object CssEncoder {
      */
     internal fun parseCssTextSize(cssTextSize: String): TextUnit {
         if (cssTextSize == "0") return TextUnit.Unspecified
-        val sizeRegex = Regex("""([-]?\d+(\.\d+)?)\s*(px|pt|em|rem|%)""")
+        val sizeRegex = Regex("""([-]?[0-9]+(\.[0-9]+)?)\s*(px|pt|em|rem|%)""")
         val sizeMatchResult = sizeRegex.find(cssTextSize)
 
         if (sizeMatchResult != null && sizeMatchResult.groupValues.size == 4) {
-            val value = sizeMatchResult.groupValues[1].toFloat()
+            val value = sizeMatchResult.groupValues[1].toFloatOrNull() ?: return TextUnit.Unspecified
             val unit = sizeMatchResult.groupValues[3]
             return when (unit) {
                 "px" -> value.sp

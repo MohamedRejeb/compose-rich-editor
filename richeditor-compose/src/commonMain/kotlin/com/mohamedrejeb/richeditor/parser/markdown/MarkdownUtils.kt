@@ -282,13 +282,27 @@ private fun encodeMarkdownNodeToRichText(
 
         MarkdownElementTypes.INLINE_LINK -> {
             onOpenNode(node)
-            val text = node
-                .findChildOfType(MarkdownElementTypes.LINK_TEXT)
-                ?.getTextInNode(markdown)
-                ?.drop(1)
-                ?.dropLast(1)
-                ?.toString()
-            onText(text ?: "")
+            val linkText = node.findChildOfType(MarkdownElementTypes.LINK_TEXT)
+            if (node.parent?.type == MarkdownElementTypes.IMAGE) {
+                // The label of an image is its alt text, taken as written.
+                onText(linkText?.getTextInNode(markdown)?.drop(1)?.dropLast(1)?.toString() ?: "")
+            } else {
+                // The label of a link is inline content: an image, bold, code and so on.
+                val children = linkText?.children.orEmpty().toMutableList()
+                children.removeFirstOrNull()
+                children.removeLastOrNull()
+                children.fastForEach { child ->
+                    encodeMarkdownNodeToRichText(
+                        node = child,
+                        markdown = markdown,
+                        onOpenNode = onOpenNode,
+                        onCloseNode = onCloseNode,
+                        onText = onText,
+                        onHtmlTag = onHtmlTag,
+                        onHtmlBlock = onHtmlBlock,
+                    )
+                }
+            }
             onCloseNode(node)
         }
 

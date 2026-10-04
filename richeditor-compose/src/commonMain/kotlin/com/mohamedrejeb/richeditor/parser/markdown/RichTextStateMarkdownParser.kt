@@ -284,13 +284,20 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                         currentRichSpan?.paragraph?.children?.remove(currentRichSpan)
                 }
 
-                // Merge spans with only one child
-                if (currentRichSpan?.text?.isEmpty() == true && currentRichSpan?.children?.size == 1) {
-                    currentRichSpan?.children?.firstOrNull()?.let { child ->
+                // Merge spans with only one child. A span holds one rich span style, so a
+                // link around an image or a code span has to stay two nested spans.
+                val onlyChild = currentRichSpan?.children?.singleOrNull()
+                if (
+                    currentRichSpan?.text?.isEmpty() == true &&
+                    onlyChild != null &&
+                    (currentRichSpan?.richSpanStyle is RichSpanStyle.Default || onlyChild.richSpanStyle is RichSpanStyle.Default)
+                ) {
+                    onlyChild.let { child ->
                         currentRichSpan?.text = child.text
                         currentRichSpan?.spanStyle =
                             currentRichSpan?.spanStyle?.merge(child.spanStyle) ?: child.spanStyle
-                        currentRichSpan?.richSpanStyle = child.richSpanStyle
+                        if (child.richSpanStyle !is RichSpanStyle.Default)
+                            currentRichSpan?.richSpanStyle = child.richSpanStyle
                         currentRichSpan?.children?.clear()
                         currentRichSpan?.children?.addAll(child.children)
                         // The grandchildren now belong to the surviving span.
@@ -543,15 +550,20 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         if (!isBlank && markdownOpen.isNotEmpty())
             stringBuilder.append(markdownOpen.joinToString(separator = ""))
 
-        // Apply rich span style to markdown
-        val spanMarkdown = decodeMarkdownElementFromRichSpan(richSpan.text, richSpan.richSpanStyle)
+        val childrenMarkdown = buildString {
+            richSpan.children.fastForEach { child ->
+                append(decodeRichSpanToMarkdown(child, isHeading = isHeading))
+            }
+        }
 
-        // Append text
-        stringBuilder.append(spanMarkdown)
-
-        // Append children
-        richSpan.children.fastForEach { child ->
-            stringBuilder.append(decodeRichSpanToMarkdown(child, isHeading = isHeading))
+        // A link's label is everything inside it, so its children go between the brackets.
+        if (richSpan.richSpanStyle is RichSpanStyle.Link) {
+            stringBuilder.append(
+                decodeMarkdownElementFromRichSpan(richSpan.text + childrenMarkdown, richSpan.richSpanStyle)
+            )
+        } else {
+            stringBuilder.append(decodeMarkdownElementFromRichSpan(richSpan.text, richSpan.richSpanStyle))
+            stringBuilder.append(childrenMarkdown)
         }
 
         // Append markdown close

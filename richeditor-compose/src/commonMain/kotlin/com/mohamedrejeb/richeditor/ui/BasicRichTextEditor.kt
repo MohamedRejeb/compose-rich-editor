@@ -18,6 +18,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.hapticfeedback.HapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -35,6 +37,7 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.node.Ref
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -49,6 +52,7 @@ import com.mohamedrejeb.richeditor.clipboard.createRichTextClipboardManager
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.applyChangeList
 import com.mohamedrejeb.richeditor.model.correctPressCaret
+import com.mohamedrejeb.richeditor.model.holdCaretHandleOnParagraphEnd
 import com.mohamedrejeb.richeditor.model.correctTripleClickSelection
 import com.mohamedrejeb.richeditor.model.reconcileBufferWithModel
 
@@ -290,7 +294,23 @@ public fun BasicRichTextEditor(
     val editorCoordinates = remember { Ref<LayoutCoordinates>() }
     val innerTextFieldCoordinates = remember { Ref<LayoutCoordinates>() }
 
-    CompositionLocalProvider(LocalClipboard provides richClipboardManager) {
+    // The text field plays this haptic after every caret or selection handle step, which is
+    // the only sign of a handle drag the editor gets: the handles live in popups.
+    val hapticFeedback = LocalHapticFeedback.current
+    val handleAwareHapticFeedback = remember(hapticFeedback, state) {
+        object : HapticFeedback {
+            override fun performHapticFeedback(hapticFeedbackType: HapticFeedbackType) {
+                val undone = hapticFeedbackType == HapticFeedbackType.TextHandleMove &&
+                    state.holdCaretHandleOnParagraphEnd()
+                if (!undone) hapticFeedback.performHapticFeedback(hapticFeedbackType)
+            }
+        }
+    }
+
+    CompositionLocalProvider(
+        LocalClipboard provides richClipboardManager,
+        LocalHapticFeedback provides handleAwareHapticFeedback,
+    ) {
         // Capture position on the innerTextField (the actual text content composable),
         // not on the outer BasicTextField, so trigger-suggestion popups can anchor
         // precisely at the text content's origin - not at the top of the decorated
@@ -380,7 +400,7 @@ public fun BasicRichTextEditor(
                                             // Every caret placement the press causes is made by
                                             // the time its release has been dispatched.
                                             awaitPointerEvent(PointerEventPass.Final)
-                                            state.onSelectionGesturePointerUp()
+                                            state.onSelectionGesturePointerUp(releasePosition = change.position)
                                         }
                                     }
                                 }
@@ -405,6 +425,7 @@ public fun BasicRichTextEditor(
                 }
                 // Selection changes pass: a read-only editor can be focused and selected like
                 // a read-only BasicTextField, only its text is frozen.
+                state.selectionBeforeUserSelectionChange = originalSelection
                 @OptIn(ExperimentalFoundationApi::class)
                 val textChanged = changes.changeCount > 0
                 if (readOnly && textChanged) {

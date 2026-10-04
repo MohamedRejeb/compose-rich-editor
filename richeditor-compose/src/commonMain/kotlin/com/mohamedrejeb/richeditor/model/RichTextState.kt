@@ -300,6 +300,34 @@ public class RichTextState internal constructor(
      */
     internal var isFocused: Boolean = false
 
+    internal fun onFocusChanged(focused: Boolean) {
+        isFocused = focused
+        if (!focused) restoreSelectionCollapsedByFocusLoss()
+    }
+
+    /**
+     * The range a user selection change just collapsed to its end, the shape of the collapse
+     * the text field makes when it loses focus (CMP-2569). A focus loss reports through
+     * [onFocusChanged] in the same dispatch; the editor clears a range still pending a frame
+     * later, since that collapse was the user's own. Only set under
+     * [RichTextConfig.preserveSelectionOnFocusLoss].
+     */
+    internal var selectionCollapsedToEndFrom: TextRange? by mutableStateOf(null)
+
+    internal fun noteUserSelectionChange(original: TextRange, current: TextRange, textChanged: Boolean) {
+        if (!config.preserveSelectionOnFocusLoss) return
+        val collapsedToEnd = !textChanged && !original.collapsed && current == TextRange(original.max)
+        selectionCollapsedToEndFrom = if (collapsedToEnd) original else null
+    }
+
+    private fun restoreSelectionCollapsedByFocusLoss() {
+        val lost = selectionCollapsedToEndFrom ?: return
+        selectionCollapsedToEndFrom = null
+        if (lost.max > textFieldState.text.length) return
+        if (textFieldState.selection != TextRange(lost.max)) return
+        setTextFieldStateFromValue(text = textFieldState.text.toString(), selection = lost)
+    }
+
     /**
      * Set when the editor receives a copy, cut or paste shortcut key press. Key events only
      * reach the top layer, so the web clipboard handlers use it to tell a shortcut pressed in
@@ -5669,6 +5697,7 @@ public class RichTextState internal constructor(
         richTextState.config.preserveStyleOnEmptyLine = config.preserveStyleOnEmptyLine
         richTextState.config.exitListOnEmptyItem = config.exitListOnEmptyItem
         richTextState.config.listTypingShortcutsEnabled = config.listTypingShortcutsEnabled
+        richTextState.config.preserveSelectionOnFocusLoss = config.preserveSelectionOnFocusLoss
         richTextState.config.features = config.features
 
         return richTextState

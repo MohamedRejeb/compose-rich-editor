@@ -84,6 +84,40 @@ richTextState.selection = TextRange(0, richTextState.annotatedString.text.length
 richTextState.selection = TextRange(richTextState.annotatedString.text.length)
 ```
 
+### Selection and focus
+
+The Compose text field collapses its selection when it loses focus. A toolbar button that takes focus on click therefore finds no selection to style. There are three ways to handle this, pick the one that fits your UI.
+
+**Keep the toolbar out of the focus order.** Make each formatting control non-focusable, so the editor never loses focus. This is what the sample toolbars do:
+
+```kotlin
+IconButton(
+    onClick = { richTextState.toggleSpanStyle(SpanStyle(fontWeight = FontWeight.Bold)) },
+    modifier = Modifier.focusProperties { canFocus = false },
+) {
+    Icon(Icons.Outlined.FormatBold, contentDescription = "Bold")
+}
+```
+
+**Save and restore the selection.** For a real focus move in the same window, such as a URL field next to the editor, read the selection before focus moves and assign it back afterwards:
+
+```kotlin
+val savedSelection = richTextState.selection
+// ... focus moves to the other field, the user confirms ...
+richTextState.selection = savedSelection
+```
+
+A `Dialog` or `Popup` is a separate layer and does not take focus from the editor underneath, so the selection survives it without any of this.
+
+**Let the editor keep its selection.** Set `preserveSelectionOnFocusLoss` and the editor keeps the selected range, and its highlight, while it is unfocused:
+
+```kotlin
+@OptIn(ExperimentalRichTextApi::class)
+richTextState.config.preserveSelectionOnFocusLoss = true
+```
+
+Focusable controls can then style the selection directly. Clicking back into the editor places the caret as usual. With two editors on one screen, each keeps its own highlight, so both can show a selection at once. The flag defaults to `false` and is marked `@ExperimentalRichTextApi`: the behavior may change.
+
 ### Replacing a selection
 
 Typing, an IME commit, or a plain-text paste over a non-collapsed selection styles the inserted text from the replaced range's start (the platform typing-attributes convention), not from the character before the caret. The same goes for an IME autocorrect or suggestion pick that rewrites a word while the caret is collapsed: the new text takes the style of the first character it replaces. The restyle is part of the same edit, so undo treats the replacement as a single entry. Rich span styles are inherited only when they accept edge text and are not atomic, so replacing a whole link or image never linkifies or atomizes the typed text.

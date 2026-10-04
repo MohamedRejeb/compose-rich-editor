@@ -148,6 +148,45 @@ class Issue304CaretHandleParagraphEndTest {
         assertEquals(TextRange(2), state.selection)
     }
 
+    /** "Hi" 0..2, "Next line here" 3..17, "End" 18..21: the last paragraph is the short one. */
+    private val threeParagraphs = "Hi\nNext line here\nEnd"
+
+    @Test
+    fun `a handle coming back up from the end of a short paragraph is put on the end of the longer one above`() =
+        runEditor(text = threeParagraphs) { state ->
+            placeCaret(state, 16)
+
+            assertFalse(caretHandleStep(state, TextRange(17)))
+            assertFalse(caretHandleStep(state, TextRange(21)))
+            assertTrue(caretHandleStep(state, TextRange(18)))
+
+            assertEquals(TextRange(17), state.selection)
+        }
+
+    @Test
+    fun `a fast drag back along a line reaches the paragraph start it was heading for`() =
+        runEditor {
+            // Each step skips several characters and the last one starts further right than
+            // "Hi" ends, so only the direction of travel says this is not the empty space.
+            placeCaret(it, 17)
+
+            assertFalse(caretHandleStep(it, TextRange(13)))
+            assertFalse(caretHandleStep(it, TextRange(8)))
+            assertFalse(caretHandleStep(it, TextRange(3)))
+
+            assertEquals(TextRange(3), it.selection)
+        }
+
+    @Test
+    fun `a first step from inside a line to its paragraph start is accepted when the line above is longer`() =
+        runEditor(text = threeParagraphs) { state ->
+            placeCaret(state, 20)
+
+            assertFalse(caretHandleStep(state, TextRange(18)))
+
+            assertEquals(TextRange(18), state.selection)
+        }
+
     @Test
     fun `a handle moving left along the next paragraph's first line reaches its start`() = runEditor { state ->
         placeCaret(state, 4)

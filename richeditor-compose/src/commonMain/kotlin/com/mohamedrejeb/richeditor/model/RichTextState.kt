@@ -885,6 +885,9 @@ public class RichTextState internal constructor(
      */
     internal var selectionBeforeUserSelectionChange: TextRange = TextRange.Zero
 
+    /** The caret before and after the latest caret handle step. */
+    internal var lastCaretHandleStep: Pair<Int, Int>? = null
+
     internal fun isLaterParagraphStart(offset: Int): Boolean =
         richParagraphList
             .asSequence()

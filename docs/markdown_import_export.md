@@ -77,4 +77,5 @@ The following Markdown syntax elements are supported:
 - Nested lists are supported with proper indentation
 - The Markdown output is clean and properly formatted
 - Markdown has no native width/height syntax for images, so explicit dimensions are lost in a Markdown round-trip. Use HTML if you need to preserve them
+- HTML inside Markdown is partly supported: inline formatting tags such as `<b>`, `<i>`, `<u>`, `<br>` and `<span>` are applied, and block-level HTML is passed to the HTML parser. Inline `<a>` and `<img>` tags are not converted to links or images
 - Tables are planned for future releases

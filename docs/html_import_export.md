@@ -30,7 +30,7 @@ val complexHtml = """
             <li>Ordered list item 2</li>
         </ol>
         <p>Link to <a href="https://example.com">Example</a></p>
-        <pre><code>Code block example</code></pre>
+        <p>Inline <code>code</code> example</p>
     </div>
 """
 richTextState.setHtml(complexHtml)
@@ -70,7 +70,7 @@ The following HTML tags are supported:
 
 ### Rich Content
 - `<img src="..." width="..." height="..." alt="...">` - Inline images (see [Images](images.md))
-- `<span data-trigger-id="..." data-token-id="...">` - Mention/hashtag/command tokens (see [Mentions & Triggers](mentions_and_triggers.md))
+- `<span data-trigger="..." data-id="...">` - Mention/hashtag/command tokens (see [Mentions & Triggers](mentions_and_triggers.md))
 
 ## Line breaks and empty blocks
 
@@ -89,6 +89,6 @@ HTML saved by earlier versions of the library, which wrote empty paragraphs as b
 
 - Unsupported HTML tags will be ignored during import
 - Nested lists are supported
-- Custom styles (using style attribute) are not currently supported
+- Inline `style` attributes are read for these properties: `color`, `background` / `background-color`, `font-size`, `font-weight`, `font-style`, `letter-spacing`, `text-decoration`, `text-shadow`, `baseline-shift`, `text-align`, `direction`, `line-height` and `text-indent`. `<style>` blocks and class selectors are not supported
 - The HTML output is clean and properly formatted
 - Register triggers **before** calling `setHtml` with content that contains tokens, otherwise tokens fall back to plain text

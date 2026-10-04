@@ -70,6 +70,25 @@ CompositionLocalProvider(LocalUriHandler provides myUriHandler) {
 
 `RichTextEditorDecorationBox` and `OutlinedRichTextEditorDecorationBox` (in `RichTextEditorDefaults`) have overloads that accept a `visualTransformation` parameter. Those overloads are deprecated: the editor renders its styled output through an `OutputTransformation` it installs on the text field itself, so the parameter is no longer applied and has no effect. Switch to the overload without `visualTransformation`.
 
+### How do I react to changes? There is no `onValueChange`
+
+The editor is state based, like Compose's `BasicTextField(state)`, so there is no `value` / `onValueChange` pair. Observe the state instead:
+
+```kotlin
+LaunchedEffect(richTextState) {
+    snapshotFlow { richTextState.annotatedString }
+        .collect { onHtmlChanged(richTextState.toHtml()) }
+}
+```
+
+This also fires for your own `setHtml` calls. If you write the value back into the editor, only do so when it differs from what the editor already holds, otherwise the two will feed each other:
+
+```kotlin
+LaunchedEffect(html) {
+    if (html != richTextState.toHtml()) richTextState.setHtml(html)
+}
+```
+
 ### How do I save/restore editor content?
 
 You can convert the editor content to HTML or Markdown for storage:

@@ -2,9 +2,9 @@
 
 The Rich Text Editor supports **inline images** via the `RichSpanStyle.Image`
 span, with pluggable loading through the `ImageLoader` interface. Images render
-inside the editor's text flow as atomic inline content, round-trip through HTML
-(`<img>`), and are automatically clamped to the editor's container width so
-oversized sources don't overflow the layout.
+in the read-only `RichText` as atomic inline content, round-trip through HTML
+(`<img>`), and are automatically clamped to the container width so oversized
+sources don't overflow the layout.
 
 > **Note:** The image APIs are marked `@ExperimentalRichTextApi` and may change
 > in a future release. Images currently render in the read-only `RichText` view;

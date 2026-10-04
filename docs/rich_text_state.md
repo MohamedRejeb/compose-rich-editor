@@ -134,6 +134,15 @@ richTextState.setHtml(savedHtml)
 richTextState.setMarkdown(savedMarkdown)
 ```
 
+### Exporting a Range
+
+`toText`, `toHtml`, `toMarkdown` and `toRichTextDocument` also take a `TextRange` and export only that part of the content with its formatting. Pass the selection to get what the user selected:
+
+```kotlin
+val selectedHtml = richTextState.toHtml(richTextState.selection)
+val selectedMarkdown = richTextState.toMarkdown(richTextState.selection)
+```
+
 ## Undo / Redo
 
 `RichTextState` ships its own undo/redo stack that snapshots the full rich-text

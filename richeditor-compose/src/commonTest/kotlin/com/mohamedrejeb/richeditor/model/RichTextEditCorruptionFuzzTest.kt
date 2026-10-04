@@ -5,6 +5,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.fail
@@ -12,7 +13,8 @@ import kotlin.test.fail
 /**
  * Edit-pipeline fuzz harness with corruption oracles, stronger than
  * [Issue716StringIndexFuzzTest]'s crash-only net: every edit checks
- * annotatedString/textFieldValue consistency and selection bounds, plain-document
+ * annotatedString/textFieldValue consistency, selection bounds and span tree ownership
+ * (every span's parent and paragraph pointers match where it sits), plain-document
  * scenarios require the text to exactly equal the committed text,
  * toHtml()/toMarkdown() run periodically, and undo/redo and emoji surrogate pairs are
  * part of the op mix. All known-bug masks except the separator-overwrite one (see
@@ -55,6 +57,14 @@ class RichTextEditCorruptionFuzzTest {
                 }
                 valueHistory += state.textFieldValue
 
+                fun checkOwnership(span: RichSpan, parent: RichSpan?, paragraph: RichParagraph) {
+                    if (span.parent !== parent) finding("span \"${span.text}\" points to a parent it is not a child of")
+                    if (span.paragraph !== paragraph) finding("span \"${span.text}\" points to a paragraph it is not in")
+                    span.children.forEach { checkOwnership(it, span, paragraph) }
+                }
+                state.richParagraphList.forEach { paragraph ->
+                    paragraph.children.forEach { checkOwnership(it, null, paragraph) }
+                }
                 val tfv = state.textFieldValue
                 if (tfv.text != state.annotatedString.text) {
                     finding(

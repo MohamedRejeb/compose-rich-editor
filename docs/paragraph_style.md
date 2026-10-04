@@ -3,7 +3,6 @@
 The Rich Text Editor provides comprehensive support for paragraph styling, allowing you to control:
 - Text alignment
 - Line spacing
-- Paragraph spacing
 - Text direction
 - Text indentation
 

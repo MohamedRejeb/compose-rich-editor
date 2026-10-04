@@ -292,8 +292,8 @@ so server-side rendering stays consistent.
 
 ### HTML
 
-Committed tokens are serialized as `<span>` elements carrying `data-trigger-id`
-and `data-token-id` attributes. On `setHtml`, unknown trigger ids render as
+Committed tokens are serialized as `<span>` elements carrying `data-trigger`
+and `data-id` attributes. On `setHtml`, unknown trigger ids render as
 plain text - so make sure to `registerTrigger(...)` **before** loading content
 that contains tokens.
 

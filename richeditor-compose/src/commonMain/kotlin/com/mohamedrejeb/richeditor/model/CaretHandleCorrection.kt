@@ -39,33 +39,41 @@ internal fun RichTextState.holdCaretHandleOnParagraphEnd(): Boolean {
     val layout = textLayoutResult ?: return false
     if (layout.layoutInput.text.length != text.length) return false
 
-    val paragraphEnd = caret.start - 1
-    val lastLine = layout.getLineForOffset(paragraphEnd)
-    val cameFromLastLine =
-        previous.start <= paragraphEnd && layout.getLineForOffset(previous.start) == lastLine
-    val handleIsPastParagraphEnd =
-        if (cameFromLastLine) {
-            previous.start > layout.getLineStart(lastLine)
-        } else {
-            val startLine = layout.getLineForOffset(caret.start)
-            val previousLine = layout.getLineForOffset(previous.start)
-            val headingForStart =
-                previous.start == caret.start + 1 ||
-                    (beforePrevious != null &&
-                        previousLine == startLine &&
-                        layout.getLineForOffset(beforePrevious) == startLine &&
-                        previous.start < beforePrevious)
-            val canBeRightOfParagraphEnd =
-                previous.start == layout.getLineEnd(previousLine, visibleEnd = true) ||
-                    layout.advanceInLine(previous.start) > layout.advanceInLine(paragraphEnd)
-            !headingForStart && canBeRightOfParagraphEnd
-        }
-    if (!handleIsPastParagraphEnd) return false
+    val step = CaretHandleStep(from = previous.start, to = caret.start, before = beforePrevious)
+    if (!layout.handleIsPastParagraphEnd(step)) return false
 
+    val paragraphEnd = caret.start - 1
     lastCaretHandleStep = previous.start to paragraphEnd
     setTextFieldStateFromValue(text = text, selection = TextRange(paragraphEnd))
     return true
 }
+
+/** A caret handle step onto a paragraph start [to], from [from], which was reached from [before]. */
+private class CaretHandleStep(val from: Int, val to: Int, val before: Int?)
+
+private fun TextLayoutResult.handleIsPastParagraphEnd(step: CaretHandleStep): Boolean {
+    val paragraphEnd = step.to - 1
+    val lastLine = getLineForOffset(paragraphEnd)
+    if (step.from <= paragraphEnd && getLineForOffset(step.from) == lastLine)
+        return step.from > getLineStart(lastLine)
+
+    return !isHeadingForStart(step) && canBeRightOf(paragraphEnd, step.from)
+}
+
+/** Whether the caret was travelling back along the paragraph's first line towards its start. */
+private fun TextLayoutResult.isHeadingForStart(step: CaretHandleStep): Boolean {
+    if (step.from == step.to + 1) return true
+    val before = step.before ?: return false
+    val startLine = getLineForOffset(step.to)
+    return getLineForOffset(step.from) == startLine &&
+        getLineForOffset(before) == startLine &&
+        step.from < before
+}
+
+/** Whether a handle whose caret is at [offset] can be further along than [paragraphEnd] is. */
+private fun TextLayoutResult.canBeRightOf(paragraphEnd: Int, offset: Int): Boolean =
+    offset == getLineEnd(getLineForOffset(offset), visibleEnd = true) ||
+        advanceInLine(offset) > advanceInLine(paragraphEnd)
 
 /** How far [offset] is from the start of its line, in either text direction. */
 private fun TextLayoutResult.advanceInLine(offset: Int): Float {

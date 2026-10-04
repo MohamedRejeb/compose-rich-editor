@@ -143,6 +143,14 @@ internal class OrderedList private constructor(
         )
     }
 
+    /**
+     * The number this item is pinned to when it follows an item numbered [previousNumber] in
+     * the same run, or null when it simply counts up. A [startFrom] of 1 means "not set", so a
+     * later item cannot restart a run at 1; one equal to the next number is no restart either.
+     */
+    fun restartNumberAfter(previousNumber: Int): Int? =
+        startFrom.takeIf { it != 1 && it != previousNumber + 1 }
+
     override fun getNextParagraphType(): ParagraphType =
         OrderedList(
             number = number + 1,

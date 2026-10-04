@@ -12,7 +12,6 @@ import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startText
 import kotlin.test.*
-import kotlin.test.Ignore
 
 /**
  * Reproduction tests for HTML parser bugs from GitHub issues.
@@ -517,10 +516,6 @@ class RichTextStateHtmlParserBugTest {
         )
     }
 
-    // TODO: <li value="N"> is parsed correctly but checkParagraphsType()
-    //  renumbers items sequentially, overriding the per-item value.
-    //  Fixing this requires preserving explicit values through normalization.
-    @Ignore
     @Test
     fun testIssue574_liValueAttributeRespected() {
         // <li value="5"> should set that item's number

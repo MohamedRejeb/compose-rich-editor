@@ -160,6 +160,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     val valueAttr = attributes["value"]?.toIntOrNull()
                     if (valueAttr != null) {
                         orderedListCounters[currentListLevel] = valueAttr
+                        orderedListStartValues[currentListLevel] = valueAttr
                     }
                 }
 
@@ -556,6 +557,9 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 return@fastForEachIndexed
             }
 
+            // Whether this paragraph's number is already carried by an <ol start="N">.
+            var startWrittenOnList = false
+
             if (isParagraphList) {
                 // Close deeper lists (and the withheld host items that contained them)
                 closeListsDownTo(paragraphLevel)
@@ -590,6 +594,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                         openingLevel == paragraphLevel
                     ) {
                         builder.append("<ol start=\"${richParagraphType.startFrom}\">")
+                        startWrittenOnList = true
                     } else {
                         builder.append("<$paragraphGroupTagName>")
                     }
@@ -619,6 +624,8 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
             // Append paragraph opening tag
             builder.append("<$paragraphTagName")
+            if (richParagraphType is OrderedList && richParagraphType.startFrom != 1 && !startWrittenOnList)
+                builder.append(" value=\"${richParagraphType.startFrom}\"")
             if (paragraphCss.isNotBlank()) builder.append(" style=\"$paragraphCss\"")
             builder.append(">")
 

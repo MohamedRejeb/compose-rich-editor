@@ -27,8 +27,32 @@ internal object CssEncoder {
             .split(";")
             .map { it.split(":") }
             .filter { it.size == 2 }
-            .associate { it[0].trim() to it[1].trim() }
+            .associate { it[0].trim() to it[1].trim().withAsciiNumerals() }
     }
+
+    /**
+     * CSS only defines ASCII digits, but software formatting numbers in an Arabic or Persian
+     * locale writes values such as "١٥px" or "١٫٥em". Any Unicode decimal digit is replaced by
+     * its ASCII digit, and the Arabic decimal separator and percent sign by "." and "%".
+     */
+    private fun String.withAsciiNumerals(): String {
+        if (all { it.code < ASCII_LIMIT }) return this
+        return buildString(length) {
+            for (char in this@withAsciiNumerals) {
+                append(
+                    when (char) {
+                        ARABIC_DECIMAL_SEPARATOR -> '.'
+                        ARABIC_PERCENT_SIGN -> '%'
+                        else -> char.digitToIntOrNull()?.let { '0' + it } ?: char
+                    }
+                )
+            }
+        }
+    }
+
+    private const val ASCII_LIMIT = 0x80
+    private const val ARABIC_DECIMAL_SEPARATOR = '\u066B'
+    private const val ARABIC_PERCENT_SIGN = '\u066A'
 
     /**
      * Converts the given CSS style map into a [SpanStyle].

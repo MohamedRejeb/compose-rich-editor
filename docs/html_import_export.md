@@ -62,8 +62,8 @@ The following HTML tags are supported:
 - `<br>` - Line breaks
 - `<h1>`..`<h6>` - Headings (see [Headings](headings.md))
 - `<ul>` - Unordered lists
-- `<ol>` - Ordered lists
-- `<li>` - List items
+- `<ol>` - Ordered lists. `start="N"` sets the first item's number
+- `<li>` - List items. In an ordered list, `value="N"` renumbers the list from that item on (a later item cannot restart at 1)
 
 ### Links
 - `<a href="...">` - Hyperlinks

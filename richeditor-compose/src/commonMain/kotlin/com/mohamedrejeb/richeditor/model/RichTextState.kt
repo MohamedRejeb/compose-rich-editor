@@ -3850,11 +3850,9 @@ public class RichTextState internal constructor(
                 UnorderedList(
                     config = config,
                 )
-            } else if (richSpan.text.matches(Regex("^\\d+\\. ")) && RichTextFeature.OrderedList in features) {
-                val dotIndex = richSpan.text.indexOf('.')
-                val number = richSpan.text.substring(0, dotIndex).toIntOrNull() ?: 1
+            } else if (RichTextFeature.OrderedList in features) {
                 OrderedList(
-                    number = number,
+                    number = orderedListTriggerNumber(richSpan.text) ?: return,
                     config = config,
                 )
             } else {
@@ -3865,6 +3863,17 @@ public class RichTextState internal constructor(
         richSpan.text = ""
         // A list item cannot ride inside the paragraph it continued.
         clearLineBreakContinuations(richSpan.paragraph)
+    }
+
+    /**
+     * The number of an ordered list trigger ("3. "), or null when [text] is not one. Digits of
+     * any script count, so "٣. " starts a list at 3 on every platform. A number too large for
+     * an Int starts the list at 1.
+     */
+    private fun orderedListTriggerNumber(text: String): Int? {
+        val digits = text.removeSuffix(". ")
+        if (digits.length == text.length || digits.isEmpty() || !digits.all { it.isDigit() }) return null
+        return digits.map { it.digitToInt() }.joinToString("").toIntOrNull() ?: 1
     }
 
     /**
@@ -3907,11 +3916,15 @@ public class RichTextState internal constructor(
             if (currentParagraphType !is OrderedList)
                 break
 
+            val restartNumber =
+                if (i == startParagraphIndex) null
+                else levelNumberMap[currentParagraphType.level]?.let(currentParagraphType::restartNumberAfter)
             val currentNumber =
                 if (i == startParagraphIndex)
                     startNumber
                 else
-                    levelNumberMap[currentParagraphType.level]
+                    restartNumber
+                        ?: levelNumberMap[currentParagraphType.level]
                         ?.plus(1)
                         ?: run {
                             if (levelNumberMap.containsKey(currentParagraphType.level - 1))
@@ -3928,7 +3941,8 @@ public class RichTextState internal constructor(
                     number = currentNumber,
                     config = config,
                     startTextWidth = currentParagraphType.startTextWidth,
-                    initialLevel = currentParagraphType.level
+                    initialLevel = currentParagraphType.level,
+                    startFrom = restartNumber ?: 1,
                 ),
                 textFieldValue = newTextFieldValue,
             )
@@ -3990,12 +4004,11 @@ public class RichTextState internal constructor(
                 levelNumberMap.remove(currentParagraphType.level)
 
             if (currentParagraphType is OrderedList) {
-                // The first item of a run starts at its startFrom; following items count up.
-                val isFirstOfRun = currentParagraphType.level !in levelNumberMap
-                val number =
-                    levelNumberMap[currentParagraphType.level]
-                        ?.plus(1)
-                        ?: currentParagraphType.startFrom
+                // The first item of a run starts at its startFrom; following items count up
+                // unless they carry a restart number of their own.
+                val previousNumber = levelNumberMap[currentParagraphType.level]
+                val restartNumber = previousNumber?.let(currentParagraphType::restartNumberAfter)
+                val number = restartNumber ?: previousNumber?.plus(1) ?: currentParagraphType.startFrom
 
                 levelNumberMap[currentParagraphType.level] = number
 
@@ -4006,7 +4019,7 @@ public class RichTextState internal constructor(
                         config = config,
                         startTextWidth = currentParagraphType.startTextWidth,
                         initialLevel = currentParagraphType.level,
-                        startFrom = if (isFirstOfRun) currentParagraphType.startFrom else 1,
+                        startFrom = if (previousNumber == null) currentParagraphType.startFrom else restartNumber ?: 1,
                     ),
                     textFieldValue = tempTextFieldValue,
                 )
@@ -6009,13 +6022,11 @@ public class RichTextState internal constructor(
                 levelNumberMap.remove(type.level)
 
             if (type is OrderedList) {
-                // Use startFrom for the first item if explicitly set (from <ol start="N">),
-                // otherwise default to 1
-                val isFirstAtLevel = levelNumberMap[type.level] == null
-                val orderedListNumber =
-                    levelNumberMap[type.level]
-                        ?.plus(1)
-                        ?: type.startFrom
+                // The first item starts at its startFrom (from <ol start="N">, default 1);
+                // a later item counts up unless it restarts (<li value="N">).
+                val previousNumber = levelNumberMap[type.level]
+                val restartNumber = previousNumber?.let(type::restartNumberAfter)
+                val orderedListNumber = restartNumber ?: previousNumber?.plus(1) ?: type.startFrom
 
                 levelNumberMap[type.level] = orderedListNumber
 
@@ -6023,8 +6034,8 @@ public class RichTextState internal constructor(
                     orderedListStartTextSpanStyle =
                         richParagraph.getFirstNonEmptyChild()?.spanStyle ?: SpanStyle()
 
-                // Preserve startFrom on the first item so it survives re-runs
-                val preservedStartFrom = if (isFirstAtLevel) type.startFrom else 1
+                // Preserve the start and restart numbers so they survive re-runs
+                val preservedStartFrom = if (previousNumber == null) type.startFrom else restartNumber ?: 1
 
                 tempTextFieldValue = updateParagraphType(
                     paragraph = richParagraph,

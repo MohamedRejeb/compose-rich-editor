@@ -2,6 +2,8 @@ package com.mohamedrejeb.richeditor.sample.common.lab
 
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.model.RichTextFeature
 
 /**
  * Shows the editor lab on the home screen. A development aid for manual device checks, so it
@@ -50,3 +52,20 @@ private const val SCROLLING_PARAGRAPH_COUNT = 15
 
 // Lines of different lengths, so the empty area after a short line can be dragged into.
 private const val LONG_LINE_INTERVAL = 3
+
+/**
+ * A feature set for the editor under test, so a paste can be checked against a restriction on
+ * a phone or in the browser.
+ */
+@OptIn(ExperimentalRichTextApi::class)
+internal enum class LabFeatures(
+    val label: String,
+    val features: Set<RichTextFeature>,
+) {
+    All(label = "All features", features = RichTextFeature.All),
+    Emphasis(
+        label = "Bold, italic, underline",
+        features = setOf(RichTextFeature.Bold, RichTextFeature.Italic, RichTextFeature.Underline),
+    ),
+    Plain(label = "Plain text", features = emptySet()),
+}

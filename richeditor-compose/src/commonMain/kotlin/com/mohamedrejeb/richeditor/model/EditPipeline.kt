@@ -67,7 +67,7 @@ internal fun RichTextState.applyChangeList(buffer: TextFieldBuffer) {
 
     // Paste recognition on the delta shape: one delta whose inserted text matches the
     // clipboard's stashed plain text is the paste the clipboard manager announced.
-    val pendingHtml = pendingClipboardHtml.takeIf { config.richClipboardEnabled }
+    val pendingHtml = pendingClipboardHtml.takeIf { config.richPasteEnabled }
     val expectedPlain = pendingClipboardPlainText
     if (pendingHtml != null && expectedPlain != null) {
         val pasteDelta = deltas.singleOrNull()?.takeIf {

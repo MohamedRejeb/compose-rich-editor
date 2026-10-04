@@ -25,10 +25,12 @@ internal const val InlineImagePlaceholder: Char = '￼'
 @OptIn(ExperimentalRichTextApi::class)
 internal object RichTextDocumentEncoder {
 
-    fun encode(state: RichTextState): RichTextDocument {
+    fun encode(state: RichTextState): RichTextDocument = encode(state.richParagraphList)
+
+    fun encode(paragraphs: List<RichParagraph>): RichTextDocument {
         val orderedCounters = mutableMapOf<Int, Int>()
         return RichTextDocument(
-            blocks = state.richParagraphList
+            blocks = paragraphs
                 .map { paragraph -> encodeParagraph(paragraph, orderedCounters) }
                 .ifEmpty { listOf(RichTextBlock(text = "")) },
         )

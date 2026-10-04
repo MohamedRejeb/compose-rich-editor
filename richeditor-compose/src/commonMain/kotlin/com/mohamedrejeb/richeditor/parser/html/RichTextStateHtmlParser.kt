@@ -137,13 +137,6 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     return@onOpenTag
                 }
 
-                if (name == "body") {
-                    stringBuilder.clear()
-                    richParagraphList.clear()
-                    richParagraphList.add(RichParagraph())
-                    currentRichSpan = null
-                }
-
                 val cssStyleMap = attributes["style"]?.let { CssEncoder.parseCssStyle(it) } ?: emptyMap()
                 val cssSpanStyle = CssEncoder.parseCssStyleMapToSpanStyle(cssStyleMap)
                 val tagSpanStyle = htmlElementsSpanStyleEncodeMap[name]

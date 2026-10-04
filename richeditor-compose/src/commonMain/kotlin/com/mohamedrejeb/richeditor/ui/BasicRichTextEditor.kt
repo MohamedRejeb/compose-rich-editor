@@ -22,7 +22,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.isShiftPressed
+import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -330,6 +336,9 @@ public fun BasicRichTextEditor(
                     state.isFocused = focusState.isFocused
                 }
                 .onPreviewKeyEvent { event ->
+                    if (event.isClipboardShortcutKeyDown())
+                        state.sawClipboardShortcutKey = true
+
                     if (readOnly) {
                         // The selection keys still work in a read-only editor, and the state
                         // tells their changes from gestures by the key press.
@@ -442,6 +451,18 @@ public fun BasicRichTextEditor(
             },
             scrollState = state.scrollState,
         )
+    }
+}
+
+/** Ctrl or Cmd with C, X or V, and the Insert and Delete forms (Ctrl+Insert, Shift+Insert, Shift+Delete). */
+private fun KeyEvent.isClipboardShortcutKeyDown(): Boolean {
+    if (type != KeyEventType.KeyDown) return false
+    val command = isCtrlPressed || isMetaPressed
+    return when (key) {
+        Key.C, Key.X, Key.V -> command
+        Key.Insert -> command || isShiftPressed
+        Key.Delete -> isShiftPressed
+        else -> false
     }
 }
 

@@ -301,6 +301,13 @@ public class RichTextState internal constructor(
     internal var isFocused: Boolean = false
 
     /**
+     * Set when the editor receives a copy, cut or paste shortcut key press. Key events only
+     * reach the top layer, so the web clipboard handlers use it to tell a shortcut pressed in
+     * the editor from one pressed in a dialog above it.
+     */
+    internal var sawClipboardShortcutKey: Boolean = false
+
+    /**
      * The annotated string representing the rich text.
      */
     public var annotatedString: AnnotatedString by mutableStateOf(AnnotatedString(text = ""))

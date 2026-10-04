@@ -400,7 +400,7 @@ public fun BasicRichTextEditor(
                                             // Every caret placement the press causes is made by
                                             // the time its release has been dispatched.
                                             awaitPointerEvent(PointerEventPass.Final)
-                                            state.onSelectionGesturePointerUp()
+                                            state.onSelectionGesturePointerUp(releasePosition = change.position)
                                         }
                                     }
                                 }

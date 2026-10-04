@@ -801,6 +801,7 @@ public class RichTextState internal constructor(
     private var pressSeriesCount = 0
     private var pressSeriesUptimeMs = 0L
     private var pressSeriesPosition: Offset? = null
+    private var pressSlop = 0f
 
     // True from a third press until its selection has been seen by
     // [correctTripleClickSelection] or the pointer is up.
@@ -824,12 +825,46 @@ public class RichTextState internal constructor(
         pressSeriesCount = if (continuesSeries) pressSeriesCount + 1 else 1
         pressSeriesUptimeMs = uptimeMillis
         pressSeriesPosition = position
+        pressSlop = slop
         tripleClickArmed = pressSeriesCount >= 3 && !shiftPressed
     }
 
-    internal fun onSelectionGesturePointerUp() {
+    /**
+     * @param releasePosition where the pointer came up, in the coordinates the press was
+     * reported in, or null when unknown.
+     */
+    internal fun onSelectionGesturePointerUp(releasePosition: Offset? = null) {
+        if (pressCaretCorrectionArmed && releasePosition != null)
+            correctTapOnUnchangedCaret(releasePosition)
         pressCaretCorrectionArmed = false
         tripleClickArmed = false
+    }
+
+    /**
+     * [correctPressCaret] only runs when a press changes the selection. A tap in the empty
+     * space after a paragraph while the caret already sits on the next paragraph's start
+     * reports that same offset, so nothing changes and nothing is corrected. This covers that
+     * tap once it is over. A press that moved further than the slop is a scroll or a drag.
+     */
+    private fun correctTapOnUnchangedCaret(releasePosition: Offset) {
+        val pressPosition = pressSeriesPosition ?: return
+        if ((releasePosition - pressPosition).getDistance() >= pressSlop) return
+        val press = pressForCaretCorrection() ?: return
+
+        val caret = textFieldState.selection
+        if (singleParagraphMode || !caret.collapsed || !isLaterParagraphStart(caret.start)) return
+
+        val text = textFieldState.text.toString()
+        val layout = textLayoutResult ?: return
+        if (layout.layoutInput.text.length != text.length) return
+
+        val pressedLine = layout.getLineForVerticalPosition(
+            press.y.coerceIn(0f, layout.size.height.toFloat())
+        )
+        if (layout.getLineForOffset(caret.start) <= pressedLine) return
+
+        pressCorrectedCaret = caret.start - 1
+        setTextFieldStateFromValue(text = text, selection = TextRange(caret.start - 1))
     }
 
     internal fun pressForCaretCorrection(): Offset? {

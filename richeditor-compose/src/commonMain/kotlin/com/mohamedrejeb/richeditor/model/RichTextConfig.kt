@@ -189,6 +189,18 @@ public class RichTextConfig internal constructor(
     public var exitListOnEmptyItem: Boolean = true
 
     /**
+     * Whether typing a list marker at the start of a paragraph turns it into a list:
+     * `- ` or `* ` for an unordered list, a number followed by `. ` for an ordered list.
+     *
+     * When false the typed characters stay as text. Lists themselves are unaffected: the list
+     * functions on [RichTextState] and loaded or pasted lists keep working. To remove lists
+     * altogether, leave them out of [features] instead.
+     *
+     * Default is `true`.
+     */
+    public var listTypingShortcutsEnabled: Boolean = true
+
+    /**
      * Whether copy and paste carry rich text (HTML) formatting.
      *
      * When false, paste inserts plain text only, styled by the editor's normal insertion

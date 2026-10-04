@@ -3889,6 +3889,9 @@ public class RichTextState internal constructor(
     }
 
     private fun checkListStart(richSpan: RichSpan) {
+        if (!config.listTypingShortcutsEnabled)
+            return
+
         if (richSpan.paragraph.type !is DefaultParagraph)
             return
 
@@ -5665,6 +5668,7 @@ public class RichTextState internal constructor(
         richTextState.config.orderedListStyleType = config.orderedListStyleType
         richTextState.config.preserveStyleOnEmptyLine = config.preserveStyleOnEmptyLine
         richTextState.config.exitListOnEmptyItem = config.exitListOnEmptyItem
+        richTextState.config.listTypingShortcutsEnabled = config.listTypingShortcutsEnabled
         richTextState.config.features = config.features
 
         return richTextState

@@ -844,6 +844,12 @@ public class RichTextState internal constructor(
     // it is press driven, however much it looks like the one that ends an IME pick (#779).
     internal var pressCorrectedCaret: Int? = null
 
+    /**
+     * The selection before the latest user selection change or edit, recorded by the
+     * InputTransformation. [holdCaretHandleOnParagraphEnd] reads where a handle step came from.
+     */
+    internal var selectionBeforeUserSelectionChange: TextRange = TextRange.Zero
+
     internal fun isLaterParagraphStart(offset: Int): Boolean =
         richParagraphList
             .asSequence()

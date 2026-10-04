@@ -551,6 +551,15 @@ internal class RichSpan(
         }
     }
 
+    /**
+     * Appends [other]'s children to this span's children and makes this span their parent.
+     * [other] keeps its own list, so it must be detached from the tree by the caller.
+     */
+    fun adoptChildrenOf(other: RichSpan) {
+        other.children.fastForEach { it.parent = this }
+        children.addAll(other.children)
+    }
+
     fun removeEmptyChildren() {
         val toRemoveIndices = mutableListOf<Int>()
 

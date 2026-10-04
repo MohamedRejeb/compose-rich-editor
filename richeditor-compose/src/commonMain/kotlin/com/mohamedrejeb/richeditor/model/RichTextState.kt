@@ -4459,7 +4459,7 @@ public class RichTextState internal constructor(
                 firstRichSpan.richSpanStyle == secondRichSpan.richSpanStyle
             ) {
                 firstRichSpan.text += secondRichSpan.text
-                firstRichSpan.children.addAll(secondRichSpan.children)
+                firstRichSpan.adoptChildrenOf(secondRichSpan)
                 richSpan.children.removeAt(1)
             }
 
@@ -4471,7 +4471,7 @@ public class RichTextState internal constructor(
                 richSpan.text = firstRichSpan.text
                 richSpan.spanStyle = richSpan.spanStyle.customMerge(firstRichSpan.spanStyle)
                 richSpan.children.clear()
-                richSpan.children.addAll(firstRichSpan.children)
+                richSpan.adoptChildrenOf(firstRichSpan)
             }
         }
     }
@@ -4558,7 +4558,7 @@ public class RichTextState internal constructor(
                         if (lastChild != null && lastChild.spanStyle == childRichSpan.spanStyle) {
                             if (lastChild.children.isEmpty()) {
                                 lastChild.text += childRichSpan.text
-                                lastChild.children.addAll(childRichSpan.children)
+                                lastChild.adoptChildrenOf(childRichSpan)
                             } else {
                                 lastChild.children.add(childRichSpan)
                                 childRichSpan.parent = lastChild
@@ -4692,7 +4692,7 @@ public class RichTextState internal constructor(
                 firstRichSpan.spanStyle == secondRichSpan.spanStyle
             ) {
                 firstRichSpan.text += secondRichSpan.text
-                firstRichSpan.children.addAll(secondRichSpan.children)
+                firstRichSpan.adoptChildrenOf(secondRichSpan)
                 activeRichSpan.children.removeAt(1)
             }
 
@@ -4706,7 +4706,7 @@ public class RichTextState internal constructor(
                 activeRichSpan.spanStyle =
                     richSpan.first().spanStyle.customMerge(firstRichSpan.spanStyle)
                 activeRichSpan.children.clear()
-                activeRichSpan.children.addAll(firstRichSpan.children)
+                activeRichSpan.adoptChildrenOf(firstRichSpan)
             }
         }
     }

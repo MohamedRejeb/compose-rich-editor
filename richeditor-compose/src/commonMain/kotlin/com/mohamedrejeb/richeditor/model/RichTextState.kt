@@ -3850,11 +3850,9 @@ public class RichTextState internal constructor(
                 UnorderedList(
                     config = config,
                 )
-            } else if (richSpan.text.matches(Regex("^\\d+\\. ")) && RichTextFeature.OrderedList in features) {
-                val dotIndex = richSpan.text.indexOf('.')
-                val number = richSpan.text.substring(0, dotIndex).toIntOrNull() ?: 1
+            } else if (RichTextFeature.OrderedList in features) {
                 OrderedList(
-                    number = number,
+                    number = orderedListTriggerNumber(richSpan.text) ?: return,
                     config = config,
                 )
             } else {
@@ -3865,6 +3863,17 @@ public class RichTextState internal constructor(
         richSpan.text = ""
         // A list item cannot ride inside the paragraph it continued.
         clearLineBreakContinuations(richSpan.paragraph)
+    }
+
+    /**
+     * The number of an ordered list trigger ("3. "), or null when [text] is not one. Digits of
+     * any script count, so "٣. " starts a list at 3 on every platform. A number too large for
+     * an Int starts the list at 1.
+     */
+    private fun orderedListTriggerNumber(text: String): Int? {
+        val digits = text.removeSuffix(". ")
+        if (digits.length == text.length || digits.isEmpty() || !digits.all { it.isDigit() }) return null
+        return digits.map { it.digitToInt() }.joinToString("").toIntOrNull() ?: 1
     }
 
     /**

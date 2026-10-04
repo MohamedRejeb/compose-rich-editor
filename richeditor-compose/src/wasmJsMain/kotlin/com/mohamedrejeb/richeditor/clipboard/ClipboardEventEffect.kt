@@ -10,6 +10,7 @@ import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.richPasteEnabled
 import kotlinx.browser.document
 import org.w3c.dom.events.Event
+import org.w3c.dom.events.KeyboardEvent
 
 @Composable
 internal actual fun ClipboardEventEffect(
@@ -18,16 +19,34 @@ internal actual fun ClipboardEventEffect(
 ) {
     val isReadOnly by rememberUpdatedState(readOnly)
     DisposableEffect(richTextState) {
+        // A dialog or popup is its own layer with its own focus, so the editor underneath
+        // stays focused while a field in that layer is used. Key events only reach the top
+        // layer though: a clipboard event that follows a shortcut the editor never received
+        // belongs to that layer. One with no shortcut (browser menu, touch) falls back to focus.
+        var shortcutPressed = false
+
+        val keyDownHandler: (Event) -> Unit = { event ->
+            if (isClipboardShortcut(event as KeyboardEvent)) {
+                shortcutPressed = true
+                richTextState.sawClipboardShortcutKey = false
+            }
+        }
+
+        val keyUpHandler: (Event) -> Unit = { shortcutPressed = false }
+
+        fun ownsClipboardEvents() =
+            richTextState.isFocused && (!shortcutPressed || richTextState.sawClipboardShortcutKey)
+
         val pasteHandler: (Event) -> Unit = { event ->
-            if (richTextState.isFocused && !isReadOnly) richTextState.pasteFrom(event)
+            if (ownsClipboardEvents() && !isReadOnly) richTextState.pasteFrom(event)
         }
 
         val copyHandler: (Event) -> Unit = { event ->
-            if (richTextState.isFocused) richTextState.copySelectionTo(event)
+            if (ownsClipboardEvents()) richTextState.copySelectionTo(event)
         }
 
         val cutHandler: (Event) -> Unit = { event ->
-            if (richTextState.isFocused && !isReadOnly && richTextState.copySelectionTo(event)) {
+            if (ownsClipboardEvents() && !isReadOnly && richTextState.copySelectionTo(event)) {
                 richTextState.removeSelectedText()
             }
         }
@@ -36,12 +55,27 @@ internal actual fun ClipboardEventEffect(
         document.addEventListener("paste", pasteHandler, true)
         document.addEventListener("copy", copyHandler, true)
         document.addEventListener("cut", cutHandler, true)
+        // Capture phase so the reset in keyDownHandler runs before Compose delivers the key.
+        document.addEventListener("keydown", keyDownHandler, true)
+        document.addEventListener("keyup", keyUpHandler, true)
 
         onDispose {
             document.removeEventListener("paste", pasteHandler, true)
             document.removeEventListener("copy", copyHandler, true)
             document.removeEventListener("cut", cutHandler, true)
+            document.removeEventListener("keydown", keyDownHandler, true)
+            document.removeEventListener("keyup", keyUpHandler, true)
         }
+    }
+}
+
+private fun isClipboardShortcut(event: KeyboardEvent): Boolean {
+    val command = event.ctrlKey || event.metaKey
+    return when (event.key.lowercase()) {
+        "c", "x", "v" -> command
+        "insert" -> command || event.shiftKey
+        "delete" -> event.shiftKey
+        else -> false
     }
 }
 

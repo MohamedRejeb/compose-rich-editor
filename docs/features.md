@@ -71,7 +71,7 @@ Each feature corresponds to one `RichTextSpanMark` or one block attribute of the
 
 **Formatting calls.** `toggleSpanStyle` and `addSpanStyle` apply only the fields of allowed features, so a `SpanStyle(fontWeight = Bold, color = Red)` under a bold-only set applies bold. `addRichSpan`, `addLinkToSelection`, `addLinkToTextRange`, `addCodeSpan`, `setHeadingStyle`, `addParagraphStyle`, `addOrderedList` and `addUnorderedList` are no-ops for a disallowed feature. The toggles never switch a disallowed feature on, but still switch it off where it is already applied. `addLink(text, url)` inserts the plain text. `insertToken` cancels the active trigger query. Every `remove*` call keeps working, so a toolbar can always clear formatting that was allowed when it was applied.
 
-**Typing shortcuts.** `- `, `* ` or a number followed by `. ` at the start of a paragraph convert it to a list only when that list kind is allowed.
+**Typing shortcuts.** `- `, `* ` or a number followed by `. ` at the start of a paragraph convert it to a list only when that list kind is allowed. To keep lists and turn off only these shortcuts, set `config.listTypingShortcutsEnabled = false`.
 
 **Paste with no features.** With an empty set the clipboard's HTML is ignored and the pasted text flows through the plain text path: it inherits the style at the caret, exactly like typed text, and keeps its paragraph breaks. This is the same path `richClipboardEnabled = false` uses for paste.
 

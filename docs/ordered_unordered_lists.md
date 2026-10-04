@@ -12,6 +12,7 @@
 - [Common Operations](#common-operations)
   - [Default Values](#default-values)
   - [Keyboard Shortcuts](#keyboard-shortcuts)
+  - [Typing Shortcuts](#typing-shortcuts)
   - [List Behavior](#list-behavior)
   - [Visual Examples](#visual-examples)
 
@@ -184,6 +185,7 @@ By default, the Rich Text Editor uses these configurations:
 - List Prefix Alignment: `ListPrefixAlignment.End` (HTML-style, dots aligned)
 - List Marker Style: `ListMarkerStyleBehavior.InheritFromText`
 - Exit List on Empty Item: `true` (configurable via `richTextState.config.exitListOnEmptyItem`)
+- List Typing Shortcuts: `true` (configurable via `richTextState.config.listTypingShortcutsEnabled`)
 
 ### Keyboard Shortcuts
 The editor supports common keyboard shortcuts for list operations:
@@ -191,6 +193,19 @@ The editor supports common keyboard shortcuts for list operations:
 - `Shift + Tab`: Decrease list level (outdent)
 - `Enter` on an empty list item: Exit the list
 - `Backspace` at the start of a list item: Decrease list level or exit list
+
+### Typing Shortcuts
+Typing a list marker at the start of a paragraph turns it into a list:
+- `- ` or `* `: unordered list
+- A number followed by `. ` (for example `1. ` or `57. `): ordered list starting at that number
+
+To keep lists but turn these shortcuts off, so the typed characters stay as text:
+
+```kotlin
+richTextState.config.listTypingShortcutsEnabled = false
+```
+
+The list functions (`toggleOrderedList`, `toggleUnorderedList` and the others) and lists in loaded or pasted content keep working. To remove lists from the editor altogether, leave them out of the feature set instead (see [Editor features](features.md)).
 
 ### List Behavior
 When working with lists:

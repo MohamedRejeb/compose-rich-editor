@@ -7,7 +7,7 @@ import com.mohamedrejeb.richeditor.sample.common.App
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
-    ComposeViewport {
+    ComposeViewport(viewportContainerId = "composeApp") {
         Box(Modifier.fillMaxSize()) {
             App()
         }

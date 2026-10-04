@@ -9,7 +9,7 @@ import org.jetbrains.skiko.wasm.onWasmReady
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
     onWasmReady {
-        ComposeViewport {
+        ComposeViewport(viewportContainerId = "composeApp") {
             Box(Modifier.fillMaxSize()) {
                 App()
             }

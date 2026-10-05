@@ -7,6 +7,7 @@ import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.history.CommitTrigger
 
 internal data class InputDelta(val originalRange: TextRange, val newText: String)
@@ -316,7 +317,8 @@ internal fun TextLayoutResult.isForModelText(modelLength: Int): Boolean {
 }
 
 /**
- * Projects annotatedString's style ranges into the BTF2 output buffer.
+ * Projects annotatedString's style ranges into the BTF2 output buffer, then the highlights, which
+ * come after the span styles so they win where they overlap.
  *
  * A trailing empty paragraph has a collapsed range, which BTF2 would drop: it gets the
  * [EmptyLineAnchor] and its ParagraphStyle on it. A collapsed range anywhere else (a shape only
@@ -327,6 +329,7 @@ internal fun TextLayoutResult.isForModelText(modelLength: Int): Boolean {
  * The anchor is appended before any addStyle call: TextFieldBuffer only tracks styles added
  * after the last edit, so styles emitted first would be discarded by the append.
  */
+@OptIn(ExperimentalRichTextApi::class)
 internal fun RichTextState.applyRichTextStyles(buffer: TextFieldBuffer) {
     val annotated = annotatedString
     val modelLength = buffer.length
@@ -338,6 +341,9 @@ internal fun RichTextState.applyRichTextStyles(buffer: TextFieldBuffer) {
         if (range.start in 0..modelLength && range.end in 0..modelLength) {
             buffer.addStyle(range.item, range.start, range.end)
         }
+    }
+    highlights.toSpanStyleRanges(textLength = modelLength, selection = selection).forEach { range ->
+        buffer.addStyle(range.item, range.start, range.end)
     }
     paragraphRanges.forEach { range ->
         if (range.start != range.end && range.start in 0..modelLength && range.end in 0..modelLength) {

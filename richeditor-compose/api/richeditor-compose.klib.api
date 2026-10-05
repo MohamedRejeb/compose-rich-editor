@@ -797,6 +797,19 @@ final class com.mohamedrejeb.richeditor.model/RichTextConfig { // com.mohamedrej
         final fun <set-unorderedListStyleType>(com.mohamedrejeb.richeditor.paragraph.type/UnorderedListStyleType) // com.mohamedrejeb.richeditor.model/RichTextConfig.unorderedListStyleType.<set-unorderedListStyleType>|<set-unorderedListStyleType>(com.mohamedrejeb.richeditor.paragraph.type.UnorderedListStyleType){}[0]
 }
 
+final class com.mohamedrejeb.richeditor.model/RichTextHighlight { // com.mohamedrejeb.richeditor.model/RichTextHighlight|null[0]
+    constructor <init>(androidx.compose.ui.text/TextRange, androidx.compose.ui.text/SpanStyle) // com.mohamedrejeb.richeditor.model/RichTextHighlight.<init>|<init>(androidx.compose.ui.text.TextRange;androidx.compose.ui.text.SpanStyle){}[0]
+
+    final val range // com.mohamedrejeb.richeditor.model/RichTextHighlight.range|{}range[0]
+        final fun <get-range>(): androidx.compose.ui.text/TextRange // com.mohamedrejeb.richeditor.model/RichTextHighlight.range.<get-range>|<get-range>(){}[0]
+    final val style // com.mohamedrejeb.richeditor.model/RichTextHighlight.style|{}style[0]
+        final fun <get-style>(): androidx.compose.ui.text/SpanStyle // com.mohamedrejeb.richeditor.model/RichTextHighlight.style.<get-style>|<get-style>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.mohamedrejeb.richeditor.model/RichTextHighlight.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.mohamedrejeb.richeditor.model/RichTextHighlight.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.mohamedrejeb.richeditor.model/RichTextHighlight.toString|toString(){}[0]
+}
+
 final class com.mohamedrejeb.richeditor.model/RichTextState { // com.mohamedrejeb.richeditor.model/RichTextState|null[0]
     constructor <init>(kotlin/Int = ..., kotlin/Long = ...) // com.mohamedrejeb.richeditor.model/RichTextState.<init>|<init>(kotlin.Int;kotlin.Long){}[0]
 
@@ -839,6 +852,9 @@ final class com.mohamedrejeb.richeditor.model/RichTextState { // com.mohamedreje
         final fun <get-canDecreaseListLevel>(): kotlin/Boolean // com.mohamedrejeb.richeditor.model/RichTextState.canDecreaseListLevel.<get-canDecreaseListLevel>|<get-canDecreaseListLevel>(){}[0]
     final var canIncreaseListLevel // com.mohamedrejeb.richeditor.model/RichTextState.canIncreaseListLevel|{}canIncreaseListLevel[0]
         final fun <get-canIncreaseListLevel>(): kotlin/Boolean // com.mohamedrejeb.richeditor.model/RichTextState.canIncreaseListLevel.<get-canIncreaseListLevel>|<get-canIncreaseListLevel>(){}[0]
+    final var highlights // com.mohamedrejeb.richeditor.model/RichTextState.highlights|{}highlights[0]
+        final fun <get-highlights>(): kotlin.collections/List<com.mohamedrejeb.richeditor.model/RichTextHighlight> // com.mohamedrejeb.richeditor.model/RichTextState.highlights.<get-highlights>|<get-highlights>(){}[0]
+        final fun <set-highlights>(kotlin.collections/List<com.mohamedrejeb.richeditor.model/RichTextHighlight>) // com.mohamedrejeb.richeditor.model/RichTextState.highlights.<set-highlights>|<set-highlights>(kotlin.collections.List<com.mohamedrejeb.richeditor.model.RichTextHighlight>){}[0]
     final var isList // com.mohamedrejeb.richeditor.model/RichTextState.isList|{}isList[0]
         final fun <get-isList>(): kotlin/Boolean // com.mohamedrejeb.richeditor.model/RichTextState.isList.<get-isList>|<get-isList>(){}[0]
     final var isOrderedList // com.mohamedrejeb.richeditor.model/RichTextState.isOrderedList|{}isOrderedList[0]
@@ -1063,6 +1079,7 @@ final val com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_Ri
 final val com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Link$stableprop // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Link$stableprop|#static{}com_mohamedrejeb_richeditor_model_RichSpanStyle_Link$stableprop[0]
 final val com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Token$stableprop // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Token$stableprop|#static{}com_mohamedrejeb_richeditor_model_RichSpanStyle_Token$stableprop[0]
 final val com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichTextConfig$stableprop // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichTextConfig$stableprop|#static{}com_mohamedrejeb_richeditor_model_RichTextConfig$stableprop[0]
+final val com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichTextHighlight$stableprop // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichTextHighlight$stableprop|#static{}com_mohamedrejeb_richeditor_model_RichTextHighlight$stableprop[0]
 final val com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichTextState$stableprop // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichTextState$stableprop|#static{}com_mohamedrejeb_richeditor_model_RichTextState$stableprop[0]
 final val com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_TextPaddingValues$stableprop // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_TextPaddingValues$stableprop|#static{}com_mohamedrejeb_richeditor_model_TextPaddingValues$stableprop[0]
 final val com.mohamedrejeb.richeditor.paragraph.type/com_mohamedrejeb_richeditor_paragraph_type_OrderedListStyleType_Arabic$stableprop // com.mohamedrejeb.richeditor.paragraph.type/com_mohamedrejeb_richeditor_paragraph_type_OrderedListStyleType_Arabic$stableprop|#static{}com_mohamedrejeb_richeditor_paragraph_type_OrderedListStyleType_Arabic$stableprop[0]
@@ -1126,6 +1143,7 @@ final fun com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_Ri
 final fun com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Link$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Link$stableprop_getter|com_mohamedrejeb_richeditor_model_RichSpanStyle_Link$stableprop_getter(){}[0]
 final fun com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Token$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichSpanStyle_Token$stableprop_getter|com_mohamedrejeb_richeditor_model_RichSpanStyle_Token$stableprop_getter(){}[0]
 final fun com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichTextConfig$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichTextConfig$stableprop_getter|com_mohamedrejeb_richeditor_model_RichTextConfig$stableprop_getter(){}[0]
+final fun com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichTextHighlight$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichTextHighlight$stableprop_getter|com_mohamedrejeb_richeditor_model_RichTextHighlight$stableprop_getter(){}[0]
 final fun com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichTextState$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_RichTextState$stableprop_getter|com_mohamedrejeb_richeditor_model_RichTextState$stableprop_getter(){}[0]
 final fun com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_TextPaddingValues$stableprop_getter(): kotlin/Int // com.mohamedrejeb.richeditor.model/com_mohamedrejeb_richeditor_model_TextPaddingValues$stableprop_getter|com_mohamedrejeb_richeditor_model_TextPaddingValues$stableprop_getter(){}[0]
 final fun com.mohamedrejeb.richeditor.model/rememberRichTextState(kotlin/Int, kotlin/Long, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int): com.mohamedrejeb.richeditor.model/RichTextState // com.mohamedrejeb.richeditor.model/rememberRichTextState|rememberRichTextState(kotlin.Int;kotlin.Long;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]

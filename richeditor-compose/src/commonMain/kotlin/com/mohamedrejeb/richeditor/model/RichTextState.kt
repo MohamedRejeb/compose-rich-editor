@@ -373,10 +373,37 @@ public class RichTextState internal constructor(
     public var annotatedString: AnnotatedString by mutableStateOf(AnnotatedString(text = ""))
         private set
 
+    private var highlightsState: List<RichTextHighlight> by mutableStateOf(emptyList())
+
+    /**
+     * Styles drawn over ranges of the text without being part of the document, for example the
+     * matches of a find-in-text feature. The editor and the read-only rich text both render
+     * them, on top of the text's own styles, and a later highlight wins over an earlier one
+     * where they overlap.
+     *
+     * Highlights are presentation only: they are not exported by [toHtml], [toMarkdown],
+     * [toText] or [toRichTextDocument], not copied to the clipboard, not recorded in the undo
+     * [history], not reflected in [currentSpanStyle], and not kept by [copy] or the [Saver].
+     *
+     * Ranges are offsets in the current text of [annotatedString], where paragraphs are
+     * separated by one character and list markers are part of the text. They do not follow
+     * edits: assign a new list when the text changes. A range reaching past the end of the
+     * text is clamped, and one that lies outside it is not drawn.
+     *
+     * Assign a new list to change the highlights and an empty list to clear them.
+     */
+    @ExperimentalRichTextApi
+    public var highlights: List<RichTextHighlight>
+        get() = highlightsState
+        set(value) {
+            highlightsState = value.toList()
+        }
+
     /**
      * Must stay the same instance for the lifetime of the state: BTF2 keys its transformed
      * state on it, and a new instance restarts the input session. Style-only changes reach
-     * BTF2 through the transformation's read of [annotatedString], which is snapshot state.
+     * BTF2 through the transformation's read of [annotatedString] and [highlights], which are
+     * snapshot state.
      */
     internal val outputTransformation: OutputTransformation =
         OutputTransformation { this@RichTextState.applyRichTextStyles(this) }

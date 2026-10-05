@@ -141,11 +141,25 @@ internal fun RichTextState.applyChangeList(buffer: TextFieldBuffer) {
         }
     }
 
+    deltas.singleOrNull()?.let { applyTypingShortcutsAfterEdit(it) }
+
     // Arms the #779 follow-up window: a suggestion pick's trailing-space refresh arrives
     // as a bare caret step right after this edit. A refresh folded into this batch has
     // already happened, so the window is disarmed instead: a step out of the paragraph now
     // is navigation.
     if (refreshed) clearImeEditWindow() else noteImeEdit(caret = textFieldValue.selection.min)
+}
+
+/** [applyTypingShortcuts] for a replayed edit: the buffer is mid-edit, so the write stays pending. */
+private fun RichTextState.applyTypingShortcutsAfterEdit(delta: InputDelta) {
+    val previous = skipTextFieldStateSync
+    skipTextFieldStateSync = true
+    try {
+        applyTypingShortcuts(inserted = delta.newText)
+    } finally {
+        skipTextFieldStateSync = previous
+        pendingTextDuringSync = null
+    }
 }
 
 /**

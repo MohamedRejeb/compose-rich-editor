@@ -82,6 +82,18 @@ richTextState.config.listTypingShortcutsEnabled = true  // "- " or "1. " at a pa
 richTextState.config.listMarkerStyle = SpanStyle(color = Color.Red)  // Style bullets and numbers on their own
 ```
 
+### Typing Shortcuts
+
+```kotlin
+// "**bold**", "*italic*", "`code`" and "~~strike~~" format as you type (off by default)
+richTextState.config.inlineTypingShortcutsEnabled = true
+
+// "# " to "###### " at a paragraph start makes a heading (off by default)
+richTextState.config.headingTypingShortcutsEnabled = true
+```
+
+See [Span Style](span_style.md#typing-shortcuts) and [Headings](headings.md#typing-shortcut). The list shortcuts are controlled by `listTypingShortcutsEnabled` above.
+
 ### Clipboard
 
 By default, copy and paste carry rich text: copying writes HTML alongside plain text, and pasting from a browser or another rich text app imports its formatting (bold, underline, links, lists, and so on). Set `richClipboardEnabled` to `false` to restrict the clipboard to plain text:

@@ -133,6 +133,27 @@ richTextState.addSpanStyle(SpanStyle(
 ))
 ```
 
+## Typing Shortcuts
+
+Markdown marks typed around text can format it as you type, the way Notion, Slack and Google Docs do. The shortcuts are off by default:
+
+```kotlin
+richTextState.config.inlineTypingShortcutsEnabled = true
+```
+
+| Typed | Result |
+|-------|--------|
+| `**bold**` or `__bold__` | **bold** |
+| `*italic*` or `_italic_` | *italic* |
+| `` `code` `` | `code` (a code span) |
+| `~~gone~~` | ~~gone~~ |
+
+The text is formatted and the marks are removed when the closing mark is typed, so `**bold*` is still text until the last `*` arrives. What is typed after the formatted text is not formatted, and one undo restores the typed marks.
+
+The marks must sit in one paragraph around text that does not start or end with a space, so `** a**` stays as text. An underscore mark must not touch a letter or digit outside the pair, so `snake_case_name` stays as text, while `*` works inside a word. Nothing is converted inside a code span, a link or a token, and a mark whose feature is left out of `config.features` stays as text (see [Editor features](features.md)).
+
+For the paragraph shortcuts, see [Headings](headings.md#typing-shortcut) and [Lists](ordered_unordered_lists.md#typing-shortcuts).
+
 ## Visual Examples
 
 Here's how different span styles might appear:

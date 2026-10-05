@@ -498,6 +498,8 @@ public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public final fun getCodeSpanStrokeWidth-XSAIIZE ()J
 	public final fun getExitListOnEmptyItem ()Z
 	public final fun getFeatures ()Ljava/util/Set;
+	public final fun getHeadingTypingShortcutsEnabled ()Z
+	public final fun getInlineTypingShortcutsEnabled ()Z
 	public final fun getLinkColor-0d7_KjU ()J
 	public final fun getLinkTextDecoration ()Landroidx/compose/ui/text/style/TextDecoration;
 	public final fun getListIndent ()I
@@ -520,6 +522,8 @@ public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public final fun setCodeSpanStrokeWidth--R2X_6o (J)V
 	public final fun setExitListOnEmptyItem (Z)V
 	public final fun setFeatures (Ljava/util/Set;)V
+	public final fun setHeadingTypingShortcutsEnabled (Z)V
+	public final fun setInlineTypingShortcutsEnabled (Z)V
 	public final fun setLinkColor-8_81llA (J)V
 	public final fun setLinkTextDecoration (Landroidx/compose/ui/text/style/TextDecoration;)V
 	public final fun setListIndent (I)V

@@ -61,9 +61,11 @@ The following HTML tags are supported:
 - `<div>` - Divisions
 - `<br>` - Line breaks
 - `<h1>`..`<h6>` - Headings (see [Headings](headings.md))
-- `<ul>` - Unordered lists
-- `<ol>` - Ordered lists. `start="N"` sets the first item's number
-- `<li>` - List items. In an ordered list, `value="N"` renumbers the list from that item on (a later item cannot restart at 1)
+- `<ul>` - Unordered lists. `style="list-style-type: ..."` sets the bullet (`disc`, `circle`, `square`)
+- `<ol>` - Ordered lists. `start="N"` sets the first item's number; `style="list-style-type: ..."` sets the numbering (`decimal`, `lower-alpha`, `upper-alpha`, `lower-roman`, `upper-roman`, `arabic-indic`, `arabic-abjad`)
+- `<li>` - List items. In an ordered list, `value="N"` renumbers the list from that item on (a later item cannot restart at 1). A `list-style-type` on the item applies to that item alone
+
+A `list-style-type` is kept per list and written back on the tag that opens the list; an item whose type differs from its list's gets it on the `<li>`. Other keywords are ignored and the list follows the editor config. See [Per-List Style Types](ordered_unordered_lists.md#per-list-style-types).
 
 ### Links
 - `<a href="...">` - Hyperlinks
@@ -89,6 +91,6 @@ HTML saved by earlier versions of the library, which wrote empty paragraphs as b
 
 - Unsupported HTML tags will be ignored during import
 - Nested lists are supported
-- Inline `style` attributes are read for these properties: `color`, `background` / `background-color`, `font-size`, `font-weight`, `font-style`, `letter-spacing`, `text-decoration`, `text-shadow`, `baseline-shift`, `text-align`, `direction`, `line-height` and `text-indent`. `<style>` blocks and class selectors are not supported
+- Inline `style` attributes are read for these properties: `color`, `background` / `background-color`, `font-size`, `font-weight`, `font-style`, `letter-spacing`, `text-decoration`, `text-shadow`, `baseline-shift`, `text-align`, `direction`, `line-height`, `text-indent` and, on lists, `list-style-type`. `<style>` blocks and class selectors are not supported
 - The HTML output is clean and properly formatted
 - Register triggers **before** calling `setHtml` with content that contains tokens, otherwise tokens fall back to plain text

@@ -19,23 +19,32 @@ internal class UnorderedList private constructor(
     initialLevel: Int = 1,
     initialStyleType: UnorderedListStyleType = DefaultUnorderedListStyleType,
     initialPrefixAlignment: ListPrefixAlignment = ListPrefixAlignment.End,
+    /**
+     * The style type this item's list carries in the document (`list-style-type` in HTML),
+     * or null to follow [RichTextConfig.unorderedListStyleType].
+     */
+    val styleTypeOverride: UnorderedListStyleType? = null,
 ): ParagraphType, ConfigurableStartTextWidth, ConfigurableListLevel {
 
     constructor(
         initialLevel: Int = 1,
+        styleTypeOverride: UnorderedListStyleType? = null,
     ): this(
         initialIndent = DefaultListIndent,
         initialLevel = initialLevel,
+        styleTypeOverride = styleTypeOverride,
     )
 
     constructor(
         config: RichTextConfig,
         initialLevel: Int = 1,
+        styleTypeOverride: UnorderedListStyleType? = null,
     ): this(
         initialIndent = config.unorderedListIndent,
         initialLevel = initialLevel,
         initialStyleType = config.unorderedListStyleType,
         initialPrefixAlignment = config.listPrefixAlignment,
+        styleTypeOverride = styleTypeOverride,
     )
 
     override var startTextWidth: TextUnit = startTextWidth
@@ -110,10 +119,11 @@ internal class UnorderedList private constructor(
 
     @OptIn(ExperimentalRichTextApi::class)
     private fun getNewStartRichSpan(textRange: TextRange = TextRange(0)): RichSpan {
+        val prefixes = (styleTypeOverride ?: styleType).prefixes
         val prefixIndex =
-            (level - 1).coerceIn(styleType.prefixes.indices)
+            (level - 1).coerceIn(prefixes.indices)
 
-        val prefix = styleType.prefixes
+        val prefix = prefixes
             .getOrNull(prefixIndex)
             ?: "•"
 
@@ -130,21 +140,19 @@ internal class UnorderedList private constructor(
     }
 
     override fun getNextParagraphType(): ParagraphType =
-        UnorderedList(
-            initialIndent = indent,
-            startTextWidth = startTextWidth,
-            initialLevel = level,
-            initialStyleType = styleType,
-            initialPrefixAlignment = prefixAlignment,
-        )
+        copy()
 
     override fun copy(): ParagraphType =
+        copy(styleTypeOverride = styleTypeOverride)
+
+    fun copy(styleTypeOverride: UnorderedListStyleType?): UnorderedList =
         UnorderedList(
             initialIndent = indent,
             startTextWidth = startTextWidth,
             initialLevel = level,
             initialStyleType = styleType,
             initialPrefixAlignment = prefixAlignment,
+            styleTypeOverride = styleTypeOverride,
         )
 
     override fun equals(other: Any?): Boolean {
@@ -155,6 +163,7 @@ internal class UnorderedList private constructor(
         if (startTextWidth != other.startTextWidth) return false
         if (level != other.level) return false
         if (styleType != other.styleType) return false
+        if (styleTypeOverride != other.styleTypeOverride) return false
         if (prefixAlignment != other.prefixAlignment) return false
 
         return true
@@ -165,6 +174,7 @@ internal class UnorderedList private constructor(
         result = 31 * result + startTextWidth.hashCode()
         result = 31 * result + level
         result = 31 * result + styleType.hashCode()
+        result = 31 * result + styleTypeOverride.hashCode()
         result = 31 * result + prefixAlignment.hashCode()
         return result
     }

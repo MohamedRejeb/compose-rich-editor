@@ -688,6 +688,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState$Companion {
 
 public final class com/mohamedrejeb/richeditor/model/RichTextStateKt {
 	public static final fun rememberRichTextState (IJLandroidx/compose/runtime/Composer;II)Lcom/mohamedrejeb/richeditor/model/RichTextState;
+	public static final fun rememberRichTextState (IJLkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;II)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 }
 
 public final class com/mohamedrejeb/richeditor/model/TextPaddingValues {

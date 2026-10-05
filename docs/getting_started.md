@@ -25,6 +25,12 @@ RichTextEditor(
 )
 ```
 
+To start with content, pass an initializer. See [Starting with content](rich_text_state.md#starting-with-content):
+
+```kotlin
+val state = rememberRichTextState { setHtml(html) }
+```
+
 Check out [the full documentation](rich_text_state.md) for more info.
 
 ## Styling Spans

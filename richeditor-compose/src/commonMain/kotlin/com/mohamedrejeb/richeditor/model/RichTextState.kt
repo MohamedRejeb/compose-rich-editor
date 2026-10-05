@@ -95,6 +95,38 @@ public fun rememberRichTextState(
     }
 }
 
+/**
+ * Creates and remembers a [RichTextState] that starts with content.
+ *
+ * [initialContent] runs once on the new state, before the first composition uses it. Call
+ * whichever setter matches the content: [RichTextState.setText], [RichTextState.setHtml],
+ * [RichTextState.setMarkdown] or [RichTextState.setRichTextDocument].
+ *
+ * ```
+ * val state = rememberRichTextState { setHtml(html) }
+ * ```
+ *
+ * The block is an initializer, not a binding: it does not run again when the values it reads
+ * change, and it does not run when the state is restored from saved instance state, where
+ * the saved content wins. To replace the content later, call the setter on the state.
+ *
+ * What the block does is the starting point of the undo history, not a step in it.
+ */
+@ExperimentalRichTextApi
+@Composable
+public fun rememberRichTextState(
+    historyLimit: Int = 100,
+    coalesceWindowMs: Long = 500L,
+    initialContent: RichTextState.() -> Unit,
+): RichTextState {
+    return rememberSaveable(saver = RichTextState.Saver) {
+        RichTextState(historyLimit = historyLimit, coalesceWindowMs = coalesceWindowMs).apply {
+            initialContent()
+            history.onProgrammaticReplace()
+        }
+    }
+}
+
 @OptIn(ExperimentalRichTextApi::class)
 public class RichTextState internal constructor(
     initialRichParagraphList: List<RichParagraph>,

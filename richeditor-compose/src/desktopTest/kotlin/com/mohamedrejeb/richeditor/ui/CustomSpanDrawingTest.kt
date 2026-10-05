@@ -20,11 +20,14 @@ import kotlin.test.assertTrue
 
 /**
  * The background a code span draws behind its text must be painted whatever the shape of the
- * rest of the document.
+ * rest of the document. Two shapes lost it:
  *
- * The drawing is skipped while the text layout belongs to an older text, which was checked by
- * comparing lengths. An empty last paragraph adds an output-only character to the laid out
- * text, so every span background disappeared as soon as the document ended with an empty line.
+ * - A document ending with an empty paragraph. The drawing is skipped while the text layout
+ *   belongs to an older text, which was checked by comparing lengths, and an empty last
+ *   paragraph adds an output-only character to the laid out text.
+ * - A span on the last line of a document with more than one paragraph. The end of the laid
+ *   out text was found with a hit test at the top right of the last line, which lands on the
+ *   boundary with the paragraph above and reports the last line's start instead of its end.
  */
 @OptIn(ExperimentalTestApi::class)
 class CustomSpanDrawingTest {
@@ -39,6 +42,20 @@ class CustomSpanDrawingTest {
     @Test
     fun `a code span is drawn in a document that ends with an empty paragraph`() = runDesktopComposeUiTest {
         setEditor("<p><code>CODE SPAN</code> text</p><p><br></p>")
+
+        assertTrue(codeSpanPixels() > 0)
+    }
+
+    @Test
+    fun `a code span on the last line of a later paragraph is drawn`() = runDesktopComposeUiTest {
+        setEditor("<p>first</p><p><code>CODE SPAN</code></p>")
+
+        assertTrue(codeSpanPixels() > 0)
+    }
+
+    @Test
+    fun `a code span followed by text on the last line is drawn`() = runDesktopComposeUiTest {
+        setEditor("<p>first</p><p>second</p><p><code>CODE SPAN</code> text</p>")
 
         assertTrue(codeSpanPixels() > 0)
     }

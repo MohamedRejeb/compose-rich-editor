@@ -291,7 +291,7 @@ internal fun RichTextState.applyRichTextStyles(buffer: TextFieldBuffer) {
     val modelLength = buffer.length
     val paragraphRanges = annotated.paragraphStyles
     val trailingEmpty = trailingEmptyParagraphRange(paragraphRanges, modelLength)
-    if (trailingEmpty != null) buffer.append(EmptyLineAnchor)
+    if (trailingEmpty != null) appendEmptyLineAnchor(buffer)
 
     annotated.spanStyles.forEach { range ->
         if (range.start in 0..modelLength && range.end in 0..modelLength) {
@@ -303,10 +303,32 @@ internal fun RichTextState.applyRichTextStyles(buffer: TextFieldBuffer) {
             buffer.addStyle(range.item, range.start, range.end)
         }
     }
-    if (trailingEmpty != null) buffer.addStyle(trailingEmpty.item, modelLength, buffer.length)
+    if (trailingEmpty != null && buffer.length > modelLength) {
+        buffer.addStyle(trailingEmpty.item, modelLength, buffer.length)
+    }
 
     applyEmptyParagraphFonts(buffer, paragraphRanges, modelLength)
 }
+
+/**
+ * Adds the [EmptyLineAnchor] by replacing the separator in front of it with the separator and
+ * the anchor, not by inserting after it. BTF2 gives inserted output text two caret positions for
+ * one model position, and the first Backspace or arrow key after a tap on the line would only
+ * switch between them. A replacement maps both of its ends to distinct model offsets.
+ *
+ * An empty document has no separator to replace. Inserting is harmless there: no key can move
+ * or delete anything.
+ */
+private fun appendEmptyLineAnchor(buffer: TextFieldBuffer) {
+    val length = buffer.length
+    when {
+        length == 0 -> buffer.append(EmptyLineAnchor)
+        buffer.asCharSequence()[length - 1] == ParagraphSeparator ->
+            buffer.replace(length - 1, length, ParagraphSeparator + EmptyLineAnchor)
+    }
+}
+
+private const val ParagraphSeparator = ' '
 
 internal fun trailingEmptyParagraphRange(
     ranges: List<AnnotatedString.Range<ParagraphStyle>>,

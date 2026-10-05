@@ -887,7 +887,7 @@ public class RichTextState internal constructor(
         val press = pressForCaretCorrection() ?: return
 
         val caret = textFieldState.selection
-        if (singleParagraphMode || !caret.collapsed || !isLaterParagraphStart(caret.start)) return
+        if (singleParagraphMode || !caret.collapsed) return
 
         val text = textFieldState.text.toString()
         val layout = textLayoutResult ?: return
@@ -896,6 +896,12 @@ public class RichTextState internal constructor(
         val pressedLine = layout.getLineForVerticalPosition(
             press.y.coerceIn(0f, layout.size.height.toFloat())
         )
+        if (layout.isPressOnEmptyLastLine(caret.start, text.length, pressedLine)) {
+            pressCorrectedCaret = text.length
+            setTextFieldStateFromValue(text = text, selection = TextRange(text.length))
+            return
+        }
+        if (!isLaterParagraphStart(caret.start)) return
         if (layout.getLineForOffset(caret.start) <= pressedLine) return
 
         pressCorrectedCaret = caret.start - 1

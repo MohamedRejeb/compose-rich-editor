@@ -201,6 +201,18 @@ public class RichTextConfig internal constructor(
     public var listTypingShortcutsEnabled: Boolean = true
 
     /**
+     * Whether the editor keeps its selection when it loses focus.
+     *
+     * The Compose text field collapses the selection as soon as focus moves to another
+     * focusable, so a focusable toolbar button finds nothing to style. When true the editor
+     * keeps the range, and its highlight, while it is unfocused.
+     *
+     * Default is `false`.
+     */
+    @ExperimentalRichTextApi
+    public var preserveSelectionOnFocusLoss: Boolean = false
+
+    /**
      * Whether copy and paste carry rich text (HTML) formatting.
      *
      * When false, paste inserts plain text only, styled by the editor's normal insertion

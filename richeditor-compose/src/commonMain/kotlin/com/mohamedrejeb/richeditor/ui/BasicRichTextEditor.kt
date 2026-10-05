@@ -275,6 +275,17 @@ public fun BasicRichTextEditor(
             .collect { composition -> state.handleCompositionChanged(composition) }
     }
 
+    // A focus loss consumes the range in the dispatch that set it; one still pending a
+    // frame later came from the user collapsing the selection.
+    LaunchedEffect(state) {
+        snapshotFlow { state.selectionCollapsedToEndFrom }
+            .collect { collapsedFrom ->
+                if (collapsedFrom == null) return@collect
+                withFrameNanos { }
+                state.selectionCollapsedToEndFrom = null
+            }
+    }
+
     LaunchedEffect(singleParagraph) {
         state.singleParagraphMode = singleParagraph
     }
@@ -353,7 +364,7 @@ public fun BasicRichTextEditor(
             state = state.textFieldState,
             modifier = modifier
                 .onFocusChanged { focusState ->
-                    state.isFocused = focusState.isFocused
+                    state.onFocusChanged(focusState.isFocused)
                 }
                 .onPreviewKeyEvent { event ->
                     if (event.isClipboardShortcutKeyDown())
@@ -437,6 +448,7 @@ public fun BasicRichTextEditor(
                 state.selectionBeforeUserSelectionChange = originalSelection
                 @OptIn(ExperimentalFoundationApi::class)
                 val textChanged = changes.changeCount > 0
+                state.noteUserSelectionChange(originalSelection, selection, textChanged)
                 if (readOnly && textChanged) {
                     revertAllChanges()
                     return@InputTransformation

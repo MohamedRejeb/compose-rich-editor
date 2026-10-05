@@ -17,7 +17,7 @@ kotlin {
     android {
         namespace = "com.mohamedrejeb.richeditor.sample.common"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
-        minSdk = libs.versions.android.minSdk.get().toInt()
+        minSdk = libs.versions.android.sample.minSdk.get().toInt()
 
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {

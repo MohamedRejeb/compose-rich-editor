@@ -22,9 +22,11 @@ richeditor = "1.2.1"
 coroutines = "1.11.0"
 ktor = "3.6.0"
 android-minSdk = "23"
+# Navigation 2.10.0-beta01, the pairing for Compose Multiplatform 1.12.1, needs 24. The libraries stay on 23.
+android-sample-minSdk = "24"
 android-compileSdk = "37"
 lifecycle = "2.11.0"
-navigation = "2.10.0-alpha02"
+navigation = "2.10.0-beta01"
 
 [libraries]
 ksoup-html = { module = "com.mohamedrejeb.ksoup:ksoup-html", version.ref = "ksoup" }

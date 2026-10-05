@@ -11,7 +11,7 @@ android {
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        minSdk = libs.versions.android.minSdk.get().toInt()
+        minSdk = libs.versions.android.sample.minSdk.get().toInt()
         targetSdk = libs.versions.android.compileSdk.get().toInt()
 
         applicationId = "com.mohamedrejeb.richeditor.android"

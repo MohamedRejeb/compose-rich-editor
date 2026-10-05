@@ -5,112 +5,116 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * A heading set on one line of a `<br>` block applies to the whole block.
+ * Headings and `<br>` blocks.
  *
  * The lines of `<p>a<br>b<br>c</p>` are separate paragraphs in the model, linked as line break
- * continuations of the first one. In html a block has one tag, so a heading belongs to all of
- * its lines: setting it on a single line used to cut the block into separate paragraphs.
+ * continuations of the first one. Such a block only comes from imported html; in the editor
+ * its lines look like any other paragraphs. So an imported heading covers every line of its
+ * block, while a heading set in the editor applies to the selected lines only: a line whose
+ * level now differs from its neighbour's leaves the block, and the other links stay.
+ *
+ * Setting a heading on the first line used to cut every link in the block, including the one
+ * between lines the change did not touch.
  */
 class HeadingLineBreakBlockTest {
 
     @Test
-    fun `a heading set on the first line applies to every line of the block`() {
+    fun `an imported heading block has the heading on every line`() {
+        val state = stateOf("<h1>a<br>b<br>c</h1>")
+
+        assertEquals(List(3) { HeadingStyle.H1 }, state.richParagraphList.map { it.headingStyle })
+        assertEquals("<h1>a<br>b<br>c</h1>", state.toHtml())
+    }
+
+    @Test
+    fun `a heading on the first line leaves the other two linked`() {
         val state = stateOf("<p>a<br>b<br>c</p>")
 
         state.selection = FIRST_LINE
         state.setHeadingStyle(HeadingStyle.H1)
 
-        assertEquals("<h1>a<br>b<br>c</h1>", state.toHtml())
+        assertEquals("<h1>a</h1><p>b<br>c</p>", state.toHtml())
     }
 
     @Test
-    fun `a heading set on a middle line applies to every line of the block`() {
+    fun `a heading on the middle line separates all three`() {
         val state = stateOf("<p>a<br>b<br>c</p>")
 
         state.selection = SECOND_LINE
         state.setHeadingStyle(HeadingStyle.H2)
 
-        assertEquals("<h2>a<br>b<br>c</h2>", state.toHtml())
+        assertEquals("<p>a</p><h2>b</h2><p>c</p>", state.toHtml())
     }
 
     @Test
-    fun `a heading set on the last line applies to every line of the block`() {
+    fun `a heading on the last line leaves the first two linked`() {
         val state = stateOf("<p>a<br>b<br>c</p>")
 
         state.selection = THIRD_LINE
         state.setHeadingStyle(HeadingStyle.H1)
 
-        assertEquals("<h1>a<br>b<br>c</h1>", state.toHtml())
+        assertEquals("<p>a<br>b</p><h1>c</h1>", state.toHtml())
     }
 
     @Test
-    fun `a heading set with the caret in a line applies to the block`() {
+    fun `a heading on two selected lines keeps those two linked`() {
         val state = stateOf("<p>a<br>b<br>c</p>")
 
-        state.selection = TextRange(3)
+        state.selection = TextRange(0, 3)
+        state.setHeadingStyle(HeadingStyle.H1)
+
+        assertEquals("<h1>a<br>b</h1><p>c</p>", state.toHtml())
+    }
+
+    @Test
+    fun `a heading on every line keeps the block whole`() {
+        val state = stateOf("<p>a<br>b<br>c</p>")
+
+        state.selection = TextRange(0, 5)
         state.setHeadingStyle(HeadingStyle.H1)
 
         assertEquals("<h1>a<br>b<br>c</h1>", state.toHtml())
     }
 
     @Test
-    fun `removing the heading from one line removes it from the block`() {
+    fun `removing the heading from one line of a heading block takes that line out`() {
         val state = stateOf("<h1>a<br>b<br>c</h1>")
 
-        state.selection = SECOND_LINE
+        state.selection = THIRD_LINE
         state.setHeadingStyle(HeadingStyle.Normal)
 
-        assertEquals("<p>a<br>b<br>c</p>", state.toHtml())
+        assertEquals("<h1>a<br>b</h1><p>c</p>", state.toHtml())
     }
 
     @Test
-    fun `changing the level on one line changes the block`() {
-        val state = stateOf("<h1>a<br>b<br>c</h1>")
-
-        state.selection = THIRD_LINE
-        state.setHeadingStyle(HeadingStyle.H3)
-
-        assertEquals("<h3>a<br>b<br>c</h3>", state.toHtml())
-    }
-
-    @Test
-    fun `the blocks around it are left alone`() {
-        val state = stateOf("<p>before</p><p>a<br>b</p><p>after</p>")
-
-        // "before a b after": the line "b" starts at 9.
-        state.selection = TextRange(9, 10)
-        state.setHeadingStyle(HeadingStyle.H1)
-
-        assertEquals("<p>before</p><h1>a<br>b</h1><p>after</p>", state.toHtml())
-    }
-
-    @Test
-    fun `a selection across two blocks applies to both in full`() {
-        val state = stateOf("<p>a<br>b</p><p>c<br>d</p>")
-
-        // "a b c d": from the line "b" to the line "c".
-        state.selection = TextRange(2, 5)
-        state.setHeadingStyle(HeadingStyle.H1)
-
-        assertEquals("<h1>a<br>b</h1><h1>c<br>d</h1>", state.toHtml())
-    }
-
-    @Test
-    fun `every line of the block reports the heading`() {
+    fun `only the selected line reports the heading`() {
         val state = stateOf("<p>a<br>b<br>c</p>")
         state.selection = FIRST_LINE
         state.setHeadingStyle(HeadingStyle.H1)
 
-        listOf(FIRST_LINE, SECOND_LINE, THIRD_LINE).forEach { line ->
+        val levels = listOf(FIRST_LINE, SECOND_LINE, THIRD_LINE).map { line ->
             state.selection = line
-            assertEquals(HeadingStyle.H1, state.currentHeadingStyle, "line at $line")
+            state.currentHeadingStyle
         }
+
+        assertEquals(listOf(HeadingStyle.H1, HeadingStyle.Normal, HeadingStyle.Normal), levels)
+    }
+
+    @Test
+    fun `the blocks around it are left alone`() {
+        val state = stateOf("<p>x<br>y</p><p>a<br>b</p><p>after</p>")
+
+        // "x y a b after": the line "a" is at 4.
+        state.selection = TextRange(4, 5)
+        state.setHeadingStyle(HeadingStyle.H1)
+
+        assertEquals("<p>x<br>y</p><h1>a</h1><p>b</p><p>after</p>", state.toHtml())
     }
 
     @Test
     fun `undo restores the block as it was`() {
         val state = stateOf("<p>a<br>b<br>c</p>")
-        state.selection = SECOND_LINE
+        state.selection = FIRST_LINE
         state.setHeadingStyle(HeadingStyle.H1)
 
         state.history.undo()
@@ -119,14 +123,14 @@ class HeadingLineBreakBlockTest {
     }
 
     @Test
-    fun `the block survives an html round trip`() {
+    fun `the result survives an html round trip`() {
         val state = stateOf("<p>a<br>b<br>c</p>")
         state.selection = FIRST_LINE
         state.setHeadingStyle(HeadingStyle.H1)
 
         val reloaded = stateOf(state.toHtml())
 
-        assertEquals("<h1>a<br>b<br>c</h1>", reloaded.toHtml())
+        assertEquals("<h1>a</h1><p>b<br>c</p>", reloaded.toHtml())
     }
 
     private fun stateOf(html: String): RichTextState = RichTextState().apply { setHtml(html) }

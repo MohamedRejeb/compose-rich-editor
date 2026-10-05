@@ -1500,18 +1500,20 @@ public class RichTextState internal constructor(
      * otherwise the specified heading style replaces any previous one. Wrapped in
      * [recordHistory] so undo/redo restores heading changes alongside other formatting.
      *
-     * The lines of a `<br>` block share one tag in html, so a heading set on one of them
-     * applies to the whole block.
+     * The lines of an imported `<br>` block look like any other paragraphs in the editor, so
+     * the heading applies to the selected ones only. A line whose level now differs from its
+     * neighbour's leaves the block; lines that still share a level stay linked.
      */
     public fun setHeadingStyle(headingStyle: HeadingStyle) {
         if (headingStyle != HeadingStyle.Normal && RichTextFeature.Heading !in config.features) return
         recordHistory(CommitTrigger.Formatting) {
-            val paragraphs = withLineBreakBlocks(getRichParagraphListByTextRange(selection))
+            val paragraphs = getRichParagraphListByTextRange(selection)
             if (paragraphs.isEmpty()) return@recordHistory
 
-            paragraphs.forEach { paragraph ->
-                if (paragraph.headingStyle != headingStyle) paragraph.applyHeadingStyle(headingStyle)
-            }
+            val changed = paragraphs.filter { it.headingStyle != headingStyle }
+            changed.forEach { it.applyHeadingStyle(headingStyle) }
+            // After every level is set, so two selected lines that end up alike stay linked.
+            changed.forEach { cutLineBreakLinksAcrossHeadingLevels(it) }
 
             updateAnnotatedString()
             updateCurrentSpanStyle()
@@ -5157,22 +5159,21 @@ public class RichTextState internal constructor(
     }
 
     /**
-     * [paragraphs] widened to the `<br>` blocks they belong to: the paragraph that opens each
-     * block and every line break continuation that follows it, in document order.
+     * A `<br>` continuation is written inside the tag of the line it continues, so the two
+     * must share a heading level. Cuts the links of [paragraph] to the line above and to the
+     * line below where the levels differ. Links further along the block are not its concern.
      */
-    private fun withLineBreakBlocks(paragraphs: List<RichParagraph>): List<RichParagraph> {
-        val indices = mutableSetOf<Int>()
-        paragraphs.forEach { paragraph ->
-            val index = richParagraphList.indexOf(paragraph)
-            if (index < 0) return@forEach
+    private fun cutLineBreakLinksAcrossHeadingLevels(paragraph: RichParagraph) {
+        val index = richParagraphList.indexOf(paragraph)
+        if (index < 0) return
 
-            var first = index
-            while (first > 0 && richParagraphList[first].isFromLineBreak) first--
-            var last = index
-            while (last < richParagraphList.lastIndex && richParagraphList[last + 1].isFromLineBreak) last++
-            indices.addAll(first..last)
-        }
-        return indices.sorted().map { richParagraphList[it] }
+        val previous = richParagraphList.getOrNull(index - 1)
+        if (previous == null || previous.headingStyle != paragraph.headingStyle)
+            paragraph.isFromLineBreak = false
+
+        val next = richParagraphList.getOrNull(index + 1)
+        if (next != null && next.headingStyle != paragraph.headingStyle)
+            next.isFromLineBreak = false
     }
 
     /**

@@ -65,6 +65,7 @@ nav:
     - 'Links': links.md
     - 'Code Blocks': code_blocks.md
     - 'Ordered/Unordered lists': ordered_unordered_lists.md
+    - 'Task lists': task_lists.md
     - 'Images': images.md
     - 'Mentions & Triggers': mentions_and_triggers.md
   - 'Read-only views':

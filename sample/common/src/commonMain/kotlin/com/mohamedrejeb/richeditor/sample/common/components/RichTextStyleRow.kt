@@ -210,6 +210,16 @@ fun RichTextStyleRow(
         }
 
         item {
+            RichTextStyleButton(
+                onClick = {
+                    state.toggleTaskList()
+                },
+                isSelected = state.isTaskList,
+                icon = Icons.Outlined.Checklist,
+            )
+        }
+
+        item {
             SlackDemoPanelButton(
                 onClick = {
                     state.increaseListLevel()

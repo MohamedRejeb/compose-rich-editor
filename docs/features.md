@@ -55,6 +55,7 @@ if (RichTextFeature.Link in state.config.features) {
 | `CustomSpanStyle` | Every app-defined `RichSpanStyle` |
 | `OrderedList` | Ordered list items |
 | `UnorderedList` | Unordered list items |
+| `TaskList` | [Task list](task_lists.md) items, the list items with a checkbox |
 | `Heading` | Heading levels 1 to 6 |
 | `ParagraphStyle` | Paragraph alignment, direction, first-line indent and line height |
 
@@ -69,9 +70,9 @@ Each feature corresponds to one `RichTextSpanMark` or one block attribute of the
 - A disallowed paragraph style (alignment, direction, indent, line height) is reset.
 - A disallowed image is removed together with its placeholder character. A paragraph that held only an image is dropped, and a paste that held only images inserts nothing.
 
-**Formatting calls.** `toggleSpanStyle` and `addSpanStyle` apply only the fields of allowed features, so a `SpanStyle(fontWeight = Bold, color = Red)` under a bold-only set applies bold. `addRichSpan`, `addLinkToSelection`, `addLinkToTextRange`, `addCodeSpan`, `setHeadingStyle`, `addParagraphStyle`, `addOrderedList` and `addUnorderedList` are no-ops for a disallowed feature. The toggles never switch a disallowed feature on, but still switch it off where it is already applied. `addLink(text, url)` inserts the plain text. `insertToken` cancels the active trigger query. Every `remove*` call keeps working, so a toolbar can always clear formatting that was allowed when it was applied.
+**Formatting calls.** `toggleSpanStyle` and `addSpanStyle` apply only the fields of allowed features, so a `SpanStyle(fontWeight = Bold, color = Red)` under a bold-only set applies bold. `addRichSpan`, `addLinkToSelection`, `addLinkToTextRange`, `addCodeSpan`, `setHeadingStyle`, `addParagraphStyle`, `addOrderedList`, `addUnorderedList` and `addTaskList` are no-ops for a disallowed feature. The toggles never switch a disallowed feature on, but still switch it off where it is already applied. `addLink(text, url)` inserts the plain text. `insertToken` cancels the active trigger query. Every `remove*` call keeps working, so a toolbar can always clear formatting that was allowed when it was applied.
 
-**Typing shortcuts.** `- `, `* ` or a number followed by `. ` at the start of a paragraph convert it to a list only when that list kind is allowed. To keep lists and turn off only these shortcuts, set `config.listTypingShortcutsEnabled = false`.
+**Typing shortcuts.** `- `, `* `, a number followed by `. `, or a box (`[ ] `, `[x] `) at the start of a paragraph convert it to a list only when that list kind is allowed. To keep lists and turn off only these shortcuts, set `config.listTypingShortcutsEnabled = false`.
 
 **Paste with no features.** With an empty set the clipboard's HTML is ignored and the pasted text flows through the plain text path: it inherits the style at the caret, exactly like typed text, and keeps its paragraph breaks. This is the same path `richClipboardEnabled = false` uses for paste.
 

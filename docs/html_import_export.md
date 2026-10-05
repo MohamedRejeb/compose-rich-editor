@@ -64,6 +64,7 @@ The following HTML tags are supported:
 - `<ul>` - Unordered lists
 - `<ol>` - Ordered lists. `start="N"` sets the first item's number
 - `<li>` - List items. In an ordered list, `value="N"` renumbers the list from that item on (a later item cannot restart at 1)
+- `<li><input type="checkbox">` - [Task list](task_lists.md#html) items, checked when the input has the `checked` attribute
 
 ### Links
 - `<a href="...">` - Hyperlinks

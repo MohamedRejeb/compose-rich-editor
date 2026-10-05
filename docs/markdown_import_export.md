@@ -62,6 +62,7 @@ The following Markdown syntax elements are supported:
 ### Lists
 - `* item` or `- item` - Unordered list items
 - `1. item` - Ordered list items
+- `- [ ] item` and `- [x] item` - [Task list](task_lists.md#markdown) items
 - Nested lists with proper indentation
 
 ### Links

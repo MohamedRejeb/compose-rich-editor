@@ -82,6 +82,10 @@ internal val skippedHtmlElements = setOf(
 
 internal const val BrElement = "br"
 
+/** The classes GitHub gives the list and the item of a task list. */
+internal const val TaskListClass = "contains-task-list"
+internal const val TaskListItemClass = "task-list-item"
+
 /** Span attribute carrying a registered custom style's kind. */
 internal const val CustomSpanKindAttr = "data-richeditor-kind"
 

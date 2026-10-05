@@ -61,6 +61,21 @@ public final class com/mohamedrejeb/richeditor/document/RichTextBlockType$Paragr
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class com/mohamedrejeb/richeditor/document/RichTextBlockType$TaskItem : com/mohamedrejeb/richeditor/document/RichTextBlockType {
+	public static final field $stable I
+	public fun <init> (ZI)V
+	public synthetic fun <init> (ZIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()I
+	public final fun copy (ZI)Lcom/mohamedrejeb/richeditor/document/RichTextBlockType$TaskItem;
+	public static synthetic fun copy$default (Lcom/mohamedrejeb/richeditor/document/RichTextBlockType$TaskItem;ZIILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextBlockType$TaskItem;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChecked ()Z
+	public final fun getIndent ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class com/mohamedrejeb/richeditor/document/RichTextDocument {
 	public static final field $stable I
 	public static final field Companion Lcom/mohamedrejeb/richeditor/document/RichTextDocument$Companion;
@@ -554,6 +569,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextFeature : java/lang
 	public static final field ParagraphStyle Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
 	public static final field Shadow Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
 	public static final field Strikethrough Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+	public static final field TaskList Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
 	public static final field TextColor Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
 	public static final field Token Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
 	public static final field Underline Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
@@ -591,6 +607,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun addRichSpan-FDrldGo (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;J)V
 	public final fun addSpanStyle (Landroidx/compose/ui/text/SpanStyle;)V
 	public final fun addSpanStyle-FDrldGo (Landroidx/compose/ui/text/SpanStyle;J)V
+	public final fun addTaskList ()V
 	public final fun addTextAfterSelection (Ljava/lang/String;)V
 	public final fun addTextAtIndex (ILjava/lang/String;)V
 	public final fun addUnorderedList ()V
@@ -637,6 +654,8 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun isOrderedList ()Z
 	public final fun isRichSpan (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;)Z
 	public final fun isRichSpan (Lkotlin/reflect/KClass;)Z
+	public final fun isTaskList ()Z
+	public final fun isTaskListItemChecked ()Z
 	public final fun isUnorderedList ()Z
 	public final fun registerTrigger (Lcom/mohamedrejeb/richeditor/model/trigger/Trigger;)V
 	public final fun removeCode ()V
@@ -649,6 +668,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun removeSelectedText ()V
 	public final fun removeSpanStyle (Landroidx/compose/ui/text/SpanStyle;)V
 	public final fun removeSpanStyle-FDrldGo (Landroidx/compose/ui/text/SpanStyle;J)V
+	public final fun removeTaskList ()V
 	public final fun removeTextRange-5zc-tL8 (J)V
 	public final fun removeUnorderedList ()V
 	public final fun replaceSelectedText (Ljava/lang/String;)V
@@ -661,6 +681,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun setRichTextDocument-psREZIo (Lcom/mohamedrejeb/richeditor/document/RichTextDocument;Landroidx/compose/ui/text/TextRange;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public static synthetic fun setRichTextDocument-psREZIo$default (Lcom/mohamedrejeb/richeditor/model/RichTextState;Lcom/mohamedrejeb/richeditor/document/RichTextDocument;Landroidx/compose/ui/text/TextRange;ILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public final fun setSelection-5zc-tL8 (J)V
+	public final fun setTaskListItemsChecked (Z)V
 	public final fun setText-FDrldGo (Ljava/lang/String;J)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public static synthetic fun setText-FDrldGo$default (Lcom/mohamedrejeb/richeditor/model/RichTextState;Ljava/lang/String;JILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public final fun toHtml ()Ljava/lang/String;
@@ -677,6 +698,8 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun toggleParagraphStyle (Landroidx/compose/ui/text/ParagraphStyle;)V
 	public final fun toggleRichSpan (Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;)V
 	public final fun toggleSpanStyle (Landroidx/compose/ui/text/SpanStyle;)V
+	public final fun toggleTaskList ()V
+	public final fun toggleTaskListItemChecked ()V
 	public final fun toggleUnorderedList ()V
 	public final fun unregisterTrigger (Ljava/lang/String;)V
 	public final fun updateLink (Ljava/lang/String;)V

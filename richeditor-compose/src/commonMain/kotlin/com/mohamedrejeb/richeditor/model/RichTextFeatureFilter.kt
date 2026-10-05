@@ -38,8 +38,11 @@ private fun RichTextBlock.restrictedTo(features: Set<RichTextFeature>): RichText
 
 @OptIn(ExperimentalRichTextApi::class)
 private fun RichTextBlockType.restrictedTo(features: Set<RichTextFeature>): RichTextBlockType {
-    if (this !is RichTextBlockType.ListItem) return this
-    val feature = if (ordered) RichTextFeature.OrderedList else RichTextFeature.UnorderedList
+    val feature = when (this) {
+        is RichTextBlockType.ListItem -> if (ordered) RichTextFeature.OrderedList else RichTextFeature.UnorderedList
+        is RichTextBlockType.TaskItem -> RichTextFeature.TaskList
+        RichTextBlockType.Paragraph -> return this
+    }
     return if (feature in features) this else RichTextBlockType.Paragraph
 }
 

@@ -12,6 +12,7 @@ import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
+import com.mohamedrejeb.richeditor.paragraph.type.TaskList
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import com.mohamedrejeb.richeditor.parser.RichTextStateParser
 import com.mohamedrejeb.richeditor.parser.utils.*
@@ -114,6 +115,20 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     explicitParagraphOpens.add(!isImplied)
 
                 if (name in skippedHtmlElements) {
+                    return@onOpenTag
+                }
+
+                // A checkbox at the start of a list item makes it a task item, the form
+                // GitHub renders: <li class="task-list-item"><input type="checkbox" checked> text</li>
+                if (isCheckboxInput(name, attributes)) {
+                    val paragraph = richParagraphList.lastOrNull()
+                    val listLevel = (paragraph?.type as? ConfigurableListLevel)?.level
+                    if (paragraph != null && listLevel != null && paragraph.type !is TaskList && paragraph.isBlank()) {
+                        paragraph.type = TaskList(
+                            checked = "checked" in attributes,
+                            initialLevel = listLevel,
+                        )
+                    }
                     return@onOpenTag
                 }
 
@@ -318,7 +333,11 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 }
             }
             .onCloseTag { name, isImplied ->
-                openedTags.removeLastOrNull()
+                val closedTag = openedTags.removeLastOrNull()
+
+                // No span was opened for it.
+                if (closedTag != null && closedTag.first == name && isCheckboxInput(name, closedTag.second))
+                    return@onCloseTag
 
                 val isExplicitParagraphPair =
                     if (name == "p" || name in HeadingStyle.headingTags)
@@ -588,6 +607,8 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     ) {
                         builder.append("<ol start=\"${richParagraphType.startFrom}\">")
                         startWrittenOnList = true
+                    } else if (richParagraphType is TaskList && openingLevel == paragraphLevel) {
+                        builder.append("<ul class=\"$TaskListClass\">")
                     } else {
                         builder.append("<$paragraphGroupTagName>")
                     }
@@ -619,8 +640,15 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
             builder.append("<$paragraphTagName")
             if (richParagraphType is OrderedList && richParagraphType.startFrom != 1 && !startWrittenOnList)
                 builder.append(" value=\"${richParagraphType.startFrom}\"")
+            if (richParagraphType is TaskList) builder.append(" class=\"$TaskListItemClass\"")
             if (paragraphCss.isNotBlank()) builder.append(" style=\"$paragraphCss\"")
             builder.append(">")
+
+            if (richParagraphType is TaskList) {
+                builder.append("<input type=\"checkbox\" disabled")
+                if (richParagraphType.checked) builder.append(" checked")
+                builder.append("> ")
+            }
 
             // Append paragraph children
             val textContext = HtmlTextEmitContext(afterCollapsibleSpace = true)
@@ -890,6 +918,9 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
             }
         }
 
+    private fun isCheckboxInput(name: String, attributes: Map<String, String>): Boolean =
+        name == "input" && attributes["type"]?.lowercase() == "checkbox"
+
     /**
      * Encodes HTML elements to [ParagraphType].
      */
@@ -924,7 +955,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
     ): String {
         val paragraphType = richParagraph.type
         return when (paragraphType) {
-            is UnorderedList -> "ul"
+            is UnorderedList, is TaskList -> "ul"
             is OrderedList -> "ol"
             else -> richParagraph.headingStyle.htmlTag ?: "p"
         }

@@ -17,6 +17,7 @@ import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
+import com.mohamedrejeb.richeditor.paragraph.type.TaskList
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import com.mohamedrejeb.richeditor.utils.InlineContentPlaceholder
 import com.mohamedrejeb.richeditor.utils.customMerge
@@ -40,7 +41,9 @@ internal object RichTextDocumentDecoder {
         )
         paragraph.isFromLineBreak = block.isLineBreak
         val type = block.type
-        if (type is RichTextBlockType.ListItem) {
+        if (type is RichTextBlockType.TaskItem) {
+            paragraph.type = TaskList(checked = type.checked, initialLevel = type.indent + 1)
+        } else if (type is RichTextBlockType.ListItem) {
             // Constructed like RichTextStateHtmlParser does for <li>; the real number is
             // recomputed in applyOrderedNumbers.
             paragraph.type =
@@ -165,6 +168,9 @@ internal object RichTextDocumentDecoder {
                     counters[type.level] = number
                 }
                 is UnorderedList -> {
+                    counters.keys.filter { it >= type.level }.forEach(counters::remove)
+                }
+                is TaskList -> {
                     counters.keys.filter { it >= type.level }.forEach(counters::remove)
                 }
                 else -> counters.clear()

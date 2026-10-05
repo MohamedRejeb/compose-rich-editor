@@ -34,6 +34,8 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerType
+import androidx.compose.ui.input.pointer.isPrimaryPressed
 import androidx.compose.ui.input.pointer.isShiftPressed
 import androidx.compose.ui.input.pointer.changedToDown
 import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
@@ -308,6 +310,8 @@ public fun BasicRichTextEditor(
         }
     }
 
+    val canToggleTaskListItems by rememberUpdatedState(enabled && !readOnly)
+
     val editorCoordinates = remember { Ref<LayoutCoordinates>() }
     val innerTextFieldCoordinates = remember { Ref<LayoutCoordinates>() }
 
@@ -395,6 +399,8 @@ public fun BasicRichTextEditor(
                             // in the coordinates of the text layout; never consumes events.
                             .pointerInput(state, singleLine) {
                                 awaitPointerEventScope {
+                                    // A secondary mouse button opens the context menu.
+                                    var isPrimaryPress = false
                                     while (true) {
                                         val event = awaitPointerEvent(PointerEventPass.Initial)
                                         val change = event.changes
@@ -408,6 +414,8 @@ public fun BasicRichTextEditor(
                                         )?.let(state::onSelectionGesturePointerMove)
 
                                         if (change.changedToDown()) {
+                                            isPrimaryPress =
+                                                change.type != PointerType.Mouse || event.buttons.isPrimaryPressed
                                             state.onSelectionGesturePointerDown(
                                                 position = change.position,
                                                 uptimeMillis = change.uptimeMillis,
@@ -420,6 +428,13 @@ public fun BasicRichTextEditor(
                                             // Every caret placement the press causes is made by
                                             // the time its release has been dispatched.
                                             awaitPointerEvent(PointerEventPass.Final)
+                                            if (canToggleTaskListItems && isPrimaryPress) {
+                                                state.toggleTaskListItemOnTap(
+                                                    releasePosition = change.position,
+                                                    uptimeMillis = change.uptimeMillis,
+                                                    longPressTimeoutMillis = viewConfiguration.longPressTimeoutMillis,
+                                                )
+                                            }
                                             state.onSelectionGesturePointerUp(releasePosition = change.position)
                                         }
                                     }

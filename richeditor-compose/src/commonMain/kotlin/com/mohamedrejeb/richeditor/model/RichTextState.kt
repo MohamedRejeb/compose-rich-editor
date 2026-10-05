@@ -897,6 +897,49 @@ public class RichTextState internal constructor(
     }
 
     /**
+     * Toggles the task list item whose marker a tap ended on. Called before
+     * [onSelectionGesturePointerUp], with the release in the coordinates the press was
+     * reported in. A press that moved further than the slop is a scroll or a drag, and one
+     * held for the long press timeout is a selection.
+     */
+    internal fun toggleTaskListItemOnTap(
+        releasePosition: Offset,
+        uptimeMillis: Long,
+        longPressTimeoutMillis: Long,
+    ): Boolean {
+        val pressPosition = pressSeriesPosition ?: return false
+        if ((releasePosition - pressPosition).getDistance() >= pressSlop) return false
+        if (uptimeMillis - pressSeriesUptimeMs >= longPressTimeoutMillis) return false
+        val position = pressForCaretCorrection() ?: return false
+        val item = getTaskListItemByMarkerPosition(position) ?: return false
+
+        setTaskListParagraphsChecked(listOf(item), !(item.type as TaskList).checked)
+        return true
+    }
+
+    /** The task list item whose marker is drawn at [position] of the text layout. */
+    private fun getTaskListItemByMarkerPosition(position: Offset): RichParagraph? {
+        val layout = textLayoutResult ?: return null
+        if (!layout.isForModelText(annotatedString.text.length)) return null
+
+        return richParagraphList.firstOrNull { paragraph ->
+            if (paragraph.type !is TaskList) return@firstOrNull false
+            val marker = paragraph.type.startRichSpan.textRange
+            val line = layout.getLineForOffset(marker.min)
+            // A marker past the last laid out line (maxLines) is not on screen.
+            if (marker.max > layout.getLineEnd(line)) return@firstOrNull false
+            if (position.y < layout.getLineTop(line) || position.y >= layout.getLineBottom(line))
+                return@firstOrNull false
+
+            // The boxes of the characters, not the caret positions around them: the caret
+            // after a marker that wraps onto its own line is on the next line.
+            val first = layout.getBoundingBox(marker.min)
+            val last = layout.getBoundingBox(marker.max - 1)
+            position.x >= minOf(first.left, last.left) && position.x < maxOf(first.right, last.right)
+        }
+    }
+
+    /**
      * @param releasePosition where the pointer came up, in the coordinates the press was
      * reported in, or null when unknown.
      */
@@ -1088,7 +1131,20 @@ public class RichTextState internal constructor(
         private set
     public var isOrderedList: Boolean by mutableStateOf(currentRichParagraphType is OrderedList)
         private set
-    public var isList: Boolean by mutableStateOf(isUnorderedList || isOrderedList)
+
+    /** Whether every paragraph of the selection is a task list item. */
+    @ExperimentalRichTextApi
+    public var isTaskList: Boolean by mutableStateOf(currentRichParagraphType is TaskList)
+        private set
+
+    /** Whether every paragraph of the selection is a checked task list item. */
+    @ExperimentalRichTextApi
+    public var isTaskListItemChecked: Boolean by mutableStateOf(
+        (currentRichParagraphType as? TaskList)?.checked == true
+    )
+        private set
+
+    public var isList: Boolean by mutableStateOf(isUnorderedList || isOrderedList || isTaskList)
         private set
     public var canIncreaseListLevel: Boolean by mutableStateOf(false)
         private set
@@ -2011,6 +2067,85 @@ public class RichTextState internal constructor(
     }
 
     /**
+     * Turns the selected paragraphs into unchecked task list items, or back into plain
+     * paragraphs when the first of them is already one.
+     */
+    @ExperimentalRichTextApi
+    public fun toggleTaskList(): Unit = recordHistory(CommitTrigger.Structural) {
+        val paragraphs = getRichParagraphListByTextRange(selection)
+        if (paragraphs.isEmpty())
+            return@recordHistory
+        val isFirstParagraphTaskList = paragraphs.first().type is TaskList
+        if (!isFirstParagraphTaskList && RichTextFeature.TaskList !in config.features)
+            return@recordHistory
+        paragraphs.fastForEach { paragraph ->
+            if (isFirstParagraphTaskList)
+                removeTaskList(paragraph)
+            else
+                addTaskList(paragraph)
+        }
+    }
+
+    /**
+     * Turns the selected paragraphs into unchecked task list items. Paragraphs that are
+     * task list items already keep their checked state.
+     */
+    @ExperimentalRichTextApi
+    public fun addTaskList(): Unit = recordHistory(CommitTrigger.Structural) {
+        if (RichTextFeature.TaskList !in config.features) return@recordHistory
+        val paragraphs = getRichParagraphListByTextRange(selection)
+
+        paragraphs.fastForEach { paragraph ->
+            addTaskList(paragraph)
+        }
+    }
+
+    /** Turns the selected task list items back into plain paragraphs. */
+    @ExperimentalRichTextApi
+    public fun removeTaskList(): Unit = recordHistory(CommitTrigger.Structural) {
+        val paragraphs = getRichParagraphListByTextRange(selection)
+
+        paragraphs.fastForEach { paragraph ->
+            removeTaskList(paragraph)
+        }
+    }
+
+    /**
+     * Checks the selected task list items, or unchecks them when the first of them is
+     * checked. Paragraphs that are not task list items are left alone.
+     */
+    @ExperimentalRichTextApi
+    public fun toggleTaskListItemChecked() {
+        val firstItem = getRichParagraphListByTextRange(selection)
+            .firstNotNullOfOrNull { it.type as? TaskList }
+            ?: return
+        setTaskListItemsChecked(!firstItem.checked)
+    }
+
+    /**
+     * Sets the checked state of the selected task list items. Paragraphs that are not task
+     * list items are left alone.
+     */
+    @ExperimentalRichTextApi
+    public fun setTaskListItemsChecked(checked: Boolean) {
+        setTaskListParagraphsChecked(getRichParagraphListByTextRange(selection), checked)
+    }
+
+    private fun setTaskListParagraphsChecked(paragraphs: List<RichParagraph>, checked: Boolean) {
+        val items = paragraphs.filter { (it.type as? TaskList)?.checked == !checked }
+        if (items.isEmpty()) return
+
+        recordHistory(CommitTrigger.Formatting) {
+            items.fastForEach { paragraph ->
+                paragraph.type = (paragraph.type as TaskList).withChecked(checked)
+            }
+            // The two markers have the same length: the text keeps its offsets and only
+            // the marker character changes, so the selection stays where it is.
+            updateTextFieldValue(textFieldValue)
+        }
+    }
+
+    /**
      * Increase the level of the current selected lists.
      *
      * If the current selection is not a list, this method does nothing.
@@ -2063,7 +2198,7 @@ public class RichTextState internal constructor(
                         if (type is OrderedList)
                             levelNumberMap[type.level] = type.number
 
-                        if (type is UnorderedList)
+                        if (type is UnorderedList || type is TaskList)
                             levelNumberMap.remove(type.level)
                     } else {
                         levelNumberMap.clear()
@@ -2177,7 +2312,7 @@ public class RichTextState internal constructor(
                         if (type is OrderedList)
                             levelNumberMap[type.level] = type.number
 
-                        if (type is UnorderedList)
+                        if (type is UnorderedList || type is TaskList)
                             levelNumberMap.remove(type.level)
                     } else {
                         levelNumberMap.clear()
@@ -2301,6 +2436,49 @@ public class RichTextState internal constructor(
 
     private fun removeUnorderedList(paragraph: RichParagraph) {
         if (paragraph.type !is UnorderedList)
+            return
+
+        resetParagraphType(paragraph = paragraph)
+    }
+
+    private fun addTaskList(paragraph: RichParagraph) {
+        val paragraphType = paragraph.type
+        if (paragraphType is TaskList)
+            return
+
+        val index = richParagraphList.indexOf(paragraph)
+
+        if (index == -1)
+            return
+
+        val listLevel =
+            if (paragraphType is ConfigurableListLevel)
+                paragraphType.level
+            else
+                1
+
+        val newType = TaskList(
+            config = config,
+            initialLevel = listLevel,
+        )
+
+        val newTextFieldValue = adjustOrderedListsNumbers(
+            startParagraphIndex = index,
+            startNumber = 1,
+            textFieldValue = updateParagraphType(
+                paragraph = paragraph,
+                newType = newType,
+                textFieldValue = textFieldValue,
+            ),
+        )
+
+        updateTextFieldValue(
+            newTextFieldValue = newTextFieldValue
+        )
+    }
+
+    private fun removeTaskList(paragraph: RichParagraph) {
+        if (paragraph.type !is TaskList)
             return
 
         resetParagraphType(paragraph = paragraph)
@@ -3959,13 +4137,17 @@ public class RichTextState internal constructor(
         if (!config.listTypingShortcutsEnabled)
             return
 
-        if (richSpan.paragraph.type !is DefaultParagraph)
-            return
-
         if (!richSpan.isFirstInParagraph)
             return
 
         val features = config.features
+
+        if (RichTextFeature.TaskList in features && checkTaskListStart(richSpan))
+            return
+
+        if (richSpan.paragraph.type !is DefaultParagraph)
+            return
+
         val newType =
             if ((richSpan.text == "- " || richSpan.text == "* ") && RichTextFeature.UnorderedList in features) {
                 UnorderedList(
@@ -3984,6 +4166,48 @@ public class RichTextState internal constructor(
         richSpan.text = ""
         // A list item cannot ride inside the paragraph it continued.
         clearLineBreakContinuations(richSpan.paragraph)
+    }
+
+    /**
+     * Turns a paragraph or a bullet item whose text is a task trigger, "[ ] " or "[x] ", into
+     * a task list item, so that typing "- [ ] " the Markdown way ends up as one. The trigger
+     * is longer than the marker that replaces it, so the text after it moves back.
+     */
+    private fun checkTaskListStart(richSpan: RichSpan): Boolean {
+        val oldType = richSpan.paragraph.type
+        if (oldType !is DefaultParagraph && oldType !is UnorderedList)
+            return false
+
+        val trigger = richSpan.text
+        val checked = when (trigger) {
+            "[ ] " -> false
+            "[x] ", "[X] " -> true
+            else -> return false
+        }
+
+        val newType = TaskList(
+            config = config,
+            checked = checked,
+            initialLevel = (oldType as? ConfigurableListLevel)?.level ?: 1,
+        )
+        val oldStartLength = oldType.startText.length
+        val start = (richSpan.textRange.min - oldStartLength).coerceIn(0, tempTextFieldValue.text.length)
+        val end = (start + oldStartLength + trigger.length).coerceAtMost(tempTextFieldValue.text.length)
+        val removedLength = end - start - newType.startText.length
+        val selection = tempTextFieldValue.selection
+
+        tempTextFieldValue = tempTextFieldValue.copy(
+            text = tempTextFieldValue.text.replaceRange(start, end, newType.startText),
+            selection = TextRange(
+                if (selection.start >= end) selection.start - removedLength else selection.start,
+                if (selection.end >= end) selection.end - removedLength else selection.end,
+            ),
+        )
+
+        richSpan.paragraph.type = newType
+        richSpan.text = ""
+        clearLineBreakContinuations(richSpan.paragraph)
+        return true
     }
 
     /**
@@ -4029,7 +4253,7 @@ public class RichTextState internal constructor(
                     levelNumberMap.remove(level)
             }
 
-            if (currentParagraphType is UnorderedList) {
+            if (currentParagraphType is UnorderedList || currentParagraphType is TaskList) {
                 levelNumberMap[currentParagraphType.level] = 0
                 continue
             }
@@ -4095,7 +4319,7 @@ public class RichTextState internal constructor(
                     ) {
                         levelNumberMap[seedType.level] = seedType.number
                     }
-                    if (seedType is UnorderedList && seedType.level !in levelNumberMap) {
+                    if ((seedType is UnorderedList || seedType is TaskList) && seedType.level !in levelNumberMap) {
                         blockedLevels.add(seedType.level)
                     }
                     maxSeedableLevel = seedType.level
@@ -4121,7 +4345,7 @@ public class RichTextState internal constructor(
             }
 
             // Remove current list level from map if the current paragraph is an unordered list
-            if (currentParagraphType is UnorderedList)
+            if (currentParagraphType is UnorderedList || currentParagraphType is TaskList)
                 levelNumberMap.remove(currentParagraphType.level)
 
             if (currentParagraphType is OrderedList) {
@@ -4148,7 +4372,7 @@ public class RichTextState internal constructor(
 
             if (
                 currentParagraphType !is ConfigurableListLevel ||
-                (currentParagraphType is UnorderedList && currentParagraphType.level == 1)
+                ((currentParagraphType is UnorderedList || currentParagraphType is TaskList) && currentParagraphType.level == 1)
             ) {
                 // Break if we reach the end paragraph index
                 if (i >= endParagraphIndex)
@@ -5242,7 +5466,9 @@ public class RichTextState internal constructor(
                         ?: RichParagraph.DefaultParagraphStyle
             isUnorderedList = richParagraph?.type is UnorderedList
             isOrderedList = richParagraph?.type is OrderedList
-            isList = isUnorderedList || isOrderedList
+            isTaskList = richParagraph?.type is TaskList
+            isTaskListItemChecked = (richParagraph?.type as? TaskList)?.checked == true
+            isList = isUnorderedList || isOrderedList || isTaskList
             canIncreaseListLevel = richParagraph?.let { canIncreaseListLevel(listOf(it)) } == true
             canDecreaseListLevel = richParagraph?.let { canDecreaseListLevel(listOf(it)) } == true
         } else {
@@ -5257,7 +5483,9 @@ public class RichTextState internal constructor(
 
             isUnorderedList = richParagraphList.all { it.type is UnorderedList }
             isOrderedList = richParagraphList.all { it.type is OrderedList }
-            isList = richParagraphList.all { it.type is UnorderedList || it.type is OrderedList }
+            isTaskList = richParagraphList.all { it.type is TaskList }
+            isTaskListItemChecked = richParagraphList.all { (it.type as? TaskList)?.checked == true }
+            isList = richParagraphList.all { it.type is ConfigurableListLevel }
             canIncreaseListLevel = canIncreaseListLevel(richParagraphList)
             canDecreaseListLevel = canDecreaseListLevel(richParagraphList)
         }
@@ -6161,7 +6389,7 @@ public class RichTextState internal constructor(
             }
 
             // Remove current list level from map if the current paragraph is an unordered list
-            if (type is UnorderedList)
+            if (type is UnorderedList || type is TaskList)
                 levelNumberMap.remove(type.level)
 
             if (type is OrderedList) {

@@ -65,6 +65,9 @@ public enum class RichTextFeature {
     /** Unordered list items. */
     UnorderedList,
 
+    /** Task list items, the list items with a checkbox. */
+    TaskList,
+
     /** Heading levels 1 to 6. */
     Heading,
 

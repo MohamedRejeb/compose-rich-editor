@@ -210,7 +210,8 @@ public class RichTextConfig internal constructor(
 
     /**
      * Whether typing a list marker at the start of a paragraph turns it into a list:
-     * `- ` or `* ` for an unordered list, a number followed by `. ` for an ordered list.
+     * `- ` or `* ` for an unordered list, a number followed by `. ` for an ordered list,
+     * `[ ] ` or `[x] ` for a task list.
      *
      * When false the typed characters stay as text. Lists themselves are unaffected: the list
      * functions on [RichTextState] and loaded or pasted lists keep working. To remove lists

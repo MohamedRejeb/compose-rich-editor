@@ -29,7 +29,7 @@ A document is a list of blocks, one per paragraph:
 | `RichTextBlock` field | Type | Meaning |
 |---|---|---|
 | `text` | `String` | Flattened paragraph text. List prefixes are excluded. Each inline image occupies one U+FFFC placeholder character. |
-| `type` | `RichTextBlockType` | `Paragraph` or `ListItem(ordered, indent, startNumber)` |
+| `type` | `RichTextBlockType` | `Paragraph`, `ListItem(ordered, indent, startNumber)` or `TaskItem(checked, indent)` for a [task list](task_lists.md) item |
 | `spans` | `List<RichTextSpanMark>` | Styling marks over inclusive character ranges of `text` |
 | `headingLevel` | `Int` | 0 for normal text, 1 to 6 for headings |
 | `textAlign` | `TextAlign` | Paragraph alignment, `Unspecified` when not set |

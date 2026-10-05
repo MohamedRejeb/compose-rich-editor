@@ -210,6 +210,10 @@ internal class RichParagraph(
      * See [ListMarkerStyleBehavior] for what is kept versus stripped.
      */
     @OptIn(ExperimentalRichTextApi::class)
+    /** The style of this paragraph's list marker: [behavior]'s, with [markerStyle] on top. */
+    fun getListMarkerSpanStyle(behavior: ListMarkerStyleBehavior, markerStyle: SpanStyle): SpanStyle =
+        getListMarkerSpanStyle(behavior).merge(markerStyle)
+
     fun getListMarkerSpanStyle(behavior: ListMarkerStyleBehavior): SpanStyle =
         when (behavior) {
             ListMarkerStyleBehavior.InheritFromText ->

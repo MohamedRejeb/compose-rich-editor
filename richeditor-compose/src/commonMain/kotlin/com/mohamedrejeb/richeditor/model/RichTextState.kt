@@ -3347,7 +3347,7 @@ public class RichTextState internal constructor(
                 }
 
                 withStyle(richParagraph.paragraphStyle.merge(richParagraph.type.getStyle(config))) {
-                    withStyle(richParagraph.getListMarkerSpanStyle(config.listMarkerStyleBehavior)) {
+                    withStyle(richParagraph.getListMarkerSpanStyle(config.listMarkerStyleBehavior, config.listMarkerStyle)) {
                         append(richParagraph.type.startText)
                     }
                     val richParagraphStartTextLength = richParagraph.type.startText.length
@@ -5704,6 +5704,7 @@ public class RichTextState internal constructor(
         richTextState.config.preserveStyleOnEmptyLine = config.preserveStyleOnEmptyLine
         richTextState.config.exitListOnEmptyItem = config.exitListOnEmptyItem
         richTextState.config.listTypingShortcutsEnabled = config.listTypingShortcutsEnabled
+        richTextState.config.listMarkerStyle = config.listMarkerStyle
         richTextState.config.preserveSelectionOnFocusLoss = config.preserveSelectionOnFocusLoss
         richTextState.config.features = config.features
 
@@ -6012,7 +6013,7 @@ public class RichTextState internal constructor(
             richParagraphList.fastForEachIndexed { i, richParagraph ->
                 withStyle(richParagraph.paragraphStyle.merge(richParagraph.type.getStyle(config))) {
                     withStyle(
-                        richParagraph.getListMarkerSpanStyle(config.listMarkerStyleBehavior)
+                        richParagraph.getListMarkerSpanStyle(config.listMarkerStyleBehavior, config.listMarkerStyle)
                     ) {
                         append(richParagraph.type.startText)
                     }

@@ -171,6 +171,21 @@ Use `AlwaysDefault` when you want bullets that look identical no matter how the 
 
 ## Common Operations
 
+
+### Styling the markers directly
+
+To style the bullets and numbers on their own, set `listMarkerStyle`. It is applied on top of the marker style behavior above, so anything it leaves unset still follows that behavior:
+
+```kotlin
+@OptIn(ExperimentalRichTextApi::class)
+richTextState.config.listMarkerStyle = SpanStyle(color = Color.Red)
+
+// Bold, colored numbers and bullets
+richTextState.config.listMarkerStyle = SpanStyle(color = Color.Gray, fontWeight = FontWeight.Bold)
+```
+
+It is an appearance setting of the editor, like the link and code span colors: it applies to every list in the editor and is not saved in the document, so `toHtml()` and `toMarkdown()` do not include it. Reset it with `SpanStyle()`.
+
 ### Default Values
 By default, the Rich Text Editor uses these configurations:
 - Ordered List Style: `OrderedListStyleType.Multiple` with:

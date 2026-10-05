@@ -6428,6 +6428,39 @@ public class RichTextState internal constructor(
     }
 
     /**
+     * Replaces the editor content with [annotatedString]. Undo history is cleared and the
+     * selection moves to the end, matching [setText].
+     *
+     * A line break (`\n`, `\r\n` or `\r`) starts a new paragraph, as in [setText]. A
+     * `ParagraphStyle` range also starts and ends a paragraph, as it does when Compose lays the
+     * string out. The string is read as follows:
+     * - `SpanStyle` ranges become span styles. Where ranges overlap, a later range wins over an
+     *   earlier one property by property, and text decorations combine.
+     * - `ParagraphStyle` ranges become the paragraph style of the paragraphs they cover.
+     * - `LinkAnnotation.Url` becomes a link. Its `TextLinkStyles` are dropped: links are drawn
+     *   with [RichTextConfig.linkColor] and [RichTextConfig.linkTextDecoration].
+     * - `LinkAnnotation.Clickable`, string annotations, bullets and any other annotation are
+     *   dropped. Their text is kept.
+     *
+     * Formatting outside [RichTextConfig.features] is removed and its text kept.
+     *
+     * This is not the inverse of [RichTextState.annotatedString]: that one is the rendered
+     * text, where paragraphs are joined by a space, list markers are characters and links,
+     * code spans and headings are plain styling.
+     *
+     * @param annotatedString The [AnnotatedString] to load.
+     */
+    @ExperimentalRichTextApi
+    public fun setAnnotatedString(annotatedString: AnnotatedString): RichTextState {
+        history.onProgrammaticReplace()
+        updateRichParagraphList(
+            admit(annotatedString.toRichParagraphs()),
+            newSelection = TextRange(Int.MAX_VALUE),
+        )
+        return this
+    }
+
+    /**
      * Re-resolves all span styles from the current tree without changing the content, the
      * selection, the IME composition, staged style toggles, or the undo history. Call this
      * after an external resource a custom [RichSpanStyle] depends on (for example an

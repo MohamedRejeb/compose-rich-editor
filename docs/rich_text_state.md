@@ -38,6 +38,7 @@ rememberRichTextState { setText("Plain text") }
 rememberRichTextState { setHtml("<p>Hello <b>world</b></p>") }
 rememberRichTextState { setMarkdown("Hello **world**") }
 rememberRichTextState { setRichTextDocument(document) }
+rememberRichTextState { setAnnotatedString(annotatedString) }
 ```
 
 The block is an initializer, not a binding:
@@ -47,6 +48,39 @@ The block is an initializer, not a binding:
 - What it does is the starting point of the undo history, not a step in it. Undo after typing returns to the initial content.
 
 Outside composition, the setters return the state, so `RichTextState().setHtml(html)` does the same.
+
+### Loading an AnnotatedString
+
+If your app already holds styled text as a Compose `AnnotatedString` (from its own parser, from resources or from another library), load it with `setAnnotatedString`. The content can then be edited and exported with `toHtml()`, `toMarkdown()` or `toRichTextDocument()`:
+
+```kotlin
+@OptIn(ExperimentalRichTextApi::class)
+richTextState.setAnnotatedString(
+    buildAnnotatedString {
+        append("Read the ")
+        withLink(LinkAnnotation.Url("https://example.com")) { append("guide") }
+        append(" before the ")
+        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("first run") }
+        append(".\nA second paragraph.")
+    }
+)
+```
+
+Like the other setters, it replaces the content, clears the undo history, moves the selection to the end and returns the state.
+
+How the string is read:
+
+| In the `AnnotatedString` | In the editor |
+|---|---|
+| Line break (`\n`, `\r\n` or `\r`) | Starts a new paragraph, as in `setText` |
+| `SpanStyle` range | Span style. Where ranges overlap, the later (inner) one wins property by property, and text decorations combine |
+| `ParagraphStyle` range | Paragraph style of the paragraphs it covers. A range that starts or ends inside a line splits the line there, as Compose does when it lays the string out |
+| `LinkAnnotation.Url` | Link to its `url`. The annotation's `TextLinkStyles` are dropped; links are drawn with `config.linkColor` and `config.linkTextDecoration` |
+| `LinkAnnotation.Clickable`, string annotations, bullets, any other annotation | Dropped. The text is kept |
+
+Formatting outside `config.features` is removed and its text kept, see [Editor features](features.md).
+
+`setAnnotatedString` is not the inverse of `richTextState.annotatedString`. That property is the rendered text: paragraphs are joined by a space, list markers are characters, and links, code spans and headings are plain styling. Loading it back keeps the text and its look, but a list comes back as paragraphs that start with the marker characters, a link as colored text, and each paragraph but the last keeps a trailing space. To copy content between states use `toRichTextDocument()` and `setRichTextDocument()`, or `toHtml()` and `setHtml()`.
 
 ## Configuration
 

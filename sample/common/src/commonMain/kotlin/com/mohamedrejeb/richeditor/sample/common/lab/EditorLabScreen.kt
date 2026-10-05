@@ -67,11 +67,16 @@ fun EditorLabScreen(navigateBack: () -> Unit) {
     var loadedScenarioName by rememberSaveable { mutableStateOf<String?>(null) }
     var readOnly by rememberSaveable { mutableStateOf(false) }
     var featuresName by rememberSaveable { mutableStateOf(LabFeatures.All.name) }
+    var keepSelection by rememberSaveable { mutableStateOf(false) }
     val scenario = LabScenario.valueOf(scenarioName)
     val features = LabFeatures.valueOf(featuresName)
 
     LaunchedEffect(state, features) {
         state.config.features = features.features
+    }
+
+    LaunchedEffect(state, keepSelection) {
+        state.config.preserveSelectionOnFocusLoss = keepSelection
     }
 
     LaunchedEffect(state, scenario) {
@@ -113,8 +118,21 @@ fun EditorLabScreen(navigateBack: () -> Unit) {
                 selected = features,
                 onSelect = { featuresName = it.name },
             )
+            // The paste field at the bottom takes the focus from the editor for this check.
+            FilterChip(
+                selected = keepSelection,
+                onClick = { keepSelection = !keepSelection },
+                label = { Text("Keep selection on focus loss") },
+                modifier = Modifier.focusProperties { canFocus = false },
+            )
             LabEditor(state = state, scenario = scenario, readOnly = readOnly)
-            StateReadout(state = state, pageScroll = pageScroll, readOnly = readOnly, features = features)
+            StateReadout(
+                state = state,
+                pageScroll = pageScroll,
+                readOnly = readOnly,
+                features = features,
+                keepSelection = keepSelection,
+            )
             LabLogPanel(log = log)
             PasteTarget()
             Spacer(Modifier.height(24.dp))
@@ -231,10 +249,12 @@ private fun StateReadout(
     pageScroll: ScrollState,
     readOnly: Boolean,
     features: LabFeatures,
+    keepSelection: Boolean,
 ) {
     val lines = listOf(
         "read only      $readOnly",
         "features       ${features.name}",
+        "keep selection $keepSelection",
         "selection      ${state.selection.describe()}",
         "composition    ${state.composition?.describe() ?: "none"}",
         "bold           ${state.isBold()}",

@@ -2,6 +2,7 @@ package com.mohamedrejeb.richeditor.ui
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.text.TextRange
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
@@ -15,6 +16,7 @@ internal fun Modifier.drawRichSpanStyle(
     richTextState: RichTextState,
     topPadding: Float = 0f,
     startPadding: Float = 0f,
+    bottomPadding: Float = 0f,
 ): Modifier {
     return this
         .drawBehind {
@@ -36,7 +38,23 @@ internal fun Modifier.drawRichSpanStyle(
                     styledRichSpanList.add(richSpan.richSpanStyle to TextRange(richSpan.textRange.start, end))
             }
 
-            translate(top = -richTextState.scrollState.value.toFloat()) {
+            // This node is the editor's outer box and does not clip, while the text clips at the
+            // text area inside the padding. Clip where content is scrolled past an edge (#601),
+            // and nowhere else: a span's padding and stroke reach a little outside its line, and
+            // must stay whole on the first and last line of text that is at rest.
+            val scrollState = richTextState.scrollState
+            val clipTop = if (scrollState.value > 0) topPadding else -UnclippedExtent
+            val clipBottom =
+                if (scrollState.value < scrollState.maxValue) size.height - bottomPadding
+                else size.height + UnclippedExtent
+
+            clipRect(
+                left = -UnclippedExtent,
+                top = clipTop,
+                right = size.width + UnclippedExtent,
+                bottom = clipBottom,
+            ) {
+            translate(top = -scrollState.value.toFloat()) {
                 styledRichSpanList.fastForEach { (style, textRange) ->
                     richTextState.textLayoutResult?.let { textLayoutResult ->
                         with(style) {
@@ -53,5 +71,9 @@ internal fun Modifier.drawRichSpanStyle(
                     }
                 }
             }
+            }
         }
 }
+// Far enough that an edge using it never cuts anything; finite, since a clip rectangle with an
+// infinite edge is not applied.
+private const val UnclippedExtent = 100_000f

@@ -384,6 +384,7 @@ public fun BasicRichTextEditor(
                     richTextState = state,
                     topPadding = with(density) { contentPadding.calculateTopPadding().toPx() },
                     startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() },
+                    bottomPadding = with(density) { contentPadding.calculateBottomPadding().toPx() },
                 )
                 .then(
                     if (singleParagraph)

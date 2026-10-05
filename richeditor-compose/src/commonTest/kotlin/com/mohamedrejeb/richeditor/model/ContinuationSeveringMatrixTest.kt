@@ -91,17 +91,17 @@ class ContinuationSeveringMatrixTest {
     }
 
     @Test
-    fun `a heading on the head severs the whole chain`() {
-        // Same rule as addParagraphStyle on the head: the continuations were not touched by
-        // the user, so they must not silently become part of the heading.
+    fun `a heading on the head severs it and leaves the rest of the chain linked`() {
+        // The continuations were not touched by the user, so they do not become part of the
+        // heading. They still share a level with each other, so their own link stays.
         val state = continuationDocument()
         state.selection = TextRange(1)
 
         state.setHeadingStyle(HeadingStyle.H1)
 
-        assertEquals(listOf(false, false, false), structure(state).continuations)
+        assertEquals(listOf(false, false, true), structure(state).continuations)
         assertEquals(listOf(HeadingStyle.H1, HeadingStyle.Normal, HeadingStyle.Normal), structure(state).headings)
-        assertEquals("<h1>a</h1><p>b</p><p>c</p>", state.toHtml())
+        assertEquals("<h1>a</h1><p>b<br>c</p>", state.toHtml())
         assertReloadAgrees(state)
     }
 

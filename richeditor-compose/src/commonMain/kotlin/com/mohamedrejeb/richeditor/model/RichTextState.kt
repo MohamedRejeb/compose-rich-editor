@@ -1499,6 +1499,10 @@ public class RichTextState internal constructor(
      * [HeadingStyle.Normal], any existing heading style is removed from those paragraphs;
      * otherwise the specified heading style replaces any previous one. Wrapped in
      * [recordHistory] so undo/redo restores heading changes alongside other formatting.
+     *
+     * The lines of an imported `<br>` block look like any other paragraphs in the editor, so
+     * the heading applies to the selected ones only. A line whose level now differs from its
+     * neighbour's leaves the block; lines that still share a level stay linked.
      */
     public fun setHeadingStyle(headingStyle: HeadingStyle) {
         if (headingStyle != HeadingStyle.Normal && RichTextFeature.Heading !in config.features) return
@@ -1506,13 +1510,10 @@ public class RichTextState internal constructor(
             val paragraphs = getRichParagraphListByTextRange(selection)
             if (paragraphs.isEmpty()) return@recordHistory
 
-            paragraphs.forEach { paragraph ->
-                if (paragraph.headingStyle == headingStyle) return@forEach
-                paragraph.applyHeadingStyle(headingStyle)
-                // A continuation has no heading of its own in html. Unlike addParagraphStyle,
-                // which severs unconditionally, a level that did not change severs nothing.
-                clearLineBreakContinuations(paragraph)
-            }
+            val changed = paragraphs.filter { it.headingStyle != headingStyle }
+            changed.forEach { it.applyHeadingStyle(headingStyle) }
+            // After every level is set, so two selected lines that end up alike stay linked.
+            changed.forEach { cutLineBreakLinksAcrossHeadingLevels(it) }
 
             updateAnnotatedString()
             updateCurrentSpanStyle()
@@ -5155,6 +5156,24 @@ public class RichTextState internal constructor(
         val richSpanList = getRichSpanListByTextRange(textRange)
 
         return richSpanList.getCommonStyle() ?: RichSpanStyle.DefaultSpanStyle
+    }
+
+    /**
+     * A `<br>` continuation is written inside the tag of the line it continues, so the two
+     * must share a heading level. Cuts the links of [paragraph] to the line above and to the
+     * line below where the levels differ. Links further along the block are not its concern.
+     */
+    private fun cutLineBreakLinksAcrossHeadingLevels(paragraph: RichParagraph) {
+        val index = richParagraphList.indexOf(paragraph)
+        if (index < 0) return
+
+        val previous = richParagraphList.getOrNull(index - 1)
+        if (previous == null || previous.headingStyle != paragraph.headingStyle)
+            paragraph.isFromLineBreak = false
+
+        val next = richParagraphList.getOrNull(index + 1)
+        if (next != null && next.headingStyle != paragraph.headingStyle)
+            next.isFromLineBreak = false
     }
 
     /**

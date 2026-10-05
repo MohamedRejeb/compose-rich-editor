@@ -12,6 +12,7 @@ import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.model.headingTextStyleFor
 import kotlin.math.max
 import kotlin.math.min
 
@@ -287,7 +288,16 @@ internal fun AnnotatedString.Builder.append(
  */
 @OptIn(ExperimentalRichTextApi::class)
 private fun effectiveSpanStyle(state: RichTextState, richSpan: RichSpan): SpanStyle {
-    val spanStyle = richSpan.spanStyle.merge(resolveRichSpanStyleStyle(state, richSpan.richSpanStyle))
+    // A restyled heading renders its typography from the config around the whole paragraph,
+    // so the level's default kept on the span is dropped here, the same way the HTML
+    // encoder drops it to tell the heading's own typography from styles added on top.
+    val headingStyle = richSpan.paragraph.headingStyle
+    val ownSpanStyle =
+        if (state.config.headingTextStyleFor(headingStyle) == null)
+            richSpan.spanStyle
+        else
+            richSpan.spanStyle.diff(headingStyle.defaultSpanStyle)
+    val spanStyle = ownSpanStyle.merge(resolveRichSpanStyleStyle(state, richSpan.richSpanStyle))
     val inheritedDecoration = richSpan.parent?.fullSpanStyle?.textDecoration ?: return spanStyle
     val ownDecoration = spanStyle.textDecoration ?: return spanStyle
     if (inheritedDecoration == ownDecoration) return spanStyle

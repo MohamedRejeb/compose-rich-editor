@@ -3178,8 +3178,24 @@ public class RichTextState internal constructor(
         }
 
         return richParagraphList.any { paragraph ->
-            paragraph.children.any { spanHasBackground(it) }
+            config.headingSpanStyleFor(paragraph.headingStyle)?.background?.isSpecified == true ||
+                    paragraph.children.any { spanHasBackground(it) }
         }
+    }
+
+    /**
+     * The paragraph style [richParagraph] renders with. A heading restyled by
+     * [RichTextConfig.headingTextStyles] takes the paragraph part of that style underneath
+     * its own, so an alignment set on the heading itself still wins.
+     */
+    private fun renderedParagraphStyle(richParagraph: RichParagraph): ParagraphStyle {
+        val headingTextStyle = config.headingTextStyleFor(richParagraph.headingStyle)
+        val paragraphStyle =
+            if (headingTextStyle == null)
+                richParagraph.paragraphStyle
+            else
+                headingTextStyle.toParagraphStyle().merge(richParagraph.paragraphStyle)
+        return paragraphStyle.merge(richParagraph.type.getStyle(config))
     }
 
     private inner class HistoryHostImpl : RichTextHistoryHost {
@@ -3379,15 +3395,22 @@ public class RichTextState internal constructor(
                     return@fastForEachIndexed
                 }
 
-                withStyle(richParagraph.paragraphStyle.merge(richParagraph.type.getStyle(config))) {
-                    withStyle(richParagraph.getListMarkerSpanStyle(config.listMarkerStyleBehavior, config.listMarkerStyle)) {
+                val headingSpanStyle = config.headingSpanStyleFor(richParagraph.headingStyle)
+                withStyle(renderedParagraphStyle(richParagraph)) {
+                    withStyle(
+                        richParagraph.getListMarkerSpanStyle(
+                            config.listMarkerStyleBehavior,
+                            config.listMarkerStyle,
+                            headingSpanStyle,
+                        )
+                    ) {
                         append(richParagraph.type.startText)
                     }
                     val richParagraphStartTextLength = richParagraph.type.startText.length
                     richParagraph.type.startRichSpan.textRange =
                         TextRange(index, index + richParagraphStartTextLength)
                     index += richParagraphStartTextLength
-                    withStyle(RichSpanStyle.DefaultSpanStyle) {
+                    withStyle(headingSpanStyle ?: RichSpanStyle.DefaultSpanStyle) {
                         index = append(
                             state = this@RichTextState,
                             richSpanList = richParagraph.children,
@@ -5756,6 +5779,7 @@ public class RichTextState internal constructor(
         richTextState.config.exitListOnEmptyItem = config.exitListOnEmptyItem
         richTextState.config.listTypingShortcutsEnabled = config.listTypingShortcutsEnabled
         richTextState.config.listMarkerStyle = config.listMarkerStyle
+        richTextState.config.headingTextStyles = config.headingTextStyles
         richTextState.config.preserveSelectionOnFocusLoss = config.preserveSelectionOnFocusLoss
         richTextState.config.features = config.features
 
@@ -6062,9 +6086,14 @@ public class RichTextState internal constructor(
         annotatedString = buildAnnotatedString {
             var index = 0
             richParagraphList.fastForEachIndexed { i, richParagraph ->
-                withStyle(richParagraph.paragraphStyle.merge(richParagraph.type.getStyle(config))) {
+                val headingSpanStyle = config.headingSpanStyleFor(richParagraph.headingStyle)
+                withStyle(renderedParagraphStyle(richParagraph)) {
                     withStyle(
-                        richParagraph.getListMarkerSpanStyle(config.listMarkerStyleBehavior, config.listMarkerStyle)
+                        richParagraph.getListMarkerSpanStyle(
+                            config.listMarkerStyleBehavior,
+                            config.listMarkerStyle,
+                            headingSpanStyle,
+                        )
                     ) {
                         append(richParagraph.type.startText)
                     }
@@ -6073,7 +6102,7 @@ public class RichTextState internal constructor(
                     richParagraph.type.startRichSpan.textRange =
                         TextRange(index, index + richParagraphStartTextLength)
                     index += richParagraphStartTextLength
-                    withStyle(RichSpanStyle.DefaultSpanStyle) {
+                    withStyle(headingSpanStyle ?: RichSpanStyle.DefaultSpanStyle) {
                         index = append(
                             state = this@RichTextState,
                             richSpanList = richParagraph.children,

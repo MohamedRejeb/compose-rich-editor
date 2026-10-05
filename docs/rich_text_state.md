@@ -82,6 +82,15 @@ richTextState.config.listTypingShortcutsEnabled = true  // "- " or "1. " at a pa
 richTextState.config.listMarkerStyle = SpanStyle(color = Color.Red)  // Style bullets and numbers on their own
 ```
 
+### Automatic Links
+
+```kotlin
+// A typed or pasted URL becomes a link (off by default)
+richTextState.config.autoLinkEnabled = true
+```
+
+A word that starts with `http://`, `https://` or `www.` becomes a link when a space or Enter is typed after it, and a pasted URL is inserted as a link. See [Links](links.md#automatic-links).
+
 ### Clipboard
 
 By default, copy and paste carry rich text: copying writes HTML alongside plain text, and pasting from a browser or another rich text app imports its formatting (bold, underline, links, lists, and so on). Set `richClipboardEnabled` to `false` to restrict the clipboard to plain text:

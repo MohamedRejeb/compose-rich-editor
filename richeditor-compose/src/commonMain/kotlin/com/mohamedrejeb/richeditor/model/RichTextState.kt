@@ -891,7 +891,7 @@ public class RichTextState internal constructor(
 
         val text = textFieldState.text.toString()
         val layout = textLayoutResult ?: return
-        if (layout.layoutInput.text.length != text.length) return
+        if (!layout.isForModelText(text.length)) return
 
         val pressedLine = layout.getLineForVerticalPosition(
             press.y.coerceIn(0f, layout.size.height.toFloat())
@@ -3365,8 +3365,8 @@ public class RichTextState internal constructor(
                             // a boundary offset to the later paragraph, so without it the caret could
                             // never sit after the last character of a non-last paragraph. A space and
                             // not a newline, because a newline between paragraphs inside a
-                            // ParagraphStyle range renders an extra blank line (only the trailing empty
-                            // paragraph swaps one in, see substituteTrailingSeparatorWithNewline).
+                            // ParagraphStyle range renders an extra blank line (the trailing empty
+                            // paragraph gets a character of its own instead, see applyRichTextStyles).
                             if (i != richParagraphList.lastIndex && index < newText.length) {
                                 append(' ')
                                 index++
@@ -5240,10 +5240,10 @@ public class RichTextState internal constructor(
         var isParagraphUpdated = false
 
         textLayoutResult?.let { textLayoutResult ->
-            val layoutTextLength = textLayoutResult.layoutInput.text.text.length
+            val layoutTextLength = annotatedString.text.length
 
             // Skip if the layout result is stale (text changed since layout was computed)
-            if (layoutTextLength != annotatedString.text.length) return
+            if (!textLayoutResult.isForModelText(layoutTextLength)) return
 
             val multiParagraph = textLayoutResult.multiParagraph
             val offsetLimit =
@@ -5381,6 +5381,7 @@ public class RichTextState internal constructor(
     private fun getRichSpanByOffset(offset: Offset): RichSpan? {
         this.textLayoutResult?.let { textLayoutResult ->
             val position = textLayoutResult.getOffsetForPosition(offset)
+                .coerceAtMost(textFieldState.text.length)
             return getRichSpanByTextIndex(position, true)
         }
         return null
@@ -5446,7 +5447,7 @@ public class RichTextState internal constructor(
             pointer != null &&
             pointerFresh &&
             layout != null &&
-            layout.layoutInput.text.length == textFieldValue.text.length
+            layout.isForModelText(textFieldValue.text.length)
         ) {
             val pointerLine = layout.getLineForVerticalPosition(
                 pointer.y.coerceIn(0f, layout.size.height.toFloat())

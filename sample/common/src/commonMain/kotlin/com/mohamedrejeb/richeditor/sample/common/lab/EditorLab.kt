@@ -16,11 +16,14 @@ const val EDITOR_LAB_ENABLED: Boolean = false
  *
  * @property editorHeight the editor's height, or null to let it grow with its content. A fixed
  * height makes the editor scroll on its own, which the scroll offset checks need.
+ * @property fontSizedLines whether each line takes its height from its font instead of the
+ * theme's fixed line height, which the caret size checks need.
  */
 internal enum class LabScenario(
     val label: String,
     val html: String,
     val editorHeight: Dp?,
+    val fontSizedLines: Boolean = false,
 ) {
     Paragraphs(
         label = "Paragraphs",
@@ -45,6 +48,14 @@ internal enum class LabScenario(
             "<ol><li>One</li><li>Two</li></ol>" +
             "<p>After the list</p>",
         editorHeight = null,
+    ),
+    FontSizes(
+        label = "Font sizes",
+        html = "<p><span style=\"font-size: 40px\">Big</span></p>" +
+            "<p><span style=\"font-size: 40px\"></span></p>" +
+            "<p>Small</p>",
+        editorHeight = null,
+        fontSizedLines = true,
     ),
 }
 

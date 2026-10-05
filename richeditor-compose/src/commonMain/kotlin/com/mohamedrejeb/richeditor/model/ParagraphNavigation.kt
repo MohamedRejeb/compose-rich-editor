@@ -52,9 +52,9 @@ internal fun RichTextState.correctTripleClickSelection(buffer: TextFieldBuffer) 
 
     val press = pressForCaretCorrection() ?: return
     val layout = textLayoutResult ?: return
-    if (layout.layoutInput.text.length != buffer.length) return
+    if (!layout.isForModelText(buffer.length)) return
 
-    var offset = layout.getOffsetForPosition(press)
+    var offset = layout.getOffsetForPosition(press).coerceAtMost(buffer.length)
     // A press past the end of a line reports the next paragraph's start (see
     // [correctPressCaret]); the pressed line decides.
     val pressedLine = layout.getLineForVerticalPosition(

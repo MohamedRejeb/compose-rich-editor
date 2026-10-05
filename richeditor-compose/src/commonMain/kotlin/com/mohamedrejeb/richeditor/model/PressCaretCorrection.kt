@@ -27,7 +27,7 @@ internal fun RichTextState.correctPressCaret(buffer: TextFieldBuffer) {
     if (!caret.collapsed || !isLaterParagraphStart(caret.start)) return
 
     val layout = textLayoutResult ?: return
-    if (layout.layoutInput.text.length != buffer.length) return
+    if (!layout.isForModelText(buffer.length)) return
 
     val pressedLine = layout.getLineForVerticalPosition(
         press.y.coerceIn(0f, layout.size.height.toFloat())

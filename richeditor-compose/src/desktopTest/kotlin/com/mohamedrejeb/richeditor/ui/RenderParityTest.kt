@@ -17,7 +17,9 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.mohamedrejeb.richeditor.model.HeadingStyle
+import com.mohamedrejeb.richeditor.model.EmptyLineAnchor
 import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.model.trailingEmptyParagraphRange
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -32,11 +34,10 @@ import kotlin.test.assertTrue
  * line short, or the style the model held never reached the buffer BTF2 measured. These tests drive
  * the real editor and assert against [RichTextState.textLayoutResult] only.
  *
- * The rendered text is [RichTextState.annotatedString] plus one output-only substitution: a
- * trailing empty paragraph owns no range of its own, so the pipeline turns the separator space in
- * front of it into a newline (see `substituteTrailingSeparatorWithNewline`). [expectedLayoutText]
- * reproduces that rule, so a drift in either direction fails here rather than silently changing the
- * rendered line count.
+ * The rendered text is [RichTextState.annotatedString] plus one output-only addition: a trailing
+ * empty paragraph owns no range of its own, so the pipeline appends a zero-width anchor for it
+ * (see `EmptyLineAnchor`). [expectedLayoutText] reproduces that rule, so a drift in either
+ * direction fails here rather than silently changing the rendered line count.
  *
  * Widths are left at the desktop test default and every document stays a few words long, so a line
  * in the layout is always a paragraph and never a soft wrap.
@@ -45,18 +46,14 @@ import kotlin.test.assertTrue
 class RenderParityTest {
 
     /**
-     * The text the editor is expected to lay out: the model text, with the trailing paragraph
-     * separator substituted for a newline when the last paragraph is empty.
+     * The text the editor is expected to lay out: the model text, plus the anchor when the last
+     * paragraph is empty.
      */
     private fun expectedLayoutText(state: RichTextState): String {
         val text = state.annotatedString.text
-        val last = state.annotatedString.paragraphStyles.lastOrNull() ?: return text
         val trailingEmptyParagraph =
-            last.start == last.end &&
-                last.start == text.length &&
-                text.isNotEmpty() &&
-                text.last() == ' '
-        return if (trailingEmptyParagraph) text.dropLast(1) + "\n" else text
+            trailingEmptyParagraphRange(state.annotatedString.paragraphStyles, text.length) != null
+        return if (trailingEmptyParagraph) text + EmptyLineAnchor else text
     }
 
     /** Offset of the first character of every paragraph, marker prefix included. */

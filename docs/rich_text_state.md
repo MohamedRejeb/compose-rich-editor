@@ -22,6 +22,32 @@ RichTextEditor(
 )
 ```
 
+### Starting with content
+
+To create the state with content already in it, pass an initializer. It runs once on the new state, before the first composition uses it:
+
+```kotlin
+@OptIn(ExperimentalRichTextApi::class)
+val state = rememberRichTextState { setHtml(html) }
+```
+
+Use whichever setter matches your content:
+
+```kotlin
+rememberRichTextState { setText("Plain text") }
+rememberRichTextState { setHtml("<p>Hello <b>world</b></p>") }
+rememberRichTextState { setMarkdown("Hello **world**") }
+rememberRichTextState { setRichTextDocument(document) }
+```
+
+The block is an initializer, not a binding:
+
+- It does not run again when the values it reads change. To replace the content later, call the setter on the state.
+- It does not run when the state is restored from saved instance state. The saved content wins, so the user's edits survive a configuration change.
+- What it does is the starting point of the undo history, not a step in it. Undo after typing returns to the initial content.
+
+Outside composition, the setters return the state, so `RichTextState().setHtml(html)` does the same.
+
 ## Configuration
 
 ### Appearance Settings

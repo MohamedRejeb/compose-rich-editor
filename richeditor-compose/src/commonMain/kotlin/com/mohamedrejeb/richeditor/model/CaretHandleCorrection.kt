@@ -37,7 +37,7 @@ internal fun RichTextState.holdCaretHandleOnParagraphEnd(): Boolean {
 
     val text = textFieldState.text.toString()
     val layout = textLayoutResult ?: return false
-    if (layout.layoutInput.text.length != text.length) return false
+    if (!layout.isForModelText(text.length)) return false
 
     val step = CaretHandleStep(from = previous.start, to = caret.start, before = beforePrevious)
     if (!layout.handleIsPastParagraphEnd(step)) return false

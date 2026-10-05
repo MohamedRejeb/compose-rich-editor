@@ -4,6 +4,8 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text.input.TextFieldBuffer
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.ParagraphStyle
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import com.mohamedrejeb.richeditor.model.history.CommitTrigger
 
@@ -293,58 +295,118 @@ internal fun RichTextState.reconcileBufferWithModel(buffer: TextFieldBuffer) {
 }
 
 /**
- * Makes a trailing empty paragraph render its line by turning the separator space in front of it
- * into a newline in the output buffer.
+ * What the output buffer appends for a trailing empty paragraph: a zero-width space.
  *
  * The builder appends each paragraph separator inside the *previous* paragraph's range, so a
- * trailing empty paragraph gets a zero-length range at the end of the text. BTF2 styles the buffer
- * through tracked ranges and drops collapsed ones, so that paragraph renders nothing. Shifting the
- * ranges instead cannot work on an all-empty document: N empty paragraphs own only N-1 separators,
- * so one line always goes missing. A newline makes MultiParagraph split natively, no range needed.
+ * trailing empty paragraph gets a zero-length range at the end of the text, and BTF2 drops
+ * collapsed style ranges. The anchor gives that paragraph one character to carry its
+ * ParagraphStyle and its font, so its line renders with its own alignment and height.
  *
- * The substitution is output-only (the model text keeps its space) and same-length, so every style
- * offset stays valid and the caret at the end of the text lands on the new line.
- *
- * Known limitation: the trailing empty paragraph still has no range of its own, so its own
- * ParagraphStyle is not attributed until it holds a character; the substituted newline lives inside
- * the previous paragraph's range and inherits that paragraph's style. Centering an empty trailing
- * line therefore shows as a one-keystroke alignment jump: the line renders with the previous
- * paragraph's alignment until the first character turns the range non-degenerate.
+ * It is output-only and always last, so every model offset is also a valid layout offset. The
+ * layout text is one character longer than the model text while it is there, see
+ * [isForModelText].
  */
-internal fun substituteTrailingSeparatorWithNewline(
-    buffer: TextFieldBuffer,
-    ranges: List<AnnotatedString.Range<ParagraphStyle>>,
-): Boolean {
-    val last = ranges.lastOrNull() ?: return false
-    if (last.start != last.end) return false
-    if (last.start != buffer.length || buffer.length == 0) return false
-    if (buffer.asCharSequence()[buffer.length - 1] != ' ') return false
-    buffer.replace(buffer.length - 1, buffer.length, "\n")
-    return true
+internal const val EmptyLineAnchor: String = "\u200B"
+
+/** Whether this layout was computed for a model text of [modelLength] characters. */
+internal fun TextLayoutResult.isForModelText(modelLength: Int): Boolean {
+    val text = layoutInput.text.text
+    return text.length == modelLength ||
+        (text.length == modelLength + EmptyLineAnchor.length && text.endsWith(EmptyLineAnchor))
 }
 
 /**
- * Projects annotatedString's style ranges into the BTF2 output buffer. Collapsed paragraph ranges
- * are skipped, since BTF2 drops them anyway; the trailing one stands for a line that
- * [substituteTrailingSeparatorWithNewline] renders instead. A collapsed range anywhere else (a
- * shape only singleParagraphMode or a transient desync can produce) is deliberately unhandled and
- * simply dropped here. Inter-paragraph spacing comes from the caller's text style alone: each
- * paragraph range is laid out with the caller's `lineHeight` and `lineHeightStyle` as given.
+ * Projects annotatedString's style ranges into the BTF2 output buffer.
  *
- * The substitution runs before any addStyle call: TextFieldBuffer only tracks styles added after
- * the last edit, so styles emitted first would be discarded by the replace.
+ * A trailing empty paragraph has a collapsed range, which BTF2 would drop: it gets the
+ * [EmptyLineAnchor] and its ParagraphStyle on it. A collapsed range anywhere else (a shape only
+ * singleParagraphMode or a transient desync can produce) is deliberately unhandled and simply
+ * dropped here. Inter-paragraph spacing comes from the caller's text style alone: each paragraph
+ * range is laid out with the caller's `lineHeight` and `lineHeightStyle` as given.
+ *
+ * The anchor is appended before any addStyle call: TextFieldBuffer only tracks styles added
+ * after the last edit, so styles emitted first would be discarded by the append.
  */
 internal fun RichTextState.applyRichTextStyles(buffer: TextFieldBuffer) {
     val annotated = annotatedString
-    substituteTrailingSeparatorWithNewline(buffer, annotated.paragraphStyles)
+    val modelLength = buffer.length
+    val paragraphRanges = annotated.paragraphStyles
+    val trailingEmpty = trailingEmptyParagraphRange(paragraphRanges, modelLength)
+    if (trailingEmpty != null) appendEmptyLineAnchor(buffer)
+
     annotated.spanStyles.forEach { range ->
-        if (range.start in 0..buffer.length && range.end in 0..buffer.length) {
+        if (range.start in 0..modelLength && range.end in 0..modelLength) {
             buffer.addStyle(range.item, range.start, range.end)
         }
     }
-    annotated.paragraphStyles.forEach { range ->
-        if (range.start != range.end && range.start in 0..buffer.length && range.end in 0..buffer.length) {
+    paragraphRanges.forEach { range ->
+        if (range.start != range.end && range.start in 0..modelLength && range.end in 0..modelLength) {
             buffer.addStyle(range.item, range.start, range.end)
         }
+    }
+    if (trailingEmpty != null && buffer.length > modelLength) {
+        buffer.addStyle(trailingEmpty.item, modelLength, buffer.length)
+    }
+
+    applyEmptyParagraphFonts(buffer, paragraphRanges, modelLength)
+}
+
+/**
+ * Adds the [EmptyLineAnchor] by replacing the separator in front of it with the separator and
+ * the anchor, not by inserting after it. BTF2 gives inserted output text two caret positions for
+ * one model position, and the first Backspace or arrow key after a tap on the line would only
+ * switch between them. A replacement maps both of its ends to distinct model offsets.
+ *
+ * An empty document has no separator to replace. Inserting is harmless there: no key can move
+ * or delete anything.
+ */
+private fun appendEmptyLineAnchor(buffer: TextFieldBuffer) {
+    val length = buffer.length
+    when {
+        length == 0 -> buffer.append(EmptyLineAnchor)
+        buffer.asCharSequence()[length - 1] == ParagraphSeparator ->
+            buffer.replace(length - 1, length, ParagraphSeparator + EmptyLineAnchor)
     }
 }
+
+private const val ParagraphSeparator = ' '
+
+internal fun trailingEmptyParagraphRange(
+    ranges: List<AnnotatedString.Range<ParagraphStyle>>,
+    textLength: Int,
+): AnnotatedString.Range<ParagraphStyle>? =
+    ranges.lastOrNull()?.takeIf { it.start == it.end && it.start == textLength }
+
+/**
+ * An empty paragraph has no text to give its line a font, so the line and the caret on it would
+ * fall back to the editor's text style (#369). Its one rendered character, the separator after it
+ * or the [EmptyLineAnchor], takes the font the next typed character would have.
+ */
+private fun RichTextState.applyEmptyParagraphFonts(
+    buffer: TextFieldBuffer,
+    paragraphRanges: List<AnnotatedString.Range<ParagraphStyle>>,
+    modelLength: Int,
+) {
+    if (paragraphRanges.size != richParagraphList.size) return
+    val caret = selection.takeIf { it.collapsed }?.min
+
+    richParagraphList.forEachIndexed { index, paragraph ->
+        if (!paragraph.isEmpty(ignoreStartRichSpan = false)) return@forEachIndexed
+        val range = paragraphRanges[index]
+        val charStart = if (range.start == range.end) modelLength else range.end - 1
+        if (charStart != range.start || charStart >= buffer.length) return@forEachIndexed
+
+        val style = (if (caret == charStart) currentSpanStyle else paragraph.getStartTextSpanStyle())
+            ?: return@forEachIndexed
+        buffer.addStyle(style.fontOnly(), charStart, charStart + 1)
+    }
+}
+
+private fun SpanStyle.fontOnly(): SpanStyle =
+    SpanStyle(
+        fontSize = fontSize,
+        fontFamily = fontFamily,
+        fontWeight = fontWeight,
+        fontStyle = fontStyle,
+        fontSynthesis = fontSynthesis,
+    )

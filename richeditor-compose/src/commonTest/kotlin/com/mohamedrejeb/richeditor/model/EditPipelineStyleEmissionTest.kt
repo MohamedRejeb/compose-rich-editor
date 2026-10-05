@@ -10,8 +10,8 @@ import kotlin.test.assertTrue
 /**
  * Pins the paragraph-range shapes [applyRichTextStyles] emits from. The builder appends each
  * separator inside the previous paragraph's block, so only the final range can be degenerate; the
- * emission drops collapsed ranges and relies on [substituteTrailingSeparatorWithNewline] to render
- * the line the trailing one stands for.
+ * emission drops collapsed ranges and appends the [EmptyLineAnchor] to render the line the
+ * trailing one stands for.
  */
 @OptIn(ExperimentalFoundationApi::class)
 class EditPipelineStyleEmissionTest {
@@ -48,13 +48,12 @@ class EditPipelineStyleEmissionTest {
     }
 
     @Test
-    fun `emission turns the trailing separator into a newline of the same length`() {
+    fun `emission appends the anchor for a trailing empty paragraph`() {
         val state = RichTextState().setText("a\n")
         val buffer = bufferOf(state.annotatedString.text)
 
         state.applyRichTextStyles(buffer)
 
-        assertEquals("a\n", buffer.asCharSequence().toString())
-        assertEquals(state.annotatedString.text.length, buffer.length)
+        assertEquals("a $EmptyLineAnchor", buffer.asCharSequence().toString())
     }
 }

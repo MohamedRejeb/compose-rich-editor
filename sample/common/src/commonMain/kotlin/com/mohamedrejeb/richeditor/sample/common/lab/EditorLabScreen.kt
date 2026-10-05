@@ -25,6 +25,7 @@ import androidx.compose.material.icons.outlined.FormatItalic
 import androidx.compose.material.icons.outlined.FormatListNumbered
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -43,6 +44,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichTextState
@@ -230,9 +232,11 @@ private fun LabEditor(
     scenario: LabScenario,
     readOnly: Boolean,
 ) {
+    val textStyle = LocalTextStyle.current
     OutlinedRichTextEditor(
         state = state,
         readOnly = readOnly,
+        textStyle = if (scenario.fontSizedLines) textStyle.copy(lineHeight = TextUnit.Unspecified) else textStyle,
         modifier = Modifier
             .fillMaxWidth()
             .then(

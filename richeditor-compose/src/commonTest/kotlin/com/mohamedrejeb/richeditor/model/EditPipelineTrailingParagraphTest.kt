@@ -7,13 +7,13 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.ParagraphStyle
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.assertNull
+import kotlin.test.assertSame
 
 /**
- * Unit coverage for [substituteTrailingSeparatorWithNewline]. The builder puts each paragraph
- * separator inside the previous paragraph's range, so a trailing empty paragraph arrives with a
- * zero-length range that BTF2 drops; the newline makes MultiParagraph render that line instead.
+ * Unit coverage for the trailing empty paragraph. The builder puts each paragraph separator
+ * inside the previous paragraph's range, so a trailing empty paragraph arrives with a zero-length
+ * range that BTF2 drops; the output buffer appends the [EmptyLineAnchor] for it instead.
  */
 @OptIn(ExperimentalFoundationApi::class)
 class EditPipelineTrailingParagraphTest {
@@ -21,84 +21,68 @@ class EditPipelineTrailingParagraphTest {
     private fun range(start: Int, end: Int) =
         AnnotatedString.Range(ParagraphStyle(), start, end)
 
-    private fun bufferOf(text: String) = TextFieldState(text).toTextFieldBuffer()
-
-    @Test
-    fun `a trailing empty paragraph turns its separator into a newline`() {
-        // "a " + "" : the empty paragraph has no separator of its own.
-        val buffer = bufferOf("a ")
-
-        assertTrue(substituteTrailingSeparatorWithNewline(buffer, listOf(range(0, 2), range(2, 2))))
-        assertEquals("a\n", buffer.asCharSequence().toString())
+    private fun outputOf(state: RichTextState): String {
+        val buffer = TextFieldState(state.annotatedString.text).toTextFieldBuffer()
+        state.applyRichTextStyles(buffer)
+        return buffer.asCharSequence().toString()
     }
 
     @Test
-    fun `two empty paragraphs own a single separator and still render a newline`() {
-        // The all-empty document: two paragraphs share one separator space.
-        val buffer = bufferOf(" ")
+    fun `a collapsed last range at the end of the text is the trailing empty paragraph`() {
+        val ranges = listOf(range(0, 2), range(2, 2))
 
-        assertTrue(substituteTrailingSeparatorWithNewline(buffer, listOf(range(0, 1), range(1, 1))))
-        assertEquals("\n", buffer.asCharSequence().toString())
+        assertSame(ranges.last(), trailingEmptyParagraphRange(ranges, textLength = 2))
     }
 
     @Test
-    fun `the substitution keeps the buffer length so style offsets stay valid`() {
-        val buffer = bufferOf("ab ")
+    fun `an empty document is a trailing empty paragraph`() {
+        val ranges = listOf(range(0, 0))
 
-        substituteTrailingSeparatorWithNewline(buffer, listOf(range(0, 3), range(3, 3)))
-
-        assertEquals(3, buffer.length)
+        assertSame(ranges.last(), trailingEmptyParagraphRange(ranges, textLength = 0))
     }
 
     @Test
-    fun `a document without a trailing empty paragraph is left untouched`() {
-        val buffer = bufferOf("a b")
-
-        assertFalse(substituteTrailingSeparatorWithNewline(buffer, listOf(range(0, 2), range(2, 3))))
-        assertEquals("a b", buffer.asCharSequence().toString())
-        assertEquals(0, buffer.changes.changeCount)
-    }
-
-    @Test
-    fun `an empty document is left untouched`() {
-        val buffer = bufferOf("")
-
-        assertFalse(substituteTrailingSeparatorWithNewline(buffer, listOf(range(0, 0))))
-        assertEquals("", buffer.asCharSequence().toString())
+    fun `a last range that holds text is not one`() {
+        assertNull(trailingEmptyParagraphRange(listOf(range(0, 2), range(2, 3)), textLength = 3))
     }
 
     @Test
     fun `a collapsed range before the last one is never mistaken for the trailing one`() {
-        val buffer = bufferOf("ab cd")
-
-        assertFalse(
-            substituteTrailingSeparatorWithNewline(
-                buffer,
-                listOf(range(0, 2), range(2, 2), range(2, 5)),
-            )
+        assertNull(
+            trailingEmptyParagraphRange(listOf(range(0, 2), range(2, 2), range(2, 5)), textLength = 5)
         )
-        assertEquals("ab cd", buffer.asCharSequence().toString())
-        assertEquals(0, buffer.changes.changeCount)
     }
 
     @Test
-    fun `a collapsed range before the last one leaves the trailing substitution alone`() {
-        val buffer = bufferOf("ab ")
-
-        assertTrue(
-            substituteTrailingSeparatorWithNewline(
-                buffer,
-                listOf(range(0, 2), range(2, 2), range(2, 3), range(3, 3)),
-            )
-        )
-        assertEquals("ab\n", buffer.asCharSequence().toString())
+    fun `a collapsed last range that is not at the end of the text is not one`() {
+        assertNull(trailingEmptyParagraphRange(listOf(range(0, 2), range(2, 2)), textLength = 3))
     }
 
     @Test
-    fun `a preceding character that is not a separator is never consumed`() {
-        val buffer = bufferOf("ab")
+    fun `the output appends the anchor after the model text and keeps the separator`() {
+        val state = RichTextState().setText("a\n")
 
-        assertFalse(substituteTrailingSeparatorWithNewline(buffer, listOf(range(0, 2), range(2, 2))))
-        assertEquals("ab", buffer.asCharSequence().toString())
+        assertEquals(state.annotatedString.text + EmptyLineAnchor, outputOf(state))
+    }
+
+    @Test
+    fun `two empty paragraphs own a single separator and the anchor`() {
+        val state = RichTextState().setText("\n")
+
+        assertEquals(" $EmptyLineAnchor", outputOf(state))
+    }
+
+    @Test
+    fun `an empty document renders the anchor alone`() {
+        val state = RichTextState()
+
+        assertEquals(EmptyLineAnchor, outputOf(state))
+    }
+
+    @Test
+    fun `a document without a trailing empty paragraph is left untouched`() {
+        val state = RichTextState().setText("a\nb")
+
+        assertEquals(state.annotatedString.text, outputOf(state))
     }
 }

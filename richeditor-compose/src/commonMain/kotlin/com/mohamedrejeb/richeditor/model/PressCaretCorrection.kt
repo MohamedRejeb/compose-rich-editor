@@ -2,6 +2,7 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text.input.TextFieldBuffer
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 
 /**
@@ -24,17 +25,34 @@ internal fun RichTextState.correctPressCaret(buffer: TextFieldBuffer) {
     if (singleParagraphMode || buffer.changes.changeCount != 0) return
 
     val caret = buffer.selection
-    if (!caret.collapsed || !isLaterParagraphStart(caret.start)) return
+    if (!caret.collapsed) return
 
     val layout = textLayoutResult ?: return
-    if (layout.layoutInput.text.length != buffer.length) return
+    if (!layout.isForModelText(buffer.length)) return
 
     val pressedLine = layout.getLineForVerticalPosition(
         press.y.coerceIn(0f, layout.size.height.toFloat())
     )
+    if (layout.isPressOnEmptyLastLine(caret.start, buffer.length, pressedLine)) {
+        buffer.selection = TextRange(buffer.length)
+        pressCorrectedCaret = buffer.length
+        return
+    }
+    if (!isLaterParagraphStart(caret.start)) return
     if (layout.getLineForOffset(caret.start) <= pressedLine) return
 
     // One back is the separator's own position, which renders at the end of the pressed line.
     buffer.selection = TextRange(caret.start - 1)
     pressCorrectedCaret = caret.start - 1
 }
+
+/**
+ * Whether a press on the empty last paragraph's line left the caret on the separator in front
+ * of it. The [EmptyLineAnchor] replaces that separator with two characters, and a hit between
+ * them maps back to the separator, which renders at the end of the line above.
+ */
+internal fun TextLayoutResult.isPressOnEmptyLastLine(caret: Int, modelLength: Int, pressedLine: Int): Boolean =
+    caret == modelLength - 1 &&
+        layoutInput.text.length > modelLength &&
+        pressedLine == lineCount - 1 &&
+        getLineForOffset(caret) < pressedLine

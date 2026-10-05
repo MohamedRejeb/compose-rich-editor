@@ -56,7 +56,9 @@ internal fun RichTextState.applyChangeList(buffer: TextFieldBuffer) {
             originalRange = originalRange,
             newText = buffer.asCharSequence().substring(newRange.min, newRange.max),
         )
-    }.sortedBy { it.originalRange.min }.mapNotNull { keepSeparatorUnderTrailingSpace(it) }
+    }.sortedBy { it.originalRange.min }
+        .mapNotNull { trimWholeTextRewrite(it, buffer) }
+        .mapNotNull { keepSeparatorUnderTrailingSpace(it) }
     if (deltas.isEmpty()) {
         // The whole batch was a kept separator deletion: the reconciliation puts the separator
         // back and must leave the caret in front of it, or the caret would land in the next
@@ -142,6 +144,45 @@ internal fun RichTextState.applyChangeList(buffer: TextFieldBuffer) {
     // already happened, so the window is disarmed instead: a step out of the paragraph now
     // is navigation.
     if (refreshed) clearImeEditWindow() else noteImeEdit(caret = textFieldValue.selection.min)
+}
+
+/**
+ * Compose web commits every typed character as one change from the whole old text to the whole
+ * new text. Replayed as it is, that replaces the document with a single unformatted paragraph,
+ * so such a change is cut down to the part that differs. A change over the whole text that
+ * matches the selection is a real replacement (select all, then type) and is left alone.
+ * Returns null when nothing differs.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+private fun trimWholeTextRewrite(delta: InputDelta, buffer: TextFieldBuffer): InputDelta? {
+    val original = buffer.originalText
+    val coversWholeText = delta.originalRange.min == 0 && delta.originalRange.max == original.length
+    if (!coversWholeText || original.isEmpty() || delta.originalRange == buffer.originalSelection) return delta
+    return differingPart(original = original, rewritten = delta.newText, caret = buffer.selection.min)
+}
+
+/**
+ * The smallest single edit that turns [original] into [rewritten], or null when they are equal.
+ * Where it could sit in more than one place (a character typed into a run of the same one), it
+ * is the one that ends at [caret], which is where a typed character leaves the caret.
+ */
+internal fun differingPart(original: CharSequence, rewritten: CharSequence, caret: Int): InputDelta? {
+    val shorter = minOf(original.length, rewritten.length)
+    val prefix = original.commonPrefixWith(rewritten).length
+    val suffix = original.commonSuffixWith(rewritten).length.coerceAtMost(shorter - prefix)
+    if (prefix == original.length && prefix == rewritten.length) return null
+
+    // The same edit also fits anywhere down to the shortest prefix a full suffix match allows.
+    val fullSuffix = original.commonSuffixWith(rewritten).length
+    val minPrefix = (shorter - fullSuffix).coerceIn(0, prefix)
+    val shift = (rewritten.length - suffix - caret).coerceIn(0, prefix - minPrefix)
+
+    val start = prefix - shift
+    val kept = suffix + shift
+    return InputDelta(
+        originalRange = TextRange(start, original.length - kept),
+        newText = rewritten.substring(start, rewritten.length - kept),
+    )
 }
 
 /**

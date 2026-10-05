@@ -264,5 +264,6 @@ When working with lists:
 
 ## Related Documentation
 
+- For checklists, see [Task Lists](task_lists.md)
 - For HTML list import/export, see [HTML Import and Export](html_import_export.md)
 - For Markdown list import/export, see [Markdown Import and Export](markdown_import_export.md)

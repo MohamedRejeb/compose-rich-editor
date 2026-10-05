@@ -17,6 +17,7 @@ import com.mohamedrejeb.richeditor.paragraph.type.ConfigurableListLevel
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
+import com.mohamedrejeb.richeditor.paragraph.type.TaskList
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import com.mohamedrejeb.richeditor.parser.RichTextStateParser
 import com.mohamedrejeb.ksoup.entities.KsoupEntities
@@ -179,6 +180,18 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                                 number = literalNumber,
                                 initialLevel = currentListLevel,
                                 startFrom = literalNumber,
+                            )
+                        }
+
+                        // "- [ ] " and "- [x] ": the GFM flavour reports the box as a token of
+                        // the item and leaves it out of the item's text.
+                        val checkBox = node.children
+                            .firstOrNull { it.type == GFMTokenTypes.CHECK_BOX }
+                            ?.getTextInNode(correctedMarkdown)
+                        if (checkBox != null) {
+                            currentRichParagraphType = TaskList(
+                                checked = checkBox.contains('x', ignoreCase = true),
+                                initialLevel = currentListLevel,
                             )
                         }
 
@@ -504,7 +517,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
     }
 
     private fun ParagraphType.isList(): Boolean =
-        this is OrderedList || this is UnorderedList
+        this is OrderedList || this is UnorderedList || this is TaskList
 
     @OptIn(ExperimentalRichTextApi::class)
     private fun decodeRichSpanToMarkdown(
@@ -580,6 +593,9 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
             is UnorderedList ->
                 append("  ".repeat(type.level - 1) + "- ")
+
+            is TaskList ->
+                append("  ".repeat(type.level - 1) + if (type.checked) "- [x] " else "- [ ] ")
 
             else ->
                 Unit

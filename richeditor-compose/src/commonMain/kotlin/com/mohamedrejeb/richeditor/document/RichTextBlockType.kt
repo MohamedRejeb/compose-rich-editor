@@ -22,4 +22,14 @@ public sealed interface RichTextBlockType {
             require(startNumber == null || ordered) { "startNumber requires an ordered list" }
         }
     }
+
+    /** A task list item, checked or not. [indent] is the 0-based nesting depth. */
+    public data class TaskItem(
+        public val checked: Boolean,
+        public val indent: Int = 0,
+    ) : RichTextBlockType {
+        init {
+            require(indent >= 0) { "indent must be >= 0, was $indent" }
+        }
+    }
 }

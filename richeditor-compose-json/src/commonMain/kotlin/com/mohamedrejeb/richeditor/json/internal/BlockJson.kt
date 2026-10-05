@@ -42,11 +42,20 @@ internal fun decodeBlock(json: JsonObject, registry: RichSpanStyleRegistry): Ric
             "list-item" -> {
                 val ordered = (json["ordered"] as? JsonPrimitive)?.booleanOrNull
                     ?: throw MalformedRichTextJsonException("list-item block is missing its \"ordered\" field")
-                RichTextBlockType.ListItem(
-                    ordered = ordered,
-                    indent = (json["indent"] as? JsonPrimitive)?.content?.toIntOrNull() ?: 0,
-                    startNumber = if (ordered) (json["start"] as? JsonPrimitive)?.content?.toIntOrNull() else null,
-                ) to ((json["heading"] as? JsonPrimitive)?.content?.toIntOrNull() ?: 0)
+                val indent = (json["indent"] as? JsonPrimitive)?.content?.toIntOrNull() ?: 0
+                // A task item is an unordered list item with a "checked" field, so a reader
+                // that does not know task items still loads it as a bullet item.
+                val checked = if (ordered) null else (json["checked"] as? JsonPrimitive)?.booleanOrNull
+                val listType =
+                    if (checked != null)
+                        RichTextBlockType.TaskItem(checked = checked, indent = indent)
+                    else
+                        RichTextBlockType.ListItem(
+                            ordered = ordered,
+                            indent = indent,
+                            startNumber = if (ordered) (json["start"] as? JsonPrimitive)?.content?.toIntOrNull() else null,
+                        )
+                listType to ((json["heading"] as? JsonPrimitive)?.content?.toIntOrNull() ?: 0)
             }
             else -> throw MalformedRichTextJsonException("Unknown block type: $typeName")
         }
@@ -92,6 +101,13 @@ internal fun encodeBlock(
             put("ordered", type.ordered)
             put("indent", type.indent)
             type.startNumber?.let { put("start", it) }
+            if (block.headingLevel > 0) put("heading", block.headingLevel)
+        }
+        type is RichTextBlockType.TaskItem -> {
+            put("type", "list-item")
+            put("ordered", false)
+            put("indent", type.indent)
+            put("checked", type.checked)
             if (block.headingLevel > 0) put("heading", block.headingLevel)
         }
         block.headingLevel > 0 -> {

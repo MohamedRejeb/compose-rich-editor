@@ -16,6 +16,7 @@ import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
+import com.mohamedrejeb.richeditor.paragraph.type.TaskList
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import com.mohamedrejeb.richeditor.utils.diff
 
@@ -69,6 +70,13 @@ internal object RichTextDocumentEncoder {
                 orderedCounters.keys.filter { it >= paragraphType.level }.forEach(orderedCounters::remove)
                 RichTextBlockType.ListItem(
                     ordered = false,
+                    indent = paragraphType.level - 1,
+                )
+            }
+            is TaskList -> {
+                orderedCounters.keys.filter { it >= paragraphType.level }.forEach(orderedCounters::remove)
+                RichTextBlockType.TaskItem(
+                    checked = paragraphType.checked,
                     indent = paragraphType.level - 1,
                 )
             }

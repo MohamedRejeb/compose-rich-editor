@@ -21,6 +21,10 @@ richTextState.setHeadingStyle(HeadingStyle.Normal)
 selection**. Wrap the call in `recordHistory` automatically so undo/redo
 restores heading changes alongside other formatting.
 
+Lines separated by a `<br>` inside one block, such as `<p>a<br>b</p>`, share that block's
+tag. A heading set on any of those lines applies to the whole block, and the result is
+`<h2>a<br>b</h2>`.
+
 ### Reading the current level
 
 ```kotlin

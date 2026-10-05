@@ -1499,19 +1499,18 @@ public class RichTextState internal constructor(
      * [HeadingStyle.Normal], any existing heading style is removed from those paragraphs;
      * otherwise the specified heading style replaces any previous one. Wrapped in
      * [recordHistory] so undo/redo restores heading changes alongside other formatting.
+     *
+     * The lines of a `<br>` block share one tag in html, so a heading set on one of them
+     * applies to the whole block.
      */
     public fun setHeadingStyle(headingStyle: HeadingStyle) {
         if (headingStyle != HeadingStyle.Normal && RichTextFeature.Heading !in config.features) return
         recordHistory(CommitTrigger.Formatting) {
-            val paragraphs = getRichParagraphListByTextRange(selection)
+            val paragraphs = withLineBreakBlocks(getRichParagraphListByTextRange(selection))
             if (paragraphs.isEmpty()) return@recordHistory
 
             paragraphs.forEach { paragraph ->
-                if (paragraph.headingStyle == headingStyle) return@forEach
-                paragraph.applyHeadingStyle(headingStyle)
-                // A continuation has no heading of its own in html. Unlike addParagraphStyle,
-                // which severs unconditionally, a level that did not change severs nothing.
-                clearLineBreakContinuations(paragraph)
+                if (paragraph.headingStyle != headingStyle) paragraph.applyHeadingStyle(headingStyle)
             }
 
             updateAnnotatedString()
@@ -5155,6 +5154,25 @@ public class RichTextState internal constructor(
         val richSpanList = getRichSpanListByTextRange(textRange)
 
         return richSpanList.getCommonStyle() ?: RichSpanStyle.DefaultSpanStyle
+    }
+
+    /**
+     * [paragraphs] widened to the `<br>` blocks they belong to: the paragraph that opens each
+     * block and every line break continuation that follows it, in document order.
+     */
+    private fun withLineBreakBlocks(paragraphs: List<RichParagraph>): List<RichParagraph> {
+        val indices = mutableSetOf<Int>()
+        paragraphs.forEach { paragraph ->
+            val index = richParagraphList.indexOf(paragraph)
+            if (index < 0) return@forEach
+
+            var first = index
+            while (first > 0 && richParagraphList[first].isFromLineBreak) first--
+            var last = index
+            while (last < richParagraphList.lastIndex && richParagraphList[last + 1].isFromLineBreak) last++
+            indices.addAll(first..last)
+        }
+        return indices.sorted().map { richParagraphList[it] }
     }
 
     /**

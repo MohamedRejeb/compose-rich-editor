@@ -14,11 +14,13 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * Every paragraph-level mutator applied to a `<br>` continuation must sever it, and the chain
- * behind it, into independent paragraphs. The html encoder can only write a continuation inside
- * the tag of the paragraph it continues, so a continuation that became a heading, a list item or
- * a centered paragraph has no faithful `<br>` form: its level, type or alignment would be dropped
- * on save, or smeared over the paragraph it continues.
+ * A paragraph-level mutator applied to a `<br>` continuation must leave a document the html
+ * encoder can write. The encoder can only write a continuation inside the tag of the paragraph
+ * it continues, so a continuation that became a list item or a centered paragraph has no
+ * faithful `<br>` form: its type or alignment would be dropped on save, or smeared over the
+ * paragraph it continues. Those mutators sever it, and the chain behind it, into independent
+ * paragraphs. A heading is the exception: it is the block's own tag, so it applies to every
+ * line of the block and the block stays whole (see [HeadingLineBreakBlockTest]).
  *
  * The document is `<p>a<br>b<br>c</p>` with the caret in `b`. Each row asserts the triple: the
  * model (the continuation flags of all three paragraphs plus the mutated property), the exact
@@ -65,43 +67,41 @@ class ContinuationSeveringMatrixTest {
     // setHeadingStyle
 
     @Test
-    fun `a heading on a middle continuation severs it and its chain`() {
+    fun `a heading on a middle continuation applies to the block and keeps it whole`() {
         val state = continuationDocument()
         state.selection = TextRange(3)
 
         state.setHeadingStyle(HeadingStyle.H1)
 
-        assertEquals(listOf(false, false, false), structure(state).continuations)
-        assertEquals(listOf(HeadingStyle.Normal, HeadingStyle.H1, HeadingStyle.Normal), structure(state).headings)
-        assertEquals("<p>a</p><h1>b</h1><p>c</p>", state.toHtml())
+        assertEquals(listOf(false, true, true), structure(state).continuations)
+        assertEquals(listOf(HeadingStyle.H1, HeadingStyle.H1, HeadingStyle.H1), structure(state).headings)
+        assertEquals("<h1>a<br>b<br>c</h1>", state.toHtml())
         assertReloadAgrees(state)
     }
 
     @Test
-    fun `a heading on the last continuation severs it`() {
+    fun `a heading on the last continuation applies to the block and keeps it whole`() {
         val state = continuationDocument("<p>a<br>b</p>")
         state.selection = TextRange(3)
 
         state.setHeadingStyle(HeadingStyle.H1)
 
-        assertEquals(listOf(false, false), structure(state).continuations)
-        assertEquals(listOf(HeadingStyle.Normal, HeadingStyle.H1), structure(state).headings)
-        assertEquals("<p>a</p><h1>b</h1>", state.toHtml())
+        assertEquals(listOf(false, true), structure(state).continuations)
+        assertEquals(listOf(HeadingStyle.H1, HeadingStyle.H1), structure(state).headings)
+        assertEquals("<h1>a<br>b</h1>", state.toHtml())
         assertReloadAgrees(state)
     }
 
     @Test
-    fun `a heading on the head severs the whole chain`() {
-        // Same rule as addParagraphStyle on the head: the continuations were not touched by
-        // the user, so they must not silently become part of the heading.
+    fun `a heading on the head applies to its continuations and keeps the block whole`() {
         val state = continuationDocument()
         state.selection = TextRange(1)
 
         state.setHeadingStyle(HeadingStyle.H1)
 
-        assertEquals(listOf(false, false, false), structure(state).continuations)
-        assertEquals(listOf(HeadingStyle.H1, HeadingStyle.Normal, HeadingStyle.Normal), structure(state).headings)
-        assertEquals("<h1>a</h1><p>b</p><p>c</p>", state.toHtml())
+        assertEquals(listOf(false, true, true), structure(state).continuations)
+        assertEquals(listOf(HeadingStyle.H1, HeadingStyle.H1, HeadingStyle.H1), structure(state).headings)
+        assertEquals("<h1>a<br>b<br>c</h1>", state.toHtml())
         assertReloadAgrees(state)
     }
 

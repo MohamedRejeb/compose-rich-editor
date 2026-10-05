@@ -1,6 +1,7 @@
 package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
@@ -145,6 +146,25 @@ public class RichTextConfig internal constructor(
      */
     @ExperimentalRichTextApi
     public var listMarkerStyleBehavior: ListMarkerStyleBehavior = ListMarkerStyleBehavior.InheritFromText
+        set(value) {
+            if (field == value) return
+            field = value
+            updateText()
+        }
+
+    /**
+     * A style for list markers ("•", "1.", etc.) on their own, applied on top of what
+     * [listMarkerStyleBehavior] gives them. Whatever it leaves unset keeps coming from that
+     * behavior, so `SpanStyle(color = Color.Red)` colors the markers and keeps their size
+     * in step with the text.
+     *
+     * It is an appearance setting of the editor, like [linkColor]: it applies to every list
+     * and is not part of the document, so it is not written to HTML or Markdown.
+     *
+     * Default is an empty [SpanStyle], which changes nothing.
+     */
+    @ExperimentalRichTextApi
+    public var listMarkerStyle: SpanStyle = SpanStyle()
         set(value) {
             if (field == value) return
             field = value

@@ -53,6 +53,7 @@ richTextState.config.unorderedListIndent = 20
 // List behavior
 richTextState.config.exitListOnEmptyItem = true  // Exit list when pressing Enter on empty item
 richTextState.config.listTypingShortcutsEnabled = true  // "- " or "1. " at a paragraph start creates a list
+richTextState.config.listMarkerStyle = SpanStyle(color = Color.Red)  // Style bullets and numbers on their own
 ```
 
 ### Clipboard

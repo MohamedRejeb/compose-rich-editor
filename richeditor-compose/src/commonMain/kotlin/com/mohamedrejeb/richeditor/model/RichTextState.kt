@@ -1122,6 +1122,24 @@ public class RichTextState internal constructor(
     public var canDecreaseListLevel: Boolean by mutableStateOf(false)
         private set
 
+    /**
+     * The style type the ordered list at the selection carries, or null when the selection
+     * is not in an ordered list, the list follows [RichTextConfig.orderedListStyleType], or
+     * the selected items carry different style types.
+     */
+    @ExperimentalRichTextApi
+    public var currentOrderedListStyleType: OrderedListStyleType? by mutableStateOf(null)
+        private set
+
+    /**
+     * The style type the unordered list at the selection carries, or null when the selection
+     * is not in an unordered list, the list follows [RichTextConfig.unorderedListStyleType],
+     * or the selected items carry different style types.
+     */
+    @ExperimentalRichTextApi
+    public var currentUnorderedListStyleType: UnorderedListStyleType? by mutableStateOf(null)
+        private set
+
     public val config: RichTextConfig = RichTextConfig(
         updateText = {
             // Config changes can alter paragraph prefix widths (e.g. switching
@@ -2038,6 +2056,48 @@ public class RichTextState internal constructor(
     }
 
     /**
+     * Sets the style type of the ordered lists at the selection, or returns them to
+     * [RichTextConfig.orderedListStyleType] when [styleType] is null.
+     *
+     * The style applies to every item of each list a selected item belongs to (the items at
+     * its level up to the previous and next shallower or non-list paragraph), the way a
+     * `list-style-type` applies to an `<ol>`. It is part of the content: `toHtml` writes it
+     * and `setHtml` reads it back when [styleType] is one of the predefined types.
+     * Changing the config afterwards does not affect a list with a style type of its own.
+     */
+    @ExperimentalRichTextApi
+    public fun setOrderedListStyleType(styleType: OrderedListStyleType?) {
+        if (RichTextFeature.OrderedList !in config.features)
+            return
+
+        setListStyleType(
+            paragraphs = getListsAtSelection { it is OrderedList },
+            newType = { (it as OrderedList).copy(styleTypeOverride = styleType) },
+        )
+    }
+
+    /**
+     * Sets the style type of the unordered lists at the selection, or returns them to
+     * [RichTextConfig.unorderedListStyleType] when [styleType] is null.
+     *
+     * The style applies to every item of each list a selected item belongs to (the items at
+     * its level up to the previous and next shallower or non-list paragraph), the way a
+     * `list-style-type` applies to a `<ul>`. It is part of the content: `toHtml` writes it
+     * and `setHtml` reads it back when [styleType] is one of the predefined types.
+     * Changing the config afterwards does not affect a list with a style type of its own.
+     */
+    @ExperimentalRichTextApi
+    public fun setUnorderedListStyleType(styleType: UnorderedListStyleType?) {
+        if (RichTextFeature.UnorderedList !in config.features)
+            return
+
+        setListStyleType(
+            paragraphs = getListsAtSelection { it is UnorderedList },
+            newType = { (it as UnorderedList).copy(styleTypeOverride = styleType) },
+        )
+    }
+
+    /**
      * Increase the level of the current selected lists.
      *
      * If the current selection is not a list, this method does nothing.
@@ -2290,6 +2350,102 @@ public class RichTextState internal constructor(
         return getLinkRichSpan(richSpan)
     }
 
+    /**
+     * The items of every list a selected paragraph of a kind accepted by [isListKind]
+     * belongs to, in document order: the items at the paragraph's level, over deeper
+     * items, up to the previous and next paragraph that is shallower, not a list, or a
+     * list of another kind.
+     */
+    private fun getListsAtSelection(isListKind: (ParagraphType) -> Boolean): List<RichParagraph> {
+        val result = mutableSetOf<RichParagraph>()
+
+        getRichParagraphListByTextRange(selection).fastForEach { paragraph ->
+            val type = paragraph.type
+            if (type !is ConfigurableListLevel || !isListKind(type) || paragraph in result)
+                return@fastForEach
+            val index = richParagraphList.indexOf(paragraph)
+            if (index == -1)
+                return@fastForEach
+
+            collectListItems(index downTo 0, type.level, isListKind, result)
+            collectListItems(index..richParagraphList.lastIndex, type.level, isListKind, result)
+        }
+
+        return richParagraphList.filter { it in result }
+    }
+
+    private fun collectListItems(
+        indices: IntProgression,
+        level: Int,
+        isListKind: (ParagraphType) -> Boolean,
+        into: MutableSet<RichParagraph>,
+    ) {
+        for (i in indices) {
+            val type = richParagraphList[i].type
+            if (type !is ConfigurableListLevel || type.level < level)
+                break
+            if (type.level > level)
+                continue
+            if (!isListKind(type))
+                break
+            into.add(richParagraphList[i])
+        }
+    }
+
+    /**
+     * Replaces the type of each of [paragraphs] with [newType] as one undo step, keeping the
+     * selection on the same characters when the markers change width.
+     */
+    private fun setListStyleType(
+        paragraphs: List<RichParagraph>,
+        newType: (ParagraphType) -> ParagraphType,
+    ) {
+        if (paragraphs.isEmpty())
+            return
+
+        recordHistory(CommitTrigger.Structural) {
+            val selection = textFieldValue.selection
+            var selectionStart = selection.start
+            var selectionEnd = selection.end
+
+            paragraphs.fastForEach { paragraph ->
+                val oldType = paragraph.type
+                val type = newType(oldType)
+                val contentStart = oldType.startRichSpan.textRange.min + oldType.startText.length
+                val delta = type.startText.length - oldType.startText.length
+
+                selectionStart += markerChangeShift(selection.start, contentStart, delta)
+                selectionEnd += markerChangeShift(selection.end, contentStart, delta)
+                paragraph.type = type
+            }
+
+            updateRichParagraphList(newSelection = TextRange(selectionStart, selectionEnd))
+        }
+    }
+
+    /**
+     * How far [index] moves when the marker ending at [contentStart] grows by [delta]: an
+     * index after the marker moves with it, one inside a shrinking marker stays before the content.
+     */
+    private fun markerChangeShift(index: Int, contentStart: Int, delta: Int): Int =
+        if (index >= contentStart) delta
+        else minOf(0, contentStart + delta - index)
+
+    /**
+     * The list item the paragraph at [paragraphIndex] would join at [level]: the nearest
+     * item above it at that level, with no shallower or non-list paragraph in between.
+     */
+    private fun getListItemAbove(paragraphIndex: Int, level: Int): ParagraphType? {
+        for (i in paragraphIndex - 1 downTo 0) {
+            val type = richParagraphList[i].type
+            if (type !is ConfigurableListLevel || type.level < level)
+                return null
+            if (type.level == level)
+                return type
+        }
+        return null
+    }
+
     private fun addUnorderedList(paragraph: RichParagraph) {
         val paragraphType = paragraph.type
         if (paragraphType is UnorderedList)
@@ -2309,6 +2465,7 @@ public class RichTextState internal constructor(
         val newType = UnorderedList(
             config = config,
             initialLevel = listLevel,
+            styleTypeOverride = (getListItemAbove(index, listLevel) as? UnorderedList)?.styleTypeOverride,
         )
 
         val newTextFieldValue = adjustOrderedListsNumbers(
@@ -2377,6 +2534,7 @@ public class RichTextState internal constructor(
             number = orderedListNumber,
             config = config,
             initialLevel = listLevel,
+            styleTypeOverride = (getListItemAbove(index, listLevel) as? OrderedList)?.styleTypeOverride,
         )
 
         val newTextFieldValue = adjustOrderedListsNumbers(
@@ -3993,15 +4151,18 @@ public class RichTextState internal constructor(
             return
 
         val features = config.features
+        val listItemAbove = getListItemAbove(richParagraphList.indexOf(richSpan.paragraph), level = 1)
         val newType =
             if ((richSpan.text == "- " || richSpan.text == "* ") && RichTextFeature.UnorderedList in features) {
                 UnorderedList(
                     config = config,
+                    styleTypeOverride = (listItemAbove as? UnorderedList)?.styleTypeOverride,
                 )
             } else if (RichTextFeature.OrderedList in features) {
                 OrderedList(
                     number = orderedListTriggerNumber(richSpan.text) ?: return,
                     config = config,
+                    styleTypeOverride = (listItemAbove as? OrderedList)?.styleTypeOverride,
                 )
             } else {
                 return
@@ -4091,6 +4252,7 @@ public class RichTextState internal constructor(
                     startTextWidth = currentParagraphType.startTextWidth,
                     initialLevel = currentParagraphType.level,
                     startFrom = restartNumber ?: 1,
+                    styleTypeOverride = currentParagraphType.styleTypeOverride,
                 ),
                 textFieldValue = newTextFieldValue,
             )
@@ -4168,6 +4330,7 @@ public class RichTextState internal constructor(
                         startTextWidth = currentParagraphType.startTextWidth,
                         initialLevel = currentParagraphType.level,
                         startFrom = if (previousNumber == null) currentParagraphType.startFrom else restartNumber ?: 1,
+                        styleTypeOverride = currentParagraphType.styleTypeOverride,
                     ),
                     textFieldValue = tempTextFieldValue,
                 )
@@ -5272,6 +5435,8 @@ public class RichTextState internal constructor(
             isList = isUnorderedList || isOrderedList
             canIncreaseListLevel = richParagraph?.let { canIncreaseListLevel(listOf(it)) } == true
             canDecreaseListLevel = richParagraph?.let { canDecreaseListLevel(listOf(it)) } == true
+            currentOrderedListStyleType = (richParagraph?.type as? OrderedList)?.styleTypeOverride
+            currentUnorderedListStyleType = (richParagraph?.type as? UnorderedList)?.styleTypeOverride
         } else {
             val richParagraphList = getRichParagraphListByTextRange(selection)
 
@@ -5287,6 +5452,12 @@ public class RichTextState internal constructor(
             isList = richParagraphList.all { it.type is UnorderedList || it.type is OrderedList }
             canIncreaseListLevel = canIncreaseListLevel(richParagraphList)
             canDecreaseListLevel = canDecreaseListLevel(richParagraphList)
+            currentOrderedListStyleType =
+                if (isOrderedList) richParagraphList.map { (it.type as OrderedList).styleTypeOverride }.distinct().singleOrNull()
+                else null
+            currentUnorderedListStyleType =
+                if (isUnorderedList) richParagraphList.map { (it.type as UnorderedList).styleTypeOverride }.distinct().singleOrNull()
+                else null
         }
     }
 
@@ -6216,6 +6387,7 @@ public class RichTextState internal constructor(
                         startTextWidth = type.startTextWidth,
                         initialLevel = type.level,
                         startFrom = preservedStartFrom,
+                        styleTypeOverride = type.styleTypeOverride,
                     ),
                     textFieldValue = tempTextFieldValue,
                 )

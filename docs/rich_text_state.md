@@ -75,10 +75,31 @@ How the string is read:
 | Line break (`\n`, `\r\n` or `\r`) | Starts a new paragraph, as in `setText` |
 | `SpanStyle` range | Span style. Where ranges overlap, the later (inner) one wins property by property, and text decorations combine |
 | `ParagraphStyle` range | Paragraph style of the paragraphs it covers. A range that starts or ends inside a line splits the line there, as Compose does when it lays the string out |
-| `LinkAnnotation.Url` | Link to its `url`. The annotation's `TextLinkStyles` are dropped; links are drawn with `config.linkColor` and `config.linkTextDecoration` |
-| `LinkAnnotation.Clickable`, string annotations, bullets, any other annotation | Dropped. The text is kept |
+| `Bullet` (`withBulletList`, `withBulletListItem`, `addBullet`) | Unordered list item, for the paragraph that starts where the bullet's range starts, which is the paragraph Compose draws the bullet on. A bullet that does not start a paragraph is dropped |
+| `LinkAnnotation.Url`, deprecated `UrlAnnotation` | Link to its `url`. A link's `TextLinkStyles` are dropped; links are drawn with `config.linkColor` and `config.linkTextDecoration` |
+| `LinkAnnotation.Clickable` | Dropped, the text is kept. It carries a tag and a listener but no URL for a link to point to |
+| String annotations (inline content from `appendInlineContent` included), `TtsAnnotation`, any other annotation | Dropped. The text is kept |
 
-Formatting outside `config.features` is removed and its text kept, see [Editor features](features.md).
+Bullet lists keep their nesting. Compose nests a bullet list by indenting it further, so consecutive bulleted paragraphs nest by their text indent: an item indented further than the one before it is one level deeper, and an item indented less returns to the level that had its indentation. A bulleted paragraph without a text indent is at the first level, and text between two lists starts the nesting again.
+
+```kotlin
+@OptIn(ExperimentalRichTextApi::class)
+richTextState.setAnnotatedString(
+    buildAnnotatedString {
+        withBulletList {
+            withBulletListItem { append("Fruits") }
+            withBulletList {
+                withBulletListItem { append("Apples") }   // second level
+            }
+            withBulletListItem { append("Vegetables") }
+        }
+    }
+)
+```
+
+The indent that makes room for the bullet and the bullet's shape, size and brush are not kept. The item is indented and its marker drawn from the config like every list item, see [Ordered and Unordered Lists](ordered_unordered_lists.md). A bullet range that spans several lines makes its first line the list item; the lines after it load as indented paragraphs without a marker, as Compose shows them.
+
+Formatting outside `config.features` is removed and its text kept, see [Editor features](features.md). Without `RichTextFeature.UnorderedList`, a bulleted paragraph loads as a plain paragraph.
 
 `setAnnotatedString` is not the inverse of `richTextState.annotatedString`. That property is the rendered text: paragraphs are joined by a space, list markers are characters, and links, code spans and headings are plain styling. Loading it back keeps the text and its look, but a list comes back as paragraphs that start with the marker characters, a link as colored text, and each paragraph but the last keeps a trailing space. To copy content between states use `toRichTextDocument()` and `setRichTextDocument()`, or `toHtml()` and `setHtml()`.
 

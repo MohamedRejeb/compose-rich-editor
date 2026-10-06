@@ -6437,12 +6437,22 @@ public class RichTextState internal constructor(
      * - `SpanStyle` ranges become span styles. Where ranges overlap, a later range wins over an
      *   earlier one property by property, and text decorations combine.
      * - `ParagraphStyle` ranges become the paragraph style of the paragraphs they cover.
-     * - `LinkAnnotation.Url` becomes a link. Its `TextLinkStyles` are dropped: links are drawn
-     *   with [RichTextConfig.linkColor] and [RichTextConfig.linkTextDecoration].
-     * - `LinkAnnotation.Clickable`, string annotations, bullets and any other annotation are
-     *   dropped. Their text is kept.
+     * - A `Bullet` (`withBulletList`, `addBullet`) makes the paragraph that starts where its
+     *   range starts an unordered list item, the paragraph Compose draws the bullet on.
+     *   Consecutive items nest by their text indent: an item indented further than the one
+     *   before it is one level deeper, so nested `withBulletList` calls become nested levels,
+     *   and an item without a text indent is at the first level. The indent itself and the
+     *   bullet's shape, size and brush are dropped: the item is indented and its marker drawn
+     *   from [RichTextConfig], like every list item. A bullet that does not start a paragraph
+     *   is dropped.
+     * - `LinkAnnotation.Url` and the deprecated `UrlAnnotation` become links. A link's
+     *   `TextLinkStyles` are dropped: links are drawn with [RichTextConfig.linkColor] and
+     *   [RichTextConfig.linkTextDecoration].
+     * - `LinkAnnotation.Clickable` (it has no URL), string annotations (inline content
+     *   included), `TtsAnnotation` and any other annotation are dropped. Their text is kept.
      *
-     * Formatting outside [RichTextConfig.features] is removed and its text kept.
+     * Formatting outside [RichTextConfig.features] is removed and its text kept: without
+     * [RichTextFeature.UnorderedList] a bulleted paragraph loads as a plain paragraph.
      *
      * This is not the inverse of [RichTextState.annotatedString]: that one is the rendered
      * text, where paragraphs are joined by a space, list markers are characters and links,

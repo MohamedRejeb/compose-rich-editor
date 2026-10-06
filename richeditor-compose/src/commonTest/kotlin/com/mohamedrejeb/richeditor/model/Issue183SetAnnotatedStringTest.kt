@@ -1,22 +1,32 @@
 package com.mohamedrejeb.richeditor.model
 
+import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.Bullet
+import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.UrlAnnotation
+import androidx.compose.ui.text.VerbatimTtsAnnotation
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.text.withAnnotation
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.document.RichTextBlock
+import com.mohamedrejeb.richeditor.document.RichTextBlockType
 import com.mohamedrejeb.richeditor.document.RichTextDocument
 import com.mohamedrejeb.richeditor.document.RichTextSpanMark
 import kotlin.test.Test
@@ -31,8 +41,9 @@ import kotlin.test.assertSame
  *
  * `RichTextState.setAnnotatedString` converts the string into paragraphs: a line feed starts a
  * new paragraph, `SpanStyle` ranges become span styles, `ParagraphStyle` ranges become
- * paragraph styles and `LinkAnnotation.Url` becomes a link. Everything else the string
- * carries is dropped and its text kept.
+ * paragraph styles, a `Bullet` makes its paragraph an unordered list item nested by its
+ * indentation, and `LinkAnnotation.Url` and the legacy `UrlAnnotation` become links.
+ * Everything else the string carries is dropped and its text kept.
  */
 @OptIn(ExperimentalRichTextApi::class)
 class Issue183SetAnnotatedStringTest {
@@ -47,6 +58,9 @@ class Issue183SetAnnotatedStringTest {
         RichTextState().setHtml(html).toRichTextDocument()
 
     private fun RichTextState.blocks(): List<RichTextBlock> = toRichTextDocument().blocks
+
+    private fun listItem(text: String, indent: Int = 0): RichTextBlock =
+        RichTextBlock(text, type = RichTextBlockType.ListItem(ordered = false, indent = indent))
 
     @Test
     fun `plain text loads as one paragraph`() {
@@ -306,7 +320,14 @@ class Issue183SetAnnotatedStringTest {
             withLink(
                 LinkAnnotation.Url(
                     url = "https://example.com",
-                    styles = TextLinkStyles(style = SpanStyle(color = Color.Green)),
+                    styles = TextLinkStyles(
+                        style = SpanStyle(
+                            color = Color.Green,
+                            fontWeight = FontWeight.Bold,
+                            textDecoration = TextDecoration.LineThrough,
+                        ),
+                        hoveredStyle = SpanStyle(background = Color.Yellow),
+                    ),
                 ),
             ) {
                 append("the site")
@@ -327,6 +348,26 @@ class Issue183SetAnnotatedStringTest {
         assertEquals(
             RichTextState().setHtml("<p>Go to <a href=\"https://example.com\">the site</a></p>").toHtml(),
             state.toHtml(),
+        )
+    }
+
+    @Test
+    @OptIn(ExperimentalTextApi::class)
+    @Suppress("DEPRECATION")
+    fun `a legacy url annotation becomes a link`() {
+        val text = buildAnnotatedString {
+            append("Go to ")
+            withAnnotation(UrlAnnotation("https://example.com")) { append("the site") }
+        }
+
+        assertEquals(
+            listOf(
+                RichTextBlock(
+                    "Go to the site",
+                    spans = listOf(RichTextSpanMark.Link(6..13, "https://example.com")),
+                ),
+            ),
+            stateOf(text).blocks(),
         )
     }
 
@@ -374,6 +415,247 @@ class Issue183SetAnnotatedStringTest {
         assertEquals("I'll be alright as long as there's light from a neon moon. Very cool.", state.toText())
         assertEquals(Color.Blue, state.getSpanStyle(TextRange(48, 57)).color)
         assertEquals(Color.Unspecified, state.getSpanStyle(TextRange(0, 48)).color)
+    }
+
+    @Test
+    fun `a string annotation tagged as a url is not a link`() {
+        val text = buildAnnotatedString {
+            withAnnotation("URL", annotation = "https://example.com") { append("the site") }
+        }
+
+        assertEquals(listOf(RichTextBlock("the site")), stateOf(text).blocks())
+    }
+
+    @Test
+    fun `a tts annotation is dropped and its text kept`() {
+        val text = buildAnnotatedString {
+            withAnnotation(VerbatimTtsAnnotation("H T M L")) { append("HTML") }
+        }
+
+        assertEquals(listOf(RichTextBlock("HTML")), stateOf(text).blocks())
+    }
+
+    @Test
+    fun `inline content keeps its alternate text and is not an image`() {
+        val text = buildAnnotatedString {
+            append("An ")
+            appendInlineContent(id = "icon", alternateText = "[icon]")
+            append(" here")
+        }
+
+        assertEquals(listOf(RichTextBlock("An [icon] here")), stateOf(text).blocks())
+    }
+
+    @Test
+    fun `a bullet list becomes unordered list items`() {
+        val text = buildAnnotatedString {
+            append("Intro")
+            withBulletList {
+                withBulletListItem { append("One") }
+                withBulletListItem { append("Two") }
+            }
+            append("Outro")
+        }
+        val html = "<p>Intro</p><ul><li>One</li><li>Two</li></ul><p>Outro</p>"
+
+        val state = stateOf(text)
+
+        assertEquals(
+            listOf(RichTextBlock("Intro"), listItem("One"), listItem("Two"), RichTextBlock("Outro")),
+            state.blocks(),
+        )
+        assertEquals(RichTextState().setHtml(html).toHtml(), state.toHtml())
+        assertEquals(RichTextState().setHtml(html).toMarkdown(), state.toMarkdown())
+    }
+
+    @Test
+    fun `nested bullet lists become nested list levels`() {
+        val text = buildAnnotatedString {
+            withBulletList {
+                withBulletListItem { append("One") }
+                withBulletList {
+                    withBulletListItem { append("Two") }
+                    withBulletList {
+                        withBulletListItem { append("Three") }
+                    }
+                    withBulletListItem { append("Four") }
+                }
+                withBulletListItem { append("Five") }
+            }
+        }
+
+        assertEquals(
+            listOf(
+                listItem("One"),
+                listItem("Two", indent = 1),
+                listItem("Three", indent = 2),
+                listItem("Four", indent = 1),
+                listItem("Five"),
+            ),
+            stateOf(text).blocks(),
+        )
+    }
+
+    @Test
+    fun `bullet lists with custom indentations nest by how far each one is indented`() {
+        val text = buildAnnotatedString {
+            withBulletList(indentation = 10.sp) {
+                withBulletListItem { append("One") }
+                withBulletList(indentation = 15.sp) {
+                    withBulletListItem { append("Two") }
+                }
+                withBulletListItem { append("Three") }
+            }
+        }
+
+        assertEquals(
+            listOf(listItem("One"), listItem("Two", indent = 1), listItem("Three")),
+            stateOf(text).blocks(),
+        )
+    }
+
+    @Test
+    fun `bullets added one by one nest by their indentation`() {
+        val text = buildAnnotatedString {
+            append("One\nTwo\nThree")
+            addBullet(Bullet.Default, Bullet.DefaultIndentation, 0, 3)
+            addBullet(Bullet.Default, Bullet.DefaultIndentation * 2, 4, 7)
+            addBullet(Bullet.Default, Bullet.DefaultIndentation, 8, 13)
+        }
+
+        assertEquals(
+            listOf(listItem("One"), listItem("Two", indent = 1), listItem("Three")),
+            stateOf(text).blocks(),
+        )
+    }
+
+    @Test
+    fun `a bullet without an indentation is a first level item`() {
+        val text = buildAnnotatedString {
+            append("One\nTwo\nThree")
+            addBullet(Bullet.Default, Bullet.DefaultIndentation * 3, 0, 3)
+            addBullet(Bullet.Default, 4, 7)
+        }
+
+        assertEquals(
+            listOf(listItem("One"), listItem("Two"), RichTextBlock("Three")),
+            stateOf(text).blocks(),
+        )
+    }
+
+    @Test
+    fun `text between two bullet lists restarts the nesting`() {
+        val text = buildAnnotatedString {
+            withBulletList(indentation = 1.em) {
+                withBulletListItem { append("One") }
+            }
+            append("Between")
+            withBulletList(indentation = 2.em) {
+                withBulletListItem { append("Two") }
+            }
+        }
+
+        assertEquals(
+            listOf(listItem("One"), RichTextBlock("Between"), listItem("Two")),
+            stateOf(text).blocks(),
+        )
+    }
+
+    @Test
+    fun `a list item keeps its styles link and alignment but not the bullet indentation`() {
+        val text = buildAnnotatedString {
+            withStyle(ParagraphStyle(textAlign = TextAlign.Center)) {
+                withBulletList {
+                    withBulletListItem {
+                        withStyle(bold) { append("One ") }
+                        withLink(LinkAnnotation.Url("https://example.com")) { append("link") }
+                    }
+                }
+            }
+        }
+
+        val state = stateOf(text)
+
+        assertEquals(
+            listOf(
+                RichTextBlock(
+                    "One link",
+                    type = RichTextBlockType.ListItem(ordered = false),
+                    spans = listOf(
+                        RichTextSpanMark.Bold(0..3),
+                        RichTextSpanMark.Link(4..7, "https://example.com"),
+                    ),
+                    textAlign = TextAlign.Center,
+                ),
+            ),
+            state.blocks(),
+        )
+        assertFalse("text-indent" in state.toHtml())
+    }
+
+    @Test
+    fun `the lines after the first in a bullet are indented paragraphs without a bullet`() {
+        val text = buildAnnotatedString {
+            withBulletList {
+                withBulletListItem { append("One\nmore") }
+                withBulletList {
+                    withBulletListItem { append("Two") }
+                }
+            }
+        }
+
+        assertEquals(
+            listOf(
+                listItem("One"),
+                RichTextBlock("more", textIndent = TextIndent(1.em, 1.em)),
+                listItem("Two", indent = 1),
+            ),
+            stateOf(text).blocks(),
+        )
+    }
+
+    @Test
+    fun `a bullet that does not start a paragraph is dropped`() {
+        val text = buildAnnotatedString {
+            append("One two")
+            addBullet(Bullet.Default, 4, 7)
+        }
+
+        assertEquals(listOf(RichTextBlock("One two")), stateOf(text).blocks())
+    }
+
+    @Test
+    fun `the bullet shape is dropped and the marker comes from the config`() {
+        val text = buildAnnotatedString {
+            withBulletList(bullet = Bullet(RectangleShape, 1.em, 1.em, 0.5.em)) {
+                withBulletListItem { append("One") }
+            }
+        }
+
+        val state = stateOf(text)
+
+        assertEquals(listOf(listItem("One")), state.blocks())
+        assertEquals(RichTextState().setHtml("<ul><li>One</li></ul>").annotatedString.text, state.annotatedString.text)
+    }
+
+    @Test
+    fun `a bullet list becomes paragraphs when unordered lists are not allowed`() {
+        val text = buildAnnotatedString {
+            withBulletList {
+                withBulletListItem { append("One") }
+                withBulletList {
+                    withBulletListItem { append("Two") }
+                }
+            }
+        }
+        val state = RichTextState().apply {
+            config.features = RichTextFeature.entries.toSet() - RichTextFeature.UnorderedList
+        }
+
+        state.setAnnotatedString(text)
+
+        assertEquals(listOf(RichTextBlock("One"), RichTextBlock("Two")), state.blocks())
+        assertEquals("One Two", state.annotatedString.text)
     }
 
     @Test

@@ -85,7 +85,7 @@ richTextState.config.listMarkerStyle = SpanStyle(color = Color.Red)  // Style bu
 ### Automatic Links
 
 ```kotlin
-// A typed or pasted URL becomes a link (off by default)
+// A typed or pasted URL becomes a link
 richTextState.config.autoLinkEnabled = true
 ```
 

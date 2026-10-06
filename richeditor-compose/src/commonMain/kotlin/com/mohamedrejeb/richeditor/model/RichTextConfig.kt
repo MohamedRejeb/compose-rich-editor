@@ -231,10 +231,10 @@ public class RichTextConfig internal constructor(
      *
      * Nothing is linked while links are left out of [features].
      *
-     * Default is `false`.
+     * Default is `true`.
      */
     @ExperimentalRichTextApi
-    public var autoLinkEnabled: Boolean = false
+    public var autoLinkEnabled: Boolean = true
 
     /**
      * Whether the editor keeps its selection when it loses focus.

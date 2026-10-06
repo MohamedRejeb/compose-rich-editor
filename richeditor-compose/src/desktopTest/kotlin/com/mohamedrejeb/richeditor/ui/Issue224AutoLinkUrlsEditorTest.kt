@@ -103,7 +103,7 @@ class Issue224AutoLinkUrlsEditorTest {
     fun `nothing is linked with the setting off`() = runDesktopComposeUiTest {
         lateinit var state: RichTextState
         setContent {
-            state = rememberRichTextState()
+            state = rememberRichTextState().apply { config.autoLinkEnabled = false }
             BasicRichTextEditor(state = state, modifier = Modifier.testTag("editor"))
         }
         val editor = onNodeWithTag("editor")

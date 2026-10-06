@@ -35,13 +35,7 @@ richTextState.addLinkToSelection(
 
 ## Automatic Links
 
-The editor can turn a URL into a link on its own, the way Google Docs, Slack and Notion do. It is off by default; turn it on in the config:
-
-```kotlin
-richTextState.config.autoLinkEnabled = true
-```
-
-With it on:
+The editor turns a URL into a link on its own, the way Google Docs, Slack and Notion do:
 
 - **Typing.** A word that starts with `http://`, `https://` or `www.` becomes a link when a space or Enter is typed after it. Nothing is linked while the URL is still being typed.
 - **Pasting.** A paste whose whole text is such a URL is inserted as a link. A paste that contains a URL among other text stays plain text.
@@ -57,6 +51,12 @@ With it on:
 Punctuation that closes the sentence after the URL (`.`, `,`, `;`, `:`, `!`, `?`, quotes and closing brackets) stays outside the link. A closing parenthesis is kept when the URL itself opened it.
 
 The link is added as its own undo step after the edit, so one undo removes the link and keeps the typed or pasted text.
+
+To keep typed and pasted URLs as plain text, turn it off in the config:
+
+```kotlin
+richTextState.config.autoLinkEnabled = false
+```
 
 ### Limitations
 

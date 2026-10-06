@@ -7,7 +7,6 @@ import com.mohamedrejeb.richeditor.model.trigger.Trigger
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
@@ -53,9 +52,18 @@ class Issue224AutoLinkUrlsTest {
     }
 
     @Test
-    fun `auto linking is off by default`() {
+    fun `auto linking is on by default`() {
         val state = RichTextState()
-        assertFalse(state.config.autoLinkEnabled)
+        assertTrue(state.config.autoLinkEnabled)
+
+        state.type("https://example.com ")
+
+        assertEquals(listOf("https://example.com" to "https://example.com"), state.links())
+    }
+
+    @Test
+    fun `nothing is linked when auto linking is turned off`() {
+        val state = RichTextState().apply { config.autoLinkEnabled = false }
 
         state.type("https://example.com ")
         state.paste("https://example.com")

@@ -70,6 +70,12 @@ CompositionLocalProvider(LocalUriHandler provides myUriHandler) {
 
 `RichTextEditorDecorationBox` and `OutlinedRichTextEditorDecorationBox` (in `RichTextEditorDefaults`) have overloads that accept a `visualTransformation` parameter. Those overloads are deprecated: the editor renders its styled output through an `OutputTransformation` it installs on the text field itself, so the parameter is no longer applied and has no effect. Switch to the overload without `visualTransformation`.
 
+### Can I set an `AnnotatedString` or a `VisualTransformation` on the editor?
+
+No. The content of the editor is a rich text document, so it is set with `setHtml`, `setMarkdown`, `setText` or `setRichTextDocument`, and `richTextState.annotatedString` is a read-only view of how that document renders. The editor is built on the state based `BasicTextField`, which has no `VisualTransformation`.
+
+To style ranges of the text for display only, for example the matches of a find-in-text feature, use [`richTextState.highlights`](highlights.md).
+
 ### How do I react to changes? There is no `onValueChange`
 
 The editor is state based, like Compose's `BasicTextField(state)`, so there is no `value` / `onValueChange` pair. Observe the state instead:

@@ -7,6 +7,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.model.autoLinkInsertedText
 import com.mohamedrejeb.richeditor.model.richPasteEnabled
 import kotlinx.browser.document
 import org.w3c.dom.events.Event
@@ -92,6 +93,7 @@ private fun RichTextState.pasteFrom(event: Event) {
     removeSelectedText()
     if (!html.isNullOrBlank()) insertHtml(html = html, position = position)
     else if (text != null) addTextAtIndex(index = position, text = text)
+    (text ?: getClipboardDataText(event))?.let { autoLinkInsertedText(at = position, inserted = it) }
 }
 
 /** Returns false, leaving the event to the browser, when there is nothing to copy. */

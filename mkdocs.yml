@@ -61,6 +61,7 @@ nav:
     - 'Custom span styles': custom_span_styles.md
     - 'Paragraph Style': paragraph_style.md
     - 'Headings': headings.md
+    - 'Highlights': highlights.md
   - 'Rich Content':
     - 'Links': links.md
     - 'Code Blocks': code_blocks.md

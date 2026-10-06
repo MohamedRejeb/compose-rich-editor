@@ -373,10 +373,37 @@ public class RichTextState internal constructor(
     public var annotatedString: AnnotatedString by mutableStateOf(AnnotatedString(text = ""))
         private set
 
+    private var highlightsState: List<RichTextHighlight> by mutableStateOf(emptyList())
+
+    /**
+     * Styles drawn over ranges of the text without being part of the document, for example the
+     * matches of a find-in-text feature. The editor and the read-only rich text both render
+     * them, on top of the text's own styles, and a later highlight wins over an earlier one
+     * where they overlap.
+     *
+     * Highlights are presentation only: they are not exported by [toHtml], [toMarkdown],
+     * [toText] or [toRichTextDocument], not copied to the clipboard, not recorded in the undo
+     * [history], not reflected in [currentSpanStyle], and not kept by [copy] or the [Saver].
+     *
+     * Ranges are offsets in the current text of [annotatedString], where paragraphs are
+     * separated by one character and list markers are part of the text. They do not follow
+     * edits: assign a new list when the text changes. A range reaching past the end of the
+     * text is clamped, and one that lies outside it is not drawn.
+     *
+     * Assign a new list to change the highlights and an empty list to clear them.
+     */
+    @ExperimentalRichTextApi
+    public var highlights: List<RichTextHighlight>
+        get() = highlightsState
+        set(value) {
+            highlightsState = value.toList()
+        }
+
     /**
      * Must stay the same instance for the lifetime of the state: BTF2 keys its transformed
      * state on it, and a new instance restarts the input session. Style-only changes reach
-     * BTF2 through the transformation's read of [annotatedString], which is snapshot state.
+     * BTF2 through the transformation's read of [annotatedString] and [highlights], which are
+     * snapshot state.
      */
     internal val outputTransformation: OutputTransformation =
         OutputTransformation { this@RichTextState.applyRichTextStyles(this) }
@@ -5761,6 +5788,7 @@ public class RichTextState internal constructor(
         richTextState.config.preserveStyleOnEmptyLine = config.preserveStyleOnEmptyLine
         richTextState.config.exitListOnEmptyItem = config.exitListOnEmptyItem
         richTextState.config.listTypingShortcutsEnabled = config.listTypingShortcutsEnabled
+        richTextState.config.autoLinkEnabled = config.autoLinkEnabled
         richTextState.config.headingTypingShortcutsEnabled = config.headingTypingShortcutsEnabled
         richTextState.config.inlineTypingShortcutsEnabled = config.inlineTypingShortcutsEnabled
         richTextState.config.listMarkerStyle = config.listMarkerStyle
@@ -6431,6 +6459,49 @@ public class RichTextState internal constructor(
         updateRichParagraphList(
             RichTextDocumentDecoder.decode(document.restrictedTo(config.features)),
             newSelection = selection ?: TextRange(Int.MAX_VALUE),
+        )
+        return this
+    }
+
+    /**
+     * Replaces the editor content with [annotatedString]. Undo history is cleared and the
+     * selection moves to the end, matching [setText].
+     *
+     * A line break (`\n`, `\r\n` or `\r`) starts a new paragraph, as in [setText]. A
+     * `ParagraphStyle` range also starts and ends a paragraph, as it does when Compose lays the
+     * string out. The string is read as follows:
+     * - `SpanStyle` ranges become span styles. Where ranges overlap, a later range wins over an
+     *   earlier one property by property, and text decorations combine.
+     * - `ParagraphStyle` ranges become the paragraph style of the paragraphs they cover.
+     * - A `Bullet` (`withBulletList`, `addBullet`) makes the paragraph that starts where its
+     *   range starts an unordered list item, the paragraph Compose draws the bullet on.
+     *   Consecutive items nest by their text indent: an item indented further than the one
+     *   before it is one level deeper, so nested `withBulletList` calls become nested levels,
+     *   and an item without a text indent is at the first level. The indent itself and the
+     *   bullet's shape, size and brush are dropped: the item is indented and its marker drawn
+     *   from [RichTextConfig], like every list item. A bullet that does not start a paragraph
+     *   is dropped.
+     * - `LinkAnnotation.Url` and the deprecated `UrlAnnotation` become links. A link's
+     *   `TextLinkStyles` are dropped: links are drawn with [RichTextConfig.linkColor] and
+     *   [RichTextConfig.linkTextDecoration].
+     * - `LinkAnnotation.Clickable` (it has no URL), string annotations (inline content
+     *   included), `TtsAnnotation` and any other annotation are dropped. Their text is kept.
+     *
+     * Formatting outside [RichTextConfig.features] is removed and its text kept: without
+     * [RichTextFeature.UnorderedList] a bulleted paragraph loads as a plain paragraph.
+     *
+     * This is not the inverse of [RichTextState.annotatedString]: that one is the rendered
+     * text, where paragraphs are joined by a space, list markers are characters and links,
+     * code spans and headings are plain styling.
+     *
+     * @param annotatedString The [AnnotatedString] to load.
+     */
+    @ExperimentalRichTextApi
+    public fun setAnnotatedString(annotatedString: AnnotatedString): RichTextState {
+        history.onProgrammaticReplace()
+        updateRichParagraphList(
+            admit(annotatedString.toRichParagraphs()),
+            newSelection = TextRange(Int.MAX_VALUE),
         )
         return this
     }

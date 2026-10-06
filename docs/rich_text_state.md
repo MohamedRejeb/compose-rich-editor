@@ -38,6 +38,7 @@ rememberRichTextState { setText("Plain text") }
 rememberRichTextState { setHtml("<p>Hello <b>world</b></p>") }
 rememberRichTextState { setMarkdown("Hello **world**") }
 rememberRichTextState { setRichTextDocument(document) }
+rememberRichTextState { setAnnotatedString(annotatedString) }
 ```
 
 The block is an initializer, not a binding:
@@ -47,6 +48,60 @@ The block is an initializer, not a binding:
 - What it does is the starting point of the undo history, not a step in it. Undo after typing returns to the initial content.
 
 Outside composition, the setters return the state, so `RichTextState().setHtml(html)` does the same.
+
+### Loading an AnnotatedString
+
+If your app already holds styled text as a Compose `AnnotatedString` (from its own parser, from resources or from another library), load it with `setAnnotatedString`. The content can then be edited and exported with `toHtml()`, `toMarkdown()` or `toRichTextDocument()`:
+
+```kotlin
+@OptIn(ExperimentalRichTextApi::class)
+richTextState.setAnnotatedString(
+    buildAnnotatedString {
+        append("Read the ")
+        withLink(LinkAnnotation.Url("https://example.com")) { append("guide") }
+        append(" before the ")
+        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("first run") }
+        append(".\nA second paragraph.")
+    }
+)
+```
+
+Like the other setters, it replaces the content, clears the undo history, moves the selection to the end and returns the state.
+
+How the string is read:
+
+| In the `AnnotatedString` | In the editor |
+|---|---|
+| Line break (`\n`, `\r\n` or `\r`) | Starts a new paragraph, as in `setText` |
+| `SpanStyle` range | Span style. Where ranges overlap, the later (inner) one wins property by property, and text decorations combine |
+| `ParagraphStyle` range | Paragraph style of the paragraphs it covers. A range that starts or ends inside a line splits the line there, as Compose does when it lays the string out |
+| `Bullet` (`withBulletList`, `withBulletListItem`, `addBullet`) | Unordered list item, for the paragraph that starts where the bullet's range starts, which is the paragraph Compose draws the bullet on. A bullet that does not start a paragraph is dropped |
+| `LinkAnnotation.Url`, deprecated `UrlAnnotation` | Link to its `url`. A link's `TextLinkStyles` are dropped; links are drawn with `config.linkColor` and `config.linkTextDecoration` |
+| `LinkAnnotation.Clickable` | Dropped, the text is kept. It carries a tag and a listener but no URL for a link to point to |
+| String annotations (inline content from `appendInlineContent` included), `TtsAnnotation`, any other annotation | Dropped. The text is kept |
+
+Bullet lists keep their nesting. Compose nests a bullet list by indenting it further, so consecutive bulleted paragraphs nest by their text indent: an item indented further than the one before it is one level deeper, and an item indented less returns to the level that had its indentation. A bulleted paragraph without a text indent is at the first level, and text between two lists starts the nesting again.
+
+```kotlin
+@OptIn(ExperimentalRichTextApi::class)
+richTextState.setAnnotatedString(
+    buildAnnotatedString {
+        withBulletList {
+            withBulletListItem { append("Fruits") }
+            withBulletList {
+                withBulletListItem { append("Apples") }   // second level
+            }
+            withBulletListItem { append("Vegetables") }
+        }
+    }
+)
+```
+
+The indent that makes room for the bullet and the bullet's shape, size and brush are not kept. The item is indented and its marker drawn from the config like every list item, see [Ordered and Unordered Lists](ordered_unordered_lists.md). A bullet range that spans several lines makes its first line the list item; the lines after it load as indented paragraphs without a marker, as Compose shows them.
+
+Formatting outside `config.features` is removed and its text kept, see [Editor features](features.md). Without `RichTextFeature.UnorderedList`, a bulleted paragraph loads as a plain paragraph.
+
+`setAnnotatedString` is not the inverse of `richTextState.annotatedString`. That property is the rendered text: paragraphs are joined by a space, list markers are characters, and links, code spans and headings are plain styling. Loading it back keeps the text and its look, but a list comes back as paragraphs that start with the marker characters, a link as colored text, and each paragraph but the last keeps a trailing space. To copy content between states use `toRichTextDocument()` and `setRichTextDocument()`, or `toHtml()` and `setHtml()`.
 
 ## Configuration
 

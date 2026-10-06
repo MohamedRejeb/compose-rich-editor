@@ -666,6 +666,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun removeUnorderedList ()V
 	public final fun replaceSelectedText (Ljava/lang/String;)V
 	public final fun replaceTextRange-72CqOWE (JLjava/lang/String;)V
+	public final fun setAnnotatedString (Landroidx/compose/ui/text/AnnotatedString;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public final fun setConfig-kmsmbh4 (JLandroidx/compose/ui/text/style/TextDecoration;JJJI)V
 	public static synthetic fun setConfig-kmsmbh4$default (Lcom/mohamedrejeb/richeditor/model/RichTextState;JLandroidx/compose/ui/text/style/TextDecoration;JJJIILjava/lang/Object;)V
 	public final fun setHeadingStyle (Lcom/mohamedrejeb/richeditor/model/HeadingStyle;)V

@@ -6456,6 +6456,49 @@ public class RichTextState internal constructor(
     }
 
     /**
+     * Replaces the editor content with [annotatedString]. Undo history is cleared and the
+     * selection moves to the end, matching [setText].
+     *
+     * A line break (`\n`, `\r\n` or `\r`) starts a new paragraph, as in [setText]. A
+     * `ParagraphStyle` range also starts and ends a paragraph, as it does when Compose lays the
+     * string out. The string is read as follows:
+     * - `SpanStyle` ranges become span styles. Where ranges overlap, a later range wins over an
+     *   earlier one property by property, and text decorations combine.
+     * - `ParagraphStyle` ranges become the paragraph style of the paragraphs they cover.
+     * - A `Bullet` (`withBulletList`, `addBullet`) makes the paragraph that starts where its
+     *   range starts an unordered list item, the paragraph Compose draws the bullet on.
+     *   Consecutive items nest by their text indent: an item indented further than the one
+     *   before it is one level deeper, so nested `withBulletList` calls become nested levels,
+     *   and an item without a text indent is at the first level. The indent itself and the
+     *   bullet's shape, size and brush are dropped: the item is indented and its marker drawn
+     *   from [RichTextConfig], like every list item. A bullet that does not start a paragraph
+     *   is dropped.
+     * - `LinkAnnotation.Url` and the deprecated `UrlAnnotation` become links. A link's
+     *   `TextLinkStyles` are dropped: links are drawn with [RichTextConfig.linkColor] and
+     *   [RichTextConfig.linkTextDecoration].
+     * - `LinkAnnotation.Clickable` (it has no URL), string annotations (inline content
+     *   included), `TtsAnnotation` and any other annotation are dropped. Their text is kept.
+     *
+     * Formatting outside [RichTextConfig.features] is removed and its text kept: without
+     * [RichTextFeature.UnorderedList] a bulleted paragraph loads as a plain paragraph.
+     *
+     * This is not the inverse of [RichTextState.annotatedString]: that one is the rendered
+     * text, where paragraphs are joined by a space, list markers are characters and links,
+     * code spans and headings are plain styling.
+     *
+     * @param annotatedString The [AnnotatedString] to load.
+     */
+    @ExperimentalRichTextApi
+    public fun setAnnotatedString(annotatedString: AnnotatedString): RichTextState {
+        history.onProgrammaticReplace()
+        updateRichParagraphList(
+            admit(annotatedString.toRichParagraphs()),
+            newSelection = TextRange(Int.MAX_VALUE),
+        )
+        return this
+    }
+
+    /**
      * Re-resolves all span styles from the current tree without changing the content, the
      * selection, the IME composition, staged style toggles, or the undo history. Call this
      * after an external resource a custom [RichSpanStyle] depends on (for example an

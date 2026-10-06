@@ -729,6 +729,9 @@ final class com.mohamedrejeb.richeditor.model/RichSpanStyleRegistry { // com.moh
 }
 
 final class com.mohamedrejeb.richeditor.model/RichTextConfig { // com.mohamedrejeb.richeditor.model/RichTextConfig|null[0]
+    final var autoLinkEnabled // com.mohamedrejeb.richeditor.model/RichTextConfig.autoLinkEnabled|{}autoLinkEnabled[0]
+        final fun <get-autoLinkEnabled>(): kotlin/Boolean // com.mohamedrejeb.richeditor.model/RichTextConfig.autoLinkEnabled.<get-autoLinkEnabled>|<get-autoLinkEnabled>(){}[0]
+        final fun <set-autoLinkEnabled>(kotlin/Boolean) // com.mohamedrejeb.richeditor.model/RichTextConfig.autoLinkEnabled.<set-autoLinkEnabled>|<set-autoLinkEnabled>(kotlin.Boolean){}[0]
     final var codeSpanBackgroundColor // com.mohamedrejeb.richeditor.model/RichTextConfig.codeSpanBackgroundColor|{}codeSpanBackgroundColor[0]
         final fun <get-codeSpanBackgroundColor>(): androidx.compose.ui.graphics/Color // com.mohamedrejeb.richeditor.model/RichTextConfig.codeSpanBackgroundColor.<get-codeSpanBackgroundColor>|<get-codeSpanBackgroundColor>(){}[0]
         final fun <set-codeSpanBackgroundColor>(androidx.compose.ui.graphics/Color) // com.mohamedrejeb.richeditor.model/RichTextConfig.codeSpanBackgroundColor.<set-codeSpanBackgroundColor>|<set-codeSpanBackgroundColor>(androidx.compose.ui.graphics.Color){}[0]

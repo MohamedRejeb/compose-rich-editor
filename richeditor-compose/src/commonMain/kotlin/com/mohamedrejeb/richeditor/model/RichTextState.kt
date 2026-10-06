@@ -5755,6 +5755,7 @@ public class RichTextState internal constructor(
         richTextState.config.preserveStyleOnEmptyLine = config.preserveStyleOnEmptyLine
         richTextState.config.exitListOnEmptyItem = config.exitListOnEmptyItem
         richTextState.config.listTypingShortcutsEnabled = config.listTypingShortcutsEnabled
+        richTextState.config.autoLinkEnabled = config.autoLinkEnabled
         richTextState.config.listMarkerStyle = config.listMarkerStyle
         richTextState.config.preserveSelectionOnFocusLoss = config.preserveSelectionOnFocusLoss
         richTextState.config.features = config.features

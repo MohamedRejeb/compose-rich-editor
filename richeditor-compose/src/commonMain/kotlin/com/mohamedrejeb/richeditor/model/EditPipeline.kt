@@ -85,6 +85,7 @@ internal fun RichTextState.applyChangeList(buffer: TextFieldBuffer) {
                     selection = TextRange(pasteDelta.originalRange.min, pasteDelta.originalRange.max)
                     handleRecognizedPaste(pendingHtml)
                 }
+                autoLinkInsertedText(at = pasteDelta.originalRange.min, inserted = pasteDelta.newText)
             } finally {
                 skipTextFieldStateSync = previous
                 // pendingTextDuringSync must not leak past the batch; pendingSelectionDuringSync
@@ -141,11 +142,25 @@ internal fun RichTextState.applyChangeList(buffer: TextFieldBuffer) {
         }
     }
 
+    deltas.singleOrNull()?.let { autoLinkAfterEdit(it) }
+
     // Arms the #779 follow-up window: a suggestion pick's trailing-space refresh arrives
     // as a bare caret step right after this edit. A refresh folded into this batch has
     // already happened, so the window is disarmed instead: a step out of the paragraph now
     // is navigation.
     if (refreshed) clearImeEditWindow() else noteImeEdit(caret = textFieldValue.selection.min)
+}
+
+/** [autoLinkInsertedText] for a replayed edit: the buffer is mid-edit, so the write stays pending. */
+private fun RichTextState.autoLinkAfterEdit(delta: InputDelta) {
+    val previous = skipTextFieldStateSync
+    skipTextFieldStateSync = true
+    try {
+        autoLinkInsertedText(at = delta.originalRange.min, inserted = delta.newText)
+    } finally {
+        skipTextFieldStateSync = previous
+        pendingTextDuringSync = null
+    }
 }
 
 /**

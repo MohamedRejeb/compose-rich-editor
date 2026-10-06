@@ -490,6 +490,7 @@ public final class com/mohamedrejeb/richeditor/model/RichSpanStyleRegistry$Compa
 
 public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public static final field $stable I
+	public final fun getAutoLinkEnabled ()Z
 	public final fun getCodeSpanBackgroundColor-0d7_KjU ()J
 	public final fun getCodeSpanColor-0d7_KjU ()J
 	public final fun getCodeSpanCornerRadius-XSAIIZE ()J
@@ -512,6 +513,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public final fun getRichClipboardEnabled ()Z
 	public final fun getUnorderedListIndent ()I
 	public final fun getUnorderedListStyleType ()Lcom/mohamedrejeb/richeditor/paragraph/type/UnorderedListStyleType;
+	public final fun setAutoLinkEnabled (Z)V
 	public final fun setCodeSpanBackgroundColor-8_81llA (J)V
 	public final fun setCodeSpanColor-8_81llA (J)V
 	public final fun setCodeSpanCornerRadius--R2X_6o (J)V

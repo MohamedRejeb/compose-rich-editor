@@ -146,6 +146,18 @@ richTextState.config.autoLinkEnabled = true
 
 A word that starts with `http://`, `https://` or `www.` becomes a link when a space or Enter is typed after it, and a pasted URL is inserted as a link. See [Links](links.md#automatic-links).
 
+### Typing Shortcuts
+
+```kotlin
+// "**bold**", "*italic*", "`code`" and "~~strike~~" format as you type (off by default)
+richTextState.config.inlineTypingShortcutsEnabled = true
+
+// "# " to "###### " at a paragraph start makes a heading (off by default)
+richTextState.config.headingTypingShortcutsEnabled = true
+```
+
+See [Span Style](span_style.md#typing-shortcuts) and [Headings](headings.md#typing-shortcut). The list shortcuts are controlled by `listTypingShortcutsEnabled` above.
+
 ### Clipboard
 
 By default, copy and paste carry rich text: copying writes HTML alongside plain text, and pasting from a browser or another rich text app imports its formatting (bold, underline, links, lists, and so on). Set `richClipboardEnabled` to `false` to restrict the clipboard to plain text:

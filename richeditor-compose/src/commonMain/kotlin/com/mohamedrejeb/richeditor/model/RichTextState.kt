@@ -1584,18 +1584,21 @@ public class RichTextState internal constructor(
     public fun setHeadingStyle(headingStyle: HeadingStyle) {
         if (headingStyle != HeadingStyle.Normal && RichTextFeature.Heading !in config.features) return
         recordHistory(CommitTrigger.Formatting) {
-            val paragraphs = getRichParagraphListByTextRange(selection)
-            if (paragraphs.isEmpty()) return@recordHistory
-
-            val changed = paragraphs.filter { it.headingStyle != headingStyle }
-            changed.forEach { it.applyHeadingStyle(headingStyle) }
-            // After every level is set, so two selected lines that end up alike stay linked.
-            changed.forEach { cutLineBreakLinksAcrossHeadingLevels(it) }
-
-            updateAnnotatedString()
-            updateCurrentSpanStyle()
-            updateCurrentParagraphStyle()
+            setHeadingStyle(headingStyle, getRichParagraphListByTextRange(selection))
         }
+    }
+
+    internal fun setHeadingStyle(headingStyle: HeadingStyle, paragraphs: List<RichParagraph>) {
+        if (paragraphs.isEmpty()) return
+
+        val changed = paragraphs.filter { it.headingStyle != headingStyle }
+        changed.forEach { it.applyHeadingStyle(headingStyle) }
+        // After every level is set, so two selected lines that end up alike stay linked.
+        changed.forEach { cutLineBreakLinksAcrossHeadingLevels(it) }
+
+        updateAnnotatedString()
+        updateCurrentSpanStyle()
+        updateCurrentParagraphStyle()
     }
 
     /**
@@ -2884,7 +2887,10 @@ public class RichTextState internal constructor(
             }
         }
 
-        if (changesText) noteImeEdit(caret = textFieldValue.selection.min)
+        if (changesText) {
+            applyTypingShortcuts(inserted = delta.newText)
+            noteImeEdit(caret = textFieldValue.selection.min)
+        }
     }
 
     /**
@@ -3251,7 +3257,7 @@ public class RichTextState internal constructor(
         return false
     }
 
-    private fun paragraphLength(paragraph: RichParagraph): Int {
+    internal fun paragraphLength(paragraph: RichParagraph): Int {
         fun spanLength(span: RichSpan): Int =
             span.text.length + span.children.sumOf { spanLength(it) }
         return paragraph.type.startRichSpan.text.length +
@@ -5954,6 +5960,8 @@ public class RichTextState internal constructor(
         richTextState.config.exitListOnEmptyItem = config.exitListOnEmptyItem
         richTextState.config.listTypingShortcutsEnabled = config.listTypingShortcutsEnabled
         richTextState.config.autoLinkEnabled = config.autoLinkEnabled
+        richTextState.config.headingTypingShortcutsEnabled = config.headingTypingShortcutsEnabled
+        richTextState.config.inlineTypingShortcutsEnabled = config.inlineTypingShortcutsEnabled
         richTextState.config.listMarkerStyle = config.listMarkerStyle
         richTextState.config.preserveSelectionOnFocusLoss = config.preserveSelectionOnFocusLoss
         richTextState.config.features = config.features

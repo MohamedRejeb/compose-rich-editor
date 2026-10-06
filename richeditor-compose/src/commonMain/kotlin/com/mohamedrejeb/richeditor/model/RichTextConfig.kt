@@ -237,6 +237,36 @@ public class RichTextConfig internal constructor(
     public var autoLinkEnabled: Boolean = true
 
     /**
+     * Whether typing a heading marker at the start of a paragraph turns it into a heading:
+     * `# ` to `###### ` set levels 1 to 6 and the marker is removed. A marker typed in a
+     * list item stays as text.
+     *
+     * The conversion is its own undo step: one undo restores the typed marker. Nothing is
+     * converted while headings are left out of [features].
+     *
+     * Default is `false`.
+     */
+    @ExperimentalRichTextApi
+    public var headingTypingShortcutsEnabled: Boolean = false
+
+    /**
+     * Whether Markdown marks typed around text format it: `**bold**` or `__bold__`,
+     * `*italic*` or `_italic_`, `` `code` `` and `~~strikethrough~~`. The text is formatted
+     * and the marks are removed when the closing mark is typed, so `**bold*` is still text.
+     * The marks must sit in one paragraph around text that does not start or end with a
+     * space, an underscore mark must not touch a letter or digit outside the pair, and
+     * nothing is converted inside a code span, a link or a token.
+     *
+     * The conversion is its own undo step: one undo restores the typed marks. What is typed
+     * after the formatted text is not formatted. A mark whose feature is left out of
+     * [features] stays as text.
+     *
+     * Default is `false`.
+     */
+    @ExperimentalRichTextApi
+    public var inlineTypingShortcutsEnabled: Boolean = false
+
+    /**
      * Whether the editor keeps its selection when it loses focus.
      *
      * The Compose text field collapses the selection as soon as focus moves to another

@@ -144,6 +144,7 @@ internal fun RichTextState.applyChangeList(buffer: TextFieldBuffer) {
     }
 
     deltas.singleOrNull()?.let { autoLinkAfterEdit(it) }
+    deltas.singleOrNull()?.let { applyTypingShortcutsAfterEdit(it) }
 
     // Arms the #779 follow-up window: a suggestion pick's trailing-space refresh arrives
     // as a bare caret step right after this edit. A refresh folded into this batch has
@@ -158,6 +159,18 @@ private fun RichTextState.autoLinkAfterEdit(delta: InputDelta) {
     skipTextFieldStateSync = true
     try {
         autoLinkInsertedText(at = delta.originalRange.min, inserted = delta.newText)
+    } finally {
+        skipTextFieldStateSync = previous
+        pendingTextDuringSync = null
+    }
+}
+
+/** [applyTypingShortcuts] for a replayed edit: the buffer is mid-edit, so the write stays pending. */
+private fun RichTextState.applyTypingShortcutsAfterEdit(delta: InputDelta) {
+    val previous = skipTextFieldStateSync
+    skipTextFieldStateSync = true
+    try {
+        applyTypingShortcuts(inserted = delta.newText)
     } finally {
         skipTextFieldStateSync = previous
         pendingTextDuringSync = null

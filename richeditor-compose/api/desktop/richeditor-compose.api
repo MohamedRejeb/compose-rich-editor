@@ -577,6 +577,16 @@ public final class com/mohamedrejeb/richeditor/model/RichTextFormat : java/lang/
 	public static fun values ()[Lcom/mohamedrejeb/richeditor/model/RichTextFormat;
 }
 
+public final class com/mohamedrejeb/richeditor/model/RichTextHighlight {
+	public static final field $stable I
+	public synthetic fun <init> (JLandroidx/compose/ui/text/SpanStyle;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRange-d9O1mEE ()J
+	public final fun getStyle ()Landroidx/compose/ui/text/SpanStyle;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public static final field $stable I
 	public static final field Companion Lcom/mohamedrejeb/richeditor/model/RichTextState$Companion;
@@ -614,6 +624,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun getCurrentParagraphStyle ()Landroidx/compose/ui/text/ParagraphStyle;
 	public final fun getCurrentRichSpanStyle ()Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;
 	public final fun getCurrentSpanStyle ()Landroidx/compose/ui/text/SpanStyle;
+	public final fun getHighlights ()Ljava/util/List;
 	public final fun getHistory ()Lcom/mohamedrejeb/richeditor/model/history/RichTextHistory;
 	public final fun getParagraphStyle-5zc-tL8 (J)Landroidx/compose/ui/text/ParagraphStyle;
 	public final fun getRichSpanStyle-5zc-tL8 (J)Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;
@@ -658,6 +669,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun setConfig-kmsmbh4 (JLandroidx/compose/ui/text/style/TextDecoration;JJJI)V
 	public static synthetic fun setConfig-kmsmbh4$default (Lcom/mohamedrejeb/richeditor/model/RichTextState;JLandroidx/compose/ui/text/style/TextDecoration;JJJIILjava/lang/Object;)V
 	public final fun setHeadingStyle (Lcom/mohamedrejeb/richeditor/model/HeadingStyle;)V
+	public final fun setHighlights (Ljava/util/List;)V
 	public final fun setHtml (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public final fun setMarkdown (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public final fun setRichTextDocument-psREZIo (Lcom/mohamedrejeb/richeditor/document/RichTextDocument;Landroidx/compose/ui/text/TextRange;)Lcom/mohamedrejeb/richeditor/model/RichTextState;

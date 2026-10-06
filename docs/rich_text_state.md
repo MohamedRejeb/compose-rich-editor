@@ -326,6 +326,7 @@ Button(
 - For styling text spans, see [Span Style](span_style.md)
 - For styling paragraphs, see [Paragraph Style](paragraph_style.md)
 - For headings (H1..H6), see [Headings](headings.md)
+- For display-only styles such as find-in-text matches, see [Highlights](highlights.md)
 - For working with lists, see [Ordered and Unordered Lists](ordered_unordered_lists.md)
 - For inline images, see [Images](images.md)
 - For mentions, hashtags, and slash commands, see [Mentions & Triggers](mentions_and_triggers.md)

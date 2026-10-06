@@ -221,6 +221,22 @@ public class RichTextConfig internal constructor(
     public var listTypingShortcutsEnabled: Boolean = true
 
     /**
+     * Whether a typed or pasted URL becomes a link on its own.
+     *
+     * When true, a word that starts with `http://`, `https://` or `www.` turns into a link once
+     * a space or Enter is typed after it, and a paste whose whole text is such a URL is inserted
+     * as a link. Punctuation that closes the sentence after the URL stays outside the link.
+     * Text that is already a link, a code span or a token is left as it is. The link is its own
+     * undo step: one undo removes it and keeps the text.
+     *
+     * Nothing is linked while links are left out of [features].
+     *
+     * Default is `true`.
+     */
+    @ExperimentalRichTextApi
+    public var autoLinkEnabled: Boolean = true
+
+    /**
      * Whether the editor keeps its selection when it loses focus.
      *
      * The Compose text field collapses the selection as soon as focus moves to another

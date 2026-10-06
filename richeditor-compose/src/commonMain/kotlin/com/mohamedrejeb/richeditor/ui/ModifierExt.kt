@@ -7,6 +7,7 @@ import androidx.compose.ui.text.TextRange
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.model.isForModelText
 import androidx.compose.ui.util.fastForEach
 
 @OptIn(ExperimentalRichTextApi::class)
@@ -39,9 +40,7 @@ internal fun Modifier.drawRichSpanStyle(
                 styledRichSpanList.fastForEach { (style, textRange) ->
                     richTextState.textLayoutResult?.let { textLayoutResult ->
                         with(style) {
-                            val textLength = richTextState.annotatedString.length
-                            val measuredTextLength = textLayoutResult.multiParagraph.intrinsics.annotatedString.length
-                            if (textLength == measuredTextLength) {
+                            if (textLayoutResult.isForModelText(richTextState.annotatedString.length)) {
                                 drawCustomStyle(
                                     layoutResult = textLayoutResult,
                                     textRange = textRange,

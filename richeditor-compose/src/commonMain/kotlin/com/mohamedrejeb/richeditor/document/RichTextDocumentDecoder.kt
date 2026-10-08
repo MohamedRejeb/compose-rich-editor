@@ -16,6 +16,7 @@ import com.mohamedrejeb.richeditor.model.HeadingStyle
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
+import com.mohamedrejeb.richeditor.paragraph.type.CodeBlock
 import com.mohamedrejeb.richeditor.paragraph.type.ListStyleTypeKeywords
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
@@ -58,6 +59,9 @@ internal object RichTextDocumentDecoder {
                         styleTypeOverride = ListStyleTypeKeywords.unorderedFromKeyword(type.listStyleType),
                     )
                 }
+        }
+        if (type is RichTextBlockType.CodeBlock) {
+            paragraph.type = CodeBlock(language = type.language, isBlockStart = type.isBlockStart)
         }
 
         val cuts = buildSet {

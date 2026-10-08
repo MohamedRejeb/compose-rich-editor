@@ -52,6 +52,15 @@ class RichTextFeaturesStateTest {
     }
 
     @Test
+    fun `setMarkdown turns a disallowed code block into plain paragraphs`() {
+        val state = RichTextState().apply { config.features = RichTextFeature.All - RichTextFeature.CodeBlock }
+
+        state.setMarkdown("```kotlin\nval a\n  val b\n```")
+
+        assertEquals(listOf(RichTextBlock("val a"), RichTextBlock("  val b")), state.blocks())
+    }
+
+    @Test
     fun `setMarkdown keeps only the allowed features`() {
         val state = RichTextState().apply { config.features = setOf(RichTextFeature.Italic) }
 

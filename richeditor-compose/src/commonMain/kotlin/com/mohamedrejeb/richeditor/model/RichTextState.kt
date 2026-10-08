@@ -46,6 +46,7 @@ import com.mohamedrejeb.richeditor.model.trigger.Trigger
 import com.mohamedrejeb.richeditor.model.trigger.TriggerQuery
 import com.mohamedrejeb.richeditor.model.trigger.detectActiveTrigger
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
+import com.mohamedrejeb.richeditor.paragraph.baseSpanStyle
 import com.mohamedrejeb.richeditor.paragraph.type.*
 import com.mohamedrejeb.richeditor.platform.currentPlatform
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startText
@@ -3578,7 +3579,7 @@ public class RichTextState internal constructor(
                     richParagraph.type.startRichSpan.textRange =
                         TextRange(index, index + richParagraphStartTextLength)
                     index += richParagraphStartTextLength
-                    withStyle(RichSpanStyle.DefaultSpanStyle) {
+                    withStyle(richParagraph.baseSpanStyle(config)) {
                         index = append(
                             state = this@RichTextState,
                             richSpanList = richParagraph.children,
@@ -6280,7 +6281,7 @@ public class RichTextState internal constructor(
                     richParagraph.type.startRichSpan.textRange =
                         TextRange(index, index + richParagraphStartTextLength)
                     index += richParagraphStartTextLength
-                    withStyle(RichSpanStyle.DefaultSpanStyle) {
+                    withStyle(richParagraph.baseSpanStyle(config)) {
                         index = append(
                             state = this@RichTextState,
                             richSpanList = richParagraph.children,

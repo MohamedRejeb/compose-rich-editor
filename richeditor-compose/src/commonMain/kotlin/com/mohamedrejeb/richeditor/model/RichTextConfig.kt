@@ -2,10 +2,12 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.highlight.CodeBlockColors
 import com.mohamedrejeb.richeditor.paragraph.type.ListMarkerStyleBehavior
 import com.mohamedrejeb.richeditor.paragraph.type.ListPrefixAlignment
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedListStyleType
@@ -64,6 +66,33 @@ public class RichTextConfig internal constructor(
         }
 
     public var codeSpanPadding: TextPaddingValues = TextPaddingValues(horizontal = 2.sp, vertical = 2.sp)
+        set(value) {
+            if (field == value) return
+            field = value
+            updateText()
+        }
+
+    /** The background drawn behind a code block. */
+    @ExperimentalRichTextApi
+    public var codeBlockBackgroundColor: Color = Color(0x1F808080)
+        set(value) {
+            if (field == value) return
+            field = value
+            updateText()
+        }
+
+    /** The font of the text in a code block. */
+    @ExperimentalRichTextApi
+    public var codeBlockFontFamily: FontFamily = FontFamily.Monospace
+        set(value) {
+            if (field == value) return
+            field = value
+            updateText()
+        }
+
+    /** The style of each kind of token in a code block. */
+    @ExperimentalRichTextApi
+    public var codeBlockColors: CodeBlockColors = CodeBlockColors.Default
         set(value) {
             if (field == value) return
             field = value

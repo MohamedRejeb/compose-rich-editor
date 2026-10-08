@@ -36,6 +36,22 @@ public final class com/mohamedrejeb/richeditor/document/RichTextBlock {
 public abstract interface class com/mohamedrejeb/richeditor/document/RichTextBlockType {
 }
 
+public final class com/mohamedrejeb/richeditor/document/RichTextBlockType$CodeBlock : com/mohamedrejeb/richeditor/document/RichTextBlockType {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Z)V
+	public synthetic fun <init> (Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Z
+	public final fun copy (Ljava/lang/String;Z)Lcom/mohamedrejeb/richeditor/document/RichTextBlockType$CodeBlock;
+	public static synthetic fun copy$default (Lcom/mohamedrejeb/richeditor/document/RichTextBlockType$CodeBlock;Ljava/lang/String;ZILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextBlockType$CodeBlock;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLanguage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isBlockStart ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class com/mohamedrejeb/richeditor/document/RichTextBlockType$ListItem : com/mohamedrejeb/richeditor/document/RichTextBlockType {
 	public static final field $stable I
 	public fun <init> (ZILjava/lang/Integer;Ljava/lang/String;)V
@@ -331,6 +347,87 @@ public final class com/mohamedrejeb/richeditor/document/RichTextSpanMark$Unknown
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class com/mohamedrejeb/richeditor/highlight/CodeBlockColors {
+	public static final field $stable I
+	public static final field Companion Lcom/mohamedrejeb/richeditor/highlight/CodeBlockColors$Companion;
+	public fun <init> (Landroidx/compose/ui/text/SpanStyle;Landroidx/compose/ui/text/SpanStyle;Landroidx/compose/ui/text/SpanStyle;Landroidx/compose/ui/text/SpanStyle;Landroidx/compose/ui/text/SpanStyle;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnnotation ()Landroidx/compose/ui/text/SpanStyle;
+	public final fun getComment ()Landroidx/compose/ui/text/SpanStyle;
+	public final fun getKeyword ()Landroidx/compose/ui/text/SpanStyle;
+	public final fun getNumber ()Landroidx/compose/ui/text/SpanStyle;
+	public final fun getString ()Landroidx/compose/ui/text/SpanStyle;
+	public fun hashCode ()I
+	public final fun styleOf (Lcom/mohamedrejeb/richeditor/highlight/CodeTokenKind;)Landroidx/compose/ui/text/SpanStyle;
+}
+
+public final class com/mohamedrejeb/richeditor/highlight/CodeBlockColors$Companion {
+	public final fun getDefault ()Lcom/mohamedrejeb/richeditor/highlight/CodeBlockColors;
+}
+
+public final class com/mohamedrejeb/richeditor/highlight/CodeHighlighter {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/mohamedrejeb/richeditor/highlight/CodeHighlighter;
+	public final fun tokenize (Ljava/lang/String;Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage;)Ljava/util/List;
+	public final fun tokenizeLines (Ljava/util/List;Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage;)Ljava/util/List;
+}
+
+public final class com/mohamedrejeb/richeditor/highlight/CodeLanguage {
+	public static final field $stable I
+	public static final field Companion Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage$Companion;
+	public final fun getName ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/highlight/CodeLanguage$Companion {
+	public final fun fromFileName (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage;
+	public final fun fromName (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage;
+	public final fun getAll ()Ljava/util/List;
+	public final fun getC ()Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage;
+	public final fun getCSharp ()Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage;
+	public final fun getCpp ()Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage;
+	public final fun getDart ()Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage;
+	public final fun getGo ()Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage;
+	public final fun getJava ()Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage;
+	public final fun getJavaScript ()Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage;
+	public final fun getJson ()Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage;
+	public final fun getKotlin ()Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage;
+	public final fun getPython ()Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage;
+	public final fun getRust ()Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage;
+	public final fun getShell ()Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage;
+	public final fun getSql ()Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage;
+	public final fun getSwift ()Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage;
+	public final fun getTypeScript ()Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage;
+	public final fun getYaml ()Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage;
+}
+
+public final class com/mohamedrejeb/richeditor/highlight/CodeToken {
+	public static final field $stable I
+	public fun <init> (IILcom/mohamedrejeb/richeditor/highlight/CodeTokenKind;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEnd ()I
+	public final fun getKind ()Lcom/mohamedrejeb/richeditor/highlight/CodeTokenKind;
+	public final fun getStart ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/mohamedrejeb/richeditor/highlight/CodeTokenKind : java/lang/Enum {
+	public static final field Annotation Lcom/mohamedrejeb/richeditor/highlight/CodeTokenKind;
+	public static final field Comment Lcom/mohamedrejeb/richeditor/highlight/CodeTokenKind;
+	public static final field Keyword Lcom/mohamedrejeb/richeditor/highlight/CodeTokenKind;
+	public static final field Number Lcom/mohamedrejeb/richeditor/highlight/CodeTokenKind;
+	public static final field String Lcom/mohamedrejeb/richeditor/highlight/CodeTokenKind;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/highlight/CodeTokenKind;
+	public static fun values ()[Lcom/mohamedrejeb/richeditor/highlight/CodeTokenKind;
+}
+
+public final class com/mohamedrejeb/richeditor/highlight/HighlightCodeKt {
+	public static final fun highlightCode (Ljava/lang/String;Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage;Lcom/mohamedrejeb/richeditor/highlight/CodeBlockColors;)Landroidx/compose/ui/text/AnnotatedString;
+	public static synthetic fun highlightCode$default (Ljava/lang/String;Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage;Lcom/mohamedrejeb/richeditor/highlight/CodeBlockColors;ILjava/lang/Object;)Landroidx/compose/ui/text/AnnotatedString;
+}
+
 public final class com/mohamedrejeb/richeditor/model/DefaultImageLoader : com/mohamedrejeb/richeditor/model/ImageLoader {
 	public static final field $stable I
 	public static final field INSTANCE Lcom/mohamedrejeb/richeditor/model/DefaultImageLoader;
@@ -493,6 +590,9 @@ public final class com/mohamedrejeb/richeditor/model/RichSpanStyleRegistry$Compa
 public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public static final field $stable I
 	public final fun getAutoLinkEnabled ()Z
+	public final fun getCodeBlockBackgroundColor-0d7_KjU ()J
+	public final fun getCodeBlockColors ()Lcom/mohamedrejeb/richeditor/highlight/CodeBlockColors;
+	public final fun getCodeBlockFontFamily ()Landroidx/compose/ui/text/font/FontFamily;
 	public final fun getCodeSpanBackgroundColor-0d7_KjU ()J
 	public final fun getCodeSpanColor-0d7_KjU ()J
 	public final fun getCodeSpanCornerRadius-XSAIIZE ()J
@@ -518,6 +618,9 @@ public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public final fun getUnorderedListIndent ()I
 	public final fun getUnorderedListStyleType ()Lcom/mohamedrejeb/richeditor/paragraph/type/UnorderedListStyleType;
 	public final fun setAutoLinkEnabled (Z)V
+	public final fun setCodeBlockBackgroundColor-8_81llA (J)V
+	public final fun setCodeBlockColors (Lcom/mohamedrejeb/richeditor/highlight/CodeBlockColors;)V
+	public final fun setCodeBlockFontFamily (Landroidx/compose/ui/text/font/FontFamily;)V
 	public final fun setCodeSpanBackgroundColor-8_81llA (J)V
 	public final fun setCodeSpanColor-8_81llA (J)V
 	public final fun setCodeSpanCornerRadius--R2X_6o (J)V
@@ -547,6 +650,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 public final class com/mohamedrejeb/richeditor/model/RichTextFeature : java/lang/Enum {
 	public static final field BaselineShift Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
 	public static final field Bold Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
+	public static final field CodeBlock Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
 	public static final field CodeSpan Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
 	public static final field Companion Lcom/mohamedrejeb/richeditor/model/RichTextFeature$Companion;
 	public static final field CustomSpanStyle Lcom/mohamedrejeb/richeditor/model/RichTextFeature;
@@ -904,6 +1008,10 @@ public final class com/mohamedrejeb/richeditor/paragraph/type/UnorderedListStyle
 	public final fun getCircle ()Lcom/mohamedrejeb/richeditor/paragraph/type/UnorderedListStyleType;
 	public final fun getDisc ()Lcom/mohamedrejeb/richeditor/paragraph/type/UnorderedListStyleType;
 	public final fun getSquare ()Lcom/mohamedrejeb/richeditor/paragraph/type/UnorderedListStyleType;
+}
+
+public final class com/mohamedrejeb/richeditor/ui/BasicCodeTextKt {
+	public static final fun BasicCodeText (Ljava/lang/String;Lcom/mohamedrejeb/richeditor/highlight/CodeLanguage;Landroidx/compose/ui/Modifier;Landroidx/compose/ui/text/TextStyle;Lcom/mohamedrejeb/richeditor/highlight/CodeBlockColors;ZLkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;II)V
 }
 
 public final class com/mohamedrejeb/richeditor/ui/BasicRichTextEditorKt {

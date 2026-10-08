@@ -60,6 +60,7 @@ The following HTML tags are supported:
 - `<p>` - Paragraphs
 - `<div>` - Divisions
 - `<br>` - Line breaks
+- `<pre>` - Code blocks, with the language from `<code class="language-x">` (see [Code Blocks](code_blocks.md))
 - `<h1>`..`<h6>` - Headings (see [Headings](headings.md))
 - `<ul>` - Unordered lists. `style="list-style-type: ..."` sets the bullet (`disc`, `circle`, `square`)
 - `<ol>` - Ordered lists. `start="N"` sets the first item's number; `style="list-style-type: ..."` sets the numbering (`decimal`, `lower-alpha`, `upper-alpha`, `lower-roman`, `upper-roman`, `arabic-indic`, `arabic-abjad`)

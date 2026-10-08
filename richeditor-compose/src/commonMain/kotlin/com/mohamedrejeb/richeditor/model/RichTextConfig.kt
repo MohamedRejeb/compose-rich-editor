@@ -1,5 +1,8 @@
 package com.mohamedrejeb.richeditor.model
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextDecoration
@@ -189,6 +192,22 @@ public class RichTextConfig internal constructor(
             field = value
             updateText()
         }
+
+    /**
+     * The vertical space between paragraphs, in sp or em.
+     *
+     * Only the read-only `RichText` and `BasicRichText` apply it for now: the editors show
+     * paragraphs without extra space. An empty paragraph is the space itself instead of adding
+     * a line to it, and items of a list stay together. On desktop, iOS and web a spacing at or
+     * below the font size is rendered as one full line of text.
+     *
+     * It is an appearance setting, like [linkColor]: it is not part of the document, so it is
+     * not written to HTML or Markdown.
+     *
+     * Default is [TextUnit.Unspecified], which adds no space.
+     */
+    @ExperimentalRichTextApi
+    public var paragraphSpacing: TextUnit by mutableStateOf(TextUnit.Unspecified)
 
     /**
      * Whether to preserve the style when the line is empty.

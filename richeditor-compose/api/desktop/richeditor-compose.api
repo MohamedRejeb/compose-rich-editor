@@ -512,6 +512,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public final fun getListTypingShortcutsEnabled ()Z
 	public final fun getOrderedListIndent ()I
 	public final fun getOrderedListStyleType ()Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType;
+	public final fun getParagraphSpacing-XSAIIZE ()J
 	public final fun getPreserveSelectionOnFocusLoss ()Z
 	public final fun getPreserveStyleOnEmptyLine ()Z
 	public final fun getRichClipboardEnabled ()Z
@@ -537,6 +538,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public final fun setListTypingShortcutsEnabled (Z)V
 	public final fun setOrderedListIndent (I)V
 	public final fun setOrderedListStyleType (Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType;)V
+	public final fun setParagraphSpacing--R2X_6o (J)V
 	public final fun setPreserveSelectionOnFocusLoss (Z)V
 	public final fun setPreserveStyleOnEmptyLine (Z)V
 	public final fun setRichClipboardEnabled (Z)V

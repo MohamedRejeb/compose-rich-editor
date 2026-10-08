@@ -63,8 +63,13 @@ public fun BasicRichText(
     }
     val maxImageWidthProvider = remember { RichTextMaxImageWidthProvider() }
 
-    val text = remember(state.annotatedString, state.highlights) {
-        state.annotatedString.withHighlights(state.highlights)
+    // Single paragraph mode has no separator characters to turn into gaps.
+    val effectiveParagraphSpacing =
+        if (state.singleParagraphMode) TextUnit.Unspecified else state.config.paragraphSpacing
+    val text = remember(state.annotatedString, state.highlights, effectiveParagraphSpacing) {
+        state.annotatedString
+            .withHighlights(state.highlights)
+            .withParagraphSpacing(state.richParagraphList, effectiveParagraphSpacing)
     }
 
     CompositionLocalProvider(

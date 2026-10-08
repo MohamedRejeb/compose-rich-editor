@@ -497,11 +497,14 @@ class TapAtParagraphEdgeTest {
      * the text inside the node, and scrolling moves it up.
      */
     private fun DesktopComposeUiTest.nodePositionOf(state: RichTextState, inText: Offset): Offset {
-        val node = onNodeWithTag(EDITOR_TAG).fetchSemanticsNode().positionInWindow
-        val textOrigin = state.textFieldWindowPosition - node
+        val node = onNodeWithTag(EDITOR_TAG).fetchSemanticsNode()
+        val textOrigin = state.textFieldWindowPosition - node.positionInWindow
+        // Compensate for scroll so clicks target the correct text-space line.
+        // Subtract the scroll offset to map text coords into the visible viewport area.
+        val yLocal = (inText.y + textOrigin.y - state.scrollState.value).coerceAtLeast(0f)
         return Offset(
             x = inText.x + textOrigin.x,
-            y = inText.y + textOrigin.y - state.scrollState.value,
+            y = yLocal,
         )
     }
 
@@ -558,7 +561,7 @@ class TapAtParagraphEdgeTest {
         const val PRESS_POSITION_LIFETIME_MILLIS = 400L
         const val WRAPPING_WORD_COUNT = 40
         const val SCROLLED_LINE_COUNT = 12
-        const val SCROLLED_LINE = "Line 9"
+        const val SCROLLED_LINE = "Line 11"
         const val ARABIC_WORD = "مرحبا"
         val SCROLLED_EDITOR_HEIGHT = 60.dp
         val DECORATION_PADDING = 24.dp

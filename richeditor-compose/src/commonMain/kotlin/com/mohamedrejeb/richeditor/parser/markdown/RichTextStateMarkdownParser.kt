@@ -13,6 +13,10 @@ import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichSpanStyleRegistry
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
+import com.mohamedrejeb.richeditor.paragraph.codeBlockGroups
+import com.mohamedrejeb.richeditor.paragraph.codeBlockOf
+import com.mohamedrejeb.richeditor.paragraph.plainText
+import com.mohamedrejeb.richeditor.paragraph.type.CodeBlock
 import com.mohamedrejeb.richeditor.paragraph.type.ConfigurableListLevel
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
@@ -50,6 +54,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         val openedNodes = mutableListOf<ASTNode>()
         val openedHtmlTags = mutableListOf<String>()
         val richParagraphList = mutableListOf(RichParagraph())
+        val paragraphsAfterCodeBlocks = mutableListOf<RichParagraph>()
         var brParagraphIndices = mutableListOf<Int>()
         var currentRichSpan: RichSpan? = null
         var currentRichParagraphType: ParagraphType = DefaultParagraph()
@@ -124,13 +129,25 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
             }
         }
 
-        // Correct the markdown text first so we can use it in callbacks
-        val correctedMarkdown = correctMarkdownText(input)
+        // Correct the markdown text first so we can use it in callbacks.
+        // intellij-markdown does not close a fence whose line ends in CRLF, so normalise first.
+        val correctedMarkdown = correctMarkdownOutsideFences(input.replace("\r\n", "\n"))
 
         encodeMarkdownToRichText(
             markdown = correctedMarkdown,
             onText = { text ->
                 onText(text)
+            },
+            onCodeBlock = { language, lines ->
+                // The blank lines before a fence are syntax, not content: each EOL opened a paragraph.
+                while (richParagraphList.lastOrNull()?.let { it.isBlank() && it.type is DefaultParagraph } == true)
+                    richParagraphList.removeAt(richParagraphList.lastIndex)
+                richParagraphList.addAll(codeBlockOf(language, lines))
+                // Text after the block must start a paragraph of its own, never join the last code line.
+                val after = RichParagraph()
+                richParagraphList.add(after)
+                paragraphsAfterCodeBlocks.add(after)
+                currentRichSpan = null
             },
             onOpenNode = { node ->
                 val lastOpenedNode = openedNodes.lastOrNull()
@@ -259,11 +276,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
                 if (
                     node.type == GFMTokenTypes.GFM_AUTOLINK ||
-                    node.type == MarkdownTokenTypes.CODE_LINE ||
-                    // Fenced code blocks (```...```) emit their body as
-                    // CODE_FENCE_CONTENT tokens. Without this branch the
-                    // content was dropped on decode (#253, #540).
-                    node.type == MarkdownTokenTypes.CODE_FENCE_CONTENT
+                    node.type == MarkdownTokenTypes.CODE_LINE
                 ) {
                     onText(node.getTextInNode(correctedMarkdown).toString())
                 }
@@ -421,7 +434,7 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         var lastBrParagraphIndex = -1
 
         richParagraphList.forEachIndexed { i, paragraph ->
-            paragraph.trim()
+            if (paragraph.type !is CodeBlock) paragraph.trim()
 
             val isEmpty = paragraph.isEmpty()
             val isBr = i in brParagraphIndices
@@ -445,6 +458,11 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
             richParagraphList.removeAt(i)
         }
 
+        // A paragraph opened after a code block is only kept when something was written to it.
+        richParagraphList.removeAll { paragraph ->
+            paragraph.isBlank() && paragraphsAfterCodeBlocks.any { it === paragraph }
+        }
+
         return RichTextState(
             initialRichParagraphList = richParagraphList,
         )
@@ -455,7 +473,27 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
         var useLineBreak = false
 
+        val codeGroups = richTextState.richParagraphList.toList().codeBlockGroups()
+
         richTextState.richParagraphList.fastForEachIndexed { index, richParagraph ->
+            val codeBlock = richParagraph.type as? CodeBlock
+            if (codeBlock != null) {
+                val paragraphs = richTextState.richParagraphList
+                val group = codeGroups.first { index in it }
+                if (index == group.first) {
+                    val code = group.joinToString("\n") { paragraphs[it].plainText() }
+                    val fence = fenceFor(code)
+                    builder.append(fence).append(codeBlock.language.orEmpty()).append('\n')
+                    builder.append(code).append('\n').append(fence)
+                    if (group.last < paragraphs.lastIndex) {
+                        builder.appendLine()
+                        if (paragraphs[group.last + 1].type !is CodeBlock) builder.appendLine()
+                    }
+                }
+                useLineBreak = false
+                return@fastForEachIndexed
+            }
+
             // Append paragraph start text
             builder.appendParagraphStartText(richParagraph)
 
@@ -497,10 +535,13 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 ) {
                     builder.appendLine()
                 }
+                if (!isBlank && nextParagraph.type is CodeBlock) {
+                    builder.appendLine()
+                }
             }
         }
 
-        return correctMarkdownText(builder.toString())
+        return correctMarkdownOutsideFences(builder.toString())
     }
 
     private fun ParagraphType.isList(): Boolean =

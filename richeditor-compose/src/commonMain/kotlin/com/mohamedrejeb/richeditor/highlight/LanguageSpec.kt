@@ -13,6 +13,8 @@ internal class StringRule(
 /**
  * What the scanner needs to know about a language. [strings] and [blockComments] are tried in
  * order, so a longer opener (triple quotes) must come before a shorter one that it starts with.
+ * Every opener ([BlockComment.open], [StringRule.open], each line comment marker) must be
+ * non-empty, because an empty one would never advance the scanner.
  */
 internal class LanguageSpec(
     val keywords: Set<String>,

@@ -347,6 +347,8 @@ internal fun RichTextConfig.headingSpanStyleFor(headingStyle: HeadingStyle): Spa
 
 internal const val DefaultListIndent = 38
 
+internal const val StartTextWidthSentinel = "x"
+
 internal val DefaultUnorderedListStyleType =
     UnorderedListStyleType.from("•", "◦", "▪")
 

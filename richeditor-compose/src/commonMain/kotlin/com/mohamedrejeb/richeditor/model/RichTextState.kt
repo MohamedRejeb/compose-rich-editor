@@ -5530,7 +5530,11 @@ public class RichTextState internal constructor(
                     paragraphType is ConfigurableStartTextWidth &&
                     paragraphType.startText.isNotEmpty() &&
                     paragraphType.startRichSpan.textRange.min >= 0 &&
-                    paragraphType.startRichSpan.textRange.max <= offsetLimit
+                    paragraphType.startRichSpan.textRange.max <= offsetLimit &&
+                    // A prefix whose end wrapped to the next line has no width to read here,
+                    // and feeding the bogus distance back into the indent never settles.
+                    textLayoutResult.getLineForOffset(paragraphType.startRichSpan.textRange.min) ==
+                    textLayoutResult.getLineForOffset(paragraphType.startRichSpan.textRange.max)
                 ) {
                     val start =
                         textLayoutResult.getHorizontalPosition(
@@ -5580,6 +5584,47 @@ public class RichTextState internal constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Measures the prefix of every list paragraph that has no width yet, so a state that has
+     * never been laid out renders its first frame with the final `TextIndent`. The layout pass
+     * in [adjustRichParagraphLayout] still has the last word on the width.
+     */
+    internal fun measureStartTextWidths(
+        textMeasurer: TextMeasurer,
+        style: TextStyle,
+        density: Density,
+    ) {
+        val widths = mutableMapOf<Pair<String, SpanStyle>, TextUnit>()
+        var isParagraphUpdated = false
+
+        richParagraphList.fastForEach { paragraph ->
+            val type = paragraph.type
+            if (type !is ConfigurableStartTextWidth || type.startText.isEmpty() || type.startTextWidth != 0.sp)
+                return@fastForEach
+
+            val markerStyle =
+                paragraph.getListMarkerSpanStyle(config.listMarkerStyleBehavior, config.listMarkerStyle)
+            type.startTextWidth = widths.getOrPut(type.startText to markerStyle) {
+                // The prefix ends with a space, which a line does not count when it is last:
+                // measure up to a character placed after it instead.
+                val layout = textMeasurer.measure(
+                    text = AnnotatedString(type.startText + StartTextWidthSentinel, markerStyle),
+                    style = style,
+                    softWrap = false,
+                )
+                with(density) {
+                    layout.getHorizontalPosition(type.startText.length, usePrimaryDirection = true)
+                        .absoluteValue
+                        .toSp()
+                }
+            }
+            isParagraphUpdated = true
+        }
+
+        if (isParagraphUpdated)
+            updateTextFieldValue(textFieldValue)
     }
 
     /**

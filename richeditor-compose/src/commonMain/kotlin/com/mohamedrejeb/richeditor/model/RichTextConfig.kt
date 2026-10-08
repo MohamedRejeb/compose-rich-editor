@@ -311,6 +311,8 @@ internal val RichTextConfig.richPasteEnabled: Boolean
 
 internal const val DefaultListIndent = 38
 
+internal const val StartTextWidthSentinel = "x"
+
 internal val DefaultUnorderedListStyleType =
     UnorderedListStyleType.from("•", "◦", "▪")
 

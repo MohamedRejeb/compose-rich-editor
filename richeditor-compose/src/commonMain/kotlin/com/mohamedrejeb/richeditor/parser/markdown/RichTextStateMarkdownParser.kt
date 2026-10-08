@@ -129,8 +129,8 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
             }
         }
 
-        // Correct the markdown text first so we can use it in callbacks.
-        // intellij-markdown does not close a fence whose line ends in CRLF, so normalise first.
+        // Correct the markdown text first so we can use it in callbacks
+        // intellij-markdown only reads LF line ends reliably, so normalise CRLF before parsing.
         val correctedMarkdown = correctMarkdownOutsideFences(input.replace("\r\n", "\n"))
 
         encodeMarkdownToRichText(
@@ -140,7 +140,11 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
             },
             onCodeBlock = { language, lines ->
                 // The blank lines before a fence are syntax, not content: each EOL opened a paragraph.
-                while (richParagraphList.lastOrNull()?.let { it.isBlank() && it.type is DefaultParagraph } == true)
+                // A paragraph made by <br> is content the author asked for, so stop there.
+                while (
+                    richParagraphList.lastIndex !in brParagraphIndices &&
+                    richParagraphList.lastOrNull()?.let { it.isBlank() && it.type is DefaultParagraph } == true
+                )
                     richParagraphList.removeAt(richParagraphList.lastIndex)
                 richParagraphList.addAll(codeBlockOf(language, lines))
                 // Text after the block must start a paragraph of its own, never join the last code line.
@@ -436,7 +440,8 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
         richParagraphList.forEachIndexed { i, paragraph ->
             if (paragraph.type !is CodeBlock) paragraph.trim()
 
-            val isEmpty = paragraph.isEmpty()
+            // A blank code line is content, never a gap between line breaks.
+            val isEmpty = paragraph.type !is CodeBlock && paragraph.isEmpty()
             val isBr = i in brParagraphIndices
 
             // Delete empty paragraphs between line breaks to match Markdown rendering
@@ -513,8 +518,9 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
 
             // Append line break if needed
             val isBlank = richParagraph.isBlank()
+            val isLineBreak = useLineBreak && isBlank
 
-            if (useLineBreak && isBlank)
+            if (isLineBreak)
                 builder.append("<br>")
 
             useLineBreak = isBlank
@@ -535,7 +541,8 @@ internal object RichTextStateMarkdownParser : RichTextStateParser<String> {
                 ) {
                     builder.appendLine()
                 }
-                if (!isBlank && nextParagraph.type is CodeBlock) {
+                // A <br> line is an HTML block that would run on into the fence without a blank line.
+                if ((!isBlank || isLineBreak) && nextParagraph.type is CodeBlock) {
                     builder.appendLine()
                 }
             }

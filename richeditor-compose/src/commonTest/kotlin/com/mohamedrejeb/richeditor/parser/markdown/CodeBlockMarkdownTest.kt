@@ -1,8 +1,11 @@
 package com.mohamedrejeb.richeditor.parser.markdown
 
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.codeBlockGroups
+import com.mohamedrejeb.richeditor.paragraph.codeBlockOf
 import com.mohamedrejeb.richeditor.paragraph.plainText
 import com.mohamedrejeb.richeditor.paragraph.type.CodeBlock
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
@@ -65,6 +68,29 @@ class CodeBlockMarkdownTest {
     fun `blank lines around a block add no empty paragraph`() {
         val state = stateOf("Before\n\n\n```\nb\n```\n\n\nAfter")
         assertEquals(listOf("Before", "b", "After"), state.richParagraphList.map { it.plainText() })
+    }
+
+    @Test
+    fun `a br blank line before a block is kept`() {
+        val state = stateOf("a<br>\n\n```\nb\n```")
+        assertEquals(listOf("a", "", "b"), state.richParagraphList.map { it.plainText() })
+        assertTrue(state.richParagraphList[1].type is DefaultParagraph)
+        assertTrue(state.richParagraphList[2].type is CodeBlock)
+    }
+
+    @Test
+    fun `blank code lines between two br lines are kept`() {
+        val state = stateOf("a<br>\n\n```\n\n\n```\n<br>")
+        assertEquals(listOf("", ""), state.codeLines())
+    }
+
+    @Test
+    fun `two blank paragraphs before a block survive an export and import`() {
+        val text = RichParagraph().also { it.children.add(RichSpan(paragraph = it, text = "a")) }
+        val paragraphs = listOf(text, RichParagraph(), RichParagraph()) + codeBlockOf(null, listOf("x"))
+        val again = stateOf(RichTextState(initialRichParagraphList = paragraphs).toMarkdown())
+        assertEquals(listOf("a", "", "", "x"), again.richParagraphList.map { it.plainText() })
+        assertTrue(again.richParagraphList.last().type is CodeBlock)
     }
 
     @Test

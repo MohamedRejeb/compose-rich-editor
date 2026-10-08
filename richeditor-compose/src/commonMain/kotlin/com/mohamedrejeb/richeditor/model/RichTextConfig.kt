@@ -2,6 +2,7 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
@@ -172,6 +173,28 @@ public class RichTextConfig internal constructor(
         }
 
     /**
+     * The typography of headings, per level. A level's [TextStyle] is applied on top of the
+     * default typography of that level (see [HeadingStyle]), so whatever it leaves unset keeps
+     * coming from the default: `TextStyle(color = Color.Red)` colors the headings of a level
+     * and keeps their size and weight. Its paragraph part (line height, alignment, ...) applies
+     * to the heading paragraph. Levels without an entry, and [HeadingStyle.Normal], are left
+     * alone.
+     *
+     * It is an appearance setting of the editor, like [linkColor]: the document stores the
+     * heading level only, so the styles are not written to HTML or Markdown, and a style added
+     * to the heading's text or paragraph still wins over them.
+     *
+     * Default is an empty map, which changes nothing.
+     */
+    @ExperimentalRichTextApi
+    public var headingTextStyles: Map<HeadingStyle, TextStyle> = emptyMap()
+        set(value) {
+            if (field == value) return
+            field = value
+            updateText()
+        }
+
+    /**
      * Controls where list markers ("1.", "10.", "•", ...) sit relative to the
      * indent gutter in ordered and unordered lists.
      *
@@ -308,6 +331,19 @@ public class RichTextConfig internal constructor(
 @OptIn(ExperimentalRichTextApi::class)
 internal val RichTextConfig.richPasteEnabled: Boolean
     get() = richClipboardEnabled && features.isNotEmpty()
+
+/** The [RichTextConfig.headingTextStyles] entry that restyles [headingStyle], if any. */
+@OptIn(ExperimentalRichTextApi::class)
+internal fun RichTextConfig.headingTextStyleFor(headingStyle: HeadingStyle): TextStyle? =
+    if (headingStyle == HeadingStyle.Normal) null else headingTextStyles[headingStyle]
+
+/**
+ * The span style a heading restyled by [RichTextConfig.headingTextStyles] renders with: the
+ * level's default typography with the configured style on top. Null when the level is not
+ * restyled.
+ */
+internal fun RichTextConfig.headingSpanStyleFor(headingStyle: HeadingStyle): SpanStyle? =
+    headingTextStyleFor(headingStyle)?.let { headingStyle.defaultSpanStyle.merge(it.toSpanStyle()) }
 
 internal const val DefaultListIndent = 38
 

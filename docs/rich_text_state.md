@@ -119,7 +119,14 @@ richTextState.config.codeSpanStrokeColor = Color.LightGray
 richTextState.config.codeSpanCornerRadius = 8.sp
 richTextState.config.codeSpanStrokeWidth = 1.sp
 richTextState.config.codeSpanPadding = TextPaddingValues(horizontal = 2.sp, vertical = 2.sp)
+
+// Heading typography, per level (see Headings)
+richTextState.config.headingTextStyles = mapOf(
+    HeadingStyle.H1 to TextStyle(fontSize = 28.sp, fontWeight = FontWeight.SemiBold),
+)
 ```
+
+These settings style the editor and are not part of the document, so they are not written to HTML or Markdown. See [Headings](headings.md#customizing-the-heading-typography) for `headingTextStyles`.
 
 ### List Configuration
 

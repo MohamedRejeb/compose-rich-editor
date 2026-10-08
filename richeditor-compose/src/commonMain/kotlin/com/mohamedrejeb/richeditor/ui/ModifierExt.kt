@@ -2,8 +2,12 @@ package com.mohamedrejeb.richeditor.ui
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.unit.dp
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
@@ -37,6 +41,22 @@ internal fun Modifier.drawRichSpanStyle(
             }
 
             translate(top = -richTextState.scrollState.value.toFloat()) {
+                richTextState.textLayoutResult?.let { textLayoutResult ->
+                    val textLength = textLayoutResult.layoutInput.text.length
+                    if (textLength > 0 && textLayoutResult.isForModelText(richTextState.annotatedString.length)) {
+                        richTextState.renderedCodeBlocks.fastForEach { block ->
+                            val firstLine = textLayoutResult.getLineForOffset(block.range.min.coerceIn(0, textLength))
+                            val lastLine = textLayoutResult.getLineForOffset((block.range.max - 1).coerceIn(0, textLength))
+                            val top = textLayoutResult.getLineTop(firstLine)
+                            drawRoundRect(
+                                color = richTextState.config.codeBlockBackgroundColor,
+                                topLeft = Offset(0f, top + topPadding),
+                                size = Size(size.width, textLayoutResult.getLineBottom(lastLine) - top),
+                                cornerRadius = CornerRadius(CodeBlockCornerRadius.toPx()),
+                            )
+                        }
+                    }
+                }
                 styledRichSpanList.fastForEach { (style, textRange) ->
                     richTextState.textLayoutResult?.let { textLayoutResult ->
                         with(style) {
@@ -55,3 +75,5 @@ internal fun Modifier.drawRichSpanStyle(
             }
         }
 }
+
+private val CodeBlockCornerRadius = 8.dp

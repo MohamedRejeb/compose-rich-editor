@@ -374,6 +374,16 @@ public class RichTextState internal constructor(
     public var annotatedString: AnnotatedString by mutableStateOf(AnnotatedString(text = ""))
         private set
 
+    private val codeBlockTokenCache = CodeBlockTokenCache()
+
+    /** The code blocks as located in [annotatedString], with their token styles. Not part of the document. */
+    internal var renderedCodeBlocks: List<RenderedCodeBlock> by mutableStateOf(emptyList())
+        private set
+
+    private fun updateRenderedCodeBlocks() {
+        renderedCodeBlocks = renderCodeBlocks(richParagraphList, annotatedString, config.codeBlockColors, codeBlockTokenCache)
+    }
+
     private var highlightsState: List<RichTextHighlight> by mutableStateOf(emptyList())
 
     /**
@@ -3622,6 +3632,7 @@ public class RichTextState internal constructor(
         )
         setTextFieldStateFromValue(text = annotatedString.text, selection = clampedSelection)
         styledRichSpanList.addAll(newStyledRichSpanList)
+        updateRenderedCodeBlocks()
     }
 
     /**
@@ -6324,6 +6335,7 @@ public class RichTextState internal constructor(
         styledRichSpanList.clear()
         setTextFieldStateFromValue(text = annotatedString.text, selection = selection)
         styledRichSpanList.addAll(newStyledRichSpanList)
+        updateRenderedCodeBlocks()
 
         // Clear un-applied styles
         toAddSpanStyle = SpanStyle()

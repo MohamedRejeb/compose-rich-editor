@@ -43,10 +43,20 @@ internal fun Modifier.drawRichSpanStyle(
             translate(top = -richTextState.scrollState.value.toFloat()) {
                 richTextState.textLayoutResult?.let { textLayoutResult ->
                     val textLength = textLayoutResult.layoutInput.text.length
-                    if (textLength > 0 && textLayoutResult.isForModelText(richTextState.annotatedString.length)) {
+                    if (
+                        textLength > 0 &&
+                        textLayoutResult.lineCount > 0 &&
+                        textLayoutResult.isForModelText(richTextState.annotatedString.length)
+                    ) {
+                        // maxLines and overflow stop the layout early, and asking it for a line
+                        // past what it laid out throws.
+                        val laidOutEnd = textLayoutResult.getLineEnd(textLayoutResult.lineCount - 1)
+                        val isCutOff = laidOutEnd < textLength
+                        val lastOffset = if (isCutOff) laidOutEnd - 1 else laidOutEnd
                         richTextState.renderedCodeBlocks.fastForEach { block ->
-                            val firstLine = textLayoutResult.getLineForOffset(block.range.min.coerceIn(0, textLength))
-                            val lastLine = textLayoutResult.getLineForOffset((block.range.max - 1).coerceIn(0, textLength))
+                            if (block.range.min > lastOffset) return@fastForEach
+                            val firstLine = textLayoutResult.getLineForOffset(block.range.min.coerceIn(0, lastOffset))
+                            val lastLine = textLayoutResult.getLineForOffset(block.lastLineOffset.coerceIn(0, lastOffset))
                             val top = textLayoutResult.getLineTop(firstLine)
                             drawRoundRect(
                                 color = richTextState.config.codeBlockBackgroundColor,

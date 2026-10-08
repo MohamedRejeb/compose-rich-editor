@@ -12,9 +12,14 @@ import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.codeBlockGroups
 import com.mohamedrejeb.richeditor.paragraph.type.CodeBlock
 
-/** A code block as it sits in the rendered text: where it is and the token styles drawn over it. */
+/**
+ * A code block as it sits in the rendered text: where it is and the token styles drawn over it.
+ * [lastLineOffset] is an offset on the last line of the block, which [range] cannot give: its
+ * end is the start of whatever follows, and an empty last line has no character of its own.
+ */
 internal data class RenderedCodeBlock(
     val range: TextRange,
+    val lastLineOffset: Int,
     val styles: List<AnnotatedString.Range<SpanStyle>>,
 )
 
@@ -65,8 +70,10 @@ internal fun renderCodeBlocks(
             if (separator in chars.indices && chars[separator] == ' ') chars[separator] = '\n'
         }
         val language = (paragraphs[group.first].type as? CodeBlock)?.language
+        val lastLine = ranges[group.last]
         RenderedCodeBlock(
             range = TextRange(start, end),
+            lastLineOffset = if (lastLine.start == lastLine.end) lastLine.start else lastLine.end - 1,
             styles = cache.tokens(chars.concatToString(), language).map { token ->
                 AnnotatedString.Range(colors.styleOf(token.kind), start + token.start, start + token.end)
             },

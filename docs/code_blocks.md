@@ -68,6 +68,18 @@ The same block in each format:
 The text inside a block is kept exactly as written: indentation, tabs, blank lines, and Markdown
 or HTML that would otherwise be formatting.
 
+### Copy and paste
+
+Copying or cutting a selection that covers code writes the code line by line, with its
+indentation, as plain text and as a `<pre><code>` block in HTML.
+
+A code block pasted into ordinary text stays whole: the text is split around it. A single line
+of code pasted into a sentence joins the sentence as text. Whatever is pasted into a code block,
+formatted or not, becomes plain lines of that block.
+
+Typing shortcuts (`**bold**`, `__bold__`, `` `code` `` and the others) do nothing inside a code
+block, where those marks are code.
+
 ### Customizing
 
 | Property on `RichTextState.config` | Type | Default | Description |
@@ -201,9 +213,14 @@ its language tag on export.
   that was loaded can be edited, and Enter adds a line to it.
 - Only fenced Markdown code is a code block. Code indented by four spaces is not.
 - HTML, XML, CSS and diffs are not coloured yet.
-- Markup inside an HTML `<pre>` is read as plain code, so the colours of code copied from an IDE
-  are replaced by the block's own.
+- Markup inside an HTML `<pre>` is read as plain code. Code copied from an IDE arrives as a
+  `<pre>` with coloured spans and no language, so it is pasted as a code block without colours.
 - A code block inside a list item or a quote is moved to the top level.
+- A block has no space of its own above or below it, and two blocks in a row touch.
+- In Markdown, an empty paragraph directly after a block is not kept on a round trip.
+- Text selected in a read-only `RichText` inside a `SelectionContainer` is copied with a space
+  between paragraphs, so code selected that way loses its line ends. Copy and cut in the editors
+  keep them.
 - `ExpandableBasicRichText` colours the code but draws no background behind it.
 
 ## Related

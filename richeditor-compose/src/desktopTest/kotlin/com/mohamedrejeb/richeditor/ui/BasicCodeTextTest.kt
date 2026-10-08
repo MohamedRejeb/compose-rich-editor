@@ -50,7 +50,11 @@ class BasicCodeTextTest {
         }
         waitForIdle()
 
-        assertEquals(1, assertNotNull(layout).lineCount)
+        val result = assertNotNull(layout)
+        assertEquals(1, result.lineCount)
+        // Laid out wider than the 120.dp parent and not clipped: the line scrolls sideways.
+        assertTrue(result.size.width > 120, "the line keeps its full width, was ${result.size.width}")
+        assertTrue(!result.didOverflowWidth, "the line is not cut off")
     }
 
     @Test

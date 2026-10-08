@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PixelMap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.platform.testTag
@@ -131,6 +132,94 @@ class CodeBlockRenderTest {
         }
         assertTrue(isRedAtLine(1), "the code line has the block background")
         assertTrue(!isRedAtLine(0), "the plain line has no block background")
+    }
+
+    @Test
+    fun `a block cut off by maxLines is drawn without crashing`() = runDesktopComposeUiTest {
+        val state = RichTextState().apply {
+            config.codeBlockBackgroundColor = Color.Red
+            setMarkdown("```\none\ntwo\nthree\n```")
+        }
+        var layout: TextLayoutResult? = null
+        setContent {
+            Box(Modifier.width(200.dp)) {
+                BasicRichText(
+                    state = state,
+                    modifier = Modifier.testTag(EDITOR_TAG).fillMaxWidth(),
+                    maxLines = 2,
+                    onTextLayout = { layout = it },
+                )
+            }
+        }
+        waitForIdle()
+
+        val lines = assertNotNull(layout)
+        assertEquals(2, lines.lineCount)
+        val pixels = onNodeWithTag(EDITOR_TAG).captureToImage().toPixelMap()
+        assertTrue(pixels.isRedAt(pixels.width - 12, lines.lineMiddle(0)), "the first visible line has the background")
+        assertTrue(pixels.isRedAt(pixels.width - 12, lines.lineMiddle(1)), "the last visible line has the background")
+    }
+
+    @Test
+    fun `a block that lies past maxLines is skipped without crashing`() = runDesktopComposeUiTest {
+        val state = RichTextState().apply {
+            config.codeBlockBackgroundColor = Color.Red
+            setMarkdown("text\n\n```\ncode\n```")
+        }
+        var layout: TextLayoutResult? = null
+        setContent {
+            Box(Modifier.width(200.dp)) {
+                BasicRichText(
+                    state = state,
+                    modifier = Modifier.testTag(EDITOR_TAG).fillMaxWidth(),
+                    maxLines = 1,
+                    onTextLayout = { layout = it },
+                )
+            }
+        }
+        waitForIdle()
+
+        val lines = assertNotNull(layout)
+        assertEquals(1, lines.lineCount)
+        val pixels = onNodeWithTag(EDITOR_TAG).captureToImage().toPixelMap()
+        assertTrue(!pixels.isRedAt(pixels.width - 12, lines.lineMiddle(0)), "the plain line has no background")
+    }
+
+    @Test
+    fun `an empty last line of a block has the background`() = runDesktopComposeUiTest {
+        val state = RichTextState().apply {
+            config.codeBlockBackgroundColor = Color.Red
+            setMarkdown("```\ncode\n```")
+        }
+        setContent {
+            val focusRequester = remember { FocusRequester() }
+            Box(Modifier.width(200.dp)) {
+                BasicRichTextEditor(
+                    state = state,
+                    modifier = Modifier.focusRequester(focusRequester).testTag(EDITOR_TAG).fillMaxWidth(),
+                )
+            }
+            LaunchedEffect(Unit) { focusRequester.requestFocus() }
+        }
+        waitForIdle()
+        state.textFieldState.edit { selection = TextRange(length) }
+        waitForIdle()
+
+        onNodeWithTag(EDITOR_TAG).performKeyInput { pressKey(Key.Enter) }
+        waitForIdle()
+
+        val lines = editorLayout(state)
+        assertEquals(2, lines.lineCount)
+        val pixels = onNodeWithTag(EDITOR_TAG).captureToImage().toPixelMap()
+        assertTrue(pixels.isRedAt(pixels.width - 12, lines.lineMiddle(0)), "the code line has the background")
+        assertTrue(pixels.isRedAt(pixels.width - 12, lines.lineMiddle(1)), "the new empty line has the background")
+    }
+
+    private fun TextLayoutResult.lineMiddle(line: Int): Int = ((getLineTop(line) + getLineBottom(line)) / 2).toInt()
+
+    private fun PixelMap.isRedAt(x: Int, y: Int): Boolean {
+        val color = this[x, y]
+        return color.red > 0.8f && color.green < 0.3f && color.blue < 0.3f
     }
 
     private fun runEditorTest(block: DesktopComposeUiTest.(state: RichTextState) -> Unit) = runDesktopComposeUiTest {

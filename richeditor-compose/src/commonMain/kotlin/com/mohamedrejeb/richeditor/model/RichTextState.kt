@@ -46,6 +46,7 @@ import com.mohamedrejeb.richeditor.model.trigger.Trigger
 import com.mohamedrejeb.richeditor.model.trigger.TriggerQuery
 import com.mohamedrejeb.richeditor.model.trigger.detectActiveTrigger
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
+import com.mohamedrejeb.richeditor.paragraph.asCodeLinesOf
 import com.mohamedrejeb.richeditor.paragraph.baseSpanStyle
 import com.mohamedrejeb.richeditor.paragraph.type.*
 import com.mohamedrejeb.richeditor.platform.currentPlatform
@@ -6169,8 +6170,6 @@ public class RichTextState internal constructor(
                 p.children.add(RichSpan(paragraph = p))
         }
 
-        val firstNewParagraph = newParagraphs.first()
-
         val richSpan = getRichSpanByTextIndex(
             textIndex = position - 1,
             ignoreCustomFiltering = true,
@@ -6179,6 +6178,11 @@ public class RichTextState internal constructor(
 
         val targetParagraph = richSpan.paragraph
         val paragraphIndex = richParagraphList.indexOf(targetParagraph)
+
+        // Whatever lands inside a code block becomes plain lines of that block.
+        val targetCodeBlock = targetParagraph.type as? CodeBlock
+        val newParagraphs = if (targetCodeBlock == null) newParagraphs else newParagraphs.asCodeLinesOf(targetCodeBlock)
+        val firstNewParagraph = newParagraphs.first()
 
         val sliceIndex = max(position, richSpan.textRange.min)
 
@@ -6189,7 +6193,11 @@ public class RichTextState internal constructor(
             removeSliceIndex = false,
         )
 
-        if (targetParagraphFirstHalf.isEmpty() && firstNewParagraph.isNotEmpty()) {
+        if (
+            targetCodeBlock == null &&
+            targetParagraphFirstHalf.isEmpty() &&
+            (firstNewParagraph.isNotEmpty() || firstNewParagraph.type is CodeBlock)
+        ) {
             targetParagraphFirstHalf.paragraphStyle = firstNewParagraph.paragraphStyle
             targetParagraphFirstHalf.type = firstNewParagraph.type
         }
@@ -6209,22 +6217,40 @@ public class RichTextState internal constructor(
 
             val lastNewParagraph = newParagraphs.last()
 
+            // A code block pasted into ordinary text stays whole: the text is split around it
+            // and never joins its first or last line.
+            val keepsFirstWhole = targetCodeBlock == null &&
+                firstNewParagraph.type is CodeBlock && firstNewParagraph.type != targetParagraphFirstHalf.type
+            val keepsLastWhole = targetCodeBlock == null &&
+                lastNewParagraph.type is CodeBlock && targetParagraphSecondHalf.isNotEmpty()
+            val firstIndex = if (keepsFirstWhole) paragraphIndex + 1 else paragraphIndex
+
             // Before position + First pasted paragraph
-            firstNewParagraph.updateChildrenParagraph(targetParagraphFirstHalf)
-            targetParagraphFirstHalf.children.addAll(firstNewParagraph.children)
-            targetParagraphFirstHalf.removeEmptyChildren()
+            if (keepsFirstWhole) {
+                richParagraphList.add(firstIndex, firstNewParagraph)
+            } else {
+                firstNewParagraph.updateChildrenParagraph(targetParagraphFirstHalf)
+                targetParagraphFirstHalf.children.addAll(firstNewParagraph.children)
+                targetParagraphFirstHalf.removeEmptyChildren()
+            }
 
             // Pasted paragraphs between first and last
             if (newParagraphs.size >= 3) {
                 val middleParagraphs = newParagraphs.subList(1, newParagraphs.size - 1)
-                richParagraphList.addAll(paragraphIndex + 1, middleParagraphs)
+                richParagraphList.addAll(firstIndex + 1, middleParagraphs)
             }
 
             // Last pasted paragraph + After position
-            targetParagraphSecondHalf.updateChildrenParagraph(lastNewParagraph)
-            lastNewParagraph.children.addAll(targetParagraphSecondHalf.children)
-            lastNewParagraph.removeEmptyChildren()
-            richParagraphList.add(paragraphIndex + newParagraphs.size - 1, lastNewParagraph)
+            val lastIndex = firstIndex + newParagraphs.size - 1
+            if (keepsLastWhole) {
+                richParagraphList.add(lastIndex, lastNewParagraph)
+                richParagraphList.add(lastIndex + 1, targetParagraphSecondHalf)
+            } else {
+                targetParagraphSecondHalf.updateChildrenParagraph(lastNewParagraph)
+                lastNewParagraph.children.addAll(targetParagraphSecondHalf.children)
+                lastNewParagraph.removeEmptyChildren()
+                richParagraphList.add(lastIndex, lastNewParagraph)
+            }
         }
 
         // Update the state

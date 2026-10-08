@@ -43,6 +43,15 @@ internal fun codeBlockOf(language: String?, lines: List<String>): List<RichParag
         }
     }
 
+/** These paragraphs as plain lines continuing the code block [type] is a line of. */
+@OptIn(ExperimentalRichTextApi::class)
+internal fun List<RichParagraph>.asCodeLinesOf(type: CodeBlock): List<RichParagraph> =
+    map { source ->
+        RichParagraph(type = CodeBlock(language = type.language, isBlockStart = false)).also { paragraph ->
+            paragraph.children.add(RichSpan(paragraph = paragraph, text = source.plainText()))
+        }
+    }
+
 /** The style every character of this paragraph starts from. */
 @OptIn(ExperimentalRichTextApi::class)
 internal fun RichParagraph.baseSpanStyle(config: RichTextConfig): SpanStyle =

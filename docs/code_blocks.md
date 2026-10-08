@@ -80,6 +80,37 @@ formatted or not, becomes plain lines of that block.
 Typing shortcuts (`**bold**`, `__bold__`, `` `code` `` and the others) do nothing inside a code
 block, where those marks are code.
 
+### Copy button
+
+A read-only `RichText` can show a copy button at the top end corner of each code block. It copies
+the block's code exactly, line ends and indentation included:
+
+```kotlin
+RichText(
+    state = state,
+    modifier = Modifier.fillMaxWidth(),
+    showCodeBlockCopyButton = true,
+)
+```
+
+The Material and Material3 `RichText` both have the option, and it is off by default. For a
+button of your own, or any other action, `BasicRichText` takes a slot that is given the code and
+the language of each block:
+
+```kotlin
+BasicRichText(
+    state = state,
+    modifier = Modifier.fillMaxWidth(),
+    codeBlockAction = { code, language ->
+        MyCopyButton(onClick = { copyToClipboard(code) })
+    },
+)
+```
+
+The action is drawn over the corner of the block and takes no room of its own, so keep it about
+one line tall: on a block with a long first line it covers the end of that line. The editors do
+not have this option.
+
 ### Customizing
 
 | Property on `RichTextState.config` | Type | Default | Description |

@@ -2,6 +2,7 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.highlight.CodeBlockColors
@@ -10,6 +11,7 @@ import com.mohamedrejeb.richeditor.highlight.CodeLanguage
 import com.mohamedrejeb.richeditor.highlight.CodeToken
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.codeBlockGroups
+import com.mohamedrejeb.richeditor.paragraph.plainText
 import com.mohamedrejeb.richeditor.paragraph.type.CodeBlock
 
 /**
@@ -21,7 +23,23 @@ internal data class RenderedCodeBlock(
     val range: TextRange,
     val lastLineOffset: Int,
     val styles: List<AnnotatedString.Range<SpanStyle>>,
+    val code: String,
+    val language: String?,
 )
+
+/**
+ * The first and last line of [block] in this layout, or null when none of it was laid out.
+ * maxLines and overflow stop a layout early, and asking it for a line past that point throws.
+ */
+internal fun TextLayoutResult.linesOf(block: RenderedCodeBlock): IntRange? {
+    val textLength = layoutInput.text.length
+    if (textLength == 0 || lineCount == 0) return null
+    val laidOutEnd = getLineEnd(lineCount - 1)
+    val lastOffset = if (laidOutEnd < textLength) laidOutEnd - 1 else laidOutEnd
+    if (block.range.min > lastOffset) return null
+    return getLineForOffset(block.range.min.coerceIn(0, lastOffset))..
+        getLineForOffset(block.lastLineOffset.coerceIn(0, lastOffset))
+}
 
 /**
  * Tokens of the blocks rendered last, so a rebuild that leaves a block's text alone (typing
@@ -77,6 +95,8 @@ internal fun renderCodeBlocks(
             styles = cache.tokens(chars.concatToString(), language).map { token ->
                 AnnotatedString.Range(colors.styleOf(token.kind), start + token.start, start + token.end)
             },
+            code = group.joinToString("\n") { paragraphs[it].plainText() },
+            language = language,
         )
     }
     cache.keepOnlyUsed()

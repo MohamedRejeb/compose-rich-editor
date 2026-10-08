@@ -12,6 +12,7 @@ import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.isForModelText
+import com.mohamedrejeb.richeditor.model.linesOf
 import androidx.compose.ui.util.fastForEach
 
 @OptIn(ExperimentalRichTextApi::class)
@@ -42,26 +43,14 @@ internal fun Modifier.drawRichSpanStyle(
 
             translate(top = -richTextState.scrollState.value.toFloat()) {
                 richTextState.textLayoutResult?.let { textLayoutResult ->
-                    val textLength = textLayoutResult.layoutInput.text.length
-                    if (
-                        textLength > 0 &&
-                        textLayoutResult.lineCount > 0 &&
-                        textLayoutResult.isForModelText(richTextState.annotatedString.length)
-                    ) {
-                        // maxLines and overflow stop the layout early, and asking it for a line
-                        // past what it laid out throws.
-                        val laidOutEnd = textLayoutResult.getLineEnd(textLayoutResult.lineCount - 1)
-                        val isCutOff = laidOutEnd < textLength
-                        val lastOffset = if (isCutOff) laidOutEnd - 1 else laidOutEnd
+                    if (textLayoutResult.isForModelText(richTextState.annotatedString.length)) {
                         richTextState.renderedCodeBlocks.fastForEach { block ->
-                            if (block.range.min > lastOffset) return@fastForEach
-                            val firstLine = textLayoutResult.getLineForOffset(block.range.min.coerceIn(0, lastOffset))
-                            val lastLine = textLayoutResult.getLineForOffset(block.lastLineOffset.coerceIn(0, lastOffset))
-                            val top = textLayoutResult.getLineTop(firstLine)
+                            val lines = textLayoutResult.linesOf(block) ?: return@fastForEach
+                            val top = textLayoutResult.getLineTop(lines.first)
                             drawRoundRect(
                                 color = richTextState.config.codeBlockBackgroundColor,
                                 topLeft = Offset(0f, top + topPadding),
-                                size = Size(size.width, textLayoutResult.getLineBottom(lastLine) - top),
+                                size = Size(size.width, textLayoutResult.getLineBottom(lines.last) - top),
                                 cornerRadius = CornerRadius(CodeBlockCornerRadius.toPx()),
                             )
                         }

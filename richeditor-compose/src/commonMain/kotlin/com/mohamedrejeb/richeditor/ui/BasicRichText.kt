@@ -51,6 +51,7 @@ public fun BasicRichText(
     imageLoader: ImageLoader = LocalImageLoader.current,
     onTokenClick: TokenClickHandler? = null,
     onTokenHover: TokenHoverHandler? = null,
+    codeBlockAction: (@Composable (code: String, language: String?) -> Unit)? = null,
 ) {
     val density = LocalDensity.current
     val uriHandler = LocalUriHandler.current
@@ -68,88 +69,90 @@ public fun BasicRichText(
         state.annotatedString.withCodeBlockStyles(state.renderedCodeBlocks).withHighlights(state.highlights)
     }
 
-    CompositionLocalProvider(
-        LocalImageLoader provides imageLoader,
-        LocalRichTextMaxImageWidthProvider provides maxImageWidthProvider,
-    ) {
-        BasicText(
-            text = text,
-            modifier = modifier
-                .drawRichSpanStyle(state)
-                .pointerHoverIcon(pointerIcon.value)
-                .pointerInput(state, effectiveTokenClick != null, effectiveTokenHover) {
-                    var lastHoveredToken: RichSpanStyle.Token? = null
-                    try {
-                        awaitEachGesture {
-                            val event = awaitPointerEvent()
-                            val position = event.changes.first().position
-                            val exited = event.type == PointerEventType.Exit
+    CodeBlockActionLayout(state = state, modifier = modifier, action = codeBlockAction) { textModifier ->
+        CompositionLocalProvider(
+            LocalImageLoader provides imageLoader,
+            LocalRichTextMaxImageWidthProvider provides maxImageWidthProvider,
+        ) {
+            BasicText(
+                text = text,
+                modifier = textModifier
+                    .drawRichSpanStyle(state)
+                    .pointerHoverIcon(pointerIcon.value)
+                    .pointerInput(state, effectiveTokenClick != null, effectiveTokenHover) {
+                        var lastHoveredToken: RichSpanStyle.Token? = null
+                        try {
+                            awaitEachGesture {
+                                val event = awaitPointerEvent()
+                                val position = event.changes.first().position
+                                val exited = event.type == PointerEventType.Exit
 
-                            val tokenUnderPointer =
-                                if (exited) null else state.getTokenByOffset(position)
-                            val isInteractive = !exited && (
-                                state.isLink(position) ||
-                                    (effectiveTokenClick != null && tokenUnderPointer != null)
-                                )
+                                val tokenUnderPointer =
+                                    if (exited) null else state.getTokenByOffset(position)
+                                val isInteractive = !exited && (
+                                    state.isLink(position) ||
+                                        (effectiveTokenClick != null && tokenUnderPointer != null)
+                                    )
 
-                            pointerIcon.value =
-                                if (isInteractive)
-                                    PointerIcon.Hand
-                                else
-                                    PointerIcon.Default
+                                pointerIcon.value =
+                                    if (isInteractive)
+                                        PointerIcon.Hand
+                                    else
+                                        PointerIcon.Default
 
-                            if (effectiveTokenHover != null && tokenUnderPointer != lastHoveredToken) {
-                                lastHoveredToken = tokenUnderPointer
-                                effectiveTokenHover.invoke(tokenUnderPointer, position)
-                            }
-                        }
-                    } catch (_: Exception) {
-
-                    }
-                }
-                .pointerInput(state, effectiveTokenClick) {
-                    detectTapGestures(
-                        onTap = { offset ->
-                            val token = state.getTokenByOffset(offset)
-                            if (token != null && effectiveTokenClick != null) {
-                                effectiveTokenClick.invoke(token, offset)
-                                return@detectTapGestures
-                            }
-                            state.getLinkByOffset(offset)?.let { url ->
-                                try {
-                                    uriHandler.openUri(url)
-                                } catch (e: Exception) {
-                                    e.printStackTrace()
+                                if (effectiveTokenHover != null && tokenUnderPointer != lastHoveredToken) {
+                                    lastHoveredToken = tokenUnderPointer
+                                    effectiveTokenHover.invoke(tokenUnderPointer, position)
                                 }
                             }
-                        },
-                        consumeDown = { offset ->
-                            state.isLink(offset) ||
-                                (effectiveTokenClick != null && state.isToken(offset))
-                        },
-                    )
-                }
-                .onSizeChanged { size ->
-                    val newWidth = with(density) { size.width.toSp() }
-                    if (newWidth != maxImageWidthProvider.maxWidth) {
-                        maxImageWidthProvider.maxWidth = newWidth
+                        } catch (_: Exception) {
+
+                        }
                     }
+                    .pointerInput(state, effectiveTokenClick) {
+                        detectTapGestures(
+                            onTap = { offset ->
+                                val token = state.getTokenByOffset(offset)
+                                if (token != null && effectiveTokenClick != null) {
+                                    effectiveTokenClick.invoke(token, offset)
+                                    return@detectTapGestures
+                                }
+                                state.getLinkByOffset(offset)?.let { url ->
+                                    try {
+                                        uriHandler.openUri(url)
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                    }
+                                }
+                            },
+                            consumeDown = { offset ->
+                                state.isLink(offset) ||
+                                    (effectiveTokenClick != null && state.isToken(offset))
+                            },
+                        )
+                    }
+                    .onSizeChanged { size ->
+                        val newWidth = with(density) { size.width.toSp() }
+                        if (newWidth != maxImageWidthProvider.maxWidth) {
+                            maxImageWidthProvider.maxWidth = newWidth
+                        }
+                    },
+                style = style,
+                onTextLayout = {
+                    state.onTextLayout(
+                        textLayoutResult = it,
+                        density = density,
+                    )
+                    onTextLayout(it)
                 },
-            style = style,
-            onTextLayout = {
-                state.onTextLayout(
-                    textLayoutResult = it,
-                    density = density,
-                )
-                onTextLayout(it)
-            },
-            overflow = overflow,
-            softWrap = softWrap,
-            maxLines = maxLines,
-            minLines = minLines,
-            inlineContent = remember(inlineContent, state.inlineContentMap.toMap()) {
-                inlineContent + state.inlineContentMap
-            }
-        )
+                overflow = overflow,
+                softWrap = softWrap,
+                maxLines = maxLines,
+                minLines = minLines,
+                inlineContent = remember(inlineContent, state.inlineContentMap.toMap()) {
+                    inlineContent + state.inlineContentMap
+                }
+            )
+        }
     }
 }

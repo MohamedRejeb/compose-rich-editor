@@ -112,7 +112,7 @@ fun CodeBlocksSampleScreen(navigateBack: () -> Unit) {
         ) {
             Spacer(Modifier.height(8.dp))
 
-            SectionTitle("Markdown with code blocks", "RichText draws fenced code coloured by its language.")
+            SectionTitle("Markdown with code blocks", "RichText draws fenced code coloured by its language, with a copy button on each block.")
             val state = remember(scheme, colors) {
                 RichTextState().apply {
                     config.codeBlockBackgroundColor = scheme.surfaceVariant
@@ -120,7 +120,7 @@ fun CodeBlocksSampleScreen(navigateBack: () -> Unit) {
                     setMarkdown(replyMarkdown)
                 }
             }
-            RichText(state = state, modifier = Modifier.fillMaxWidth())
+            RichText(state = state, modifier = Modifier.fillMaxWidth(), showCodeBlockCopyButton = true)
 
             SectionTitle("Code alone", "BasicCodeText needs no state. A long line scrolls sideways.")
             BasicCodeText(

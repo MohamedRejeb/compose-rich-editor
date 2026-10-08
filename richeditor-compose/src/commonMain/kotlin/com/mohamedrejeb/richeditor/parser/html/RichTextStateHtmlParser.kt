@@ -10,6 +10,7 @@ import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.*
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
+import com.mohamedrejeb.richeditor.paragraph.type.ListStyleTypeKeywords
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
@@ -54,6 +55,8 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         // Tracks the explicit start value per list level (from <ol start="N">).
         // Only set when start != 1. Used to propagate startFrom to the first OrderedList item.
         val orderedListStartValues = mutableMapOf<Int, Int>()
+        // The `list-style-type` keyword of the open list per level, from <ol>/<ul style>.
+        val listStyleKeywords = mutableMapOf<Int, String>()
 
         val handler = KsoupHtmlHandler
             .Builder()
@@ -134,6 +137,9 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                             orderedListStartValues[currentListLevel] = startAttr
                         }
                     }
+                    attributes["style"]
+                        ?.let { CssEncoder.parseCssStyle(it)[ListStyleTypeCssProperty] }
+                        ?.let { listStyleKeywords[currentListLevel] = it }
                     return@onOpenTag
                 }
 
@@ -157,6 +163,9 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     }
                 }
 
+                // Browsers and Google Docs put the list style on the <li> as well as on the list
+                val listStyleKeyword = cssStyleMap[ListStyleTypeCssProperty] ?: listStyleKeywords[currentListLevel]
+
                 // For <li> tags inside <ul> or <ol> tags - reuse blank current paragraph
                 val isFirstLiInBlankParagraph =
                     lastOpenedTag != null &&
@@ -168,7 +177,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     isCurrentRichParagraphBlank
 
                 if (isFirstLiInBlankParagraph) {
-                    val paragraphType = encodeHtmlElementToRichParagraphType(lastOpenedTag!!, currentListLevel, orderedListCounters, orderedListStartValues)
+                    val paragraphType = encodeHtmlElementToRichParagraphType(lastOpenedTag!!, currentListLevel, orderedListCounters, orderedListStartValues, listStyleKeyword)
                     currentRichParagraph.type = paragraphType
 
                     val cssParagraphStyle = CssEncoder.parseCssStyleMapToParagraphStyle(cssStyleMap, attributes)
@@ -193,7 +202,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                         if (isFirstLiInBlankParagraph)
                             currentRichParagraph.type
                         else if (name == "li" && lastOpenedTag != null)
-                            encodeHtmlElementToRichParagraphType(lastOpenedTag, currentListLevel, orderedListCounters, orderedListStartValues)
+                            encodeHtmlElementToRichParagraphType(lastOpenedTag, currentListLevel, orderedListCounters, orderedListStartValues, listStyleKeyword)
                         else
                             DefaultParagraph()
 
@@ -386,6 +395,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                         orderedListCounters.remove(currentListLevel)
                         orderedListStartValues.remove(currentListLevel)
                     }
+                    listStyleKeywords.remove(currentListLevel)
                     currentListLevel = (currentListLevel - 1).coerceAtLeast(0)
                     return@onCloseTag
                 }
@@ -472,7 +482,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
 
         // Open list elements, outermost first. `hasHostItem` records that the list was
         // opened inside a withheld parent <li>, so closing it also closes that item (#736).
-        class OpenList(val tag: String, val hasHostItem: Boolean)
+        class OpenList(val tag: String, val hasHostItem: Boolean, val listStyleKeyword: String?)
 
         val openLists = mutableListOf<OpenList>()
 
@@ -579,19 +589,18 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     val hasHost = inheritedHost
                         ?: (hostItemLevel > 0 && openLists.size == hostItemLevel)
                     inheritedHost = null
-                    val openingLevel = openLists.size + 1
-                    if (
-                        paragraphGroupTagName == "ol" &&
-                        richParagraphType is OrderedList &&
-                        richParagraphType.startFrom > 1 &&
-                        openingLevel == paragraphLevel
-                    ) {
-                        builder.append("<ol start=\"${richParagraphType.startFrom}\">")
+                    val opensParagraphList = openLists.size + 1 == paragraphLevel
+                    val listStyleKeyword =
+                        if (opensParagraphList) ListStyleTypeKeywords.keywordOf(richParagraphType) else null
+                    builder.append("<$paragraphGroupTagName")
+                    if (opensParagraphList && richParagraphType is OrderedList && richParagraphType.startFrom > 1) {
+                        builder.append(" start=\"${richParagraphType.startFrom}\"")
                         startWrittenOnList = true
-                    } else {
-                        builder.append("<$paragraphGroupTagName>")
                     }
-                    openLists.add(OpenList(paragraphGroupTagName, hasHost))
+                    if (listStyleKeyword != null)
+                        builder.append(" style=\"$ListStyleTypeCssProperty: $listStyleKeyword;\"")
+                    builder.append(">")
+                    openLists.add(OpenList(paragraphGroupTagName, hasHost, listStyleKeyword))
                 }
                 hostItemLevel = 0
             } else {
@@ -612,7 +621,15 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 else
                     richParagraph.paragraphStyle.diff(headingStyle.defaultParagraphStyle)
 
-            val paragraphCssMap = CssDecoder.decodeParagraphStyleToCssStyleMap(effectiveParagraphStyle)
+            val paragraphStyleCssMap = CssDecoder.decodeParagraphStyleToCssStyleMap(effectiveParagraphStyle)
+            // An item whose style type differs from its list's carries it on the <li>
+            val itemListStyleKeyword = ListStyleTypeKeywords.keywordOf(richParagraphType)
+                ?.takeIf { isParagraphList && it != openLists.lastOrNull()?.listStyleKeyword }
+            val paragraphCssMap =
+                if (itemListStyleKeyword != null)
+                    paragraphStyleCssMap + (ListStyleTypeCssProperty to itemListStyleKeyword)
+                else
+                    paragraphStyleCssMap
             val paragraphCss = CssDecoder.decodeCssStyleMap(paragraphCssMap)
 
             // Append paragraph opening tag
@@ -898,9 +915,13 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         listLevel: Int,
         orderedListCounters: MutableMap<Int, Int>,
         orderedListStartValues: MutableMap<Int, Int>,
+        listStyleKeyword: String?,
     ): ParagraphType {
         return when (tagName) {
-            "ul" -> UnorderedList(initialLevel = listLevel)
+            "ul" -> UnorderedList(
+                initialLevel = listLevel,
+                styleTypeOverride = ListStyleTypeKeywords.unorderedFromKeyword(listStyleKeyword),
+            )
             "ol" -> {
                 val number = orderedListCounters[listLevel] ?: 1
                 orderedListCounters[listLevel] = number + 1
@@ -910,6 +931,7 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     number = number,
                     initialLevel = listLevel,
                     startFrom = startFrom,
+                    styleTypeOverride = ListStyleTypeKeywords.orderedFromKeyword(listStyleKeyword),
                 )
             }
             else -> DefaultParagraph()

@@ -123,6 +123,20 @@ HeadingStyle.H3.markdownPrefix   // "### "
 HeadingStyle.H3.htmlTag          // "h3"
 ```
 
+## Typing shortcut
+
+With `headingTypingShortcutsEnabled`, typing `# ` to `###### ` at the start of a paragraph
+sets heading level 1 to 6 and removes the marker, as in Notion and Google Docs. The
+shortcut is off by default:
+
+```kotlin
+richTextState.config.headingTypingShortcutsEnabled = true
+```
+
+The marker only counts at the very start of a paragraph, followed by a space. A marker typed
+in a list item stays as text, and so does one when headings are left out of `config.features`
+(see [Editor features](features.md)). One undo restores the typed marker.
+
 ## Pressing Enter in a heading
 
 Splitting a heading follows the same rules as Google Docs, Word and Notion:

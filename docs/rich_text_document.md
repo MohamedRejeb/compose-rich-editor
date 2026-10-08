@@ -29,7 +29,7 @@ A document is a list of blocks, one per paragraph:
 | `RichTextBlock` field | Type | Meaning |
 |---|---|---|
 | `text` | `String` | Flattened paragraph text. List prefixes are excluded. Each inline image occupies one U+FFFC placeholder character. |
-| `type` | `RichTextBlockType` | `Paragraph` or `ListItem(ordered, indent, startNumber)` |
+| `type` | `RichTextBlockType` | `Paragraph` or `ListItem(ordered, indent, startNumber, listStyleType)` |
 | `spans` | `List<RichTextSpanMark>` | Styling marks over inclusive character ranges of `text` |
 | `headingLevel` | `Int` | 0 for normal text, 1 to 6 for headings |
 | `textAlign` | `TextAlign` | Paragraph alignment, `Unspecified` when not set |
@@ -131,7 +131,7 @@ LaunchedEffect(state) {
 ## Limitations
 
 - `RichTextConfig` (link color, list markers, indent widths, and so on) is presentation, not content, and is not part of the document.
-- Ordered and unordered list marker styles are config-level and not captured; only `ordered`, `indent`, and `startNumber` are.
+- The config's list marker styles are not captured. A list with a style type of its own is: `listStyleType` holds its CSS `list-style-type` keyword (`lower-alpha`, `square`, ...), or `null` when the list follows the config. Custom style types have no keyword and are not captured either. See [Per-List Style Types](ordered_unordered_lists.md#per-list-style-types).
 - Inline images whose `model` is not a `String` cannot be represented and are dropped from the snapshot.
 - `Unknown` marks are not applied to a `RichTextState` when a document is loaded, so loading and re-saving JSON through the editor drops them (see the JSON docs).
 - `Custom` marks serialize only when a descriptor is registered on the state's `spanStyleRegistry`; without one the JSON and HTML codecs skip them. See [Custom span styles](custom_span_styles.md).

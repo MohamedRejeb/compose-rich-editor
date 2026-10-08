@@ -58,6 +58,7 @@ Block fields:
 | `type` | always | `paragraph`, `heading`, or `list-item` |
 | `level` | headings | Heading level 1 to 6 |
 | `ordered`, `indent`, `start` | list items | Ordered flag, 0-based nesting, numbering restart |
+| `listStyle` | list items with a style of their own | CSS `list-style-type` keyword of the item's list (`lower-alpha`, `square`, ...) |
 | `align`, `dir`, `lineHeight`, `textIndent` | when set | Paragraph style |
 | `br` | line-break paragraphs | Paragraph created by `<br>` |
 | `text`, `spans` | always | Content and styling marks |

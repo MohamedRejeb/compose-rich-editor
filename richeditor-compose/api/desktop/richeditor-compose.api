@@ -38,15 +38,17 @@ public abstract interface class com/mohamedrejeb/richeditor/document/RichTextBlo
 
 public final class com/mohamedrejeb/richeditor/document/RichTextBlockType$ListItem : com/mohamedrejeb/richeditor/document/RichTextBlockType {
 	public static final field $stable I
-	public fun <init> (ZILjava/lang/Integer;)V
-	public synthetic fun <init> (ZILjava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ZILjava/lang/Integer;Ljava/lang/String;)V
+	public synthetic fun <init> (ZILjava/lang/Integer;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Z
 	public final fun component2 ()I
 	public final fun component3 ()Ljava/lang/Integer;
-	public final fun copy (ZILjava/lang/Integer;)Lcom/mohamedrejeb/richeditor/document/RichTextBlockType$ListItem;
-	public static synthetic fun copy$default (Lcom/mohamedrejeb/richeditor/document/RichTextBlockType$ListItem;ZILjava/lang/Integer;ILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextBlockType$ListItem;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (ZILjava/lang/Integer;Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/document/RichTextBlockType$ListItem;
+	public static synthetic fun copy$default (Lcom/mohamedrejeb/richeditor/document/RichTextBlockType$ListItem;ZILjava/lang/Integer;Ljava/lang/String;ILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/document/RichTextBlockType$ListItem;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getIndent ()I
+	public final fun getListStyleType ()Ljava/lang/String;
 	public final fun getOrdered ()Z
 	public final fun getStartNumber ()Ljava/lang/Integer;
 	public fun hashCode ()I
@@ -490,6 +492,7 @@ public final class com/mohamedrejeb/richeditor/model/RichSpanStyleRegistry$Compa
 
 public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public static final field $stable I
+	public final fun getAutoLinkEnabled ()Z
 	public final fun getCodeSpanBackgroundColor-0d7_KjU ()J
 	public final fun getCodeSpanColor-0d7_KjU ()J
 	public final fun getCodeSpanCornerRadius-XSAIIZE ()J
@@ -498,7 +501,8 @@ public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public final fun getCodeSpanStrokeWidth-XSAIIZE ()J
 	public final fun getExitListOnEmptyItem ()Z
 	public final fun getFeatures ()Ljava/util/Set;
-	public final fun getHeadingTextStyles ()Ljava/util/Map;
+	public final fun getHeadingTypingShortcutsEnabled ()Z
+	public final fun getInlineTypingShortcutsEnabled ()Z
 	public final fun getLinkColor-0d7_KjU ()J
 	public final fun getLinkTextDecoration ()Landroidx/compose/ui/text/style/TextDecoration;
 	public final fun getListIndent ()I
@@ -513,6 +517,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public final fun getRichClipboardEnabled ()Z
 	public final fun getUnorderedListIndent ()I
 	public final fun getUnorderedListStyleType ()Lcom/mohamedrejeb/richeditor/paragraph/type/UnorderedListStyleType;
+	public final fun setAutoLinkEnabled (Z)V
 	public final fun setCodeSpanBackgroundColor-8_81llA (J)V
 	public final fun setCodeSpanColor-8_81llA (J)V
 	public final fun setCodeSpanCornerRadius--R2X_6o (J)V
@@ -521,7 +526,8 @@ public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public final fun setCodeSpanStrokeWidth--R2X_6o (J)V
 	public final fun setExitListOnEmptyItem (Z)V
 	public final fun setFeatures (Ljava/util/Set;)V
-	public final fun setHeadingTextStyles (Ljava/util/Map;)V
+	public final fun setHeadingTypingShortcutsEnabled (Z)V
+	public final fun setInlineTypingShortcutsEnabled (Z)V
 	public final fun setLinkColor-8_81llA (J)V
 	public final fun setLinkTextDecoration (Landroidx/compose/ui/text/style/TextDecoration;)V
 	public final fun setListIndent (I)V
@@ -577,6 +583,16 @@ public final class com/mohamedrejeb/richeditor/model/RichTextFormat : java/lang/
 	public static fun values ()[Lcom/mohamedrejeb/richeditor/model/RichTextFormat;
 }
 
+public final class com/mohamedrejeb/richeditor/model/RichTextHighlight {
+	public static final field $stable I
+	public synthetic fun <init> (JLandroidx/compose/ui/text/SpanStyle;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRange-d9O1mEE ()J
+	public final fun getStyle ()Landroidx/compose/ui/text/SpanStyle;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public static final field $stable I
 	public static final field Companion Lcom/mohamedrejeb/richeditor/model/RichTextState$Companion;
@@ -611,9 +627,12 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun getComposition-MzsxiRA ()Landroidx/compose/ui/text/TextRange;
 	public final fun getConfig ()Lcom/mohamedrejeb/richeditor/model/RichTextConfig;
 	public final fun getCurrentHeadingStyle ()Lcom/mohamedrejeb/richeditor/model/HeadingStyle;
+	public final fun getCurrentOrderedListStyleType ()Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType;
 	public final fun getCurrentParagraphStyle ()Landroidx/compose/ui/text/ParagraphStyle;
 	public final fun getCurrentRichSpanStyle ()Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;
 	public final fun getCurrentSpanStyle ()Landroidx/compose/ui/text/SpanStyle;
+	public final fun getCurrentUnorderedListStyleType ()Lcom/mohamedrejeb/richeditor/paragraph/type/UnorderedListStyleType;
+	public final fun getHighlights ()Ljava/util/List;
 	public final fun getHistory ()Lcom/mohamedrejeb/richeditor/model/history/RichTextHistory;
 	public final fun getParagraphStyle-5zc-tL8 (J)Landroidx/compose/ui/text/ParagraphStyle;
 	public final fun getRichSpanStyle-5zc-tL8 (J)Lcom/mohamedrejeb/richeditor/model/RichSpanStyle;
@@ -655,16 +674,20 @@ public final class com/mohamedrejeb/richeditor/model/RichTextState {
 	public final fun removeUnorderedList ()V
 	public final fun replaceSelectedText (Ljava/lang/String;)V
 	public final fun replaceTextRange-72CqOWE (JLjava/lang/String;)V
+	public final fun setAnnotatedString (Landroidx/compose/ui/text/AnnotatedString;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public final fun setConfig-kmsmbh4 (JLandroidx/compose/ui/text/style/TextDecoration;JJJI)V
 	public static synthetic fun setConfig-kmsmbh4$default (Lcom/mohamedrejeb/richeditor/model/RichTextState;JLandroidx/compose/ui/text/style/TextDecoration;JJJIILjava/lang/Object;)V
 	public final fun setHeadingStyle (Lcom/mohamedrejeb/richeditor/model/HeadingStyle;)V
+	public final fun setHighlights (Ljava/util/List;)V
 	public final fun setHtml (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public final fun setMarkdown (Ljava/lang/String;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
+	public final fun setOrderedListStyleType (Lcom/mohamedrejeb/richeditor/paragraph/type/OrderedListStyleType;)V
 	public final fun setRichTextDocument-psREZIo (Lcom/mohamedrejeb/richeditor/document/RichTextDocument;Landroidx/compose/ui/text/TextRange;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public static synthetic fun setRichTextDocument-psREZIo$default (Lcom/mohamedrejeb/richeditor/model/RichTextState;Lcom/mohamedrejeb/richeditor/document/RichTextDocument;Landroidx/compose/ui/text/TextRange;ILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public final fun setSelection-5zc-tL8 (J)V
 	public final fun setText-FDrldGo (Ljava/lang/String;J)Lcom/mohamedrejeb/richeditor/model/RichTextState;
 	public static synthetic fun setText-FDrldGo$default (Lcom/mohamedrejeb/richeditor/model/RichTextState;Ljava/lang/String;JILjava/lang/Object;)Lcom/mohamedrejeb/richeditor/model/RichTextState;
+	public final fun setUnorderedListStyleType (Lcom/mohamedrejeb/richeditor/paragraph/type/UnorderedListStyleType;)V
 	public final fun toHtml ()Ljava/lang/String;
 	public final fun toHtml-5zc-tL8 (J)Ljava/lang/String;
 	public final fun toMarkdown ()Ljava/lang/String;

@@ -63,6 +63,8 @@ import com.mohamedrejeb.richeditor.ui.BasicRichText
  * text, baselines and other details. The callback can be used to add additional decoration or
  * functionality to the text. For example, to draw selection around the text.
  * @param style style configuration for the text such as color, font, line height etc.
+ * @param codeBlockAction drawn over the top end corner of each code block and given its code and
+ * language, for example a `CodeBlockCopyButton`. Null draws nothing.
  */
 @OptIn(ExperimentalRichTextApi::class)
 @Composable
@@ -88,6 +90,7 @@ public fun RichText(
     imageLoader: ImageLoader = LocalImageLoader.current,
     onTokenClick: TokenClickHandler? = null,
     onTokenHover: TokenHoverHandler? = null,
+    codeBlockAction: (@Composable (code: String, language: String?) -> Unit)? = null,
 ) {
     val textColor = color.takeOrElse {
         style.color.takeOrElse {
@@ -122,5 +125,6 @@ public fun RichText(
         imageLoader = imageLoader,
         onTokenClick = onTokenClick,
         onTokenHover = onTokenHover,
+        codeBlockAction = codeBlockAction,
     )
 }

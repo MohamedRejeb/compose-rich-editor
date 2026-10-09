@@ -46,6 +46,9 @@ import com.mohamedrejeb.richeditor.model.trigger.Trigger
 import com.mohamedrejeb.richeditor.model.trigger.TriggerQuery
 import com.mohamedrejeb.richeditor.model.trigger.detectActiveTrigger
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
+import com.mohamedrejeb.richeditor.paragraph.asCodeLinesOf
+import com.mohamedrejeb.richeditor.paragraph.baseSpanStyle
+import com.mohamedrejeb.richeditor.paragraph.codeBlockEdgeStyle
 import com.mohamedrejeb.richeditor.paragraph.type.*
 import com.mohamedrejeb.richeditor.platform.currentPlatform
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startText
@@ -372,6 +375,16 @@ public class RichTextState internal constructor(
      */
     public var annotatedString: AnnotatedString by mutableStateOf(AnnotatedString(text = ""))
         private set
+
+    private val codeBlockTokenCache = CodeBlockTokenCache()
+
+    /** The code blocks as located in [annotatedString], with their token styles. Not part of the document. */
+    internal var renderedCodeBlocks: List<RenderedCodeBlock> by mutableStateOf(emptyList())
+        private set
+
+    private fun updateRenderedCodeBlocks() {
+        renderedCodeBlocks = renderCodeBlocks(richParagraphList, annotatedString, config.codeBlockColors, codeBlockTokenCache)
+    }
 
     private var highlightsState: List<RichTextHighlight> by mutableStateOf(emptyList())
 
@@ -3379,14 +3392,16 @@ public class RichTextState internal constructor(
      * [RichTextConfig.headingTextStyles] takes the paragraph part of that style underneath
      * its own, so an alignment set on the heading itself still wins.
      */
-    private fun renderedParagraphStyle(richParagraph: RichParagraph): ParagraphStyle {
+    private fun renderedParagraphStyle(richParagraph: RichParagraph, index: Int): ParagraphStyle {
         val headingTextStyle = config.headingTextStyleFor(richParagraph.headingStyle)
         val paragraphStyle =
             if (headingTextStyle == null)
                 richParagraph.paragraphStyle
             else
                 headingTextStyle.toParagraphStyle().merge(richParagraph.paragraphStyle)
-        return paragraphStyle.merge(richParagraph.type.getStyle(config))
+        return paragraphStyle
+            .merge(richParagraph.type.getStyle(config))
+            .merge(richParagraphList.codeBlockEdgeStyle(index))
     }
 
     private inner class HistoryHostImpl : RichTextHistoryHost {
@@ -3587,7 +3602,7 @@ public class RichTextState internal constructor(
                 }
 
                 val headingSpanStyle = config.headingSpanStyleFor(richParagraph.headingStyle)
-                withStyle(renderedParagraphStyle(richParagraph)) {
+                withStyle(renderedParagraphStyle(richParagraph, i)) {
                     withStyle(
                         richParagraph.getListMarkerSpanStyle(
                             config.listMarkerStyleBehavior,
@@ -3601,7 +3616,7 @@ public class RichTextState internal constructor(
                     richParagraph.type.startRichSpan.textRange =
                         TextRange(index, index + richParagraphStartTextLength)
                     index += richParagraphStartTextLength
-                    withStyle(headingSpanStyle ?: RichSpanStyle.DefaultSpanStyle) {
+                    withStyle(headingSpanStyle ?: richParagraph.baseSpanStyle(config)) {
                         index = append(
                             state = this@RichTextState,
                             richSpanList = richParagraph.children,
@@ -3644,6 +3659,7 @@ public class RichTextState internal constructor(
         )
         setTextFieldStateFromValue(text = annotatedString.text, selection = clampedSelection)
         styledRichSpanList.addAll(newStyledRichSpanList)
+        updateRenderedCodeBlocks()
     }
 
     /**
@@ -6181,8 +6197,6 @@ public class RichTextState internal constructor(
                 p.children.add(RichSpan(paragraph = p))
         }
 
-        val firstNewParagraph = newParagraphs.first()
-
         val richSpan = getRichSpanByTextIndex(
             textIndex = position - 1,
             ignoreCustomFiltering = true,
@@ -6191,6 +6205,11 @@ public class RichTextState internal constructor(
 
         val targetParagraph = richSpan.paragraph
         val paragraphIndex = richParagraphList.indexOf(targetParagraph)
+
+        // Whatever lands inside a code block becomes plain lines of that block.
+        val targetCodeBlock = targetParagraph.type as? CodeBlock
+        val newParagraphs = if (targetCodeBlock == null) newParagraphs else newParagraphs.asCodeLinesOf(targetCodeBlock)
+        val firstNewParagraph = newParagraphs.first()
 
         val sliceIndex = max(position, richSpan.textRange.min)
 
@@ -6201,7 +6220,11 @@ public class RichTextState internal constructor(
             removeSliceIndex = false,
         )
 
-        if (targetParagraphFirstHalf.isEmpty() && firstNewParagraph.isNotEmpty()) {
+        if (
+            targetCodeBlock == null &&
+            targetParagraphFirstHalf.isEmpty() &&
+            (firstNewParagraph.isNotEmpty() || firstNewParagraph.type is CodeBlock)
+        ) {
             targetParagraphFirstHalf.paragraphStyle = firstNewParagraph.paragraphStyle
             targetParagraphFirstHalf.type = firstNewParagraph.type
         }
@@ -6221,22 +6244,40 @@ public class RichTextState internal constructor(
 
             val lastNewParagraph = newParagraphs.last()
 
+            // A code block pasted into ordinary text stays whole: the text is split around it
+            // and never joins its first or last line.
+            val keepsFirstWhole = targetCodeBlock == null &&
+                firstNewParagraph.type is CodeBlock && firstNewParagraph.type != targetParagraphFirstHalf.type
+            val keepsLastWhole = targetCodeBlock == null &&
+                lastNewParagraph.type is CodeBlock && targetParagraphSecondHalf.isNotEmpty()
+            val firstIndex = if (keepsFirstWhole) paragraphIndex + 1 else paragraphIndex
+
             // Before position + First pasted paragraph
-            firstNewParagraph.updateChildrenParagraph(targetParagraphFirstHalf)
-            targetParagraphFirstHalf.children.addAll(firstNewParagraph.children)
-            targetParagraphFirstHalf.removeEmptyChildren()
+            if (keepsFirstWhole) {
+                richParagraphList.add(firstIndex, firstNewParagraph)
+            } else {
+                firstNewParagraph.updateChildrenParagraph(targetParagraphFirstHalf)
+                targetParagraphFirstHalf.children.addAll(firstNewParagraph.children)
+                targetParagraphFirstHalf.removeEmptyChildren()
+            }
 
             // Pasted paragraphs between first and last
             if (newParagraphs.size >= 3) {
                 val middleParagraphs = newParagraphs.subList(1, newParagraphs.size - 1)
-                richParagraphList.addAll(paragraphIndex + 1, middleParagraphs)
+                richParagraphList.addAll(firstIndex + 1, middleParagraphs)
             }
 
             // Last pasted paragraph + After position
-            targetParagraphSecondHalf.updateChildrenParagraph(lastNewParagraph)
-            lastNewParagraph.children.addAll(targetParagraphSecondHalf.children)
-            lastNewParagraph.removeEmptyChildren()
-            richParagraphList.add(paragraphIndex + newParagraphs.size - 1, lastNewParagraph)
+            val lastIndex = firstIndex + newParagraphs.size - 1
+            if (keepsLastWhole) {
+                richParagraphList.add(lastIndex, lastNewParagraph)
+                richParagraphList.add(lastIndex + 1, targetParagraphSecondHalf)
+            } else {
+                targetParagraphSecondHalf.updateChildrenParagraph(lastNewParagraph)
+                lastNewParagraph.children.addAll(targetParagraphSecondHalf.children)
+                lastNewParagraph.removeEmptyChildren()
+                richParagraphList.add(lastIndex, lastNewParagraph)
+            }
         }
 
         // Update the state
@@ -6294,7 +6335,7 @@ public class RichTextState internal constructor(
             var index = 0
             richParagraphList.fastForEachIndexed { i, richParagraph ->
                 val headingSpanStyle = config.headingSpanStyleFor(richParagraph.headingStyle)
-                withStyle(renderedParagraphStyle(richParagraph)) {
+                withStyle(renderedParagraphStyle(richParagraph, i)) {
                     withStyle(
                         richParagraph.getListMarkerSpanStyle(
                             config.listMarkerStyleBehavior,
@@ -6309,7 +6350,7 @@ public class RichTextState internal constructor(
                     richParagraph.type.startRichSpan.textRange =
                         TextRange(index, index + richParagraphStartTextLength)
                     index += richParagraphStartTextLength
-                    withStyle(headingSpanStyle ?: RichSpanStyle.DefaultSpanStyle) {
+                    withStyle(headingSpanStyle ?: richParagraph.baseSpanStyle(config)) {
                         index = append(
                             state = this@RichTextState,
                             richSpanList = richParagraph.children,
@@ -6352,6 +6393,7 @@ public class RichTextState internal constructor(
         styledRichSpanList.clear()
         setTextFieldStateFromValue(text = annotatedString.text, selection = selection)
         styledRichSpanList.addAll(newStyledRichSpanList)
+        updateRenderedCodeBlocks()
 
         // Clear un-applied styles
         toAddSpanStyle = SpanStyle()

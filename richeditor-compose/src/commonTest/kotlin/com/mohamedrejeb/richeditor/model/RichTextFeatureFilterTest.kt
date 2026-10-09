@@ -95,6 +95,23 @@ class RichTextFeatureFilterTest {
     }
 
     @Test
+    fun `disallowed code blocks flatten to paragraphs and keep their text`() {
+        val document = doc(
+            RichTextBlock("val a", type = RichTextBlockType.CodeBlock("kotlin", isBlockStart = true)),
+            RichTextBlock("", type = RichTextBlockType.CodeBlock("kotlin", isBlockStart = false)),
+        )
+
+        assertEquals(
+            doc(RichTextBlock("val a"), RichTextBlock("")),
+            document.restrictedTo(RichTextFeature.All - RichTextFeature.CodeBlock),
+        )
+        assertEquals(
+            document,
+            document.restrictedTo(RichTextFeature.All - RichTextFeature.Bold),
+        )
+    }
+
+    @Test
     fun `disallowed lists flatten to paragraphs and keep their text`() {
         val document = doc(
             RichTextBlock("a", type = RichTextBlockType.ListItem(ordered = true, indent = 1, startNumber = 3)),

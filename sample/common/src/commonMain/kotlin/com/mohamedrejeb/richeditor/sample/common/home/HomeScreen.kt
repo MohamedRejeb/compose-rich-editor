@@ -22,6 +22,7 @@ import androidx.compose.material.icons.outlined.AlternateEmail
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.DataObject
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Link
@@ -66,6 +67,7 @@ fun HomeScreen(
     navigateToClaude: () -> Unit,
     navigateToExpandable: () -> Unit,
     navigateToEditorLab: () -> Unit,
+    navigateToCodeBlocks: () -> Unit,
 ) {
     SampleScaffold(
         title = "Compose Rich Editor",
@@ -236,6 +238,16 @@ fun HomeScreen(
                     icon = Icons.Outlined.UnfoldMore,
                     accent = SampleAccents.Teal,
                     onClick = navigateToExpandable,
+                )
+            }
+
+            item {
+                FeatureCard(
+                    title = "Code blocks",
+                    description = "Fenced code coloured by language, code on its own with BasicCodeText, and a diff view built on the tokenizer.",
+                    icon = Icons.Outlined.DataObject,
+                    accent = SampleAccents.Violet,
+                    onClick = navigateToCodeBlocks,
                 )
             }
 

@@ -55,6 +55,7 @@ The following Markdown syntax elements are supported:
 - `*text*` or `_text_` - Italic text
 - `~~text~~` - Strikethrough text
 - `` `code` `` - Code spans
+- Fenced code with a language after the opening fence - Code blocks (see [Code Blocks](code_blocks.md))
 
 ### Headings
 - `# Title` through `###### Title` - ATX headings H1..H6 (see [Headings](headings.md))

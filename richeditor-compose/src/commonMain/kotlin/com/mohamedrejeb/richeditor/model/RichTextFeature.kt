@@ -68,6 +68,9 @@ public enum class RichTextFeature {
     /** Heading levels 1 to 6. */
     Heading,
 
+    /** Multi-line code blocks. */
+    CodeBlock,
+
     /** Paragraph alignment, direction, first-line indent and line height. */
     ParagraphStyle;
 

@@ -667,7 +667,7 @@ class RichTextStateMarkdownParserEncodeTest {
 
     @Test
     fun testHtmlEncodeSetRichSpanParentCorrectly() {
-        val html = "<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\"></head><body><div style=\"background-color:#1e1f22;color:#bcbec4\"><pre style=\"font-family:'JetBrains Mono',monospace;font-size:9.8pt;\"><span style=\"font-style:italic;\">println</span>(<span style=\"color:#6aab73;\">\"insertHtml:&#32;</span><span style=\"color:#cf8e6d;\">\$</span>position<span style=\"color:#6aab73;\">\"</span>)</pre></div></body></html>"
+        val html = "<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\"></head><body><div style=\"background-color:#1e1f22;color:#bcbec4\"><div style=\"font-family:'JetBrains Mono',monospace;font-size:9.8pt;\"><span style=\"font-style:italic;\">println</span>(<span style=\"color:#6aab73;\">\"insertHtml:&#32;</span><span style=\"color:#cf8e6d;\">\$</span>position<span style=\"color:#6aab73;\">\"</span>)</div></div></body></html>"
         val richTextState = RichTextStateHtmlParser.encode(html)
 
         richTextState.selection = TextRange(0)
@@ -689,7 +689,7 @@ class RichTextStateMarkdownParserEncodeTest {
 
     @Test
     fun testHtmlEncodeInheritSpanStyleCorrectly() {
-        val html = "<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\"></head><body><div style=\"background-color:#1e1f22;color:#bcbec4\"><pre style=\"font-family:'JetBrains Mono',monospace;font-size:9.8pt;\"><span style=\"font-style:italic;\">println</span>(<span style=\"color:#6aab73;\">\"selection&#32;html:&#32;</span><span style=\"color:#cf8e6d;\">\$</span>html<span style=\"color:#6aab73;\">\"</span>)<br><span style=\"font-style:italic;\">println</span>(<span style=\"color:#6aab73;\">\"selection&#32;text:&#32;</span><span style=\"color:#cf8e6d;\">\$</span>text<span style=\"color:#6aab73;\">\"</span>)<br><br><span style=\"color:#cf8e6d;\">val&#32;</span>htmlSelection&#32;=&#32;<span style=\"color:#cf8e6d;\">object&#32;</span>:&#32;StringSelection(html),&#32;Transferable&#32;{</pre></div></body></html>"
+        val html = "<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\"></head><body><div style=\"background-color:#1e1f22;color:#bcbec4\"><div style=\"font-family:'JetBrains Mono',monospace;font-size:9.8pt;\"><span style=\"font-style:italic;\">println</span>(<span style=\"color:#6aab73;\">\"selection&#32;html:&#32;</span><span style=\"color:#cf8e6d;\">\$</span>html<span style=\"color:#6aab73;\">\"</span>)<br><span style=\"font-style:italic;\">println</span>(<span style=\"color:#6aab73;\">\"selection&#32;text:&#32;</span><span style=\"color:#cf8e6d;\">\$</span>text<span style=\"color:#6aab73;\">\"</span>)<br><br><span style=\"color:#cf8e6d;\">val&#32;</span>htmlSelection&#32;=&#32;<span style=\"color:#cf8e6d;\">object&#32;</span>:&#32;StringSelection(html),&#32;Transferable&#32;{</div></div></body></html>"
         val richTextState = RichTextStateHtmlParser.encode(html)
 
         val fontSize = richTextState.richParagraphList[0].getFirstNonEmptyChild()!!.fullSpanStyle.fontSize
@@ -702,7 +702,7 @@ class RichTextStateMarkdownParserEncodeTest {
 
     @Test
     fun testHtmlEncodeInheritSpanStyleCorrectly2() {
-        val html = "<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\"></head><body><div style=\"background-color:#1e1f22;color:#bcbec4\"><pre style=\"font-family:'JetBrains Mono',monospace;font-size:9.8pt;\"><span style=\"color:#cf8e6d;\">val&#32;</span>html&#32;=&#32;<span style=\"color:#6aab73;\">\"hello\"<br></span><span style=\"color:#cf8e6d;\">val&#32;</span>richTextState&#32;=&#32;RichTextStateHtmlParser.encode(html)</pre></div></body></html>"
+        val html = "<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\"></head><body><div style=\"background-color:#1e1f22;color:#bcbec4\"><div style=\"font-family:'JetBrains Mono',monospace;font-size:9.8pt;\"><span style=\"color:#cf8e6d;\">val&#32;</span>html&#32;=&#32;<span style=\"color:#6aab73;\">\"hello\"<br></span><span style=\"color:#cf8e6d;\">val&#32;</span>richTextState&#32;=&#32;RichTextStateHtmlParser.encode(html)</div></div></body></html>"
         val richTextState = RichTextStateHtmlParser.encode(html)
 
         val fontSize = richTextState.richParagraphList[0].getFirstNonEmptyChild()!!.fullSpanStyle.fontSize

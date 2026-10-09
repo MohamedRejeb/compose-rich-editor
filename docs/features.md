@@ -56,6 +56,7 @@ if (RichTextFeature.Link in state.config.features) {
 | `OrderedList` | Ordered list items |
 | `UnorderedList` | Unordered list items |
 | `Heading` | Heading levels 1 to 6 |
+| `CodeBlock` | Multi-line code blocks |
 | `ParagraphStyle` | Paragraph alignment, direction, first-line indent and line height |
 
 Each feature corresponds to one `RichTextSpanMark` or one block attribute of the [document model](rich_text_document.md). `RichTextFeature.All` is computed from the enum, so a library version that adds a feature keeps it allowed for editors on the default and excluded for editors with an explicit set.

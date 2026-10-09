@@ -345,8 +345,8 @@ internal fun TextLayoutResult.isForModelText(modelLength: Int): Boolean {
 }
 
 /**
- * Projects annotatedString's style ranges into the BTF2 output buffer, then the highlights, which
- * come after the span styles so they win where they overlap.
+ * Projects annotatedString's style ranges into the BTF2 output buffer, then the code block token
+ * styles, then the highlights, which come last so they win where they overlap.
  *
  * A trailing empty paragraph has a collapsed range, which BTF2 would drop: it gets the
  * [EmptyLineAnchor] and its ParagraphStyle on it. A collapsed range anywhere else (a shape only
@@ -368,6 +368,13 @@ internal fun RichTextState.applyRichTextStyles(buffer: TextFieldBuffer) {
     annotated.spanStyles.forEach { range ->
         if (range.start in 0..modelLength && range.end in 0..modelLength) {
             buffer.addStyle(range.item, range.start, range.end)
+        }
+    }
+    renderedCodeBlocks.forEach { block ->
+        block.styles.forEach { range ->
+            if (range.start in 0..modelLength && range.end in 0..modelLength) {
+                buffer.addStyle(range.item, range.start, range.end)
+            }
         }
     }
     highlights.toSpanStyleRanges(textLength = modelLength, selection = selection).forEach { range ->

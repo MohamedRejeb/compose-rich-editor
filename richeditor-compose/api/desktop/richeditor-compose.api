@@ -601,6 +601,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public final fun getCodeSpanStrokeWidth-XSAIIZE ()J
 	public final fun getExitListOnEmptyItem ()Z
 	public final fun getFeatures ()Ljava/util/Set;
+	public final fun getHeadingTextStyles ()Ljava/util/Map;
 	public final fun getHeadingTypingShortcutsEnabled ()Z
 	public final fun getInlineTypingShortcutsEnabled ()Z
 	public final fun getLinkColor-0d7_KjU ()J
@@ -629,6 +630,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextConfig {
 	public final fun setCodeSpanStrokeWidth--R2X_6o (J)V
 	public final fun setExitListOnEmptyItem (Z)V
 	public final fun setFeatures (Ljava/util/Set;)V
+	public final fun setHeadingTextStyles (Ljava/util/Map;)V
 	public final fun setHeadingTypingShortcutsEnabled (Z)V
 	public final fun setInlineTypingShortcutsEnabled (Z)V
 	public final fun setLinkColor-8_81llA (J)V

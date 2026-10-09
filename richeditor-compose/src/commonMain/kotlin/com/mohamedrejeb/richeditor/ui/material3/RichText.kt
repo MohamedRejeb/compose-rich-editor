@@ -25,7 +25,6 @@ import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.TokenClickHandler
 import com.mohamedrejeb.richeditor.model.TokenHoverHandler
 import com.mohamedrejeb.richeditor.ui.BasicRichText
-import com.mohamedrejeb.richeditor.ui.CodeBlockCopyButton
 
 /**
  * High-level element that displays rich text and provides semantics / accessibility information.
@@ -64,8 +63,8 @@ import com.mohamedrejeb.richeditor.ui.CodeBlockCopyButton
  * text, baselines and other details. The callback can be used to add additional decoration or
  * functionality to the text. For example, to draw selection around the text.
  * @param style style configuration for the text such as color, font, line height etc.
- * @param showCodeBlockCopyButton when true, each code block has a button at its top end corner that
- * copies its code to the clipboard.
+ * @param codeBlockAction drawn over the top end corner of each code block and given its code and
+ * language, for example a `CodeBlockCopyButton`. Null draws nothing.
  */
 @OptIn(ExperimentalRichTextApi::class)
 @Composable
@@ -91,7 +90,7 @@ public fun RichText(
     imageLoader: ImageLoader = LocalImageLoader.current,
     onTokenClick: TokenClickHandler? = null,
     onTokenHover: TokenHoverHandler? = null,
-    showCodeBlockCopyButton: Boolean = false,
+    codeBlockAction: (@Composable (code: String, language: String?) -> Unit)? = null,
 ) {
     val textColor = color.takeOrElse {
         style.color.takeOrElse {
@@ -126,8 +125,6 @@ public fun RichText(
         imageLoader = imageLoader,
         onTokenClick = onTokenClick,
         onTokenHover = onTokenHover,
-        codeBlockAction =
-            if (showCodeBlockCopyButton) { code, _ -> CodeBlockCopyButton(code = code, tint = textColor) }
-            else null,
+        codeBlockAction = codeBlockAction,
     )
 }

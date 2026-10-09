@@ -35,6 +35,7 @@ import com.mohamedrejeb.richeditor.highlight.CodeLanguage
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.sample.common.components.SampleScaffold
 import com.mohamedrejeb.richeditor.ui.BasicCodeText
+import com.mohamedrejeb.richeditor.ui.CodeBlockCopyButton
 import com.mohamedrejeb.richeditor.ui.material3.RichText
 
 private val replyMarkdown = """
@@ -120,7 +121,11 @@ fun CodeBlocksSampleScreen(navigateBack: () -> Unit) {
                     setMarkdown(replyMarkdown)
                 }
             }
-            RichText(state = state, modifier = Modifier.fillMaxWidth(), showCodeBlockCopyButton = true)
+            RichText(
+                state = state,
+                modifier = Modifier.fillMaxWidth(),
+                codeBlockAction = { code, _ -> CodeBlockCopyButton(code = code, tint = scheme.onSurfaceVariant) },
+            )
 
             SectionTitle("Code alone", "BasicCodeText needs no state. A long line scrolls sideways.")
             BasicCodeText(

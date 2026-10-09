@@ -20,28 +20,49 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 
-internal const val CopyCodeDescription: String = "Copy code"
+private const val CopyCodeDescription: String = "Copy code"
 
-/** A small button that copies [code] to the clipboard exactly as it is, line ends included. */
+/** A mid-tone grey that stays visible on light and dark backgrounds. */
+private val DefaultTint: Color = Color(0xFF8A8F98)
+
+/**
+ * A small button that copies [code] to the clipboard exactly as it is, line ends and
+ * indentation included. It is about one line of code tall, so it fits the corner of a code
+ * block: pass it as the `codeBlockAction` of [BasicRichText] or of the Material `RichText`.
+ *
+ * @param tint the colour of the icon.
+ * @param contentDescription what accessibility services call the button. Pass a translated
+ * string for other languages.
+ * @param onCopied called after the code was copied, to show feedback.
+ */
+@ExperimentalRichTextApi
 @Composable
-internal fun CodeBlockCopyButton(code: String, tint: Color) {
+public fun CodeBlockCopyButton(
+    code: String,
+    modifier: Modifier = Modifier,
+    tint: Color = DefaultTint,
+    contentDescription: String = CopyCodeDescription,
+    onCopied: () -> Unit = {},
+) {
     // The suspending LocalClipboard needs a ClipEntry, which has no common constructor.
     @Suppress("DEPRECATION")
     val clipboard = LocalClipboardManager.current
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier
+        modifier = modifier
             .padding(2.dp)
             .size(20.dp)
             .clip(RoundedCornerShape(4.dp))
-            .clickable(onClickLabel = CopyCodeDescription, role = Role.Button) {
+            .clickable(onClickLabel = contentDescription, role = Role.Button) {
                 clipboard.setText(AnnotatedString(code))
+                onCopied()
             },
     ) {
         Image(
             painter = rememberVectorPainter(CopyIcon),
-            contentDescription = CopyCodeDescription,
+            contentDescription = contentDescription,
             colorFilter = ColorFilter.tint(tint),
             modifier = Modifier.size(14.dp),
         )

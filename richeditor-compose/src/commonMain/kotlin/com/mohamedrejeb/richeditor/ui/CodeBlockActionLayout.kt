@@ -52,7 +52,7 @@ internal fun CodeBlockActionLayout(
                 val lines = blocks.getOrNull(index)?.let { layoutResult.linesOf(it) } ?: return@forEachIndexed
                 placeable.placeRelative(
                     x = textPlaceable.width - placeable.width,
-                    y = layoutResult.getLineTop(lines.first).roundToInt(),
+                    y = (layoutResult.getLineTop(lines.first) + CodeBlockVerticalGap.toPx()).roundToInt(),
                 )
             }
         }

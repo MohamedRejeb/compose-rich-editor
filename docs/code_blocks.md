@@ -82,34 +82,49 @@ block, where those marks are code.
 
 ### Copy button
 
-A read-only `RichText` can show a copy button at the top end corner of each code block. It copies
-the block's code exactly, line ends and indentation included:
+A read-only `RichText` can draw an action at the top end corner of each code block. Pass
+`CodeBlockCopyButton` to get a button that copies the block's code exactly, line ends and
+indentation included:
 
 ```kotlin
 RichText(
     state = state,
     modifier = Modifier.fillMaxWidth(),
-    showCodeBlockCopyButton = true,
+    codeBlockAction = { code, language -> CodeBlockCopyButton(code) },
 )
 ```
 
-The Material and Material3 `RichText` both have the option, and it is off by default. For a
-button of your own, or any other action, `BasicRichText` takes a slot that is given the code and
-the language of each block:
+`BasicRichText` and the Material and Material3 `RichText` all take `codeBlockAction`. It is given
+the code and the language of the block, and nothing is drawn when it is null, which is the
+default.
+
+`CodeBlockCopyButton` can be adjusted:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `code` | `String` | required | The code to copy |
+| `modifier` | `Modifier` | `Modifier` | Applied to the button |
+| `tint` | `Color` | mid-tone grey | The colour of the icon |
+| `contentDescription` | `String` | `"Copy code"` | What accessibility services call the button. Pass a translated string for other languages |
+| `onCopied` | `() -> Unit` | `{}` | Called after the copy, for example to show a "Copied" message |
 
 ```kotlin
-BasicRichText(
-    state = state,
-    modifier = Modifier.fillMaxWidth(),
-    codeBlockAction = { code, language ->
-        MyCopyButton(onClick = { copyToClipboard(code) })
-    },
-)
+codeBlockAction = { code, _ ->
+    CodeBlockCopyButton(
+        code = code,
+        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        contentDescription = stringResource(Res.string.copy_code),
+        onCopied = { showCopiedMessage() },
+    )
+}
 ```
+
+The slot takes any composable, so the action can also be a button of your own, a language label,
+or both in a `Row`.
 
 The action is drawn over the corner of the block and takes no room of its own, so keep it about
 one line tall: on a block with a long first line it covers the end of that line. The editors do
-not have this option.
+not draw it.
 
 ### Customizing
 
@@ -247,7 +262,10 @@ its language tag on export.
 - Markup inside an HTML `<pre>` is read as plain code. Code copied from an IDE arrives as a
   `<pre>` with coloured spans and no language, so it is pasted as a code block without colours.
 - A code block inside a list item or a quote is moved to the top level.
-- A block has no space of its own above or below it, and two blocks in a row touch.
+- The room above and below a block comes from a taller first and last line, because a text
+  layout has no space between paragraphs. When the first or last line of a block is long enough
+  to wrap, its wrapped lines are spaced a little wider than the rest. A one-line block that wraps
+  shows this most.
 - In Markdown, an empty paragraph directly after a block is not kept on a round trip.
 - Text selected in a read-only `RichText` inside a `SelectionContainer` is copied with a space
   between paragraphs, so code selected that way loses its line ends. Copy and cut in the editors

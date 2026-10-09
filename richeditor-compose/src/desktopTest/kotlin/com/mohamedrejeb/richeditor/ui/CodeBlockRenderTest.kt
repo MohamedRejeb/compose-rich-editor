@@ -1,6 +1,9 @@
 package com.mohamedrejeb.richeditor.ui
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.LaunchedEffect
@@ -26,6 +29,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.dp
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.highlight.CodeBlockColors
@@ -213,6 +217,117 @@ class CodeBlockRenderTest {
         val pixels = onNodeWithTag(EDITOR_TAG).captureToImage().toPixelMap()
         assertTrue(pixels.isRedAt(pixels.width - 12, lines.lineMiddle(0)), "the code line has the background")
         assertTrue(pixels.isRedAt(pixels.width - 12, lines.lineMiddle(1)), "the new empty line has the background")
+    }
+
+    @Test
+    fun `a block has room above its first line and below its last`() = runDesktopComposeUiTest {
+        val state = RichTextState().apply { setMarkdown("```\none\ntwo\nthree\n```") }
+        var layout: TextLayoutResult? = null
+        setContent { BasicRichText(state = state, onTextLayout = { layout = it }) }
+        waitForIdle()
+
+        val lines = assertNotNull(layout)
+        fun height(line: Int) = lines.getLineBottom(line) - lines.getLineTop(line)
+        assertTrue(height(0) > height(1), "the first line is taller than a middle line")
+        assertTrue(height(2) > height(1), "the last line is taller than a middle line")
+        // The room is above the first line's text and below the last line's.
+        assertTrue(lines.getLineBaseline(0) - lines.getLineTop(0) > lines.getLineBaseline(1) - lines.getLineTop(1))
+        assertTrue(lines.getLineBottom(2) - lines.getLineBaseline(2) > lines.getLineBottom(1) - lines.getLineBaseline(1))
+    }
+
+    @Test
+    fun `two blocks in a row do not touch`() = runDesktopComposeUiTest {
+        val state = RichTextState().apply {
+            config.codeBlockBackgroundColor = Color.Red
+            setMarkdown("```\none\n```\n```\ntwo\n```")
+        }
+        var layout: TextLayoutResult? = null
+        setContent {
+            Box(Modifier.width(200.dp)) {
+                BasicRichText(
+                    state = state,
+                    modifier = Modifier.testTag(EDITOR_TAG).fillMaxWidth(),
+                    onTextLayout = { layout = it },
+                )
+            }
+        }
+        waitForIdle()
+
+        val lines = assertNotNull(layout)
+        val pixels = onNodeWithTag(EDITOR_TAG).captureToImage().toPixelMap()
+        val x = pixels.width / 2
+        assertTrue(pixels.isRedAt(x, lines.lineMiddle(0)), "the first block is drawn")
+        assertTrue(pixels.isRedAt(x, lines.lineMiddle(1)), "the second block is drawn")
+        assertTrue(!pixels.isRedAt(x, lines.getLineBottom(0).toInt()), "there is a gap where the two blocks meet")
+    }
+
+    @Test
+    fun `the background stays inside the content padding of an editor`() = runDesktopComposeUiTest {
+        val state = RichTextState().apply {
+            config.codeBlockBackgroundColor = Color.Red
+            setMarkdown("```\ncode\n```")
+        }
+        val horizontalPadding = PaddingValues(start = 16.dp, top = 12.dp, end = 24.dp, bottom = 12.dp)
+        setContent {
+            BasicRichTextEditor(
+                state = state,
+                modifier = Modifier.width(200.dp).testTag(EDITOR_TAG),
+                decorationBox = { innerTextField -> Box(Modifier.padding(horizontalPadding)) { innerTextField() } },
+                contentPadding = horizontalPadding,
+            )
+        }
+        waitForIdle()
+
+        val red = onNodeWithTag(EDITOR_TAG).captureToImage().toPixelMap().redBounds()
+        assertEquals(16, red.left, "the background starts after the start padding")
+        assertEquals(200 - 24, red.right, "the background ends before the end padding")
+    }
+
+    @Test
+    fun `a scrolled block is not drawn over the padding of an editor`() = runDesktopComposeUiTest {
+        val state = RichTextState().apply {
+            config.codeBlockBackgroundColor = Color.Red
+            setMarkdown("```\n" + (1..30).joinToString("\n") { "line " + it } + "\n```")
+        }
+        setContent {
+            val focusRequester = remember { FocusRequester() }
+            BasicRichTextEditor(
+                state = state,
+                modifier = Modifier.width(200.dp).height(120.dp).focusRequester(focusRequester).testTag(EDITOR_TAG),
+                decorationBox = { innerTextField -> Box(Modifier.padding(12.dp)) { innerTextField() } },
+                contentPadding = PaddingValues(12.dp),
+            )
+            LaunchedEffect(Unit) { focusRequester.requestFocus() }
+        }
+        waitForIdle()
+        state.textFieldState.edit { selection = TextRange(length / 2) }
+        waitForIdle()
+        onNodeWithTag(EDITOR_TAG).performTextInput("x")
+        waitForIdle()
+
+        assertTrue(state.scrollState.value > 0, "the editor is scrolled")
+        val red = onNodeWithTag(EDITOR_TAG).captureToImage().toPixelMap().redBounds()
+        assertEquals(12, red.top, "nothing is drawn over the top padding")
+        assertEquals(120 - 12, red.bottom, "nothing is drawn over the bottom padding")
+    }
+
+    /** The smallest rectangle holding every red pixel, right and bottom exclusive. */
+    private fun PixelMap.redBounds(): IntRect {
+        var left = width
+        var top = height
+        var right = 0
+        var bottom = 0
+        for (y in 0 until height) {
+            for (x in 0 until width) {
+                if (isRedAt(x, y)) {
+                    left = minOf(left, x)
+                    top = minOf(top, y)
+                    right = maxOf(right, x + 1)
+                    bottom = maxOf(bottom, y + 1)
+                }
+            }
+        }
+        return IntRect(left, top, right, bottom)
     }
 
     private fun TextLayoutResult.lineMiddle(line: Int): Int = ((getLineTop(line) + getLineBottom(line)) / 2).toInt()

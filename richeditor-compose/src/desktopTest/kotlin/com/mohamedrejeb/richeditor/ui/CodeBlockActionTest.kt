@@ -1,6 +1,7 @@
 package com.mohamedrejeb.richeditor.ui
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -28,6 +29,7 @@ import com.mohamedrejeb.richeditor.ui.material3.RichText
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 /**
  * The action drawn at the top end corner of each code block in the read-only text, and the copy
@@ -94,7 +96,9 @@ class CodeBlockActionTest {
         listOf(0 to 1, 1 to 4).forEach { (index, line) ->
             val bounds = actions[index].getUnclippedBoundsInRoot()
             assertEquals(text.right, bounds.right, "action $index ends at the end edge")
-            assertEquals(text.top.value + lines.getLineTop(line), bounds.top.value, 1f, "action $index starts at its block's first line")
+            // The background, and the action with it, starts a little below the top of the line.
+            val top = bounds.top.value - (text.top.value + lines.getLineTop(line))
+            assertTrue(top in 0f..4f, "action $index starts at the top of its block, was $top below the line top")
         }
     }
 
@@ -151,7 +155,11 @@ class CodeBlockActionTest {
         val clipboard = FakeClipboardManager()
         setContent {
             CompositionLocalProvider(LocalClipboardManager provides clipboard) {
-                RichText(state = state, modifier = Modifier.fillMaxWidth(), showCodeBlockCopyButton = true)
+                RichText(
+                    state = state,
+                    modifier = Modifier.fillMaxWidth(),
+                    codeBlockAction = { code, _ -> CodeBlockCopyButton(code) },
+                )
             }
         }
         waitForIdle()
@@ -166,6 +174,56 @@ class CodeBlockActionTest {
         buttons[1].performClick()
         waitForIdle()
         assertEquals("plain", clipboard.copied?.text)
+    }
+
+    @Test
+    fun `the copy button takes a label of its own and reports the copy`() = runDesktopComposeUiTest {
+        val state = RichTextState().apply { setMarkdown("```\nonly\n```\n\nEnd") }
+        val clipboard = FakeClipboardManager()
+        var copies = 0
+        setContent {
+            CompositionLocalProvider(LocalClipboardManager provides clipboard) {
+                RichText(
+                    state = state,
+                    modifier = Modifier.fillMaxWidth(),
+                    codeBlockAction = { code, _ ->
+                        CodeBlockCopyButton(code = code, contentDescription = "Copier", onCopied = { copies++ })
+                    },
+                )
+            }
+        }
+        waitForIdle()
+
+        onAllNodesWithContentDescription(COPY_DESCRIPTION).assertCountEquals(0)
+        onAllNodesWithContentDescription("Copier")[0].performClick()
+        waitForIdle()
+
+        assertEquals("only", clipboard.copied?.text)
+        assertEquals(1, copies)
+    }
+
+    @Test
+    fun `the material texts take any action`() = runDesktopComposeUiTest {
+        val state = RichTextState().apply { setMarkdown(markdown) }
+        setContent {
+            Column {
+                RichText(
+                    state = state,
+                    modifier = Modifier.fillMaxWidth(),
+                    codeBlockAction = { _, language -> Box(Modifier.size(20.dp).testTag("m3-" + language)) },
+                )
+                com.mohamedrejeb.richeditor.ui.material.RichText(
+                    state = state,
+                    modifier = Modifier.fillMaxWidth(),
+                    codeBlockAction = { _, language -> Box(Modifier.size(20.dp).testTag("m2-" + language)) },
+                )
+            }
+        }
+        waitForIdle()
+
+        listOf("m3-kotlin", "m3-null", "m2-kotlin", "m2-null").forEach { tag ->
+            onAllNodesWithTag(tag).assertCountEquals(1)
+        }
     }
 
     @Test

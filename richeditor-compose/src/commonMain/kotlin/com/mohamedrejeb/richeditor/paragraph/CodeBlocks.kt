@@ -1,6 +1,9 @@
 package com.mohamedrejeb.richeditor.paragraph
 
+import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.ui.unit.em
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
@@ -57,3 +60,39 @@ internal fun List<RichParagraph>.asCodeLinesOf(type: CodeBlock): List<RichParagr
 internal fun RichParagraph.baseSpanStyle(config: RichTextConfig): SpanStyle =
     if (type is CodeBlock) RichSpanStyle.DefaultSpanStyle.merge(SpanStyle(fontFamily = config.codeBlockFontFamily))
     else RichSpanStyle.DefaultSpanStyle
+
+/**
+ * The extra room a code block gets above its first line and below its last, so its background
+ * does not sit tight on the code or on the text around it. A text layout has no space between
+ * paragraphs, so the room is a taller first and last line. Null for any other paragraph.
+ */
+internal fun List<RichParagraph>.codeBlockEdgeStyle(index: Int): ParagraphStyle? {
+    val type = getOrNull(index)?.type as? CodeBlock ?: return null
+    val isFirst = type.isBlockStart || getOrNull(index - 1)?.type !is CodeBlock
+    val next = getOrNull(index + 1)?.type as? CodeBlock
+    val isLast = next == null || next.isBlockStart
+    return when {
+        isFirst && isLast -> CodeBlockOnlyLineStyle
+        isFirst -> CodeBlockFirstLineStyle
+        isLast -> CodeBlockLastLineStyle
+        else -> null
+    }
+}
+
+private val CodeBlockEdgeLineHeight = 1.75.em
+private val CodeBlockOnlyLineHeight = 2.1.em
+
+private val CodeBlockFirstLineStyle = ParagraphStyle(
+    lineHeight = CodeBlockEdgeLineHeight,
+    lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Bottom, LineHeightStyle.Trim.None),
+)
+
+private val CodeBlockLastLineStyle = ParagraphStyle(
+    lineHeight = CodeBlockEdgeLineHeight,
+    lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Top, LineHeightStyle.Trim.None),
+)
+
+private val CodeBlockOnlyLineStyle = ParagraphStyle(
+    lineHeight = CodeBlockOnlyLineHeight,
+    lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.None),
+)

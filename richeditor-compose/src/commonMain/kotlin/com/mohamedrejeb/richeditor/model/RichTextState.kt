@@ -48,6 +48,7 @@ import com.mohamedrejeb.richeditor.model.trigger.detectActiveTrigger
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
 import com.mohamedrejeb.richeditor.paragraph.asCodeLinesOf
 import com.mohamedrejeb.richeditor.paragraph.baseSpanStyle
+import com.mohamedrejeb.richeditor.paragraph.codeBlockEdgeStyle
 import com.mohamedrejeb.richeditor.paragraph.type.*
 import com.mohamedrejeb.richeditor.platform.currentPlatform
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startText
@@ -3391,14 +3392,16 @@ public class RichTextState internal constructor(
      * [RichTextConfig.headingTextStyles] takes the paragraph part of that style underneath
      * its own, so an alignment set on the heading itself still wins.
      */
-    private fun renderedParagraphStyle(richParagraph: RichParagraph): ParagraphStyle {
+    private fun renderedParagraphStyle(richParagraph: RichParagraph, index: Int): ParagraphStyle {
         val headingTextStyle = config.headingTextStyleFor(richParagraph.headingStyle)
         val paragraphStyle =
             if (headingTextStyle == null)
                 richParagraph.paragraphStyle
             else
                 headingTextStyle.toParagraphStyle().merge(richParagraph.paragraphStyle)
-        return paragraphStyle.merge(richParagraph.type.getStyle(config))
+        return paragraphStyle
+            .merge(richParagraph.type.getStyle(config))
+            .merge(richParagraphList.codeBlockEdgeStyle(index))
     }
 
     private inner class HistoryHostImpl : RichTextHistoryHost {
@@ -3599,7 +3602,7 @@ public class RichTextState internal constructor(
                 }
 
                 val headingSpanStyle = config.headingSpanStyleFor(richParagraph.headingStyle)
-                withStyle(renderedParagraphStyle(richParagraph)) {
+                withStyle(renderedParagraphStyle(richParagraph, i)) {
                     withStyle(
                         richParagraph.getListMarkerSpanStyle(
                             config.listMarkerStyleBehavior,
@@ -6332,7 +6335,7 @@ public class RichTextState internal constructor(
             var index = 0
             richParagraphList.fastForEachIndexed { i, richParagraph ->
                 val headingSpanStyle = config.headingSpanStyleFor(richParagraph.headingStyle)
-                withStyle(renderedParagraphStyle(richParagraph)) {
+                withStyle(renderedParagraphStyle(richParagraph, i)) {
                     withStyle(
                         richParagraph.getListMarkerSpanStyle(
                             config.listMarkerStyleBehavior,

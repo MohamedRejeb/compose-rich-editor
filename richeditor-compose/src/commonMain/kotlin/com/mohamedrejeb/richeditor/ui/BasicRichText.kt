@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
@@ -62,6 +63,9 @@ public fun BasicRichText(
         mutableStateOf(PointerIcon.Default)
     }
     val maxImageWidthProvider = remember { RichTextMaxImageWidthProvider() }
+
+    // Before the first read of the annotated string, so the first frame has the final indent.
+    state.measureStartTextWidths(rememberTextMeasurer(), style, density)
 
     val text = remember(state.annotatedString, state.highlights) {
         state.annotatedString.withHighlights(state.highlights)

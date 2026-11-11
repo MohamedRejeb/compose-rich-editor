@@ -64,6 +64,8 @@ import com.mohamedrejeb.richeditor.ui.BasicRichText
  * text, baselines and other details. The callback can be used to add additional decoration or
  * functionality to the text. For example, to draw selection around the text.
  * @param style Style configuration for the text such as color, font, line height etc.
+ * @param codeBlockAction drawn over the top end corner of each code block and given its code and
+ * language, for example a `CodeBlockCopyButton`. Null draws nothing.
  */
 @OptIn(ExperimentalRichTextApi::class)
 @Composable
@@ -89,6 +91,7 @@ public fun RichText(
     imageLoader: ImageLoader = LocalImageLoader.current,
     onTokenClick: TokenClickHandler? = null,
     onTokenHover: TokenHoverHandler? = null,
+    codeBlockAction: (@Composable (code: String, language: String?) -> Unit)? = null,
 ) {
     val textColor = color.takeOrElse {
         style.color.takeOrElse {
@@ -123,5 +126,57 @@ public fun RichText(
         imageLoader = imageLoader,
         onTokenClick = onTokenClick,
         onTokenHover = onTokenHover,
+        codeBlockAction = codeBlockAction,
+    )
+}
+
+@Deprecated("Kept for binary compatibility.", level = DeprecationLevel.HIDDEN)
+@Composable
+public fun RichText(
+    state: RichTextState,
+    modifier: Modifier = Modifier,
+    color: Color = Color.Unspecified,
+    fontSize: TextUnit = TextUnit.Unspecified,
+    fontStyle: FontStyle? = null,
+    fontWeight: FontWeight? = null,
+    fontFamily: FontFamily? = null,
+    letterSpacing: TextUnit = TextUnit.Unspecified,
+    textDecoration: TextDecoration? = null,
+    textAlign: TextAlign = TextAlign.Unspecified,
+    lineHeight: TextUnit = TextUnit.Unspecified,
+    overflow: TextOverflow = TextOverflow.Clip,
+    softWrap: Boolean = true,
+    maxLines: Int = Int.MAX_VALUE,
+    minLines: Int = 1,
+    inlineContent: Map<String, InlineTextContent> = mapOf(),
+    onTextLayout: (TextLayoutResult) -> Unit = {},
+    style: TextStyle = LocalTextStyle.current,
+    imageLoader: ImageLoader = LocalImageLoader.current,
+    onTokenClick: TokenClickHandler? = null,
+    onTokenHover: TokenHoverHandler? = null,
+) {
+    RichText(
+        state = state,
+        modifier = modifier,
+        color = color,
+        fontSize = fontSize,
+        fontStyle = fontStyle,
+        fontWeight = fontWeight,
+        fontFamily = fontFamily,
+        letterSpacing = letterSpacing,
+        textDecoration = textDecoration,
+        textAlign = textAlign,
+        lineHeight = lineHeight,
+        overflow = overflow,
+        softWrap = softWrap,
+        maxLines = maxLines,
+        minLines = minLines,
+        inlineContent = inlineContent,
+        onTextLayout = onTextLayout,
+        style = style,
+        imageLoader = imageLoader,
+        onTokenClick = onTokenClick,
+        onTokenHover = onTokenHover,
+        codeBlockAction = null,
     )
 }

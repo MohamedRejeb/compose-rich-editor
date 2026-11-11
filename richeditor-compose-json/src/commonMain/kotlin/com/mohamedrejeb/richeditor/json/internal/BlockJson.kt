@@ -53,6 +53,13 @@ internal fun decodeBlock(json: JsonObject, registry: RichSpanStyleRegistry): Ric
                     },
                 ) to ((json["heading"] as? JsonPrimitive)?.content?.toIntOrNull() ?: 0)
             }
+            "code-block" -> RichTextBlockType.CodeBlock(
+                language = json["language"]?.takeIf { it !is JsonNull }?.let { element ->
+                    (element as? JsonPrimitive)?.takeIf { it.isString }?.content
+                        ?: throw MalformedRichTextJsonException("code-block \"language\" must be a string")
+                },
+                isBlockStart = (json["start"] as? JsonPrimitive)?.booleanOrNull == true,
+            ) to 0
             else -> throw MalformedRichTextJsonException("Unknown block type: $typeName")
         }
 
@@ -99,6 +106,11 @@ internal fun encodeBlock(
             type.startNumber?.let { put("start", it) }
             type.listStyleType?.let { put("listStyle", it) }
             if (block.headingLevel > 0) put("heading", block.headingLevel)
+        }
+        type is RichTextBlockType.CodeBlock -> {
+            put("type", "code-block")
+            type.language?.let { put("language", it) }
+            if (type.isBlockStart) put("start", true)
         }
         block.headingLevel > 0 -> {
             put("type", "heading")

@@ -25,4 +25,14 @@ public sealed interface RichTextBlockType {
             require(startNumber == null || ordered) { "startNumber requires an ordered list" }
         }
     }
+
+    /**
+     * One line of a code block. Consecutive code lines form one block; [isBlockStart] marks its
+     * first line, so two blocks next to each other stay apart. [language] is the tag as written
+     * (`kotlin`, `js`, ...), or null when the block names none.
+     */
+    public data class CodeBlock(
+        public val language: String? = null,
+        public val isBlockStart: Boolean = true,
+    ) : RichTextBlockType
 }

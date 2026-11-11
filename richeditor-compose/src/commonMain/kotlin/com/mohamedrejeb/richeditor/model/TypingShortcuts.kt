@@ -8,6 +8,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.history.CommitTrigger
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
+import com.mohamedrejeb.richeditor.paragraph.type.CodeBlock
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
 
 /** An inline Markdown mark and the formatting it stands for. Double marks come first so `**` wins over `*`. */
@@ -74,6 +75,8 @@ internal fun RichTextState.applyTypingShortcuts(inserted: String) {
     if (at < 0 || !text.startsWith(inserted, at)) return
 
     val (paragraph, paragraphRange) = paragraphAt(caret) ?: return
+    // Markdown marks are code inside a code block.
+    if (paragraph.type is CodeBlock) return
     val contentStart = paragraphRange.min + paragraph.type.startRichSpan.text.length
     if (caret <= contentStart) return
 

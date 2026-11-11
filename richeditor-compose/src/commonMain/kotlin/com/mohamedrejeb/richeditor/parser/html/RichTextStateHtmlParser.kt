@@ -9,6 +9,10 @@ import com.mohamedrejeb.ksoup.html.parser.KsoupHtmlParser
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.*
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
+import com.mohamedrejeb.richeditor.paragraph.codeBlockGroups
+import com.mohamedrejeb.richeditor.paragraph.codeBlockOf
+import com.mohamedrejeb.richeditor.paragraph.plainText
+import com.mohamedrejeb.richeditor.paragraph.type.CodeBlock
 import com.mohamedrejeb.richeditor.paragraph.type.DefaultParagraph
 import com.mohamedrejeb.richeditor.paragraph.type.ListStyleTypeKeywords
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
@@ -57,10 +61,19 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         val orderedListStartValues = mutableMapOf<Int, Int>()
         // The `list-style-type` keyword of the open list per level, from <ol>/<ul style>.
         val listStyleKeywords = mutableMapOf<Int, String>()
+        // Text of the <pre> being read, or null outside one. Code is collected whole and turned
+        // into code block paragraphs when the element closes.
+        var preText: StringBuilder? = null
+        var preLanguage: String? = null
 
         val handler = KsoupHtmlHandler
             .Builder()
             .onText {
+                preText?.let { buffer ->
+                    buffer.append(KsoupEntities.decodeHtml(it))
+                    return@onText
+                }
+
                 // In html text inside ul/ol tags is skipped
                 val lastOpenedTag = openedTags.lastOrNull()?.first
                 if (lastOpenedTag == "ul" || lastOpenedTag == "ol") return@onText
@@ -115,6 +128,24 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                 // of invalid nesting (implied opens/closes). See #779.
                 if (name == "p" || name in HeadingStyle.headingTags)
                     explicitParagraphOpens.add(!isImplied)
+
+                val openPre = preText
+                if (openPre != null) {
+                    if (name == BrElement) openPre.append('\n')
+                    if (name == CodeSpanTagName && preLanguage == null) {
+                        preLanguage = attributes["class"]
+                            ?.split(' ')
+                            ?.firstOrNull { it.startsWith(CodeLanguageClassPrefix) }
+                            ?.removePrefix(CodeLanguageClassPrefix)
+                            ?.ifEmpty { null }
+                    }
+                    return@onOpenTag
+                }
+                if (name == PreTagName) {
+                    preText = StringBuilder()
+                    preLanguage = null
+                    return@onOpenTag
+                }
 
                 if (name in skippedHtmlElements) {
                     return@onOpenTag
@@ -335,6 +366,33 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
                     else
                         false
 
+                val closingPre = preText
+                if (closingPre != null) {
+                    if (name != PreTagName) return@onCloseTag
+
+                    val last = richParagraphList.lastOrNull()
+                    if (last != null && last.isBlank() && last !in preservedBlankParagraphs && last.type is DefaultParagraph) {
+                        toKeepEmptyParagraphIndexSet.remove(richParagraphList.lastIndex)
+                        richParagraphList.removeAt(richParagraphList.lastIndex)
+                    }
+                    val lines = closingPre.toString()
+                        .replace("\r\n", "\n")
+                        .removePrefix("\n")
+                        .removeSuffix("\n")
+                        .split('\n')
+                    val block = codeBlockOf(preLanguage, lines)
+                    richParagraphList.addAll(block)
+                    // An empty code line is content: keep it through the blank paragraph sweep.
+                    preservedBlankParagraphs.addAll(block)
+                    stringBuilder.append(' ')
+                    richParagraphList.add(RichParagraph())
+                    toKeepEmptyParagraphIndexSet.add(richParagraphList.lastIndex)
+                    currentRichSpan = null
+                    preText = null
+                    preLanguage = null
+                    return@onCloseTag
+                }
+
                 val lastRichParagraph = richParagraphList.lastOrNull()
                 val isCurrentRichParagraphBlank = lastRichParagraph?.isBlank() == true &&
                     lastRichParagraph !in preservedBlankParagraphs
@@ -504,7 +562,26 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
             }
         }
 
+        val codeGroups = paragraphs.toList().codeBlockGroups()
+
         paragraphs.fastForEachIndexed { index, richParagraph ->
+            val codeBlock = richParagraph.type as? CodeBlock
+            if (codeBlock != null) {
+                val group = codeGroups.first { index in it }
+                if (index == group.first) {
+                    closeListsDownTo(0)
+                    hostItemLevel = 0
+                    builder.append("<$PreTagName><$CodeSpanTagName")
+                    codeBlock.language?.let {
+                        builder.append(" class=\"$CodeLanguageClassPrefix${escapeHtmlAttribute(it)}\"")
+                    }
+                    builder.append(">")
+                    builder.append(group.joinToString("\n") { escapeCodeText(paragraphs[it].plainText()) })
+                    builder.append("</$CodeSpanTagName></$PreTagName>")
+                }
+                return@fastForEachIndexed
+            }
+
             val richParagraphType = richParagraph.type
             val isParagraphEmpty = richParagraph.isEmpty()
             val paragraphGroupTagName = decodeHtmlElementFromRichParagraph(richParagraph)
@@ -967,6 +1044,10 @@ internal object RichTextStateHtmlParser : RichTextStateParser<String> {
         }
     }
 
+    /** Escape code for `<pre>`, where spaces are kept as they are and must not become entities. */
+    private fun escapeCodeText(text: String): String =
+        text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
     private val SpaceRunRegex = Regex(" {2,}")
 
     /** Numeric character references for a space: decimal, hex, and zero-padded forms. */
@@ -1068,3 +1149,5 @@ internal val htmlElementsSpanStyleDecodeMap = mapOf(
 
 internal const val CodeSpanTagName = "code"
 internal const val OldCodeSpanTagName = "code-span"
+internal const val PreTagName = "pre"
+internal const val CodeLanguageClassPrefix = "language-"

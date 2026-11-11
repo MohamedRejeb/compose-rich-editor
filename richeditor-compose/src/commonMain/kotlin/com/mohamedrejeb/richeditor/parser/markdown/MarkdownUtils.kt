@@ -18,6 +18,7 @@ internal fun encodeMarkdownToRichText(
     onText: (text: String) -> Unit,
     onHtmlTag: (tag: String) -> Unit,
     onHtmlBlock: (html: String) -> Unit,
+    onCodeBlock: (language: String?, lines: List<String>) -> Unit,
 ) {
 
     val parser = MarkdownParser(GFMFlavourDescriptor())
@@ -31,6 +32,7 @@ internal fun encodeMarkdownToRichText(
             onText = onText,
             onHtmlTag = onHtmlTag,
             onHtmlBlock = onHtmlBlock,
+            onCodeBlock = onCodeBlock,
         )
     }
 }
@@ -218,6 +220,7 @@ private fun encodeMarkdownNodeToRichText(
     onText: (text: String) -> Unit,
     onHtmlTag: (tag: String) -> Unit,
     onHtmlBlock: (html: String) -> Unit,
+    onCodeBlock: (language: String?, lines: List<String>) -> Unit,
 ) {
     when (node.type) {
         MarkdownTokenTypes.TEXT -> onText(node.getTextInNode(markdown).toString())
@@ -250,6 +253,7 @@ private fun encodeMarkdownNodeToRichText(
                     onText = onText,
                     onHtmlTag = onHtmlTag,
                     onHtmlBlock = onHtmlBlock,
+                    onCodeBlock = onCodeBlock,
                 )
             }
             onCloseNode(node)
@@ -269,6 +273,7 @@ private fun encodeMarkdownNodeToRichText(
                     onText = onText,
                     onHtmlTag = onHtmlTag,
                     onHtmlBlock = onHtmlBlock,
+                    onCodeBlock = onCodeBlock,
                 )
             }
             onCloseNode(node)
@@ -300,6 +305,7 @@ private fun encodeMarkdownNodeToRichText(
                         onText = onText,
                         onHtmlTag = onHtmlTag,
                         onHtmlBlock = onHtmlBlock,
+                        onCodeBlock = onCodeBlock,
                     )
                 }
             }
@@ -314,6 +320,12 @@ private fun encodeMarkdownNodeToRichText(
             onHtmlBlock(node.getTextInNode(markdown).toString())
         }
 
+        MarkdownElementTypes.CODE_FENCE -> {
+            val language = node.findChildOfType(MarkdownTokenTypes.FENCE_LANG)
+                ?.getTextInNode(markdown)?.toString()?.trim()?.ifEmpty { null }
+            onCodeBlock(language, codeFenceLines(node, markdown))
+        }
+
         else -> {
             onOpenNode(node)
             node.children.fastForEach { child ->
@@ -325,9 +337,38 @@ private fun encodeMarkdownNodeToRichText(
                     onText = onText,
                     onHtmlTag = onHtmlTag,
                     onHtmlBlock = onHtmlBlock,
+                    onCodeBlock = onCodeBlock,
                 )
             }
             onCloseNode(node)
         }
     }
+}
+
+/**
+ * The lines of a fenced block. Each line of code is one CODE_FENCE_CONTENT token and each line
+ * end is one EOL token, so two EOL tokens in a row are an empty line.
+ */
+private fun codeFenceLines(node: ASTNode, markdown: String): List<String> {
+    val lines = mutableListOf<String>()
+    var current: StringBuilder? = null
+    var started = false
+    var ended = false
+    node.children.fastForEach { child ->
+        if (ended) return@fastForEach
+        when (child.type) {
+            MarkdownTokenTypes.CODE_FENCE_END -> ended = true
+            MarkdownTokenTypes.EOL -> {
+                if (started) current?.let { lines += it.toString() }
+                started = true
+                current = StringBuilder()
+            }
+            MarkdownTokenTypes.CODE_FENCE_CONTENT ->
+                if (started) current?.append(child.getTextInNode(markdown))
+        }
+    }
+    // The line that was open when the block ended: the closing fence's own line for a closed
+    // block (empty, dropped), or the last line of code for an unclosed one.
+    current?.toString()?.takeIf { it.isNotEmpty() }?.let { lines += it }
+    return lines
 }

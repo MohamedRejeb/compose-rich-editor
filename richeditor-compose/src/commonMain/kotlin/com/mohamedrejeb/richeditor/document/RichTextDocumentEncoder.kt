@@ -15,6 +15,7 @@ import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
+import com.mohamedrejeb.richeditor.paragraph.type.CodeBlock
 import com.mohamedrejeb.richeditor.paragraph.type.ListStyleTypeKeywords
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
@@ -74,6 +75,10 @@ internal object RichTextDocumentEncoder {
                     indent = paragraphType.level - 1,
                     listStyleType = ListStyleTypeKeywords.keywordOf(paragraphType),
                 )
+            }
+            is CodeBlock -> {
+                orderedCounters.clear()
+                RichTextBlockType.CodeBlock(language = paragraphType.language, isBlockStart = paragraphType.isBlockStart)
             }
             else -> {
                 orderedCounters.clear()

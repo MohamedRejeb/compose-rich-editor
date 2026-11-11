@@ -2,6 +2,7 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.ui.text.TextRange
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.paragraph.type.CodeBlock
 
 /** The part of a word, from [start] to [end], that is a URL, and the [url] it links to. */
 internal class AutoLinkMatch(val start: Int, val end: Int, val url: String)
@@ -73,6 +74,8 @@ internal fun RichTextState.autoLinkInsertedText(at: Int, inserted: String) {
     }
 
     val range = TextRange(wordStart + match.start, wordStart + match.end)
+    // A URL inside a code block is code.
+    if (getRichSpanByTextIndex(range.min, ignoreCustomFiltering = true)?.paragraph?.type is CodeBlock) return
     val isPlainText = (range.min until range.max).all {
         getRichSpanByTextIndex(it, ignoreCustomFiltering = true)?.fullStyle is RichSpanStyle.Default
     }

@@ -55,10 +55,11 @@ Block fields:
 | Field | When present | Meaning |
 |---|---|---|
 | `id` | always | `"b" + index`; accepted and ignored on import |
-| `type` | always | `paragraph`, `heading`, or `list-item` |
+| `type` | always | `paragraph`, `heading`, `list-item`, or `code-block` |
 | `level` | headings | Heading level 1 to 6 |
 | `ordered`, `indent`, `start` | list items | Ordered flag, 0-based nesting, numbering restart |
 | `listStyle` | list items with a style of their own | CSS `list-style-type` keyword of the item's list (`lower-alpha`, `square`, ...) |
+| `language`, `start` | code blocks | One block per line of code: the language tag as written, and `true` on the first line of a block (see [Code Blocks](code_blocks.md)). A library version from before code blocks rejects a document that contains one |
 | `align`, `dir`, `lineHeight`, `textIndent` | when set | Paragraph style |
 | `br` | line-break paragraphs | Paragraph created by `<br>` |
 | `text`, `spans` | always | Content and styling marks |

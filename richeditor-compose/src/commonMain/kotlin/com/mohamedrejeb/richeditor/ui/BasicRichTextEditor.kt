@@ -5,6 +5,7 @@ import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActionScope
@@ -384,6 +385,8 @@ public fun BasicRichTextEditor(
                     richTextState = state,
                     topPadding = with(density) { contentPadding.calculateTopPadding().toPx() },
                     startPadding = with(density) { contentPadding.calculateStartPadding(layoutDirection).toPx() },
+                    endPadding = with(density) { contentPadding.calculateEndPadding(layoutDirection).toPx() },
+                    bottomPadding = with(density) { contentPadding.calculateBottomPadding().toPx() },
                 )
                 .then(
                     if (singleParagraph)

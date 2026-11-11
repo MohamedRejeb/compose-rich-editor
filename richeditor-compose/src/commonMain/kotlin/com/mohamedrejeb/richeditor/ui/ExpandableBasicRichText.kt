@@ -31,6 +31,7 @@ import com.mohamedrejeb.richeditor.model.LocalImageLoader
 import com.mohamedrejeb.richeditor.model.LocalRichTextMaxImageWidthProvider
 import com.mohamedrejeb.richeditor.model.RichTextMaxImageWidthProvider
 import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.model.withCodeBlockStyles
 import com.mohamedrejeb.richeditor.model.withHighlights
 
 /**
@@ -97,11 +98,14 @@ public fun ExpandableBasicRichText(
         LinkInteractionListener { expandedListenerState.value(false) }
     }
 
-    val visualString = remember(state.annotatedString, state.highlights) {
+    val visualString = remember(state.annotatedString, state.renderedCodeBlocks, state.highlights) {
         // Strip paragraph styles so concatenating the See more / See less suffix doesn't push it
         // into a separate paragraph (which would render on a new line). Span styles and link
         // annotations on the content are preserved.
-        state.annotatedString.withHighlights(state.highlights).flattenToInlineParagraph()
+        state.annotatedString
+            .withCodeBlockStyles(state.renderedCodeBlocks)
+            .withHighlights(state.highlights)
+            .flattenToInlineParagraph()
     }
 
     val seeMoreSuffix = remember(seeMoreLabel, seeMoreStyle, seeMoreListener) {

@@ -17,6 +17,7 @@ import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType
 import com.mohamedrejeb.richeditor.paragraph.type.ParagraphType.Companion.startText
 import com.mohamedrejeb.richeditor.ui.test.getRichTextStyleTreeRepresentation
 import com.mohamedrejeb.richeditor.utils.customMerge
+import com.mohamedrejeb.richeditor.utils.diff
 import com.mohamedrejeb.richeditor.utils.unmerge
 
 internal class RichParagraph(
@@ -211,13 +212,30 @@ internal class RichParagraph(
      */
     @OptIn(ExperimentalRichTextApi::class)
     /** The style of this paragraph's list marker: [behavior]'s, with [markerStyle] on top. */
-    fun getListMarkerSpanStyle(behavior: ListMarkerStyleBehavior, markerStyle: SpanStyle): SpanStyle =
-        getListMarkerSpanStyle(behavior).merge(markerStyle)
+    /**
+     * [headingSpanStyle] is the style this heading renders with when the config restyles its
+     * level (see [com.mohamedrejeb.richeditor.model.RichTextConfig.headingTextStyles]); the
+     * marker then inherits it in place of the level's default typography kept on the spans.
+     */
+    fun getListMarkerSpanStyle(
+        behavior: ListMarkerStyleBehavior,
+        markerStyle: SpanStyle,
+        headingSpanStyle: SpanStyle? = null,
+    ): SpanStyle =
+        getListMarkerSpanStyle(behavior, headingSpanStyle).merge(markerStyle)
 
-    fun getListMarkerSpanStyle(behavior: ListMarkerStyleBehavior): SpanStyle =
+    fun getListMarkerSpanStyle(
+        behavior: ListMarkerStyleBehavior,
+        headingSpanStyle: SpanStyle? = null,
+    ): SpanStyle =
         when (behavior) {
             ListMarkerStyleBehavior.InheritFromText ->
-                getStartTextSpanStyle()?.copy(
+                getStartTextSpanStyle()?.let { startTextSpanStyle ->
+                    if (headingSpanStyle == null)
+                        startTextSpanStyle
+                    else
+                        headingSpanStyle.merge(startTextSpanStyle.diff(headingStyle.defaultSpanStyle))
+                }?.copy(
                     textDecoration = null,
                     background = Color.Unspecified,
                     baselineShift = null,

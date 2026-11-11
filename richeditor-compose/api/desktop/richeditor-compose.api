@@ -824,6 +824,7 @@ public final class com/mohamedrejeb/richeditor/model/RichTextStateKt {
 
 public final class com/mohamedrejeb/richeditor/model/TextPaddingValues {
 	public static final field $stable I
+	public fun <init> ()V
 	public synthetic fun <init> (JJILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (JJLkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1-XSAIIZE ()J

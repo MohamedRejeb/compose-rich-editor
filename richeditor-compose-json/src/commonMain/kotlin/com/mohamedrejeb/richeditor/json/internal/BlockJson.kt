@@ -13,6 +13,7 @@ import com.mohamedrejeb.richeditor.document.RichTextSpanMark
 import com.mohamedrejeb.richeditor.json.MalformedRichTextJsonException
 import com.mohamedrejeb.richeditor.model.RichSpanStyleRegistry
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
@@ -46,6 +47,10 @@ internal fun decodeBlock(json: JsonObject, registry: RichSpanStyleRegistry): Ric
                     ordered = ordered,
                     indent = (json["indent"] as? JsonPrimitive)?.content?.toIntOrNull() ?: 0,
                     startNumber = if (ordered) (json["start"] as? JsonPrimitive)?.content?.toIntOrNull() else null,
+                    listStyleType = json["listStyle"]?.takeIf { it !is JsonNull }?.let { element ->
+                        (element as? JsonPrimitive)?.takeIf { it.isString }?.content
+                            ?: throw MalformedRichTextJsonException("list-item \"listStyle\" must be a string")
+                    },
                 ) to ((json["heading"] as? JsonPrimitive)?.content?.toIntOrNull() ?: 0)
             }
             else -> throw MalformedRichTextJsonException("Unknown block type: $typeName")
@@ -92,6 +97,7 @@ internal fun encodeBlock(
             put("ordered", type.ordered)
             put("indent", type.indent)
             type.startNumber?.let { put("start", it) }
+            type.listStyleType?.let { put("listStyle", it) }
             if (block.headingLevel > 0) put("heading", block.headingLevel)
         }
         block.headingLevel > 0 -> {

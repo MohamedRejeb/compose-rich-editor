@@ -64,6 +64,50 @@ The defaults are framework-agnostic (em-based) so the core library doesn't
 depend on Material 2 or 3. Your app's `TextStyle` on the editor composable is
 still respected as the base from which `em` sizes derive.
 
+### Customizing the heading typography
+
+Set `RichTextConfig.headingTextStyles` to give a level your own typography, for
+example the heading styles of your theme or a brand font:
+
+```kotlin
+richTextState.config.headingTextStyles = mapOf(
+    HeadingStyle.H1 to TextStyle(
+        fontSize = 28.sp,
+        fontWeight = FontWeight.SemiBold,
+        fontFamily = BrandFontFamily,
+        lineHeight = 36.sp,
+    ),
+    HeadingStyle.H2 to MaterialTheme.typography.headlineSmall,
+)
+```
+
+- Each `TextStyle` is applied **on top of the default** of its level, so what it
+  leaves unset keeps coming from the table above. `TextStyle(color = Color.Red)`
+  colors a level and keeps its size and weight.
+- The paragraph part of the style (line height, alignment, and so on) applies to
+  the heading paragraph.
+- Levels without an entry keep the default. An entry for `HeadingStyle.Normal`
+  is ignored.
+- Changing the map re-styles the headings already in the editor, and in a
+  read-only `RichText`.
+
+This is an appearance setting of the editor, like `linkColor`. The document
+stores the heading level only, so the output of `toHtml()` and `toMarkdown()`
+does not change: a restyled H1 is still written as a plain `<h1>` or `# `, and a
+loaded `<h1>` renders with your style. Set the map on every `RichTextState` that
+displays the content.
+
+Formatting added to the heading itself still wins over the configured style and
+is still exported: a color or font size on part of a heading, or an alignment on
+the heading paragraph.
+
+!!! note
+    A font size or weight equal to the level's default (bold, or `2em` on an H1)
+    counts as the heading's own typography, not as added formatting. It is not
+    exported, and it is replaced by the configured style.
+
+> **Note:** This API is marked `@ExperimentalRichTextApi` and may change in a future release.
+
 ### Converting between levels
 
 ```kotlin
@@ -78,6 +122,20 @@ val unknown  = HeadingStyle.fromHtmlTag("div") // Normal
 HeadingStyle.H3.markdownPrefix   // "### "
 HeadingStyle.H3.htmlTag          // "h3"
 ```
+
+## Typing shortcut
+
+With `headingTypingShortcutsEnabled`, typing `# ` to `###### ` at the start of a paragraph
+sets heading level 1 to 6 and removes the marker, as in Notion and Google Docs. The
+shortcut is off by default:
+
+```kotlin
+richTextState.config.headingTypingShortcutsEnabled = true
+```
+
+The marker only counts at the very start of a paragraph, followed by a space. A marker typed
+in a list item stays as text, and so does one when headings are left out of `config.features`
+(see [Editor features](features.md)). One undo restores the typed marker.
 
 ## Pressing Enter in a heading
 

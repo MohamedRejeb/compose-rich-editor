@@ -25,17 +25,24 @@ internal class OrderedList private constructor(
      * Defaults to 1. When > 1, the HTML output includes `start="N"` on the `<ol>` tag.
      */
     val startFrom: Int = 1,
+    /**
+     * The style type this item's list carries in the document (`list-style-type` in HTML),
+     * or null to follow [RichTextConfig.orderedListStyleType].
+     */
+    val styleTypeOverride: OrderedListStyleType? = null,
 ) : ParagraphType, ConfigurableStartTextWidth, ConfigurableListLevel {
 
     constructor(
         number: Int,
         initialLevel: Int = 1,
         startFrom: Int = 1,
+        styleTypeOverride: OrderedListStyleType? = null,
     ) : this(
         number = number,
         initialIndent = DefaultListIndent,
         initialLevel = initialLevel,
         startFrom = startFrom,
+        styleTypeOverride = styleTypeOverride,
     )
 
     constructor(
@@ -44,6 +51,7 @@ internal class OrderedList private constructor(
         startTextWidth: TextUnit = 0.sp,
         initialLevel: Int = 1,
         startFrom: Int = 1,
+        styleTypeOverride: OrderedListStyleType? = null,
     ) : this(
         number = number,
         initialIndent = config.orderedListIndent,
@@ -52,6 +60,7 @@ internal class OrderedList private constructor(
         initialStyleType = config.orderedListStyleType,
         initialPrefixAlignment = config.listPrefixAlignment,
         startFrom = startFrom,
+        styleTypeOverride = styleTypeOverride,
     )
 
     var number = number
@@ -131,7 +140,8 @@ internal class OrderedList private constructor(
 
     @OptIn(ExperimentalRichTextApi::class)
     private fun getNewStartRichSpan(textRange: TextRange = TextRange(0)): RichSpan {
-        val text = styleType.format(number, level) + styleType.getSuffix(level)
+        val effectiveStyleType = styleTypeOverride ?: styleType
+        val text = effectiveStyleType.format(number, level) + effectiveStyleType.getSuffix(level)
 
         return RichSpan(
             paragraph = RichParagraph(type = this),
@@ -159,6 +169,7 @@ internal class OrderedList private constructor(
             initialLevel = level,
             initialStyleType = styleType,
             initialPrefixAlignment = prefixAlignment,
+            styleTypeOverride = styleTypeOverride,
         )
 
     override fun copy(): ParagraphType =
@@ -169,7 +180,10 @@ internal class OrderedList private constructor(
      * item's visible [number] as the extract's starting number, so a snapshot beginning
      * mid-list keeps the numbering the user sees.
      */
-    fun copy(startFrom: Int): OrderedList =
+    fun copy(
+        startFrom: Int = this.startFrom,
+        styleTypeOverride: OrderedListStyleType? = this.styleTypeOverride,
+    ): OrderedList =
         OrderedList(
             number = number,
             initialIndent = indent,
@@ -178,6 +192,7 @@ internal class OrderedList private constructor(
             initialStyleType = styleType,
             initialPrefixAlignment = prefixAlignment,
             startFrom = startFrom,
+            styleTypeOverride = styleTypeOverride,
         )
 
     override fun equals(other: Any?): Boolean {
@@ -189,6 +204,7 @@ internal class OrderedList private constructor(
         if (startTextWidth != other.startTextWidth) return false
         if (level != other.level) return false
         if (styleType != other.styleType) return false
+        if (styleTypeOverride != other.styleTypeOverride) return false
         if (prefixAlignment != other.prefixAlignment) return false
 
         return true
@@ -201,6 +217,7 @@ internal class OrderedList private constructor(
         result = 31 * result + startTextWidth.hashCode()
         result = 31 * result + level
         result = 31 * result + styleType.hashCode()
+        result = 31 * result + styleTypeOverride.hashCode()
         result = 31 * result + prefixAlignment.hashCode()
         return result
     }

@@ -10,12 +10,15 @@ public sealed interface RichTextBlockType {
     /**
      * A list item. [indent] is the 0-based nesting depth. [startNumber] restarts ordered
      * numbering at this item (only meaningful for ordered lists). Negative values are
-     * allowed, matching the HTML `start` attribute.
+     * allowed, matching the HTML `start` attribute. [listStyleType] is the CSS
+     * `list-style-type` keyword of the item's list (`lower-alpha`, `square`, ...), or null
+     * when the list follows the editor's configured style.
      */
     public data class ListItem(
         public val ordered: Boolean,
         public val indent: Int = 0,
         public val startNumber: Int? = null,
+        public val listStyleType: String? = null,
     ) : RichTextBlockType {
         init {
             require(indent >= 0) { "indent must be >= 0, was $indent" }

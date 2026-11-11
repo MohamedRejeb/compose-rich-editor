@@ -2,6 +2,7 @@ package com.mohamedrejeb.richeditor.model
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
@@ -172,6 +173,28 @@ public class RichTextConfig internal constructor(
         }
 
     /**
+     * The typography of headings, per level. A level's [TextStyle] is applied on top of the
+     * default typography of that level (see [HeadingStyle]), so whatever it leaves unset keeps
+     * coming from the default: `TextStyle(color = Color.Red)` colors the headings of a level
+     * and keeps their size and weight. Its paragraph part (line height, alignment, ...) applies
+     * to the heading paragraph. Levels without an entry, and [HeadingStyle.Normal], are left
+     * alone.
+     *
+     * It is an appearance setting of the editor, like [linkColor]: the document stores the
+     * heading level only, so the styles are not written to HTML or Markdown, and a style added
+     * to the heading's text or paragraph still wins over them.
+     *
+     * Default is an empty map, which changes nothing.
+     */
+    @ExperimentalRichTextApi
+    public var headingTextStyles: Map<HeadingStyle, TextStyle> = emptyMap()
+        set(value) {
+            if (field == value) return
+            field = value
+            updateText()
+        }
+
+    /**
      * Controls where list markers ("1.", "10.", "•", ...) sit relative to the
      * indent gutter in ordered and unordered lists.
      *
@@ -221,6 +244,52 @@ public class RichTextConfig internal constructor(
     public var listTypingShortcutsEnabled: Boolean = true
 
     /**
+     * Whether a typed or pasted URL becomes a link on its own.
+     *
+     * When true, a word that starts with `http://`, `https://` or `www.` turns into a link once
+     * a space or Enter is typed after it, and a paste whose whole text is such a URL is inserted
+     * as a link. Punctuation that closes the sentence after the URL stays outside the link.
+     * Text that is already a link, a code span or a token is left as it is. The link is its own
+     * undo step: one undo removes it and keeps the text.
+     *
+     * Nothing is linked while links are left out of [features].
+     *
+     * Default is `true`.
+     */
+    @ExperimentalRichTextApi
+    public var autoLinkEnabled: Boolean = true
+
+    /**
+     * Whether typing a heading marker at the start of a paragraph turns it into a heading:
+     * `# ` to `###### ` set levels 1 to 6 and the marker is removed. A marker typed in a
+     * list item stays as text.
+     *
+     * The conversion is its own undo step: one undo restores the typed marker. Nothing is
+     * converted while headings are left out of [features].
+     *
+     * Default is `false`.
+     */
+    @ExperimentalRichTextApi
+    public var headingTypingShortcutsEnabled: Boolean = false
+
+    /**
+     * Whether Markdown marks typed around text format it: `**bold**` or `__bold__`,
+     * `*italic*` or `_italic_`, `` `code` `` and `~~strikethrough~~`. The text is formatted
+     * and the marks are removed when the closing mark is typed, so `**bold*` is still text.
+     * The marks must sit in one paragraph around text that does not start or end with a
+     * space, an underscore mark must not touch a letter or digit outside the pair, and
+     * nothing is converted inside a code span, a link or a token.
+     *
+     * The conversion is its own undo step: one undo restores the typed marks. What is typed
+     * after the formatted text is not formatted. A mark whose feature is left out of
+     * [features] stays as text.
+     *
+     * Default is `false`.
+     */
+    @ExperimentalRichTextApi
+    public var inlineTypingShortcutsEnabled: Boolean = false
+
+    /**
      * Whether the editor keeps its selection when it loses focus.
      *
      * The Compose text field collapses the selection as soon as focus moves to another
@@ -262,6 +331,19 @@ public class RichTextConfig internal constructor(
 @OptIn(ExperimentalRichTextApi::class)
 internal val RichTextConfig.richPasteEnabled: Boolean
     get() = richClipboardEnabled && features.isNotEmpty()
+
+/** The [RichTextConfig.headingTextStyles] entry that restyles [headingStyle], if any. */
+@OptIn(ExperimentalRichTextApi::class)
+internal fun RichTextConfig.headingTextStyleFor(headingStyle: HeadingStyle): TextStyle? =
+    if (headingStyle == HeadingStyle.Normal) null else headingTextStyles[headingStyle]
+
+/**
+ * The span style a heading restyled by [RichTextConfig.headingTextStyles] renders with: the
+ * level's default typography with the configured style on top. Null when the level is not
+ * restyled.
+ */
+internal fun RichTextConfig.headingSpanStyleFor(headingStyle: HeadingStyle): SpanStyle? =
+    headingTextStyleFor(headingStyle)?.let { headingStyle.defaultSpanStyle.merge(it.toSpanStyle()) }
 
 internal const val DefaultListIndent = 38
 

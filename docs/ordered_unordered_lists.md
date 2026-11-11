@@ -6,6 +6,7 @@
 - [List Style Types](#list-style-types)
   - [Ordered Lists](#ordered-lists)
   - [Unordered Lists](#unordered-lists)
+  - [Per-List Style Types](#per-list-style-types)
 - [List Indentation](#list-indentation)
 - [List Prefix Alignment](#list-prefix-alignment)
 - [List Marker Style](#list-marker-style)
@@ -93,6 +94,49 @@ richTextState.config.unorderedListStyleType = UnorderedListStyleType.from(
     "▪"   // Third level
 )
 ```
+
+### Per-List Style Types
+
+> **Note:** This API is marked `@ExperimentalRichTextApi` and may change in a future release.
+
+The config style types above are editor-wide presentation: every list follows them and they are not saved with the content. A single list can also carry a style type of its own, the way an `<ol>` or `<ul>` carries a `list-style-type` in HTML. Set it on the lists at the selection:
+
+```kotlin
+// The whole ordered list at the cursor becomes a, b, c, ...
+richTextState.setOrderedListStyleType(OrderedListStyleType.LowerAlpha)
+
+// The whole unordered list at the cursor uses square bullets
+richTextState.setUnorderedListStyleType(UnorderedListStyleType.Square)
+
+// Back to the config style
+richTextState.setOrderedListStyleType(null)
+```
+
+The style applies to every item of the list each selected item belongs to: the items at its nesting level, up to the previous and next paragraph that is not a list item, is nested less deeply, or is a list of the other kind. A nested list is a list of its own and keeps or sets its style independently. New items created with `Enter`, with the typing shortcuts, or by toggling a paragraph right below the list inherit its style. Changing the config afterwards does not affect a list with a style type of its own. Each call is one undo step.
+
+For a toolbar, read the style type of the list at the selection. It is `null` when the selection is not in a list of that kind, when the list follows the config, or when the selected items carry different style types:
+
+```kotlin
+val orderedStyle: OrderedListStyleType? = richTextState.currentOrderedListStyleType
+val unorderedStyle: UnorderedListStyleType? = richTextState.currentUnorderedListStyleType
+```
+
+A per-list style type is part of the content: `toHtml()` writes it as `style="list-style-type: ..."` on the `<ol>` or `<ul>`, `setHtml()` reads it from the list tag or from an `<li>`, and the [document model](rich_text_document.md) and [JSON](json_import_export.md) carry it too. Only the predefined types have a CSS keyword and round trip:
+
+| Style type | CSS keyword |
+|---|---|
+| `OrderedListStyleType.Decimal` | `decimal` |
+| `OrderedListStyleType.LowerAlpha` | `lower-alpha` (also read from `lower-latin`) |
+| `OrderedListStyleType.UpperAlpha` | `upper-alpha` (also read from `upper-latin`) |
+| `OrderedListStyleType.LowerRoman` | `lower-roman` |
+| `OrderedListStyleType.UpperRoman` | `upper-roman` |
+| `OrderedListStyleType.ArabicIndic` | `arabic-indic` |
+| `OrderedListStyleType.Arabic` | `arabic-abjad` |
+| `UnorderedListStyleType.Disc` | `disc` |
+| `UnorderedListStyleType.Circle` | `circle` |
+| `UnorderedListStyleType.Square` | `square` |
+
+A custom style type (an own `OrderedListStyleType` implementation, an `OrderedListStyleType.Multiple`, or `UnorderedListStyleType.from(...)` with other prefixes) renders in the editor but is not written to HTML, the document or JSON. An unknown keyword in HTML leaves the list following the config. Markdown has no list style types.
 
 ## List Indentation
 

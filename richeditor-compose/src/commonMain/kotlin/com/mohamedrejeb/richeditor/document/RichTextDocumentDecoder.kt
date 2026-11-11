@@ -16,6 +16,7 @@ import com.mohamedrejeb.richeditor.model.HeadingStyle
 import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
+import com.mohamedrejeb.richeditor.paragraph.type.ListStyleTypeKeywords
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import com.mohamedrejeb.richeditor.utils.InlineContentPlaceholder
@@ -49,9 +50,13 @@ internal object RichTextDocumentDecoder {
                         number = 1,
                         initialLevel = type.indent + 1,
                         startFrom = type.startNumber ?: 1,
+                        styleTypeOverride = ListStyleTypeKeywords.orderedFromKeyword(type.listStyleType),
                     )
                 } else {
-                    UnorderedList(initialLevel = type.indent + 1)
+                    UnorderedList(
+                        initialLevel = type.indent + 1,
+                        styleTypeOverride = ListStyleTypeKeywords.unorderedFromKeyword(type.listStyleType),
+                    )
                 }
         }
 

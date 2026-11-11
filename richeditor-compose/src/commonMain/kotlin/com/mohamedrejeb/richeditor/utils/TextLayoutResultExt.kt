@@ -31,17 +31,14 @@ public fun TextLayoutResult.getBoundingBoxes(
     if (multiParagraph.lineCount == 0)
         return emptyList()
 
+    // The end of the last line that holds text. Read from the line itself: a hit test at the
+    // line's top right lands on the boundary with the paragraph above and reports that
+    // paragraph's end, which is this line's start.
     var lastOffset = 0
     var lastNonEmptyLineIndex = multiParagraph.lineCount - 1
 
     while (lastOffset == 0 && lastNonEmptyLineIndex >= 0) {
-        val lastLinePosition =
-            Offset(
-                x = multiParagraph.getLineRight(lastNonEmptyLineIndex),
-                y = multiParagraph.getLineTop(lastNonEmptyLineIndex)
-            )
-
-        lastOffset = multiParagraph.getOffsetForPosition(lastLinePosition)
+        lastOffset = multiParagraph.getLineEnd(lastNonEmptyLineIndex, visibleEnd = true)
         lastNonEmptyLineIndex--
     }
 

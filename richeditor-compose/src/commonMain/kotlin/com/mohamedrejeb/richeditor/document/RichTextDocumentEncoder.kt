@@ -15,6 +15,7 @@ import com.mohamedrejeb.richeditor.model.RichSpan
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.paragraph.RichParagraph
+import com.mohamedrejeb.richeditor.paragraph.type.ListStyleTypeKeywords
 import com.mohamedrejeb.richeditor.paragraph.type.OrderedList
 import com.mohamedrejeb.richeditor.paragraph.type.UnorderedList
 import com.mohamedrejeb.richeditor.utils.diff
@@ -63,6 +64,7 @@ internal object RichTextDocumentEncoder {
                     ordered = true,
                     indent = paragraphType.level - 1,
                     startNumber = paragraphType.number.takeIf { it != derivedNumber },
+                    listStyleType = ListStyleTypeKeywords.keywordOf(paragraphType),
                 )
             }
             is UnorderedList -> {
@@ -70,6 +72,7 @@ internal object RichTextDocumentEncoder {
                 RichTextBlockType.ListItem(
                     ordered = false,
                     indent = paragraphType.level - 1,
+                    listStyleType = ListStyleTypeKeywords.keywordOf(paragraphType),
                 )
             }
             else -> {

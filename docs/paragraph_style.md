@@ -73,6 +73,28 @@ richTextState.addParagraphStyle(ParagraphStyle(
 ))
 ```
 
+#### The same line height for every line
+
+Each paragraph of the document is laid out on its own. With a plain `lineHeight` in the text style, Compose trims the extra space above the first line and below the last line of every paragraph. A paragraph of one line then keeps its natural height, the gap between two paragraphs is smaller than the gap between two lines of a wrapped paragraph, and an empty line from a `<br>` is shorter than the `lineHeight` you set.
+
+To give every line the full `lineHeight`, including single-line paragraphs and empty lines, turn the trimming off in the text style you pass to the editor or to `RichText`:
+
+```kotlin
+RichTextEditor(
+    state = richTextState,
+    textStyle = TextStyle(
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
+        lineHeightStyle = LineHeightStyle(
+            alignment = LineHeightStyle.Alignment.Center,
+            trim = LineHeightStyle.Trim.None,
+        ),
+    ),
+)
+```
+
+The Material 3 typography styles already set this, so an editor using `MaterialTheme.typography` text styles has uniform lines without it.
+
 ### Text Direction
 
 ```kotlin

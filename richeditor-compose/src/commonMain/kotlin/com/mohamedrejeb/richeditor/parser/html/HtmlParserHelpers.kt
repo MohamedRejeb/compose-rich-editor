@@ -82,6 +82,9 @@ internal val skippedHtmlElements = setOf(
 
 internal const val BrElement = "br"
 
+/** The CSS property that carries a list's marker style on `<ol>`, `<ul>` and `<li>`. */
+internal const val ListStyleTypeCssProperty = "list-style-type"
+
 /** Span attribute carrying a registered custom style's kind. */
 internal const val CustomSpanKindAttr = "data-richeditor-kind"
 

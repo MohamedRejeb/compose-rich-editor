@@ -33,6 +33,7 @@ import com.mohamedrejeb.richeditor.model.RichTextMaxImageWidthProvider
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.TokenClickHandler
 import com.mohamedrejeb.richeditor.model.TokenHoverHandler
+import com.mohamedrejeb.richeditor.model.withHighlights
 
 @OptIn(ExperimentalRichTextApi::class)
 @Composable
@@ -62,7 +63,9 @@ public fun BasicRichText(
     }
     val maxImageWidthProvider = remember { RichTextMaxImageWidthProvider() }
 
-    val text = state.annotatedString
+    val text = remember(state.annotatedString, state.highlights) {
+        state.annotatedString.withHighlights(state.highlights)
+    }
 
     CompositionLocalProvider(
         LocalImageLoader provides imageLoader,

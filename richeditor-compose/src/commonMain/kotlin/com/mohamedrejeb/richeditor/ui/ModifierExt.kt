@@ -8,6 +8,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.RichSpanStyle
@@ -46,10 +47,13 @@ internal fun Modifier.drawRichSpanStyle(
 
             // A block is as wide as the text area, and one scrolled partly out of an editor
             // must not paint over the padding around that area.
+            val isRtl = layoutDirection == LayoutDirection.Rtl
+            val leftPadding = if (isRtl) endPadding else startPadding
+            val rightPadding = if (isRtl) startPadding else endPadding
             clipRect(
-                left = startPadding,
+                left = leftPadding,
                 top = topPadding,
-                right = size.width - endPadding,
+                right = size.width - rightPadding,
                 bottom = size.height - bottomPadding,
             ) {
                 translate(top = -richTextState.scrollState.value.toFloat()) {
@@ -61,9 +65,9 @@ internal fun Modifier.drawRichSpanStyle(
                                 val top = textLayoutResult.getLineTop(lines.first) + gap
                                 drawRoundRect(
                                     color = richTextState.config.codeBlockBackgroundColor,
-                                    topLeft = Offset(startPadding, top + topPadding),
+                                    topLeft = Offset(leftPadding, top + topPadding),
                                     size = Size(
-                                        width = size.width - startPadding - endPadding,
+                                        width = size.width - leftPadding - rightPadding,
                                         height = textLayoutResult.getLineBottom(lines.last) - gap - top,
                                     ),
                                     cornerRadius = CornerRadius(CodeBlockCornerRadius.toPx()),

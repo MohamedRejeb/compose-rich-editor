@@ -132,6 +132,34 @@ class CodeBlockClipboardTest {
     }
 
     @Test
+    fun `one line of code pasted at the start of text joins the text`() {
+        val state = state("Hello world")
+        state.paste(TextRange(0), "a = 1", "<pre><code class=\"language-kotlin\">a = 1</code></pre>")
+        assertEquals(listOf("P:a = 1Hello world"), state.shape())
+    }
+
+    @Test
+    fun `one line of code pasted into an empty paragraph is a block`() {
+        val state = state("")
+        state.paste(TextRange(0), "a = 1", "<pre><code class=\"language-kotlin\">a = 1</code></pre>")
+        assertEquals(listOf("C*:a = 1"), state.shape())
+    }
+
+    @Test
+    fun `a URL pasted into a block stays plain code`() {
+        val state = state()
+        state.paste(TextRange(state.offsetOf("val b")), "https://example.com")
+        assertTrue(state.toRichTextDocument().blocks.all { it.spans.isEmpty() })
+    }
+
+    @Test
+    fun `a URL pasted as rich text into a block stays plain code`() {
+        val state = state()
+        state.paste(TextRange(state.offsetOf("val b")), "https://example.com", "<p>https://example.com</p>")
+        assertTrue(state.toRichTextDocument().blocks.all { it.spans.isEmpty() })
+    }
+
+    @Test
     fun `part of a block copied from one editor pastes as a block into another`() {
         val source = state()
         val range = TextRange(source.offsetOf("val a") + 4, source.offsetOf("val c") + 3)

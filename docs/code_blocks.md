@@ -78,7 +78,7 @@ of code pasted into a sentence joins the sentence as text. Whatever is pasted in
 formatted or not, becomes plain lines of that block.
 
 Typing shortcuts (`**bold**`, `__bold__`, `` `code` `` and the others) do nothing inside a code
-block, where those marks are code.
+block, where those marks are code. A URL typed or pasted there is not turned into a link either.
 
 ### Copy button
 

@@ -156,3 +156,36 @@ public fun BasicRichText(
         }
     }
 }
+
+@Deprecated("Kept for binary compatibility.", level = DeprecationLevel.HIDDEN)
+@Composable
+public fun BasicRichText(
+    state: RichTextState,
+    modifier: Modifier = Modifier,
+    style: TextStyle = TextStyle.Default,
+    onTextLayout: (TextLayoutResult) -> Unit = {},
+    overflow: TextOverflow = TextOverflow.Clip,
+    softWrap: Boolean = true,
+    maxLines: Int = Int.MAX_VALUE,
+    minLines: Int = 1,
+    inlineContent: Map<String, InlineTextContent> = mapOf(),
+    imageLoader: ImageLoader = LocalImageLoader.current,
+    onTokenClick: TokenClickHandler? = null,
+    onTokenHover: TokenHoverHandler? = null,
+) {
+    BasicRichText(
+        state = state,
+        modifier = modifier,
+        style = style,
+        onTextLayout = onTextLayout,
+        overflow = overflow,
+        softWrap = softWrap,
+        maxLines = maxLines,
+        minLines = minLines,
+        inlineContent = inlineContent,
+        imageLoader = imageLoader,
+        onTokenClick = onTokenClick,
+        onTokenHover = onTokenHover,
+        codeBlockAction = null,
+    )
+}

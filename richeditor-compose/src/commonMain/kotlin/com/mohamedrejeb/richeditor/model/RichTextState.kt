@@ -6220,8 +6220,13 @@ public class RichTextState internal constructor(
             removeSliceIndex = false,
         )
 
+        // One line of code pasted in front of text joins it, as it does in the middle of text.
+        val joinsFollowingText = newParagraphs.size == 1 &&
+            firstNewParagraph.type is CodeBlock && targetParagraphSecondHalf.isNotEmpty()
+
         if (
             targetCodeBlock == null &&
+            !joinsFollowingText &&
             targetParagraphFirstHalf.isEmpty() &&
             (firstNewParagraph.isNotEmpty() || firstNewParagraph.type is CodeBlock)
         ) {

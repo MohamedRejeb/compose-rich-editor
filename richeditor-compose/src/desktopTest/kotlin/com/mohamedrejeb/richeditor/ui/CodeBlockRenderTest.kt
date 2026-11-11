@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -15,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PixelMap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.DesktopComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -30,6 +32,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.highlight.CodeBlockColors
@@ -281,6 +284,30 @@ class CodeBlockRenderTest {
         val red = onNodeWithTag(EDITOR_TAG).captureToImage().toPixelMap().redBounds()
         assertEquals(16, red.left, "the background starts after the start padding")
         assertEquals(200 - 24, red.right, "the background ends before the end padding")
+    }
+
+    @Test
+    fun `the background stays inside the content padding of a right to left editor`() = runDesktopComposeUiTest {
+        val state = RichTextState().apply {
+            config.codeBlockBackgroundColor = Color.Red
+            setMarkdown("```\ncode\n```")
+        }
+        val horizontalPadding = PaddingValues(start = 16.dp, top = 12.dp, end = 24.dp, bottom = 12.dp)
+        setContent {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                BasicRichTextEditor(
+                    state = state,
+                    modifier = Modifier.width(200.dp).testTag(EDITOR_TAG),
+                    decorationBox = { innerTextField -> Box(Modifier.padding(horizontalPadding)) { innerTextField() } },
+                    contentPadding = horizontalPadding,
+                )
+            }
+        }
+        waitForIdle()
+
+        val red = onNodeWithTag(EDITOR_TAG).captureToImage().toPixelMap().redBounds()
+        assertEquals(24, red.left, "the background starts after the end padding")
+        assertEquals(200 - 16, red.right, "the background ends before the start padding")
     }
 
     @Test

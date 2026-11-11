@@ -4443,10 +4443,24 @@ public class RichTextState internal constructor(
                     richSpan.paragraph.isEmpty() &&
                     richSpan.paragraph.type is ConfigurableListLevel
                 ) {
+                    // No paragraph is added, so the newline leaves the text as well: left in, the
+                    // scan meets it again behind the dropped prefix and splits the paragraph below.
+                    tempTextFieldValue = tempTextFieldValue.copy(
+                        text = tempTextFieldValue.text.removeRange(index, index + 1),
+                        selection = TextRange(tempTextFieldValue.selection.min - 1),
+                    )
+
                     // Exit list by removing list formatting
                     tempTextFieldValue = updateParagraphType(
                         paragraph = richSpan.paragraph,
                         newType = DefaultParagraph(),
+                        textFieldValue = tempTextFieldValue,
+                    )
+
+                    // Numbered items below are a list of their own now
+                    tempTextFieldValue = adjustOrderedListsNumbers(
+                        startParagraphIndex = paragraphIndex + 1,
+                        startNumber = 1,
                         textFieldValue = tempTextFieldValue,
                     )
                     newParagraphFirstRichSpan.spanStyle = SpanStyle()

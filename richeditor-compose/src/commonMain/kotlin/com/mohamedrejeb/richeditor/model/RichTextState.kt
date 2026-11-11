@@ -5627,8 +5627,11 @@ public class RichTextState internal constructor(
             if (type !is ConfigurableStartTextWidth || type.startText.isEmpty() || type.startTextWidth != 0.sp)
                 return@fastForEach
 
-            val markerStyle =
-                paragraph.getListMarkerSpanStyle(config.listMarkerStyleBehavior, config.listMarkerStyle)
+            val markerStyle = paragraph.getListMarkerSpanStyle(
+                config.listMarkerStyleBehavior,
+                config.listMarkerStyle,
+                config.headingSpanStyleFor(paragraph.headingStyle),
+            )
             type.startTextWidth = widths.getOrPut(type.startText to markerStyle) {
                 // The prefix ends with a space, which a line does not count when it is last:
                 // measure up to a character placed after it instead.

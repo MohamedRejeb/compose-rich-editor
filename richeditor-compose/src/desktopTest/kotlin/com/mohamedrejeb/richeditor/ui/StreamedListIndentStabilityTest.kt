@@ -9,9 +9,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.runDesktopComposeUiTest
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
+import com.mohamedrejeb.richeditor.model.HeadingStyle
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.paragraph.type.ConfigurableStartTextWidth
 import kotlin.test.Test
@@ -24,7 +27,7 @@ import kotlin.test.assertTrue
  * first frame: a frame at the unmeasured indent followed by a corrected one makes every item
  * jump sideways on each chunk.
  */
-@OptIn(ExperimentalTestApi::class)
+@OptIn(ExperimentalTestApi::class, ExperimentalRichTextApi::class)
 class StreamedListIndentStabilityTest {
 
     private val style = TextStyle(fontSize = 16.sp)
@@ -93,6 +96,29 @@ class StreamedListIndentStabilityTest {
     @Test
     fun `numbered items keep their indent when chunks are set on the same state`() =
         assertStable(firstItemTextStarts(numberedChunks, newStatePerChunk = false, prefixLength = 3))
+
+    @Test
+    fun `a heading item restyled by the config keeps its indent`() {
+        val starts = mutableListOf<Float>()
+        runDesktopComposeUiTest(width = 500, height = 600) {
+            val state = RichTextState().apply {
+                config.headingTextStyles = mapOf(HeadingStyle.H1 to TextStyle(fontSize = 40.sp))
+                setMarkdown("- one")
+                selection = TextRange(annotatedString.text.length)
+                setHeadingStyle(HeadingStyle.H1)
+            }
+            setContent {
+                BasicRichText(
+                    state = state,
+                    style = style,
+                    modifier = Modifier.width(400.dp),
+                    onTextLayout = { starts += it.getHorizontalPosition(2, true) },
+                )
+            }
+            waitForIdle()
+        }
+        assertStable(starts)
+    }
 
     private fun RichTextState.firstPrefixWidth() =
         (richParagraphList.first().type as ConfigurableStartTextWidth).startTextWidth
